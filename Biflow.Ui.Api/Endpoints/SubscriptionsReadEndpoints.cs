@@ -27,6 +27,7 @@ public abstract class SubscriptionsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<Subscription[]>()
+            .WithSummary("Get all subscriptions")
             .WithDescription("Get all subscriptions")
             .WithName("GetSubscriptions");
         
@@ -50,6 +51,7 @@ public abstract class SubscriptionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Subscription>()
+            .WithSummary("Get subscription by id")
             .WithDescription("Get subscription by id")
             .WithName("GetSubscription");
     }

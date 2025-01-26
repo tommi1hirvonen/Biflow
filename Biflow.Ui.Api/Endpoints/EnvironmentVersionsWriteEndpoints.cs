@@ -24,7 +24,8 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                 return Results.Ok(version);
             })
             .Produces<VersionProjection>()
-            .WithDescription("Create a new environment version from the current environment state.")
+            .WithSummary("Create a new environment version")
+            .WithDescription("Create a new environment version and snapshot from the current environment state.")
             .WithName("CreateEnvironmentVersion");
         
         group.MapGet("/revert/status/{id:guid}",
@@ -40,6 +41,8 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<VersionRevertResponse>()
+            .WithSummary("Get revert process status by revert job id")
+            .WithDescription("Get environment version revert process status by revert job id")
             .WithName("GetRevertStatus");
 
         group.MapPost("/revert/{versionId:int}",
@@ -66,7 +69,10 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<VersionRevertResponse>(StatusCodes.Status202Accepted)
-            .WithDescription("Revert the environment to the version defined by the version id query parameter")
+            .WithSummary("Revert the environment to the specified version")
+            .WithDescription("Revert the environment to the version defined by the version id route parameter. " +
+                             "The process is asynchronous and a response is returned immediately. " +
+                             "Query the status endpoint to get the process status with the returned id.")
             .WithName("RevertEnvironmentVersionById");
         
         group.MapPost("/revert",
@@ -97,8 +103,9 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
             .Accepts<string>("application/json")
             .ProducesProblem(StatusCodes.Status409Conflict)
             .Produces<VersionRevertResponse>(StatusCodes.Status202Accepted)
-            .WithDescription("Revert the environment to the snapshot provided in the request body." +
-                             " The snapshot must be provided in the format where object references have been preserved.")
+            .WithSummary("Revert the environment to a provided snapshot")
+            .WithDescription("Revert the environment to the snapshot provided in the request body. " +
+                             "The snapshot must be provided in the format where object references have been preserved.")
             .WithName("RevertEnvironmentVersion");
     }
 }

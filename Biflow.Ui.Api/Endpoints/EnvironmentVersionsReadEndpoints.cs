@@ -29,6 +29,7 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<VersionProjection[]>()
+            .WithSummary("Get all environment versions")
             .WithDescription("Get all environment versions. " +
                              "Use the query parameters startVersionId and limit for pagination.")
             .WithName("GetEnvironmentVersions");
@@ -48,6 +49,7 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<VersionProjection>()
+            .WithSummary("Get environment version by id")
             .WithDescription("Get environment version by id")
             .WithName("GetEnvironmentVersion");
         
@@ -71,6 +73,7 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<EnvironmentSnapshot>()
+            .WithSummary("Get environment snapshot by version id")
             .WithDescription("Get environment version snapshot. " +
                              "Use the referencesPreserved query parameter to return a variant of the snapshot " +
                              "that can be used for reverting to a version.")

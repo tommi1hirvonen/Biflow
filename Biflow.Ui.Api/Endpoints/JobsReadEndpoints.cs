@@ -29,6 +29,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken);
             })
             .Produces<Job[]>()
+            .WithSummary("Get all jobs")
             .WithDescription("Get all jobs. Collection properties " +
                              "(job parameters, concurrencies, steps, schedules) " +
                              "are not loaded and will be empty. " +
@@ -64,6 +65,7 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Job>()
+            .WithSummary("Get job by id")
             .WithDescription("Get job by id. Steps and schedules are not loaded and will be empty. " +
                              "Job parameters and concurrency settings can be included by " +
                              "specifying the corresponding query parameters.")
@@ -92,6 +94,7 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Step[]>()
+            .WithSummary("Get all steps for a given job")
             .WithDescription("Get all steps for a job. " +
                              "Step tags can be included by specifying the corresponding query parameter. " +
                              "Other collection properties are not loaded and will be empty.")
@@ -120,6 +123,7 @@ public abstract class JobsReadEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Schedule[]>()
             .WithTags($"{Scopes.JobsRead}, {Scopes.SchedulesRead}")
+            .WithSummary("Get all schedules for a given job")
             .WithDescription("Get all schedules for a job.")
             .WithName("GetJobSchedules")
             .AddEndpointFilter(jobSchedulesEndpointFilter);
@@ -135,6 +139,7 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<JobParameter>()
+            .WithSummary("Get job parameter by id")
             .WithDescription("Get job parameter")
             .WithName("GetJobParameter");
         
@@ -144,6 +149,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                 return tags;
             })
             .Produces<JobTag[]>()
+            .WithSummary("Get all job tags")
             .WithDescription("Get all job tags")
             .WithName("GetJobTags");
         
@@ -157,7 +163,8 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<JobTag>()
-            .WithDescription("Get job tag")
+            .WithSummary("Get job tag by id")
+            .WithDescription("Get job tag by id")
             .WithName("GetJobTag");
         
         var dataObjectsGroup = app.MapGroup("/dataobjects")
@@ -170,6 +177,7 @@ public abstract class JobsReadEndpoints : IEndpoints
                 return dataObjects;
             })
             .Produces<DataObject[]>()
+            .WithSummary("Get all data objects")
             .WithDescription("Get all data objects")
             .WithName("GetDataObjects");
         
@@ -184,7 +192,8 @@ public abstract class JobsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<DataObject>()
-            .WithDescription("Get data object")
+            .WithSummary("Get data object by id")
+            .WithDescription("Get data object by id")
             .WithName("GetDataObject");
     }
 }

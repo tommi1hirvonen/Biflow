@@ -22,6 +22,7 @@ public abstract class SchedulesReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<Schedule[]>()
+            .WithSummary("Get all schedules")
             .WithDescription("Get all schedules")
             .WithName("GetSchedules");
         
@@ -41,6 +42,7 @@ public abstract class SchedulesReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Schedule>()
+            .WithSummary("Get schedule by id")
             .WithDescription("Get schedule by id")
             .WithName("GetSchedule");
         
@@ -50,6 +52,7 @@ public abstract class SchedulesReadEndpoints : IEndpoints
                 return tags;
             })
             .Produces<ScheduleTag[]>()
+            .WithSummary("Get all schedule tags")
             .WithDescription("Get all schedule tags")
             .WithName("GetScheduleTags");
         
@@ -63,7 +66,8 @@ public abstract class SchedulesReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<ScheduleTag>()
-            .WithDescription("Get schedule tag")
+            .WithSummary("Get schedule tag by id")
+            .WithDescription("Get schedule tag by id")
             .WithName("GetScheduleTag");
     }
 }

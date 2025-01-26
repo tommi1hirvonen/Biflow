@@ -36,6 +36,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .Produces<Job>(StatusCodes.Status201Created)
+            .WithSummary("Create job")
             .WithDescription("Create a new job")
             .WithName("CreateJob");
         
@@ -60,7 +61,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<Job>()
-            .WithDescription("Update an existing job")
+            .WithSummary("Update job by id")
+            .WithDescription("Update an existing job with the given id")
             .WithName("UpdateJob");
         
         group.MapDelete("/{jobId:guid}", async (Guid jobId, IMediator mediator, CancellationToken cancellationToken) =>
@@ -71,10 +73,11 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Delete a job")
+            .WithSummary("Delete job by id")
+            .WithDescription("Delete a job with the given id")
             .WithName("DeleteJob");
 
-        group.MapPut("/{jobId:guid}/concurrencies",
+        group.MapPatch("/{jobId:guid}/concurrencies",
             async ([FromRoute] Guid jobId, [FromBody] JobConcurrencyDto[] concurrencies,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -86,6 +89,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Update job concurrencies")
             .WithDescription("Update job concurrencies for an existing job")
             .WithName("UpdateJobConcurrencies");
         
@@ -110,6 +114,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .Produces<JobParameter>(StatusCodes.Status201Created)
+            .WithSummary("Create job parameter")
             .WithDescription("Create a new job parameter")
             .WithName("CreateJobParameter");
         
@@ -122,7 +127,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Toggle the state of an existing job")
+            .WithSummary("Toggle the state of a job")
+            .WithDescription("Toggle the state of an existing job (enabled/disabled)")
             .WithName("ToggleJobEnabled");
         
         group.MapPut("/parameters/{parameterId:guid}", async (Guid parameterId, [FromBody] JobParameterDto parameterDto,
@@ -140,7 +146,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<JobParameter>()
-            .WithDescription("Update an existing job parameter")
+            .WithSummary("Update job parameter by id")
+            .WithDescription("Update an existing job parameter by id")
             .WithName("UpdateJobParameter");
         
         group.MapDelete("/parameters/{parameterId:guid}", async (Guid parameterId, IMediator mediator,
@@ -152,7 +159,8 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Delete a job parameter")
+            .WithSummary("Delete job parameter by id")
+            .WithDescription("Delete a job parameter by id")
             .WithName("DeleteJobParameter");
         
         group.MapPost("/{jobId:guid}/tags/{tagId:guid}",
@@ -164,6 +172,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Create job tag relation")
             .WithDescription("Create a job tag relation")
             .WithName("CreateJobTagRelation");
         
@@ -176,6 +185,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete job tag relation")
             .WithDescription("Delete a job tag relation")
             .WithName("DeleteJobTagRelation");
         
@@ -193,6 +203,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .Produces<JobTag>(StatusCodes.Status201Created)
+            .WithSummary("Create job tag")
             .WithDescription("Create a new job tag")
             .WithName("CreateJobTag");
 
@@ -210,6 +221,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<JobTag>()
+            .WithSummary("Update job tag")
             .WithDescription("Update an existing job tag")
             .WithName("UpdateJobTag");
         
@@ -221,6 +233,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete job tag")
             .WithDescription("Delete a job tag")
             .WithName("DeleteJobTag");
         
@@ -242,6 +255,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesValidationProblem()
             .Produces<DataObject>(StatusCodes.Status201Created)
+            .WithSummary("Create data object")
             .WithDescription("Create a new data object")
             .WithName("CreateDataObject");
         
@@ -259,6 +273,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<DataObject>()
+            .WithSummary("Update data object")
             .WithDescription("Update an existing data object")
             .WithName("UpdateDataObject");
         
@@ -271,6 +286,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete data object")
             .WithDescription("Delete a data object")
             .WithName("DeleteDataObject");
     }

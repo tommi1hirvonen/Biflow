@@ -32,7 +32,9 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
-            .WithDescription("Get currently running executions")
+            .WithSummary("Get currently running executions")
+            .WithDescription("Get executions that are in the Running state. " +
+                             "Use the query parameters lastExecutionId and limit to paginate results.")
             .WithName("GetRunningExecutions");
         
         group.MapGet("/notstarted",
@@ -52,7 +54,9 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
-            .WithDescription("Get pending/not started executions")
+            .WithSummary("Get pending/not started executions")
+            .WithDescription("Get executions that are in the NotStarted state. " +
+                             "Use the query parameters lastExecutionId and limit to paginate results.")
             .WithName("GetNotStartedExecutions");
 
         group.MapGet("",
@@ -74,7 +78,9 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
-            .WithDescription("Get executions")
+            .WithSummary("Get executions for a given time period")
+            .WithDescription("Get executions for a given time period. " +
+                             "Use the query parameters lastExecutionId and limit to paginate results.")
             .WithName("GetExecutions");
         
         group.MapGet("{executionId:guid}",
@@ -95,7 +101,11 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Execution>()
-            .WithDescription("Get execution by id")
+            .WithSummary("Get execution by id")
+            .WithDescription("Get execution by id. " +
+                             "Use the query parameters to control what collection properties " +
+                             "are loaded and included in the response. " +
+                             "Otherwise the collection properties will be empty.")
             .WithName("GetExecution");
         
         group.MapGet("{executionId:guid}/steps",
@@ -120,7 +130,11 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<StepExecution[]>()
-            .WithDescription("Get execution steps")
+            .WithSummary("Get steps for an execution with a given id")
+            .WithDescription("Get execution steps for an execution with a given id. " +
+                             "Use the query parameters to control what collection properties for steps " +
+                             "are loaded and included in the response. " +
+                             "Otherwise the collection properties will be empty.")
             .WithName("GetExecutionSteps");
         
         group.MapGet("{executionId:guid}/steps/{stepId:guid}",
@@ -147,7 +161,11 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .Produces(StatusCodes.Status404NotFound)
             .Produces<StepExecution>()
-            .WithDescription("Get execution step by id")
+            .WithSummary("Get execution step by execution id and step id")
+            .WithDescription("Get execution step by execution id and step id. " +
+                             "Use the query parameters to control what collection properties for the step " +
+                             "are loaded and included in the response. " +
+                             "Otherwise the collection properties will be empty.")
             .WithName("GetExecutionStep");
         
         group.MapGet("/steps/running",
@@ -177,7 +195,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
-            .WithDescription("Get all running steps")
+            .WithSummary("Get currently running execution steps")
+            .WithDescription("Get all execution steps that are in the Running state. " +
+                             "Use the query parameters lastExecutionId, lastStepId, lastRetryAttemptIndex and limit " +
+                             "to paginate results.")
             .WithName("GetRunningStepExecutions");
         
         group.MapGet("/steps/notstarted",
@@ -207,7 +228,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
-            .WithDescription("Get all pending/not started step executions")
+            .WithSummary("Get pending/not started execution steps")
+            .WithDescription("Get execution steps that are in the NotStarted state." +
+                             "Use the query parameters lastExecutionId, lastStepId, lastRetryAttemptIndex and limit " +
+                             "to paginate results.")
             .WithName("GetNotStartedStepExecutions");
         
         group.MapGet("/steps",
@@ -239,7 +263,10 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<StepExecution[]>()
-            .WithDescription("Get step executions")
+            .WithSummary("Get execution steps for a given time period")
+            .WithDescription("Get execution steps for a given time period. " +
+                             "Use the query parameters lastExecutionId, lastStepId, lastRetryAttemptIndex and limit " +
+                             "to paginate results.")
             .WithName("GetStepExecutions");
     }
 }

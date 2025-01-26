@@ -38,7 +38,7 @@ Content-Type: application/json
 
 ### Update job concurrencies
 
-PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
+PATCH {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -49,7 +49,7 @@ Content-Type: application/json
 
 ### Clear job concurrencies (empty array)
 
-PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
+PATCH {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4/concurrencies
 x-api-key: {{apiKey}}
 Content-Type: application/json
 

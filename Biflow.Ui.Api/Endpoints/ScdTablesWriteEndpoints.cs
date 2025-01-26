@@ -39,6 +39,7 @@ public abstract class ScdTablesWriteEndpoints : IEndpoints
             })
             .ProducesValidationProblem()
             .Produces<ScdTable>()
+            .WithSummary("Create SCD table")
             .WithDescription("Create a new SCD table")
             .WithName("CreateScdTable");
         
@@ -68,6 +69,7 @@ public abstract class ScdTablesWriteEndpoints : IEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<ScdTable>()
+            .WithSummary("Update SCD table")
             .WithDescription("Update an existing SCD table")
             .WithName("UpdateScdTable");
         
@@ -80,6 +82,7 @@ public abstract class ScdTablesWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete SCD table")
             .WithDescription("Delete an SCD table")
             .WithName("DeleteScdTable");
     }

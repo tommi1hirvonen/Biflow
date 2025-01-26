@@ -29,6 +29,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<Schedule>()
+            .WithSummary("Create schedule")
             .WithDescription("Create a new schedule")
             .WithName("CreateSchedule")
             .WithTags(Scopes.SchedulesWrite)
@@ -55,6 +56,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<Schedule>()
+            .WithSummary("Update schedule")
             .WithDescription("Update an existing schedule")
             .WithName("UpdateSchedule");
         
@@ -67,6 +69,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete schedule")
             .WithDescription("Delete an existing schedule")
             .WithName("DeleteSchedule");
 
@@ -79,7 +82,8 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Toggle the state of an existing schedule")
+            .WithSummary("Toggle schedule state")
+            .WithDescription("Toggle the state of an existing schedule (enabled/disabled)")
             .WithName("ToggleScheduleEnabled");
         
         group.MapPost("/tags",
@@ -97,6 +101,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .Produces<ScheduleTag>(StatusCodes.Status201Created)
+            .WithSummary("Create schedule tag")
             .WithDescription("Create a new schedule tag")
             .WithName("CreateScheduleTag");
 
@@ -114,6 +119,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<ScheduleTag>()
+            .WithSummary("Update schedule tag")
             .WithDescription("Update an existing schedule tag")
             .WithName("UpdateScheduleTag");
         
@@ -125,6 +131,7 @@ public abstract class SchedulesWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete schedule tag")
             .WithDescription("Delete a schedule tag")
             .WithName("DeleteScheduleTag");
         

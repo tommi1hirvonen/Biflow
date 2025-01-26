@@ -73,6 +73,7 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<PackageStep>()
+            .WithSummary("Update package step")
             .WithDescription("Update an existing SSIS package step")
             .WithName("UpdatePackageStep");
         
@@ -132,6 +133,7 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<PipelineStep>()
+            .WithSummary("Update pipeline step")
             .WithDescription("Update an existing pipeline step")
             .WithName("UpdatePipelineStep");
         
@@ -192,6 +194,7 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<SqlStep>()
+            .WithSummary("Update SQL step")
             .WithDescription("Update an existing SQL step")
             .WithName("UpdateSqlStep");
     }

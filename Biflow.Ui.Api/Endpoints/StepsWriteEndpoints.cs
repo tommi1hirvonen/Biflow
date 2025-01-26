@@ -27,6 +27,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete step")
             .WithDescription("Delete a step")
             .WithName("DeleteStep");
 
@@ -39,7 +40,8 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
-            .WithDescription("Toggle the state of an existing step")
+            .WithSummary("Toggle step state")
+            .WithDescription("Toggle the state of an existing step (enabled/disabled)")
             .WithName("ToggleStepEnabled");
         
         group.MapPatch("/{stepId:guid}/dependencies", async (Guid stepId, DependencyDto[] dependencyDtos,
@@ -54,6 +56,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Dependency[]>()
+            .WithSummary("Update dependencies for an existing step")
             .WithDescription("Update the dependencies of an existing step")
             .WithName("UpdateStepDependencies");
         
@@ -66,6 +69,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Create step tag relation")
             .WithDescription("Create a step tag relation")
             .WithName("CreateStepTagRelation");
         
@@ -78,6 +82,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete step tag relation")
             .WithDescription("Delete a step tag relation")
             .WithName("DeleteStepTagRelation");
 
@@ -91,6 +96,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesValidationProblem()
             .Produces<StepTag>(StatusCodes.Status201Created)
+            .WithSummary("Create step tag")
             .WithDescription("Create a new step tag")
             .WithName("CreateStepTag");
         
@@ -108,6 +114,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<StepTag>()
+            .WithSummary("Update step tag")
             .WithDescription("Update an existing step tag")
             .WithName("UpdateStepTag");
         
@@ -120,6 +127,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete step tag")
             .WithDescription("Delete a step tag")
             .WithName("DeleteStepTag");
     }

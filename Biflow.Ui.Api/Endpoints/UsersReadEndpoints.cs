@@ -19,6 +19,7 @@ public abstract class UsersReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<User[]>()
+            .WithSummary("Get all users")
             .WithDescription("Get all users")
             .WithName("GetUsers");
         
@@ -36,6 +37,7 @@ public abstract class UsersReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<User>()
+            .WithSummary("Get user by id")
             .WithDescription("Get user by id")
             .WithName("GetUser");
         
@@ -57,7 +59,8 @@ public abstract class UsersReadEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Job[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.JobsRead}")
-            .WithDescription("Get user's authorized jobs. " +
+            .WithSummary("Get jobs authorized for a user")
+            .WithDescription("Get jobs authorized for a user. " +
                              "The collection properties of the returned jobs are not loaded and will be empty. " +
                              "If the user's property AuthorizeAllJobs is set to tue, " +
                              "the list of authorized jobs has no effect.")
@@ -82,7 +85,8 @@ public abstract class UsersReadEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<MasterDataTable[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.DataTablesRead}")
-            .WithDescription("Get user's authorized data tables. " +
+            .WithSummary("Get data tables authorized for a user")
+            .WithDescription("Get data tables authorized for a user. " +
                              "The collection properties of the returned tables are not loaded and will be empty. " +
                              "If the user property AuthorizeAllDataTables is set to true, " +
                              "the list of authorized data tables has no effect.")
@@ -108,7 +112,8 @@ public abstract class UsersReadEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Subscription[]>()
             .WithTags($"{Scopes.UsersRead}, {Scopes.SubscriptionsRead}")
-            .WithDescription("Get user's subscriptions.")
+            .WithSummary("Get all subscriptions for a user")
+            .WithDescription("Get all subscriptions for a user")
             .WithName("GetUserSubscriptions")
             .AddEndpointFilter(userSubscriptionsEndpointFilter);
     }

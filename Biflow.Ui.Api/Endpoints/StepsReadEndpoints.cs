@@ -35,6 +35,7 @@ public abstract class StepsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<Step>()
+            .WithSummary("Get step by id")
             .WithDescription("Get step by id")
             .WithName("GetStep");
         
@@ -44,6 +45,7 @@ public abstract class StepsReadEndpoints : IEndpoints
                 return tags;
             })
             .Produces<StepTag[]>()
+            .WithSummary("Get all step tags")
             .WithDescription("Get all step tags")
             .WithName("GetStepTags");
         
@@ -57,7 +59,8 @@ public abstract class StepsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<StepTag>()
-            .WithDescription("Get step tag")
+            .WithSummary("Get step tag by id")
+            .WithDescription("Get step tag by id")
             .WithName("GetStepTag");
     }
 }

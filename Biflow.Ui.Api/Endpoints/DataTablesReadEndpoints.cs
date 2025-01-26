@@ -21,6 +21,7 @@ public abstract class DataTablesReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<MasterDataTable[]>()
+            .WithSummary("Get all data tables")
             .WithDescription("Get all data tables")
             .WithName("GetDataTables");
         
@@ -39,6 +40,7 @@ public abstract class DataTablesReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<MasterDataTable>()
+            .WithSummary("Get data table by id")
             .WithDescription("Get data table by id")
             .WithName("GetDataTable");
         
@@ -49,6 +51,7 @@ public abstract class DataTablesReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<MasterDataTableCategory[]>()
+            .WithSummary("Get all data table categories")
             .WithDescription("Get all data table categories")
             .WithName("GetDataTableCategories");
         
@@ -63,6 +66,7 @@ public abstract class DataTablesReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<MasterDataTableCategory>()
+            .WithSummary("Get data table category by id")
             .WithDescription("Get data table category by id")
             .WithName("GetDataTableCategory");
     }

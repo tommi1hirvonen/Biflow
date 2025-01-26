@@ -73,6 +73,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<PackageStep>(StatusCodes.Status201Created)
+            .WithSummary("Create package step")
             .WithDescription("Create a new SSIS package step")
             .WithName("CreatePackageStep");
         
@@ -132,6 +133,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<PipelineStep>(StatusCodes.Status201Created)
+            .WithSummary("Create pipeline step")
             .WithDescription("Create a new pipeline step")
             .WithName("CreatePipelineStep");
         
@@ -192,6 +194,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesValidationProblem()
             .Produces<SqlStep>(StatusCodes.Status201Created)
+            .WithSummary("Create SQL step")
             .WithDescription("Create a new SQL step")
             .WithName("CreateSqlStep");
     }

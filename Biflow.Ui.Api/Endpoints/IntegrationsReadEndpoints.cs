@@ -19,6 +19,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<AzureCredential[]>()
+            .WithSummary("Get all Azure credentials")
             .WithDescription("Get all Azure credentials. " +
                              "Sensitive data (passwords, client secrets) will be replaced with an empty value.")
             .WithName("GetAzureCredentials");
@@ -37,6 +38,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<AzureCredential>()
+            .WithSummary("Get Azure credential by id")
             .WithDescription("Get Azure credential by id. " +
                              "Sensitive data (password, client secret) will be replaced with an empty value.")
             .WithName("GetAzureCredential");
@@ -48,6 +50,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<SqlConnectionBase[]>()
+            .WithSummary("Get all SQL connections")
             .WithDescription("Get all SQL connections. Sensitive connection strings will be replaced with an empty value.")
             .WithName("GetSqlConnections");
         
@@ -65,6 +68,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<SqlConnectionBase>()
+            .WithSummary("Get SQL connection by id")
             .WithDescription("Get SQL connection by id. Sensitive connection string will be replaced with an empty value.")
             .WithName("GetSqlConnection");
         
@@ -75,6 +79,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<PipelineClient[]>()
+            .WithSummary("Get all pipeline clients")
             .WithDescription("Get all pipeline clients (Data Factory, Synapse Workspace).")
             .WithName("GetPipelineClients");
         
@@ -92,6 +97,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<PipelineClient>()
+            .WithSummary("Get pipeline client by id")
             .WithDescription("Get pipeline client by id.")
             .WithName("GetPipelineClient");
         
@@ -102,6 +108,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<FunctionApp[]>()
+            .WithSummary("Get all Function Apps")
             .WithDescription("Get all Function Apps. Sensitive function keys will be replaced with an empty value.")
             .WithName("GetFunctionApps");
         
@@ -119,6 +126,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<FunctionApp>()
+            .WithSummary("Get Function App by id")
             .WithDescription("Get Function App by id. Sensitive function key will be replaced with an empty value.")
             .WithName("GetFunctionApp");
         
@@ -129,6 +137,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<DatabricksWorkspace[]>()
+            .WithSummary("Get all Databricks workspaces")
             .WithDescription("Get all Databricks workspaces. Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspaces");
         
@@ -146,6 +155,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<DatabricksWorkspace>()
+            .WithSummary("Get Databricks workspace by id")
             .WithDescription("Get Databricks workspace by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDatabricksWorkspace");
         
@@ -156,6 +166,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<DbtAccount[]>()
+            .WithSummary("Get all dbt accounts")
             .WithDescription("Get all dbt accounts. Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetDbtAccounts");
         
@@ -173,6 +184,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<DbtAccount>()
+            .WithSummary("Get dbt account by id")
             .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDbtAccount");
         
@@ -183,6 +195,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<AnalysisServicesConnection[]>()
+            .WithSummary("Get all Analysis Services connections")
             .WithDescription("Get all SQL Server Analysis Services connections. " +
                              "Sensitive connection strings will be replaced with an empty value.")
             .WithName("GetAnalysisServicesConnections");
@@ -201,6 +214,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<AnalysisServicesConnection>()
+            .WithSummary("Get Analysis Services connection by id")
             .WithDescription("Get SQL Server Analysis Services connection by id. " +
                              "Sensitive connection string will be replaced with an empty value.")
             .WithName("GetAnalysisServicesConnection");
@@ -212,6 +226,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                     .ToArrayAsync(cancellationToken)
             )
             .Produces<QlikCloudEnvironment[]>()
+            .WithSummary("Get all Qlik Cloud environments")
             .WithDescription("Get all Qlik Cloud environments. " +
                              "Sensitive API tokens will be replaced with an empty value.")
             .WithName("GetQlikCloudEnvironments");
@@ -230,6 +245,7 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<QlikCloudEnvironment>()
+            .WithSummary("Get Qlik Cloud environment by id")
             .WithDescription("Get Qlik Cloud environment by id. " +
                              "Sensitive API token will be replaced with an empty value.")
             .WithName("GetQlikCloudEnvironment");

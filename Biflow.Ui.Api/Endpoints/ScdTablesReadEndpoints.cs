@@ -19,6 +19,7 @@ public abstract class ScdTablesReadEndpoints : IEndpoints
                 .ToArrayAsync(cancellationToken)
             )
             .Produces<ScdTable[]>()
+            .WithSummary("Get all SCD tables")
             .WithDescription("Get all SCD tables")
             .WithName("GetScdTables");
         
@@ -36,6 +37,7 @@ public abstract class ScdTablesReadEndpoints : IEndpoints
             })
             .ProducesProblem(StatusCodes.Status404NotFound)
             .Produces<ScdTable>()
+            .WithSummary("Get SCD table by id")
             .WithDescription("Get SCD table by id")
             .WithName("GetScdTable");
     }
