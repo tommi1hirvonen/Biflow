@@ -53,6 +53,7 @@ internal class CreatePackageStepCommandHandler(
             var parameter = new PackageStepParameter
             {
                 ParameterName = createParameter.ParameterName,
+                ParameterLevel = createParameter.ParameterLevel,
                 ParameterValue = createParameter.ParameterValue,
                 UseExpression = createParameter.UseExpression,
                 Expression = new EvaluationExpression { Expression = createParameter.Expression },
