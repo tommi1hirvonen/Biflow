@@ -55,7 +55,7 @@ internal class UpdateSqlStepCommandHandler(
         step.ConnectionId = request.ConnectionId;
         step.ResultCaptureJobParameterId = request.ResultCaptureJobParameterId;
         
-        SynchronizeParameters<SqlStepParameter, UpdateStepParameter>(
+        await SynchronizeParametersAsync<SqlStepParameter, UpdateStepParameter>(
             step,
             request.Parameters,
             parameter => new SqlStepParameter
@@ -65,6 +65,8 @@ internal class UpdateSqlStepCommandHandler(
                 UseExpression = parameter.UseExpression,
                 Expression = new EvaluationExpression { Expression = parameter.Expression },
                 InheritFromJobParameterId = parameter.InheritFromJobParameterId
-            });
+            },
+            dbContext,
+            cancellationToken);
     }
 }

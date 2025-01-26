@@ -53,7 +53,7 @@ internal class UpdatePackageStepCommandHandler(
         step.ExecuteIn32BitMode = request.ExecuteIn32BitMode;
         step.ExecuteAsLogin = request.ExecuteAsLogin;
         
-        SynchronizeParameters<PackageStepParameter, UpdatePackageStepParameter>(
+        await SynchronizeParametersAsync<PackageStepParameter, UpdatePackageStepParameter>(
             step,
             request.Parameters,
             parameter => new PackageStepParameter
@@ -64,7 +64,9 @@ internal class UpdatePackageStepCommandHandler(
                 UseExpression = parameter.UseExpression,
                 Expression = new EvaluationExpression { Expression = parameter.Expression },
                 InheritFromJobParameterId = parameter.InheritFromJobParameterId
-            });
+            },
+            dbContext,
+            cancellationToken);
         
         // Update ParameterLevel for matching parameters as SynchronizeParameters() does not handle that.
         foreach (var parameter in step.StepParameters)

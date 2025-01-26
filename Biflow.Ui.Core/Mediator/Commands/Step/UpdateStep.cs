@@ -65,13 +65,38 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
     protected abstract Task UpdateTypeSpecificPropertiesAsync(
         TStep step, TCommand request, AppDbContext dbContext, CancellationToken cancellationToken);
 
-    protected void SynchronizeParameters<TParameter, TUpdateParameter>(
+    protected async Task SynchronizeParametersAsync<TParameter, TUpdateParameter>(
         IHasStepParameters<TParameter> step,
         TUpdateParameter[] parameters,
-        Func<TUpdateParameter, TParameter> parameterDelegate)
+        Func<TUpdateParameter, TParameter> parameterDelegate,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
         where TParameter : StepParameterBase
         where TUpdateParameter : UpdateStepParameter
     {
+        // Fetch potential job parameter ids from DB and check matching ids.
+        var jobParameterIds = parameters
+            .Select(x => x.InheritFromJobParameterId)
+            .OfType<Guid>()
+            .Concat(parameters.SelectMany(x => x.ExpressionParameters).Select(x => x.InheritFromJobParameterId))
+            .Distinct()
+            .ToArray();
+        if (jobParameterIds.Length > 0)
+        {
+            var jobParameterIdsFromDb = await dbContext
+                .Set<JobParameter>()
+                .Where(x => jobParameterIds.Contains(x.ParameterId))
+                .Select(x => x.ParameterId)
+                .ToArrayAsync(cancellationToken);
+            foreach (var id in jobParameterIds)
+            {
+                if (!jobParameterIdsFromDb.Contains(id))
+                {
+                    throw new NotFoundException<JobParameter>(id);
+                }
+            }
+        }
+        
         // Remove parameters
         var parametersToRemove = step.StepParameters
             .Where(p1 => parameters.All(p2 => p2.ParameterId != p1.ParameterId))
@@ -202,7 +227,7 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
                 .Where(x => jobParameterIds.Contains(x.ParameterId))
                 .Select(x => x.ParameterId)
                 .ToArrayAsync(cancellationToken);
-            foreach (var id in jobParameterIdsFromDb)
+            foreach (var id in jobParameterIds)
             {
                 if (!jobParameterIdsFromDb.Contains(id))
                 {
