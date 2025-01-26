@@ -42,7 +42,7 @@ public abstract class StepsWriteEndpoints : IEndpoints
             .WithDescription("Toggle the state of an existing step")
             .WithName("ToggleStepEnabled");
         
-        group.MapPut("/{stepId:guid}/dependencies", async (Guid stepId, DependencyDto[] dependencyDtos,
+        group.MapPatch("/{stepId:guid}/dependencies", async (Guid stepId, DependencyDto[] dependencyDtos,
             IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var dictionary = dependencyDtos.ToDictionary(
