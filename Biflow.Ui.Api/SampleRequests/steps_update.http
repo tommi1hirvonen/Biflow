@@ -43,7 +43,7 @@ Content-Type: application/json
 
 ### Update package step
 
-PUT {{baseUrl}}/jobs/steps/package/5073fddd-9bfc-499d-1ed3-08dd3d7e335a
+PUT {{baseUrl}}/jobs/steps/package/bdcdeea6-e8f2-4084-8140-08dd3de7e2d6
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
