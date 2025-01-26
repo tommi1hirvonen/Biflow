@@ -12,66 +12,6 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .WithTags(Scopes.JobsWrite)
             .AddEndpointFilter(endpointFilter);
         
-        group.MapPut("/steps/sql/{stepId:guid}", async (Guid stepId, SqlStepDto stepDto,
-            IMediator mediator, CancellationToken cancellationToken) =>
-            {
-                var dependencies = stepDto.Dependencies.ToDictionary(
-                    key => key.DependentOnStepId,
-                    value => value.DependencyType);
-                var executionConditionParameters = stepDto.ExecutionConditionParameters
-                    .Select(p => new UpdateExecutionConditionParameter(
-                        p.ParameterId,
-                        p.ParameterName,
-                        p.ParameterValue,
-                        p.InheritFromJobParameterId))
-                    .ToArray();
-                var parameters = stepDto.Parameters
-                    .Select(p => new UpdateStepParameter(
-                        p.ParameterId,
-                        p.ParameterName,
-                        p.ParameterValue,
-                        p.UseExpression,
-                        p.Expression,
-                        p.InheritFromJobParameterId,
-                        p.ExpressionParameters
-                            .Select(e => new UpdateExpressionParameter(e.ParameterId, e.ParameterName, e.InheritFromJobParameterId))
-                            .ToArray()))
-                    .ToArray();
-                var command = new UpdateSqlStepCommand
-                {
-                    StepId = stepId,
-                    StepName = stepDto.StepName,
-                    StepDescription = stepDto.StepDescription,
-                    ExecutionPhase = stepDto.ExecutionPhase,
-                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
-                    IsEnabled = stepDto.IsEnabled,
-                    RetryAttempts = stepDto.RetryAttempts,
-                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
-                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
-                    StepTagIds = stepDto.StepTagIds,
-                    TimeoutMinutes = stepDto.TimeoutMinutes,
-                    SqlStatement = stepDto.SqlStatement,
-                    ConnectionId = stepDto.ConnectionId,
-                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
-                    Parameters = parameters,
-                    Dependencies = dependencies,
-                    ExecutionConditionParameters = executionConditionParameters,
-                    Sources = stepDto.Sources
-                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
-                        .ToArray(),
-                    Targets = stepDto.Targets
-                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
-                        .ToArray()
-                };
-                var step = await mediator.SendAsync(command, cancellationToken);
-                return Results.Ok(step);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem()
-            .Produces<SqlStep>()
-            .WithDescription("Update an existing SQL step")
-            .WithName("UpdateSqlStep");
-        
         group.MapPut("/steps/package/{stepId:guid}", async (Guid stepId, PackageStepDto stepDto,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -135,5 +75,124 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .Produces<PackageStep>()
             .WithDescription("Update an existing SSIS package step")
             .WithName("UpdatePackageStep");
+        
+        group.MapPut("/steps/pipeline/{stepId:guid}", async (Guid stepId, PipelineStepDto stepDto,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var parameters = stepDto.Parameters
+                    .Select(p => new UpdateStepParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new UpdateExpressionParameter(e.ParameterId, e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
+                var command = new UpdatePipelineStepCommand
+                {
+                    StepId = stepId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    TimeoutMinutes = stepDto.TimeoutMinutes,
+                    PipelineClientId = stepDto.PipelineClientId,
+                    PipelineName = stepDto.PipelineName,
+                    Parameters = parameters,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<PipelineStep>()
+            .WithDescription("Update an existing pipeline step")
+            .WithName("UpdatePipelineStep");
+        
+        group.MapPut("/steps/sql/{stepId:guid}", async (Guid stepId, SqlStepDto stepDto,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var parameters = stepDto.Parameters
+                    .Select(p => new UpdateStepParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new UpdateExpressionParameter(e.ParameterId, e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
+                var command = new UpdateSqlStepCommand
+                {
+                    StepId = stepId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    TimeoutMinutes = stepDto.TimeoutMinutes,
+                    SqlStatement = stepDto.SqlStatement,
+                    ConnectionId = stepDto.ConnectionId,
+                    ResultCaptureJobParameterId = stepDto.ResultCaptureJobParameterId,
+                    Parameters = parameters,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<SqlStep>()
+            .WithDescription("Update an existing SQL step")
+            .WithName("UpdateSqlStep");
     }
 }

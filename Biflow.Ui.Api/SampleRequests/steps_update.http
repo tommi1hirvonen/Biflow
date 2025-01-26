@@ -1,46 +1,3 @@
-### Update SQL step
-
-PUT {{baseUrl}}/jobs/steps/sql/4cedf210-25ca-43e3-bf8c-08dd3b0d900a
-x-api-key: {{apiKey}}
-Content-Type: application/json
-
-{
-  "stepName": "API test step",
-  "stepDescription": null,
-  "executionPhase": 10,
-  "duplicateExecutionBehaviour": "Allow",
-  "isEnabled": true,
-  "retryAttempts": 1,
-  "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
-  "stepTagIds": [],
-  "timeoutMinutes": 0,
-  "sqlStatement": "select @param2",
-  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
-  "resultCaptureJobParameterId": null,
-  "parameters": [
-    {
-      "parameterId": "abc5d9a6-aa1f-4c93-f793-08dd3d1dba58",
-      "parameterName": "@param2",
-      "parameterValue": { "valueType": "String", "valueString": "hello world" },
-      "useExpression": true,
-      "expression": "testParam",
-      "inheritFromJobParameterId": null,
-      "expressionParameters": [
-        {
-          "parameterId": null,
-          "parameterName": "testParam",
-          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
-        }
-      ]
-    }
-  ],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
-}
-
 ### Update package step
 
 PUT {{baseUrl}}/jobs/steps/package/bdcdeea6-e8f2-4084-8140-08dd3de7e2d6
@@ -94,4 +51,73 @@ Content-Type: application/json
     { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": ["asd"] },
     { "dataObjectId": "971899b9-6858-4174-34d7-08dbb6cadb55", "dataAttributes": ["asd"] }
   ]
+}
+
+### Update pipeline step
+
+PUT {{baseUrl}}/jobs/steps/pipeline/bd9fdd3e-e17e-4dfd-56b7-08dd3e0c1c41
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "pipelineClientId": "bbf08ea1-461e-4323-2d3d-08dd17659e0e",
+  "pipelineName": "test_pipeline_asd",
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update SQL step
+
+PUT {{baseUrl}}/jobs/steps/sql/4cedf210-25ca-43e3-bf8c-08dd3b0d900a
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": [],
+  "timeoutMinutes": 0,
+  "sqlStatement": "select @param2",
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "resultCaptureJobParameterId": null,
+  "parameters": [
+    {
+      "parameterId": "abc5d9a6-aa1f-4c93-f793-08dd3d1dba58",
+      "parameterName": "@param2",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "useExpression": true,
+      "expression": "testParam",
+      "inheritFromJobParameterId": null,
+      "expressionParameters": [
+        {
+          "parameterId": null,
+          "parameterName": "testParam",
+          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
+        }
+      ]
+    }
+  ],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
 }

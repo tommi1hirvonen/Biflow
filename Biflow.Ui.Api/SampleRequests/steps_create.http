@@ -1,46 +1,3 @@
-### Create a SQL step
-
-POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/sql
-x-api-key: {{apiKey}}
-Content-Type: application/json
-
-{
-  "stepName": "API test step",
-  "stepDescription": null,
-  "executionPhase": 10,
-  "duplicateExecutionBehaviour": "Allow",
-  "isEnabled": true,
-  "retryAttempts": 1,
-  "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
-  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
-  "timeoutMinutes": 0,
-  "sqlStatement": "select @param",
-  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
-  "resultCaptureJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56",
-  "parameters": [
-    {
-      "parameterId": null,
-      "parameterName": "@param",
-      "parameterValue": { "valueType": "String", "valueString": "hello world" },
-      "useExpression": true,
-      "expression": "testParam",
-      "inheritFromJobParameterId": null,
-      "expressionParameters": [
-        {
-          "parameterId": null,
-          "parameterName": "testParam",
-          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
-        }
-      ]
-    }
-  ],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
-}
-
 ### Create a package step
 
 POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/package
@@ -83,4 +40,83 @@ Content-Type: application/json
   "targets": [
     { "dataObjectId": "0026bec9-136d-4dce-f91d-08dbb6976a68", "dataAttributes": [] }
   ]
+}
+
+### Create a pipeline step
+
+POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/pipeline
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "pipelineClientId": "bbf08ea1-461e-4323-2d3d-08dd17659e0e",
+  "pipelineName": "test_pipeline",
+  "parameters": [
+    {
+      "parameterId": null,
+      "parameterName": "paramX",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "useExpression": false,
+      "expression": null,
+      "inheritFromJobParameterId": null,
+      "expressionParameters": []
+    }
+  ],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Create a SQL step
+
+POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/sql
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "sqlStatement": "select @param",
+  "connectionId": "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "resultCaptureJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56",
+  "parameters": [
+    {
+      "parameterId": null,
+      "parameterName": "@param",
+      "parameterValue": { "valueType": "String", "valueString": "hello world" },
+      "useExpression": true,
+      "expression": "testParam",
+      "inheritFromJobParameterId": null,
+      "expressionParameters": [
+        {
+          "parameterId": null,
+          "parameterName": "testParam",
+          "inheritFromJobParameterId": "26dcdb06-0cd1-4509-a9f0-08dd3b0d7e56"
+        }
+      ]
+    }
+  ],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
 }
