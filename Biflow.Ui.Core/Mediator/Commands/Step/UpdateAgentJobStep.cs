@@ -17,8 +17,6 @@ internal class UpdateAgentJobStepCommandHandler(
         CancellationToken cancellationToken)
     {
         return dbContext.AgentJobSteps
-            .Include(step => step.Job)
-            .ThenInclude(job => job.JobParameters)
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
             .Include(step => step.DataObjects)

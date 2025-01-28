@@ -18,8 +18,6 @@ internal class UpdatePipelineStepCommandHandler(
         Guid stepId, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         return dbContext.PipelineSteps
-            .Include(step => step.Job)
-            .ThenInclude(job => job.JobParameters)
             .Include(step => step.StepParameters)
             .ThenInclude(p => p.InheritFromJobParameter)
             .Include(step => step.StepParameters)
