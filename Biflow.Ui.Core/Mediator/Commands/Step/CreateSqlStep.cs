@@ -2,7 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class CreateSqlStepCommand : CreateStepCommand<SqlStep>
 {
-    public required int TimeoutMinutes { get; init; }
+    public required double TimeoutMinutes { get; init; }
     public required string SqlStatement { get; init; }
     public required Guid ConnectionId { get; init; }
     public required Guid? ResultCaptureJobParameterId { get; init; }

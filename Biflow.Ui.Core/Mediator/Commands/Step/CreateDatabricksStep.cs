@@ -2,7 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class CreateDatabricksStepCommand : CreateStepCommand<DatabricksStep>
 {
-    public required int TimeoutMinutes { get; init; }
+    public required double TimeoutMinutes { get; init; }
     public required Guid DatabricksWorkspaceId { get; init; }
     public required DatabricksStepSettings DatabricksStepSettings { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }

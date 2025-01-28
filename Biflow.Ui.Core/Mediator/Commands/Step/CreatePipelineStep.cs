@@ -2,7 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class CreatePipelineStepCommand : CreateStepCommand<PipelineStep>
 {
-    public required int TimeoutMinutes { get; init; }
+    public required double TimeoutMinutes { get; init; }
     public required Guid PipelineClientId { get; init; }
     public required string PipelineName { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }

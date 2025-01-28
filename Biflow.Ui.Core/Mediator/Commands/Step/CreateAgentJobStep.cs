@@ -2,7 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class CreateAgentJobStepCommand : CreateStepCommand<AgentJobStep>
 {
-    public required int TimeoutMinutes { get; init; }
+    public required double TimeoutMinutes { get; init; }
     public required Guid ConnectionId { get; init; }
     public required string AgentJobName { get; init; }
 }

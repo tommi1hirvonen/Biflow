@@ -2,7 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class UpdatePackageStepCommand : UpdateStepCommand<PackageStep>
 {
-    public required int TimeoutMinutes { get; init; }
+    public required double TimeoutMinutes { get; init; }
     public required Guid ConnectionId { get; init; }
     public required string PackageFolderName { get; init; }
     public required string PackageProjectName { get; init; }
