@@ -36,6 +36,13 @@ internal class UpdateExeStepCommandHandler(
     protected override async Task UpdateTypeSpecificPropertiesAsync(ExeStep step, UpdateExeStepCommand request,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
+        // Check that the credential exists.
+        if (request.RunAsCredentialId is { } id &&
+            !await dbContext.Credentials.AnyAsync(x => x.CredentialId == id, cancellationToken))
+        {
+            throw new NotFoundException<Credential>(id);
+        }
+        
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.ExeFileName = request.FilePath;
         step.ExeArguments = request.Arguments;

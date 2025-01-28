@@ -17,9 +17,16 @@ internal class CreateExeStepCommandHandler(
     StepValidator validator
 ) : CreateStepCommandHandler<CreateExeStepCommand, ExeStep>(dbContextFactory, validator)
 {
-    protected override Task<ExeStep> CreateStepAsync(
+    protected override async Task<ExeStep> CreateStepAsync(
         CreateExeStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
+        // Check that the credential exists.
+        if (request.RunAsCredentialId is { } id &&
+            !await dbContext.Credentials.AnyAsync(x => x.CredentialId == id, cancellationToken))
+        {
+            throw new NotFoundException<Credential>(id);
+        }
+        
         var step = new ExeStep
         {
             JobId = request.JobId,
@@ -59,6 +66,6 @@ internal class CreateExeStepCommandHandler(
             step.StepParameters.Add(parameter);
         }
 
-        return Task.FromResult(step);
+        return step;
     }
 }
