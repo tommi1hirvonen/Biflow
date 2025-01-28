@@ -25,8 +25,8 @@ internal class UpdateDatasetStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
     
-    protected override async Task UpdateTypeSpecificPropertiesAsync(
-        DatasetStep step, UpdateDatasetStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+    protected override async Task UpdateTypeSpecificPropertiesAsync(DatasetStep step, UpdateDatasetStepCommand request,
+        AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the Azure credential exists.
         if (!await dbContext.AzureCredentials

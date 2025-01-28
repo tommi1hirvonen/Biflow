@@ -14,8 +14,8 @@ internal class CreateDataflowStepCommandHandler(
     StepValidator validator)
     : CreateStepCommandHandler<CreateDataflowStepCommand, DataflowStep>(dbContextFactory, validator)
 {
-    protected override async Task<DataflowStep> CreateStepAsync(CreateDataflowStepCommand request, AppDbContext dbContext,
-        CancellationToken cancellationToken)
+    protected override async Task<DataflowStep> CreateStepAsync(CreateDataflowStepCommand request,
+        AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the Azure credential exists.
         if (!await dbContext.AzureCredentials

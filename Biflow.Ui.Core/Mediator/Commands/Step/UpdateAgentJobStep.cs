@@ -25,7 +25,10 @@ internal class UpdateAgentJobStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
 
-    protected override async Task UpdateTypeSpecificPropertiesAsync(AgentJobStep step, UpdateAgentJobStepCommand request, AppDbContext dbContext,
+    protected override async Task UpdateTypeSpecificPropertiesAsync(
+        AgentJobStep step,
+        UpdateAgentJobStepCommand request,
+        AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
         // Check that the connection exists.

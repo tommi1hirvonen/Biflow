@@ -27,7 +27,10 @@ internal class UpdateDataflowStepCommandHandler(
     }
     
     protected override async Task UpdateTypeSpecificPropertiesAsync(
-        DataflowStep step, UpdateDataflowStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+        DataflowStep step,
+        UpdateDataflowStepCommand request,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
     {
         // Check that the Azure credential exists.
         if (!await dbContext.AzureCredentials

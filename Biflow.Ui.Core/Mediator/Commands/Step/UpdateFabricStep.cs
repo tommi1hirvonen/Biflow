@@ -32,8 +32,8 @@ internal class UpdateFabricStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
     
-    protected override async Task UpdateTypeSpecificPropertiesAsync(
-        FabricStep step, UpdateFabricStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+    protected override async Task UpdateTypeSpecificPropertiesAsync(FabricStep step, UpdateFabricStepCommand request,
+        AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the Azure credential exists.
         if (!await dbContext.AzureCredentials

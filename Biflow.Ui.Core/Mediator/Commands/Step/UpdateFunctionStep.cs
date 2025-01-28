@@ -34,7 +34,10 @@ internal class UpdateFunctionStepCommandHandler(
     }
     
     protected override async Task UpdateTypeSpecificPropertiesAsync(
-        FunctionStep step, UpdateFunctionStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+        FunctionStep step,
+        UpdateFunctionStepCommand request,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
     {
         // Check that the function app exists.
         if (!await dbContext.FunctionApps.AnyAsync(x => x.FunctionAppId == request.FunctionAppId, cancellationToken))

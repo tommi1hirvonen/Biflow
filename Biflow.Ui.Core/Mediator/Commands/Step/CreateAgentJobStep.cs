@@ -12,7 +12,9 @@ internal class CreateAgentJobStepCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory, StepValidator validator)
     : CreateStepCommandHandler<CreateAgentJobStepCommand, AgentJobStep>(dbContextFactory, validator)
 {
-    protected override async Task<AgentJobStep> CreateStepAsync(CreateAgentJobStepCommand request, AppDbContext dbContext,
+    protected override async Task<AgentJobStep> CreateStepAsync(
+        CreateAgentJobStepCommand request,
+        AppDbContext dbContext,
         CancellationToken cancellationToken)
     {
         // Check that the connection exists.

@@ -31,8 +31,8 @@ internal class UpdateSqlStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
     
-    protected override async Task UpdateTypeSpecificPropertiesAsync(
-        SqlStep step, UpdateSqlStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+    protected override async Task UpdateTypeSpecificPropertiesAsync(SqlStep step, UpdateSqlStepCommand request,
+        AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the connection exists.
         if (!await dbContext.SqlConnections.AnyAsync(c => c.ConnectionId == request.ConnectionId, cancellationToken))

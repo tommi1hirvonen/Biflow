@@ -31,7 +31,10 @@ internal class UpdateDatabricksStepCommandHandler(
     }
     
     protected override async Task UpdateTypeSpecificPropertiesAsync(
-        DatabricksStep step, UpdateDatabricksStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+        DatabricksStep step,
+        UpdateDatabricksStepCommand request,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken)
     {
         // Check that the pipeline client exists.
         if (!await dbContext.DatabricksWorkspaces

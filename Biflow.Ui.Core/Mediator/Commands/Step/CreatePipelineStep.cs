@@ -18,7 +18,8 @@ internal class CreatePipelineStepCommandHandler(
         CreatePipelineStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the pipeline client exists.
-        if (!await dbContext.PipelineClients.AnyAsync(x => x.PipelineClientId == request.PipelineClientId, cancellationToken))
+        if (!await dbContext.PipelineClients
+                .AnyAsync(x => x.PipelineClientId == request.PipelineClientId, cancellationToken))
         {
             throw new NotFoundException<PipelineClient>(request.PipelineClientId);
         }

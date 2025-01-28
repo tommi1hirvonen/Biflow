@@ -33,8 +33,8 @@ internal class UpdateExeStepCommandHandler(
             .FirstOrDefaultAsync(step => step.StepId == stepId, cancellationToken);
     }
     
-    protected override async Task UpdateTypeSpecificPropertiesAsync(
-        ExeStep step, UpdateExeStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
+    protected override async Task UpdateTypeSpecificPropertiesAsync(ExeStep step, UpdateExeStepCommand request,
+        AppDbContext dbContext, CancellationToken cancellationToken)
     {
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.ExeFileName = request.FilePath;
