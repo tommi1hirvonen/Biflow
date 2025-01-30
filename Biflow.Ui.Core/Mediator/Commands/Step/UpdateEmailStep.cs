@@ -33,7 +33,7 @@ internal class UpdateEmailStepCommandHandler(
     protected override async Task UpdateTypeSpecificPropertiesAsync(EmailStep step, UpdateEmailStepCommand request,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        step.Recipients = string.Join(',', step.Recipients);
+        step.Recipients = string.Join(',', request.Recipients);
         step.Subject = request.Subject;
         step.Body = request.Body;
         
