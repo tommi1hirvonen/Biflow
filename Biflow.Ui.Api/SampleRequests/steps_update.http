@@ -1,3 +1,301 @@
+### Update Agent job step
+
+PUT {{baseUrl}}/jobs/steps/agentjob/d32559af-a73a-4b85-1ed0-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "connectionId":  "2d8cf992-a71f-4ba3-3127-08dbb695f924",
+  "agentJobName": "Test Agent Job Updated",
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Databricks step
+
+PUT {{baseUrl}}/jobs/steps/databricks/fa3ddc66-4e83-4e7a-1ed1-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "databricksWorkspaceId": "271f7254-726f-4346-6e08-08dce18d95f2",
+  "settings": {
+    "$type": "Notebook",
+    "notebookPath": "src/notebooks/notebook_updated.py",
+    "clusterConfiguration": {
+      "$type": "NewCluster",
+      "nodeTypeId": "Standard_DS3_v2",
+      "driverNodeTypeId": null,
+      "runtimeVersion": "16.0.x-scala2.12",
+      "usePhoton": true,
+      "clusterMode": {
+        "$type": "FixedMultiNode",
+        "NumberOfWorkers": 4
+      }
+    }
+  },
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Dataflow step
+
+PUT {{baseUrl}}/jobs/steps/dataflow/1bf8f5de-9269-4241-1ed2-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "dataflowId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Dataset step
+
+PUT {{baseUrl}}/jobs/steps/dataset/eb08e5ac-8892-4bba-1ed3-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "datasetId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update dbt step
+
+PUT {{baseUrl}}/jobs/steps/dbt/b71c7a11-2cb2-4cd9-1ed4-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "dbtAccountId": "0689152b-52b3-4023-1680-08dd05bbcf7e",
+  "dbtJob": {
+    "id": 654321,
+    "name": "test-name",
+    "environmentId": 123456,
+    "environmentName": "test-environment",
+    "projectId": 123456,
+    "projectName": "test-project"
+  },
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update email step
+
+PUT {{baseUrl}}/jobs/steps/email/d5b6c512-aee3-48fa-1ed6-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "recipients": ["asd3@asd.com", "asd4@asd.com"],
+  "subject": "Test email",
+  "body": "This is a test email",
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update exe step
+
+PUT {{baseUrl}}/jobs/steps/exe/a5839167-faa4-4f4c-1ed8-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "filePath": "C:\\Users\\TestUser\\Desktop\\test_updated.cmd",
+  "arguments": "--asd",
+  "workingDirectory": "C:\\TestFolder",
+  "successExitCode": 0,
+  "runAsCredentialId": null,
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Fabric step
+
+PUT {{baseUrl}}/jobs/steps/fabric/53f5893e-ca80-4802-1ed9-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": [],
+  "timeoutMinutes": 0,
+  "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "itemType": "Notebook",
+  "itemId": "25a61e1b-601c-431e-8059-6f3be51320e8",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Function step
+
+PUT {{baseUrl}}/jobs/steps/function/c92a8743-3f07-4048-1eda-08dd4154feb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "functionAppId": "46141b84-8c24-42cc-c5e6-08dc50c2393e",
+  "functionUrl": "https://testfunctionupdated.com/",
+  "functionInput": "{ \"Value\": \"test\" }",
+  "functionIsDurable": false,
+  "functionKey": null,
+  "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update job step
+
+PUT {{baseUrl}}/jobs/steps/job/ff0155bf-5c3f-46e2-6de8-08dd415b8e87
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "jobToExecuteId": "29a43f41-d2e4-4e86-62a0-08dbb695de54",
+  "executeSynchronized": true,
+  "filterStepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "parameters": [
+    {
+      "parameterId": null,
+      "assignToJobParameterId": "81b2bca5-3398-45b1-953e-08dc4fbd5e4c",
+      "parameterValue": { "valueType": "Boolean", "valueBoolean": false },
+      "useExpression": true,
+      "expression": "false",
+      "inheritFromJobParameterId": null,
+      "expressionParameters": []
+    }
+  ],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
 ### Update package step
 
 PUT {{baseUrl}}/jobs/steps/package/bdcdeea6-e8f2-4084-8140-08dd3de7e2d6
@@ -73,6 +371,59 @@ Content-Type: application/json
   "pipelineClientId": "bbf08ea1-461e-4323-2d3d-08dd17659e0e",
   "pipelineName": "test_pipeline_asd",
   "parameters": [],
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update Qlik step
+
+PUT {{baseUrl}}/jobs/steps/qlik/7f19d4bb-fdbe-4272-6dea-08dd415b8e87
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "qlikCloudEnvironmentId": "18f63239-9ef3-4d4e-fb98-08dbc6a53327",
+  "settings": {
+    "$type": "AutomationRun",
+    "automationId": "8cc2c409-2824-4d6a-ba8a-455012b90ba0",
+    "automationName": "Reload Json Placeholder app"
+  },
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
+
+### Update SCD step
+
+PUT {{baseUrl}}/jobs/steps/scd/047cce4e-eb95-4757-6deb-08dd415b8e87
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "scdTableId": "81c36ffe-f833-4f42-9eef-08dd12e59023",
   "dependencies": [],
   "executionConditionParameters": [],
   "sources": [],
