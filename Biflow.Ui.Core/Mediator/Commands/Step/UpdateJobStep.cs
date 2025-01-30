@@ -23,6 +23,7 @@ internal class UpdateJobStepCommandHandler(
             .ThenInclude(p => p.InheritFromJobParameter)
             .Include(step => step.StepParameters)
             .ThenInclude(p => p.ExpressionParameters)
+            .Include(step => step.TagFilters)
             .Include(step => step.Tags)
             .Include(step => step.Dependencies)
             .Include(step => step.DataObjects)
