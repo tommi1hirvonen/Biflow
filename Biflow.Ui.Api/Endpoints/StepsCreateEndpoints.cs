@@ -854,5 +854,55 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .WithSummary("Create SQL step")
             .WithDescription("Create a new SQL step")
             .WithName("CreateSqlStep");
+        
+        group.MapPost("/{jobId:guid}/steps/tabular", async (Guid jobId, TabularStepDto stepDto,
+            LinkGenerator linker, HttpContext ctx,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new CreateExecutionConditionParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var command = new CreateTabularStepCommand
+                {
+                    JobId = jobId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    TimeoutMinutes = stepDto.TimeoutMinutes,
+                    ConnectionId = stepDto.ConnectionId,
+                    ModelName = stepDto.ModelName,
+                    TableName = stepDto.TableName,
+                    PartitionName = stepDto.PartitionName,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
+                return Results.Created(url, step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<TabularStep>(StatusCodes.Status201Created)
+            .WithSummary("Create tabular step")
+            .WithDescription("Create a new SQL Server Analysis Services tabular processing step")
+            .WithName("CreateTabularStep");
     }
 }

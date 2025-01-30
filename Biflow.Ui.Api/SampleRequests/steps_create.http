@@ -464,3 +464,30 @@ Content-Type: application/json
   "sources": [],
   "targets": []
 }
+
+### Create a tabular step
+
+POST {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/steps/tabular
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "connectionId": "a032b8fe-d733-4812-78f5-08dbf67512ba",
+  "modelName": "AdventureWorks",
+  "tableName": null,
+  "partitionName": null,
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}

@@ -848,5 +848,54 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .WithSummary("Update SQL step")
             .WithDescription("Update an existing SQL step")
             .WithName("UpdateSqlStep");
+        
+        group.MapPut("/steps/tabular/{stepId:guid}", async (Guid stepId, TabularStepDto stepDto,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var command = new UpdateTabularStepCommand
+                {
+                    StepId = stepId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    TimeoutMinutes = stepDto.TimeoutMinutes,
+                    ConnectionId = stepDto.ConnectionId,
+                    ModelName = stepDto.ModelName,
+                    TableName = stepDto.TableName,
+                    PartitionName = stepDto.PartitionName,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<TabularStep>()
+            .WithSummary("Update tabular step")
+            .WithDescription("Update an existing SQL Server Analysis Services tabular process step")
+            .WithName("UpdateTabularStep");
     }
 }

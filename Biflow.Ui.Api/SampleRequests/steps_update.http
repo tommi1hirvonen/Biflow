@@ -472,3 +472,30 @@ Content-Type: application/json
   "sources": [],
   "targets": []
 }
+
+### Update tabular step
+
+PUT {{baseUrl}}/jobs/steps/tabular/03cb2bc6-360b-4479-3804-08dd4162ad3d
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "stepName": "API test step",
+  "stepDescription": null,
+  "executionPhase": 10,
+  "duplicateExecutionBehaviour": "Allow",
+  "isEnabled": true,
+  "retryAttempts": 1,
+  "retryIntervalMinutes": 1.5,
+  "executionConditionExpression": null,
+  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
+  "timeoutMinutes": 0,
+  "connectionId": "a032b8fe-d733-4812-78f5-08dbf67512ba",
+  "modelName": "AdventureWorks",
+  "tableName": "D_Customer",
+  "partitionName": null,
+  "dependencies": [],
+  "executionConditionParameters": [],
+  "sources": [],
+  "targets": []
+}
