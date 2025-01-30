@@ -7,5 +7,5 @@ public record JobStepDto : StepDto
     public required Guid JobToExecuteId { get; init; }
     public required bool ExecuteSynchronized { get; init; }
     public required Guid[] FilterStepTagIds { get; init; }
-    public required StepParameterDto[] Parameters { get; init; }   
+    public required JobStepParameterDto[] Parameters { get; init; }   
 }

@@ -6,7 +6,7 @@ public class UpdateJobStepCommand : UpdateStepCommand<JobStep>
     public required Guid JobToExecuteId { get; init; }
     public required bool ExecuteSynchronized { get; init; }
     public required Guid[] FilterStepTagIds { get; init; }
-    public required UpdateStepParameter[] Parameters { get; init; }
+    public required UpdateJobStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -56,6 +56,21 @@ internal class UpdateJobStepCommandHandler(
             }
         }
         
+        var jobParameterIds = request.Parameters
+            .Select(p => p.AssignToJobParameterId)
+            .ToArray();
+        var jobParameters = await dbContext.Set<JobParameter>()
+            .Where(p => p.JobId == request.JobToExecuteId && jobParameterIds.Contains(p.ParameterId))
+            .ToArrayAsync(cancellationToken);
+
+        foreach (var id in jobParameterIds)
+        {
+            if (jobParameters.All(t => t.ParameterId != id))
+            {
+                throw new NotFoundException<JobParameter>(("JobId", request.JobToExecuteId), ("ParameterId", id));
+            }
+        }
+        
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.JobToExecuteId = request.JobToExecuteId;
         step.JobExecuteSynchronized = request.ExecuteSynchronized;
@@ -74,11 +89,13 @@ internal class UpdateJobStepCommandHandler(
             step.TagFilters.Remove(tag);
         }
         
-        await SynchronizeParametersAsync<JobStepParameter, UpdateStepParameter>(
+        await SynchronizeParametersAsync<JobStepParameter, UpdateJobStepParameter>(
             step,
             request.Parameters,
             parameter => new JobStepParameter(request.JobToExecuteId)
             {
+                AssignToJobParameterId = jobParameters
+                    .First(p => p.ParameterId == parameter.AssignToJobParameterId).ParameterId,
                 ParameterName = parameter.ParameterName,
                 ParameterValue = parameter.ParameterValue,
                 UseExpression = parameter.UseExpression,
@@ -88,10 +105,15 @@ internal class UpdateJobStepCommandHandler(
             dbContext,
             cancellationToken);
         
-        // Update ParameterLevel for matching parameters as SynchronizeParameters() does not handle that.
+        // Update AssignToJobParameterId for matching parameters as SynchronizeParameters() does not handle that.
         foreach (var parameter in step.StepParameters)
         {
-            parameter.AssignToJobParameterId = request.JobToExecuteId;
+            var updateParameter = request.Parameters
+                .FirstOrDefault(p => p.ParameterId == parameter.ParameterId);
+            if (updateParameter is null) continue;
+            var jobParameter = jobParameters.First(p => p.ParameterId == parameter.AssignToJobParameterId);
+            parameter.ParameterName = jobParameter.ParameterName;
+            parameter.AssignToJobParameterId = updateParameter.AssignToJobParameterId;
         }
     }
 }

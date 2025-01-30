@@ -6,7 +6,7 @@ public class CreateJobStepCommand : CreateStepCommand<JobStep>
     public required Guid JobToExecuteId { get; init; }
     public required bool ExecuteSynchronized { get; init; }
     public required Guid[] FilterStepTagIds { get; init; }
-    public required CreateStepParameter[] Parameters { get; init; }
+    public required CreateJobStepParameter[] Parameters { get; init; }
 }
 
 [UsedImplicitly]
@@ -37,6 +37,21 @@ internal class CreateJobStepCommandHandler(
             }
         }
         
+        var jobParameterIds = request.Parameters
+            .Select(p => p.AssignToJobParameterId)
+            .ToArray();
+        var jobParameters = await dbContext.Set<JobParameter>()
+            .Where(p => p.JobId == request.JobToExecuteId && jobParameterIds.Contains(p.ParameterId))
+            .ToArrayAsync(cancellationToken);
+
+        foreach (var id in jobParameterIds)
+        {
+            if (jobParameters.All(t => t.ParameterId != id))
+            {
+                throw new NotFoundException<JobParameter>(("JobId", request.JobToExecuteId), ("ParameterId", id));
+            }
+        }
+        
         var step = new JobStep
         {
             JobId = request.JobId,
@@ -59,9 +74,11 @@ internal class CreateJobStepCommandHandler(
         
         foreach (var createParameter in request.Parameters)
         {
+            var jobParameter = jobParameters.First(p => p.ParameterId == createParameter.AssignToJobParameterId);
             var parameter = new JobStepParameter(request.JobToExecuteId)
             {
-                ParameterName = createParameter.ParameterName,
+                AssignToJobParameterId = createParameter.AssignToJobParameterId,
+                ParameterName = jobParameter.ParameterName,
                 ParameterValue = createParameter.ParameterValue,
                 UseExpression = createParameter.UseExpression,
                 Expression = new EvaluationExpression { Expression = createParameter.Expression },

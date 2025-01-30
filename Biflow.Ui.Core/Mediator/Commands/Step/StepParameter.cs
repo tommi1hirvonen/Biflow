@@ -8,6 +8,14 @@ public record CreateStepParameter(
     Guid? InheritFromJobParameterId,
     CreateExpressionParameter[] ExpressionParameters);
 
+public record CreateJobStepParameter(
+    Guid AssignToJobParameterId,
+    ParameterValue ParameterValue,
+    bool UseExpression,
+    string? Expression,
+    Guid? InheritFromJobParameterId,
+    CreateExpressionParameter[] ExpressionParameters);
+
 public record CreatePackageStepParameter(
     string ParameterName,
     ParameterLevel ParameterLevel,
@@ -29,6 +37,23 @@ public record UpdateStepParameter(
     string? Expression,
     Guid? InheritFromJobParameterId,
     UpdateExpressionParameter[] ExpressionParameters);
+
+public record UpdateJobStepParameter(
+    Guid? ParameterId,
+    Guid AssignToJobParameterId,
+    ParameterValue ParameterValue,
+    bool UseExpression,
+    string? Expression,
+    Guid? InheritFromJobParameterId,
+    UpdateExpressionParameter[] ExpressionParameters)
+    : UpdateStepParameter(
+        ParameterId,
+        "",
+        ParameterValue,
+        UseExpression,
+        Expression,
+        InheritFromJobParameterId,
+        ExpressionParameters);
 
 public record UpdatePackageStepParameter(
     Guid? ParameterId,

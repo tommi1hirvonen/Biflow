@@ -9,6 +9,16 @@ public record StepParameterDto(
     string? Expression,
     Guid? InheritFromJobParameterId,
     ExpressionParameterDto[] ExpressionParameters);
+
+[PublicAPI]
+public record JobStepParameterDto(
+    Guid? ParameterId,
+    Guid AssignToJobParameterId,
+    ParameterValue ParameterValue,
+    bool UseExpression,
+    string? Expression,
+    Guid? InheritFromJobParameterId,
+    ExpressionParameterDto[] ExpressionParameters);
     
 [PublicAPI]
 public record PackageStepParameterDto(

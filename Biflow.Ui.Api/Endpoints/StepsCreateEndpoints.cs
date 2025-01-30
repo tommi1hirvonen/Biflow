@@ -527,8 +527,8 @@ public abstract class StepsCreateEndpoints : IEndpoints
                         p.InheritFromJobParameterId))
                     .ToArray();
                 var parameters = stepDto.Parameters
-                    .Select(p => new CreateStepParameter(
-                        p.ParameterName,
+                    .Select(p => new CreateJobStepParameter(
+                        p.AssignToJobParameterId,
                         p.ParameterValue,
                         p.UseExpression,
                         p.Expression,
