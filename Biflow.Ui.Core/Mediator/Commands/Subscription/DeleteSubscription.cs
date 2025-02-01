@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteSubscriptionCommand(Guid SubscriptionId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteSubscriptionCommand>
 {
@@ -9,11 +10,9 @@ internal class DeleteSubscriptionCommandHandler(IDbContextFactory<AppDbContext> 
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var sub = await context.Subscriptions
-            .FirstOrDefaultAsync(s => s.SubscriptionId == request.SubscriptionId, cancellationToken);
-        if (sub is not null)
-        {
-            context.Subscriptions.Remove(sub);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(s => s.SubscriptionId == request.SubscriptionId, cancellationToken)
+            ?? throw new NotFoundException<Subscription>(request.SubscriptionId);
+        context.Subscriptions.Remove(sub);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }
