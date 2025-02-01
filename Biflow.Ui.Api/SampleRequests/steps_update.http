@@ -12,15 +12,10 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "connectionId":  "2d8cf992-a71f-4ba3-3127-08dbb695f924",
-  "agentJobName": "Test Agent Job Updated",
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "agentJobName": "Test Agent Job Updated"
 }
 
 ### Update Databricks step
@@ -37,7 +32,6 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "databricksWorkspaceId": "271f7254-726f-4346-6e08-08dce18d95f2",
@@ -55,12 +49,7 @@ Content-Type: application/json
         "NumberOfWorkers": 4
       }
     }
-  },
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  }
 }
 
 ### Update Dataflow step
@@ -77,16 +66,11 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
   "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
-  "dataflowId": "25a61e1b-601c-431e-8059-6f3be51320e8",
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "dataflowId": "25a61e1b-601c-431e-8059-6f3be51320e8"
 }
 
 ### Update Dataset step
@@ -103,16 +87,11 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
   "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
-  "datasetId": "25a61e1b-601c-431e-8059-6f3be51320e8",
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "datasetId": "25a61e1b-601c-431e-8059-6f3be51320e8"
 }
 
 ### Update dbt step
@@ -129,7 +108,6 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "dbtAccountId": "0689152b-52b3-4023-1680-08dd05bbcf7e",
@@ -140,11 +118,7 @@ Content-Type: application/json
     "environmentName": "test-environment",
     "projectId": 123456,
     "projectName": "test-project"
-  },
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  }
 }
 
 ### Update email step
@@ -161,16 +135,10 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "recipients": ["asd3@asd.com", "asd4@asd.com"],
   "subject": "Test email",
-  "body": "This is a test email",
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "body": "This is a test email"
 }
 
 ### Update exe step
@@ -187,19 +155,13 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "filePath": "C:\\Users\\TestUser\\Desktop\\test_updated.cmd",
   "arguments": "--asd",
   "workingDirectory": "C:\\TestFolder",
   "successExitCode": 0,
-  "runAsCredentialId": null,
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "runAsCredentialId": null
 }
 
 ### Update Fabric step
@@ -216,18 +178,12 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": [],
   "timeoutMinutes": 0,
   "workspaceId": "25a61e1b-601c-431e-8059-6f3be51320e8",
   "itemType": "Notebook",
   "itemId": "25a61e1b-601c-431e-8059-6f3be51320e8",
-  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78"
 }
 
 ### Update Function step
@@ -244,19 +200,12 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "functionAppId": "46141b84-8c24-42cc-c5e6-08dc50c2393e",
   "functionUrl": "https://testfunctionupdated.com/",
   "functionInput": "{ \"Value\": \"test\" }",
-  "functionIsDurable": false,
-  "functionKey": null,
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "functionIsDurable": false
 }
 
 ### Update job step
@@ -273,7 +222,6 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "jobToExecuteId": "29a43f41-d2e4-4e86-62a0-08dbb695de54",
@@ -289,11 +237,7 @@ Content-Type: application/json
       "inheritFromJobParameterId": null,
       "expressionParameters": []
     }
-  ],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  ]
 }
 
 ### Update package step
@@ -365,16 +309,10 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "pipelineClientId": "bbf08ea1-461e-4323-2d3d-08dd17659e0e",
-  "pipelineName": "test_pipeline_asd",
-  "parameters": [],
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "pipelineName": "test_pipeline_asd"
 }
 
 ### Update Qlik step
@@ -391,7 +329,6 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "qlikCloudEnvironmentId": "18f63239-9ef3-4d4e-fb98-08dbc6a53327",
@@ -399,11 +336,7 @@ Content-Type: application/json
     "$type": "AutomationRun",
     "automationId": "8cc2c409-2824-4d6a-ba8a-455012b90ba0",
     "automationName": "Reload Json Placeholder app"
-  },
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  }
 }
 
 ### Update SCD step
@@ -420,14 +353,8 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
-  "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
-  "scdTableId": "81c36ffe-f833-4f42-9eef-08dd12e59023",
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "scdTableId": "81c36ffe-f833-4f42-9eef-08dd12e59023"
 }
 
 ### Update SQL step
@@ -487,15 +414,10 @@ Content-Type: application/json
   "isEnabled": true,
   "retryAttempts": 1,
   "retryIntervalMinutes": 1.5,
-  "executionConditionExpression": null,
   "stepTagIds": ["1002a70f-d3b6-463a-ab69-833024ac347c"],
   "timeoutMinutes": 0,
   "connectionId": "a032b8fe-d733-4812-78f5-08dbf67512ba",
   "modelName": "AdventureWorks",
   "tableName": "D_Customer",
-  "partitionName": null,
-  "dependencies": [],
-  "executionConditionParameters": [],
-  "sources": [],
-  "targets": []
+  "partitionName": null
 }

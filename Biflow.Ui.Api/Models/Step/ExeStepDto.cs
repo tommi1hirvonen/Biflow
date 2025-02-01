@@ -5,9 +5,9 @@ public record ExeStepDto : StepDto
 {
     public required double TimeoutMinutes { get; init; }
     public required string FilePath { get; init; }
-    public required string? Arguments { get; init; }
-    public required string? WorkingDirectory { get; init; }
-    public required int? SuccessExitCode { get; init; }
-    public required Guid? RunAsCredentialId { get; init; }
-    public required StepParameterDto[] Parameters { get; init; }
+    public string? Arguments { get; init; }
+    public string? WorkingDirectory { get; init; }
+    public int? SuccessExitCode { get; init; }
+    public Guid? RunAsCredentialId { get; init; }
+    public StepParameterDto[] Parameters { get; init; } = [];
 }

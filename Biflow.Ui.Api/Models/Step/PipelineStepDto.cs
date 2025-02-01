@@ -6,5 +6,5 @@ public record PipelineStepDto : StepDto
     public required double TimeoutMinutes { get; init; }
     public required Guid PipelineClientId { get; init; }
     public required string PipelineName { get; init; }
-    public required StepParameterDto[] Parameters { get; init; }
+    public StepParameterDto[] Parameters { get; init; } = [];
 }

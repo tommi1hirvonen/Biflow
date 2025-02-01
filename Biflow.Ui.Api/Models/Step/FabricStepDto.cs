@@ -8,5 +8,5 @@ public record FabricStepDto : StepDto
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
     public required Guid AzureCredentialId { get; init; }
-    public required StepParameterDto[] Parameters { get; init; }
+    public StepParameterDto[] Parameters { get; init; } = [];
 }

@@ -9,6 +9,6 @@ public sealed record PackageStepDto : StepDto
     public required string PackageProjectName { get; init; }
     public required string PackageName { get; init; } 
     public required bool ExecuteIn32BitMode { get; init; }
-    public required PackageStepParameterDto[] Parameters { get; init; }
     public string? ExecuteAsLogin { get; init; }
+    public PackageStepParameterDto[] Parameters { get; init; } = [];
 }
