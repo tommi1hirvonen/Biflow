@@ -13,7 +13,9 @@ internal class UpdateScheduleTagCommandHandler(IDbContextFactory<ServiceDbContex
         var tag = await dbContext.ScheduleTags
                       .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken)
                   ?? throw new NotFoundException<ScheduleTag>(request.TagId);
-        dbContext.Entry(tag).CurrentValues.SetValues(request);
+        tag.TagName = request.TagName;
+        tag.Color = request.Color;
+        tag.SortOrder = request.SortOrder;
         tag.EnsureDataAnnotationsValidated();
         await dbContext.SaveChangesAsync(cancellationToken);
         return tag;

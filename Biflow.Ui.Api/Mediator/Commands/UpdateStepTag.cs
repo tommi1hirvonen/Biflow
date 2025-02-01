@@ -12,7 +12,9 @@ internal class UpdateStepTagCommandHandler(IDbContextFactory<ServiceDbContext> d
         var tag = await dbContext.StepTags
                       .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken)
                   ?? throw new NotFoundException<StepTag>(request.TagId);
-        dbContext.Entry(tag).CurrentValues.SetValues(request);
+        tag.TagName = request.TagName;
+        tag.Color = request.Color;
+        tag.SortOrder = request.SortOrder;
         tag.EnsureDataAnnotationsValidated();
         await dbContext.SaveChangesAsync(cancellationToken);
         return tag;

@@ -15,7 +15,10 @@ internal class UpdateDataObjectCommandHandler(IDbContextFactory<AppDbContext> db
         var dataObject = await context.DataObjects
             .FirstOrDefaultAsync(x => x.ObjectId == request.ObjectId, cancellationToken)
             ?? throw new NotFoundException<DataObject>(request.ObjectId);
-        context.Entry(dataObject).CurrentValues.SetValues(request);
+        
+        dataObject.ObjectUri = request.ObjectUri;
+        dataObject.MaxConcurrentWrites = request.MaxConcurrentWrites;
+        
         dataObject.EnsureDataAnnotationsValidated();
         await context.SaveChangesAsync(cancellationToken);
         return dataObject;

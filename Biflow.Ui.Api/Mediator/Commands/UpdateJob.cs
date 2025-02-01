@@ -39,7 +39,15 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
             }
         }
         
-        dbContext.Entry(job).CurrentValues.SetValues(request);
+        job.JobName = request.JobName;
+        job.JobDescription = request.JobDescription;
+        job.ExecutionMode = request.ExecutionMode;
+        job.StopOnFirstError = request.StopOnFirstError;
+        job.MaxParallelSteps = request.MaxParallelSteps;
+        job.OvertimeNotificationLimitMinutes = request.OvertimeNotificationLimitMinutes;
+        job.TimeoutMinutes = request.TimeoutMinutes;
+        job.IsEnabled = request.IsEnabled;
+        job.IsPinned = request.IsPinned;
         
         // Synchronize tags
         var jobTagsToAdd = jobTags.Where(t1 => job.Tags.All(t2 => t2.TagId != t1.TagId));

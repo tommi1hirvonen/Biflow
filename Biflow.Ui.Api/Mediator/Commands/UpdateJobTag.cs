@@ -12,7 +12,9 @@ internal class UpdateJobTagCommandHandler(IDbContextFactory<ServiceDbContext> db
         var tag = await dbContext.JobTags
             .FirstOrDefaultAsync(t => t.TagId == request.TagId, cancellationToken)
                 ?? throw new NotFoundException<JobTag>(request.TagId);
-        dbContext.Entry(tag).CurrentValues.SetValues(request);
+        tag.TagName = request.TagName;
+        tag.Color = request.Color;
+        tag.SortOrder = request.SortOrder;
         tag.EnsureDataAnnotationsValidated();
         await dbContext.SaveChangesAsync(cancellationToken);
         return tag;
