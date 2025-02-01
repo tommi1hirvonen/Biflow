@@ -1,0 +1,28 @@
+### Create new job subscription
+
+POST {{baseUrl}}/subscriptions/job
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "userId": "bc513e3a-6291-41af-b179-08dc1a53e750",
+  "jobId": "98ed48f1-4977-4c3c-c50b-08dd39ebf851",
+  "alertType": "OnCompletion",
+  "notifyOnOvertime": false
+}
+
+### Update job subscription
+
+PUT {{baseUrl}}/subscriptions/job/f24694e5-1878-4755-38f8-08dd42b57a42
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "alertType": "OnFailure",
+  "notifyOnOvertime": true
+}
+
+### Delete subscription
+
+DELETE {{baseUrl}}/subscriptions/f24694e5-1878-4755-38f8-08dd42b57a42
+x-api-key: {{apiKey}}
