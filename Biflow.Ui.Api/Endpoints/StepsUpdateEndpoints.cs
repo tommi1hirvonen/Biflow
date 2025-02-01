@@ -506,7 +506,10 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .ProducesValidationProblem()
             .Produces<FunctionStep>()
             .WithSummary("Update function step")
-            .WithDescription("Update an existing Azure Functions step")
+            .WithDescription("Update an existing Azure Functions step. " +
+                             "Omit the functionKey property or set it to null to retain and not overwrite " +
+                             "the previously set functionKey value. " +
+                             "Use an empty string to clear the functionKey property.")
             .WithName("UpdateFunctionStep");
         
         group.MapPut("/steps/job/{stepId:guid}", async (Guid stepId, JobStepDto stepDto,
