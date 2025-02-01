@@ -8,7 +8,7 @@ public class CreatePackageStepCommand : CreateStepCommand<PackageStep>
     public required string PackageProjectName { get; init; }
     public required string PackageName { get; init; } 
     public required bool ExecuteIn32BitMode { get; init; }
-    public required string ExecuteAsLogin { get; init; }
+    public required string? ExecuteAsLogin { get; init; }
     public required CreatePackageStepParameter[] Parameters { get; init; }
 }
 

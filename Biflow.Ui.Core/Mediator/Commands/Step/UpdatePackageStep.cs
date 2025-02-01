@@ -8,7 +8,7 @@ public class UpdatePackageStepCommand : UpdateStepCommand<PackageStep>
     public required string PackageProjectName { get; init; }
     public required string PackageName { get; init; } 
     public required bool ExecuteIn32BitMode { get; init; }
-    public required string ExecuteAsLogin { get; init; }
+    public required string? ExecuteAsLogin { get; init; }
     public required UpdatePackageStepParameter[] Parameters { get; init; }
 }
 
