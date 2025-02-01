@@ -34,6 +34,24 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
             .WithDescription("Create a new job subscription")
             .WithName("CreateJobSubscription");
         
+        group.MapPost("/step", async (CreateStepSubscription subscriptionDto, IMediator mediator,
+                LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreateStepSubscriptionCommand(
+                    subscriptionDto.UserId,
+                    subscriptionDto.StepId,
+                    subscriptionDto.AlertType);
+                var subscription = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetSubscription",
+                    new { subscriptionId = subscription.SubscriptionId });
+                return Results.Created(url, subscription);
+            })
+            .ProducesValidationProblem()
+            .Produces<StepSubscription>()
+            .WithSummary("Create step subscription")
+            .WithDescription("Create a new step subscription")
+            .WithName("CreateStepSubscription");
+        
         group.MapPut("/job/{subscriptionId:guid}", async (Guid subscriptionId, UpdateJobSubscription subscriptionDto, 
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
@@ -50,6 +68,20 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
             .WithSummary("Update job subscription")
             .WithDescription("Update an existing job subscription")
             .WithName("UpdateJobSubscription");
+        
+        group.MapPut("/step/{subscriptionId:guid}", async (Guid subscriptionId, UpdateStepSubscription subscriptionDto, 
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateStepSubscriptionCommand(subscriptionId, subscriptionDto.AlertType);
+                var subscription = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(subscription);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<StepSubscription>()
+            .WithSummary("Update step subscription")
+            .WithDescription("Update an existing step subscription")
+            .WithName("UpdateStepSubscription");
         
         group.MapDelete("/{subscriptionId:guid}", async (Guid subscriptionId, IMediator mediator,
                 CancellationToken cancellationToken) =>
