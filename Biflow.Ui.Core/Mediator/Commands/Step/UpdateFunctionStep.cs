@@ -1,5 +1,9 @@
 namespace Biflow.Ui.Core;
 
+/// <summary>
+/// Command to fully update a function step.
+/// The previous FunctionKey value can optionally be retained.
+/// </summary>
 public class UpdateFunctionStepCommand : UpdateStepCommand<FunctionStep>
 {
     public required double TimeoutMinutes { get; init; }
@@ -7,6 +11,10 @@ public class UpdateFunctionStepCommand : UpdateStepCommand<FunctionStep>
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public required bool FunctionIsDurable { get; init; }
+    /// <summary>
+    /// If null, the previous FunctionKey value will be retained.
+    /// If empty string, the FunctionKey value will be cleared.
+    /// </summary>
     public required string? FunctionKey { get; init; }
     public required UpdateStepParameter[] Parameters { get; init; }
 }
@@ -49,7 +57,10 @@ internal class UpdateFunctionStepCommandHandler(
         step.FunctionUrl = request.FunctionUrl;
         step.FunctionInput = request.FunctionInput;
         step.FunctionIsDurable = request.FunctionIsDurable;
-        step.FunctionKey = request.FunctionKey;
+        if (request.FunctionKey is not null)
+        {
+            step.FunctionKey = request.FunctionKey;
+        }
         
         await SynchronizeParametersAsync<FunctionStepParameter, UpdateStepParameter>(
             step,
