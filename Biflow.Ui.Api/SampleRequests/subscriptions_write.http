@@ -23,6 +23,31 @@ Content-Type: application/json
   "alertType": "OnCompletion"
 }
 
+### Create new step tag subscription
+
+POST {{baseUrl}}/subscriptions/steptag
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "userId": "bc513e3a-6291-41af-b179-08dc1a53e750",
+  "stepTagId": "1002a70f-d3b6-463a-ab69-833024ac347c",
+  "alertType": "OnCompletion"
+}
+
+### Create new job-step tag subscription
+
+POST {{baseUrl}}/subscriptions/jobsteptag
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "userId": "bc513e3a-6291-41af-b179-08dc1a53e750",
+  "jobId": "98ed48f1-4977-4c3c-c50b-08dd39ebf851",
+  "stepTagId": "1002a70f-d3b6-463a-ab69-833024ac347c",
+  "alertType": "OnCompletion"
+}
+
 ### Update job subscription
 
 PUT {{baseUrl}}/subscriptions/job/f24694e5-1878-4755-38f8-08dd42b57a42
@@ -37,6 +62,26 @@ Content-Type: application/json
 ### Update step subscription
 
 PUT {{baseUrl}}/subscriptions/step/a76b30a9-c3a6-4f96-ae44-08dd42b77e0e
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "alertType": "OnFailure"
+}
+
+### Update step tag subscription
+
+PUT {{baseUrl}}/subscriptions/steptag/394bea76-eb1a-4f33-0ea5-08dd42bdc318
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "alertType": "OnFailure"
+}
+
+### Update job-step tag subscription
+
+PUT {{baseUrl}}/subscriptions/jobsteptag/e6732fca-211b-43d8-0ea6-08dd42bdc318
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
