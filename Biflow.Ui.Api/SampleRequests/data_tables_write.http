@@ -1,0 +1,136 @@
+### Create new data table category
+
+POST {{baseUrl}}/datatables/categories
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "categoryName": "API test category"
+}
+
+### Update data table category
+
+PUT {{baseUrl}}/datatables/categories/afe6c986-6712-4f32-c1dc-08dd42e489c3
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "categoryName": "API test category updated"
+}
+
+### Create new data table
+
+POST {{baseUrl}}/datatables
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "dataTableName": "Account",
+  "dataTableDescription": null,
+  "targetSchemaName": "dbo",
+  "targetTableName": "Account",
+  "connectionId": "7c567310-1003-4422-7e89-08dace55c34d",
+  "categoryId": "9fec1718-51e6-4409-2bfc-08dadd375046",
+  "allowInsert": true,
+  "allowDelete": true,
+  "allowUpdate": true,
+  "allowImport": true,
+  "lockedColumns": [],
+  "lockedColumnsExcludeMode": false,
+  "hiddenColumns": [],
+  "columnOrder": [
+    "Account ID", "Account Name", "Account Type", "Business Unit", "Sales Type", "Parent Account"
+  ],
+  "lookups": [
+    {
+      "columnName": "Account Type",
+      "lookupDataTableId": "6415f6f4-4282-4086-7b1d-08dace566f2b",
+      "lookupValueColumn": "Account Type ID",
+      "lookupDescriptionColumn": "Account Type Name",
+      "lookupDisplayType": "Description"
+    },
+    {
+      "columnName": "Sales Type",
+      "lookupDataTableId": "b871b522-c8ea-4bb8-7b1e-08dace566f2b",
+      "lookupValueColumn": "Sales Type ID",
+      "lookupDescriptionColumn": "Sales Type Name",
+      "lookupDisplayType": "Description"
+    },
+    {
+      "columnName": "Business Unit",
+      "lookupDataTableId": "9ad63ec4-261e-4d02-05a5-08dacf1f9580",
+      "lookupValueColumn": "Business Unit ID",
+      "lookupDescriptionColumn": "Business Unit Name",
+      "lookupDisplayType": "Description"
+    }
+  ]
+}
+
+### Update data table, incl. adding one new lookup
+
+PUT {{baseUrl}}/datatables/39d4a020-2af2-4861-d6c5-08dd42ebfc48
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "dataTableName": "Account updated",
+  "dataTableDescription": null,
+  "targetSchemaName": "dbo",
+  "targetTableName": "Account",
+  "connectionId": "7c567310-1003-4422-7e89-08dace55c34d",
+  "categoryId": "9fec1718-51e6-4409-2bfc-08dadd375046",
+  "allowInsert": true,
+  "allowDelete": true,
+  "allowUpdate": true,
+  "allowImport": true,
+  "lockedColumns": ["Account ID"],
+  "lockedColumnsExcludeMode": false,
+  "hiddenColumns": [],
+  "columnOrder": [
+    "Account ID", "Account Name", "Account Type", "Business Unit", "Sales Type", "Parent Account"
+  ],
+  "lookups": [
+    {
+      "lookupId": null,
+      "columnName": "Parent Account",
+      "lookupDataTableId": "39d4a020-2af2-4861-d6c5-08dd42ebfc48",
+      "lookupValueColumn": "Account ID",
+      "lookupDescriptionColumn": "Account Name",
+      "lookupDisplayType": "ValueAndDescription"
+    },
+    {
+      "lookupId": "67d4290a-de59-4c41-21bc-08dd42ebfc4f",
+      "columnName": "Account Type",
+      "lookupDataTableId": "6415f6f4-4282-4086-7b1d-08dace566f2b",
+      "lookupValueColumn": "Account Type ID",
+      "lookupDescriptionColumn": "Account Type Name",
+      "lookupDisplayType": "Description"
+    },
+    {
+      "lookupId": "eb262826-b54d-449d-21bd-08dd42ebfc4f",
+      "columnName": "Sales Type",
+      "lookupDataTableId": "b871b522-c8ea-4bb8-7b1e-08dace566f2b",
+      "lookupValueColumn": "Sales Type ID",
+      "lookupDescriptionColumn": "Sales Type Name",
+      "lookupDisplayType": "Description"
+    },
+    {
+      "lookupId": "31ca9ca4-1ffa-41a2-21be-08dd42ebfc4f",
+      "columnName": "Business Unit",
+      "lookupDataTableId": "9ad63ec4-261e-4d02-05a5-08dacf1f9580",
+      "lookupValueColumn": "Business Unit ID",
+      "lookupDescriptionColumn": "Business Unit Name",
+      "lookupDisplayType": "Description"
+    }
+  ]
+}
+
+### Delete data table
+
+DELETE {{baseUrl}}/datatables/82a56255-8c5b-47b4-0cfc-08dd42e70697
+x-api-key: {{apiKey}}
+
+### Delete data table category
+
+DELETE {{baseUrl}}/datatables/categories/afe6c986-6712-4f32-c1dc-08dd42e489c3
+x-api-key: {{apiKey}}
