@@ -52,7 +52,11 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [Display(Name = "Function key")]
     [MaxLength(1000)]
     [JsonSensitive]
-    public string? FunctionKey { get; set; }
+    public string? FunctionKey
+    {
+        get;
+        set => field = string.IsNullOrEmpty(value) ? null : value;
+    }
 
     [JsonIgnore]
     public FunctionApp FunctionApp { get; set; } = null!;
