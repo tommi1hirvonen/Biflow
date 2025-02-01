@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Converters;
@@ -90,6 +91,15 @@ app.UseExceptionHandler(errorAppBuilder =>
         // Handle known exceptions
         switch (exception)
         {
+            case BadHttpRequestException { InnerException: JsonException jsonException }:
+                var badRequestDetails = new ProblemDetails
+                {
+                    Title = "Bad Request",
+                    Detail = jsonException.Message,
+                    Status = StatusCodes.Status400BadRequest
+                };
+                await Results.Problem(badRequestDetails).ExecuteAsync(httpContext);
+                return;
             case PrimaryKeyException pkException:
                 var pkDetails = new ProblemDetails
                 {
