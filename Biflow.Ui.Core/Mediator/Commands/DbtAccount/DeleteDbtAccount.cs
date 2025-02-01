@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteDbtAccountCommand(Guid DbtAccountId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteDbtAccountCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteDbtAccountCommand>
 {
@@ -9,11 +10,9 @@ internal class DeleteDbtAccountCommandHandler(IDbContextFactory<AppDbContext> db
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var account = await context.DbtAccounts
-            .FirstOrDefaultAsync(a => a.DbtAccountId == request.DbtAccountId, cancellationToken);
-        if (account is not null)
-        {
-            context.DbtAccounts.Remove(account);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(a => a.DbtAccountId == request.DbtAccountId, cancellationToken)
+            ?? throw new NotFoundException<DbtAccount>(request.DbtAccountId);
+        context.DbtAccounts.Remove(account);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

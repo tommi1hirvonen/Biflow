@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteCredentialCommand(Guid CredentialId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteCredentialCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteCredentialCommand>
 {
@@ -9,11 +10,9 @@ internal class DeleteCredentialCommandHandler(IDbContextFactory<AppDbContext> db
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var cred = await context.Credentials
-            .FirstOrDefaultAsync(c => c.CredentialId == request.CredentialId, cancellationToken);
-        if (cred is not null)
-        {
-            context.Credentials.Remove(cred);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(c => c.CredentialId == request.CredentialId, cancellationToken)
+            ?? throw new NotFoundException<Credential>(request.CredentialId);
+        context.Credentials.Remove(cred);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

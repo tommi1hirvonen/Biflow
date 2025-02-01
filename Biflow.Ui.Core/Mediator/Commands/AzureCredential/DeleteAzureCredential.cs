@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteAzureCredentialCommand(Guid AzureCredentialId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteAzureCredentialCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteAzureCredentialCommand>
 {
@@ -9,11 +10,9 @@ internal class DeleteAzureCredentialCommandHandler(IDbContextFactory<AppDbContex
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.AzureCredentials
-            .FirstOrDefaultAsync(p => p.AzureCredentialId == request.AzureCredentialId, cancellationToken);
-        if (client is not null)
-        {
-            context.AzureCredentials.Remove(client);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(p => p.AzureCredentialId == request.AzureCredentialId, cancellationToken)
+            ?? throw new NotFoundException<AzureCredential>(request.AzureCredentialId);
+        context.AzureCredentials.Remove(client);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }

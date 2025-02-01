@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record DeleteFunctionAppCommand(Guid FunctionAppId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteFunctionAppCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteFunctionAppCommand>
 {
@@ -9,11 +10,9 @@ internal class DeleteFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var client = await context.FunctionApps
-            .FirstOrDefaultAsync(p => p.FunctionAppId == request.FunctionAppId, cancellationToken);
-        if (client is not null)
-        {
-            context.FunctionApps.Remove(client);
-            await context.SaveChangesAsync(cancellationToken);
-        }
+            .FirstOrDefaultAsync(p => p.FunctionAppId == request.FunctionAppId, cancellationToken)
+            ?? throw new NotFoundException<FunctionApp>(request.FunctionAppId);
+        context.FunctionApps.Remove(client);
+        await context.SaveChangesAsync(cancellationToken);
     }
 }
