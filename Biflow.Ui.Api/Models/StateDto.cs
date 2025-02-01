@@ -1,4 +1,7 @@
 namespace Biflow.Ui.Api.Models;
 
 [PublicAPI]
-internal record StateDto(bool IsEnabled);
+public record StateDto
+{
+    public required bool IsEnabled { get; init; }
+}

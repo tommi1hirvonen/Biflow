@@ -1,3 +1,9 @@
 namespace Biflow.Ui.Api.Models;
 
-public record TagDto(string TagName, TagColor Color, int SortOrder);
+[PublicAPI]
+public record TagDto
+{
+    public required string TagName { get; init; }
+    public required TagColor Color { get; init; }
+    public required int SortOrder { get; init; }
+}

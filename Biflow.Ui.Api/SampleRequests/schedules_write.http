@@ -8,9 +8,7 @@ Content-Type: application/json
   "scheduleName": "API test schedule",
   "cronExpression": "0 0 0 * * ?",
   "isEnabled": true,
-  "disallowConcurrentExecution": true,
-  "scheduleTagIds": [],
-  "filterStepTagIds": []
+  "disallowConcurrentExecution": true
 }
 
 ### Update a schedule

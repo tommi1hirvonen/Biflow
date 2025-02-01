@@ -1,3 +1,8 @@
 namespace Biflow.Ui.Api.Models;
 
-public record DataObjectDto(string ObjectUri, int MaxConcurrentWrites);
+[PublicAPI]
+public record DataObjectDto
+{
+    public required string ObjectUri { get; init; }
+    public required int MaxConcurrentWrites { get; init; }
+}
