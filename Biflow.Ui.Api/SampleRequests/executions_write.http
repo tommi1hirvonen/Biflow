@@ -1,0 +1,20 @@
+### Create execution with all steps
+
+POST {{baseUrl}}/executions
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "jobId": "b03ddac3-5033-4bb1-5b46-08dc66907662"
+}
+
+### Create execution with specific steps
+
+POST {{baseUrl}}/executions
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "jobId": "29a43f41-d2e4-4e86-62a0-08dbb695de54",
+  "stepIds": ["1135cd43-61ca-446c-5deb-08dbb6cadb53"]
+}
