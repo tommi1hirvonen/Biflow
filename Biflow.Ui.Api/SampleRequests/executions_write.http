@@ -38,3 +38,13 @@ Content-Type: application/json
     }
   ]
 }
+
+### Stop job execution
+
+POST {{baseUrl}}/executions/6acf57bd-de45-4f4f-8f57-b3789d5e90b6/stop
+x-api-key: {{apiKey}}
+
+### Stop step execution
+
+POST {{baseUrl}}/executions/3cd18bbd-47ea-49ff-9b19-ac554f75673e/steps/4026971a-fa0b-4c6c-9d33-b59c26498384/stop
+x-api-key: {{apiKey}}

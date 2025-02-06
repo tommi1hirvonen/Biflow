@@ -1,3 +1,5 @@
+using Biflow.Executor.Core.Exceptions;
+
 namespace Biflow.Ui.Api.Endpoints;
 
 [UsedImplicitly]
@@ -63,7 +65,7 @@ public abstract class ExecutionsWriteEndpoints : IEndpoints
                 
                 var url = linker.GetUriByName(ctx, "GetExecution",
                     new { executionId = execution.ExecutionId });
-                return Results.Created(url, execution);
+                return Results.Accepted(url, execution);
             })
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status404NotFound)
@@ -73,5 +75,57 @@ public abstract class ExecutionsWriteEndpoints : IEndpoints
                              "Optionally provide a list of step ids in the request body JSON model " +
                              "to only include particular steps in the job execution.")
             .WithName("CreateExecution");
+        
+        group.MapPost("/{executionId:guid}/stop",
+            async (Guid executionId, IExecutorService executor, IUserService userService,
+                LinkGenerator linker, HttpContext ctx) =>
+            {
+                try
+                {
+                    await executor.StopExecutionAsync(executionId, userService.Username ?? "API");
+                    var url = linker.GetUriByName(ctx, "GetExecution",
+                        new { executionId });
+                    return Results.Accepted(url);
+                }
+                catch (ExecutionNotFoundException)
+                {
+                    return Results.Problem("Execution not found", statusCode: StatusCodes.Status404NotFound);
+                }
+                catch (HttpRequestException ex) when ((int?)ex.StatusCode == StatusCodes.Status404NotFound)
+                {
+                    return Results.Problem("Execution not found", statusCode: StatusCodes.Status404NotFound);
+                }
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status202Accepted)
+            .WithSummary("Stop job execution")
+            .WithDescription("Stop a running job execution")
+            .WithName("StopExecution");
+        
+        group.MapPost("/{executionId:guid}/steps/{stepId:guid}/stop",
+                async (Guid executionId, Guid stepId, IExecutorService executor, IUserService userService,
+                    LinkGenerator linker, HttpContext ctx) =>
+                {
+                    try
+                    {
+                        await executor.StopExecutionAsync(executionId, stepId, userService.Username ?? "API");
+                        var url = linker.GetUriByName(ctx, "GetExecutionStep",
+                            new { executionId, stepId });
+                        return Results.Accepted(url);
+                    }
+                    catch (ExecutionNotFoundException)
+                    {
+                        return Results.Problem("Execution not found", statusCode: StatusCodes.Status404NotFound);
+                    }
+                    catch (HttpRequestException ex) when ((int?)ex.StatusCode == StatusCodes.Status404NotFound)
+                    {
+                        return Results.Problem("Execution not found", statusCode: StatusCodes.Status404NotFound);
+                    }
+                })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status202Accepted)
+            .WithSummary("Stop step execution")
+            .WithDescription("Stop a running step execution")
+            .WithName("StopExecutionStep");
     }
 }
