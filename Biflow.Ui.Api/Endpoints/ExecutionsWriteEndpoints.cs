@@ -17,6 +17,7 @@ public abstract class ExecutionsWriteEndpoints : IEndpoints
                 IExecutionBuilderFactory<AppDbContext> builderFactory, IExecutorService executor,
                 LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
+                // Create execution builder
                 using var builder = await builderFactory.CreateAsync(
                     request.JobId,
                     createdBy: userService.Username,
@@ -26,18 +27,40 @@ public abstract class ExecutionsWriteEndpoints : IEndpoints
                                      || (request.StepIds != null && request.StepIds.Contains(step.StepId))
                     ],
                     cancellationToken: cancellationToken);
+                
                 if (builder is null)
                 {
                     return Results.Problem($"Could not find job with id {request.JobId}",
                         statusCode: StatusCodes.Status404NotFound);
                 }
+                
+                // Add all steps. Steps have already been filtered in the builder predicates.
                 builder.AddAll();
+                
+                // Apply parameter overrides if any.
+                foreach (var parameterOverride in request.JobParameterOverrides)
+                {
+                    var jobParameter = builder.Parameters
+                        .FirstOrDefault(p => p.ParameterId == parameterOverride.ParameterId);
+                    if (jobParameter is null)
+                    {
+                        return Results.Problem($"Could not find job parameter with id {parameterOverride.ParameterId}",
+                            statusCode: StatusCodes.Status404NotFound);
+                    }
+                    jobParameter.ParameterValue = parameterOverride.ParameterValue;
+                    jobParameter.UseExpression = parameterOverride.UseExpression;
+                    jobParameter.Expression.Expression = parameterOverride.Expression;
+                }
+                
+                // Save the execution to DB.
                 var execution = await builder.SaveExecutionAsync(cancellationToken);
                 if (execution is null)
                 {
                     return Results.Problem("Execution contained no steps", statusCode: StatusCodes.Status400BadRequest);
                 }
+                
                 await executor.StartExecutionAsync(execution.ExecutionId, cancellationToken);
+                
                 var url = linker.GetUriByName(ctx, "GetExecution",
                     new { executionId = execution.ExecutionId });
                 return Results.Created(url, execution);

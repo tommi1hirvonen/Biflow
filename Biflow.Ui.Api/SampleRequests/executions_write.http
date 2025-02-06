@@ -18,3 +18,23 @@ Content-Type: application/json
   "jobId": "29a43f41-d2e4-4e86-62a0-08dbb695de54",
   "stepIds": ["1135cd43-61ca-446c-5deb-08dbb6cadb53"]
 }
+
+### Create execution with job parameter overrides
+
+POST {{baseUrl}}/executions
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "jobId": "29a43f41-d2e4-4e86-62a0-08dbb695de54",
+  "stepIds": ["79864a73-a819-415a-4ffd-08dbb6976a67"],
+  "jobParameterOverrides": [
+    {
+      "parameterId": "81b2bca5-3398-45b1-953e-08dc4fbd5e4c",
+      "parameterValue": {
+        "valueType": "Boolean",
+        "valueBoolean": true
+      }
+    }
+  ]
+}
