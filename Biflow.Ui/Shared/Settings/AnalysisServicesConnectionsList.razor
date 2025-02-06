@@ -207,7 +207,7 @@
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
         }
         _connections?.Add(connection);
-        _connections?.Sort();
+        _connections?.SortBy(c => c.ConnectionName);
         StateHasChanged();
     }
 }
