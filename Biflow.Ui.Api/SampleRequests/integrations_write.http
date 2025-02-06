@@ -1,0 +1,380 @@
+### Create Analysis Services connection
+
+POST {{baseUrl}}/integrations/analysisservicesconnections
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName": "localhost-test",
+  "connectionString": "DataSource=localhost",
+  "credentialId": null
+}
+
+### Update Analysis Services connection
+
+PUT {{baseUrl}}/integrations/analysisservicesconnections/b20d2c43-788f-463c-8da3-08dd46d632f2
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName": "localhost-test-updated",
+  "credentialId": null
+}
+
+### Delete Analysis Services connection
+
+DELETE {{baseUrl}}/integrations/analysisservicesconnections/b20d2c43-788f-463c-8da3-08dd46d632f2
+x-api-key: {{apiKey}}
+
+
+
+### Create orgnizational account Azure credential
+
+POST {{baseUrl}}/integrations/azurecredentials/organizationalaccount
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test org acc credential",
+  "tenantId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "clientId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "username": "asd@asd.com",
+  "password": "Mercedes_AMG_9000"
+}
+
+### Update orgnizational account Azure credential
+
+PUT {{baseUrl}}/integrations/azurecredentials/organizationalaccount/71c8e3f1-eebc-4445-7a6f-08dd46d76d08
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test org acc credential",
+  "tenantId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "clientId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "username": "asd2@asd2.com"
+}
+
+### Create service principal Azure credential
+
+POST {{baseUrl}}/integrations/azurecredentials/serviceprincipal
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test service principal credential",
+  "tenantId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "clientId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "clientSecret": "Mercedes_AMG_9000"
+}
+
+### Update service principal Azure credential
+
+PUT {{baseUrl}}/integrations/azurecredentials/serviceprincipal/e580faf2-2353-4061-7a70-08dd46d76d08
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test service principal credential updated",
+  "tenantId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "clientId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a"
+}
+
+### Create managed identity Azure credential
+
+POST {{baseUrl}}/integrations/azurecredentials/managedidentity
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test managed identity credential",
+  "clientId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a"
+}
+
+### Update managed identity Azure credential
+
+PUT {{baseUrl}}/integrations/azurecredentials/managedidentity/4b61142d-3a1e-48a9-7a71-08dd46d76d08
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "azureCredentialName": "test managed identity credential updated",
+  "clientId": null
+}
+
+### Delete orgnizational account Azure credential
+
+DELETE {{baseUrl}}/integrations/azurecredentials/4b61142d-3a1e-48a9-7a71-08dd46d76d08
+x-api-key: {{apiKey}}
+
+
+
+### Create Databricks workspace
+
+POST {{baseUrl}}/integrations/databricksworkspaces
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "workspaceName": "test workspace",
+  "workspaceUrl": "https://adb-asdasdasdasdasd.13.azuredatabricks.net",
+  "apiToken": "asdasdadsasdasdasdasdasdasdasdasdasd"
+}
+
+### Update Databricks workspace
+
+PUT {{baseUrl}}/integrations/databricksworkspaces/03fd49b2-e549-41e8-28b7-08dd46d8ad89
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "workspaceName": "test workspace updated",
+  "workspaceUrl": "https://adb-asdasdasdasdasd.13.azuredatabricks.net",
+  "apiToken": null
+}
+
+### Delete Databricks workspace
+
+DELETE {{baseUrl}}/integrations/databricksworkspaces/03fd49b2-e549-41e8-28b7-08dd46d8ad89
+x-api-key: {{apiKey}}
+
+
+
+### Create dbt account
+
+POST {{baseUrl}}/integrations/dbtaccounts
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "dbtAccountNAme": "test account",
+  "apiBaseUrl": "https://asd123.us1.dbt.com/",
+  "accountId": "123456789",
+  "apiToken": "asdasdadsasdasdasdasdasdasdasdasdasd"
+}
+
+### Update dbt account
+
+PUT {{baseUrl}}/integrations/dbtaccounts/a37e0039-f9a3-4fc9-6f3e-08dd46d9220d
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "dbtAccountNAme": "test account updated",
+  "apiBaseUrl": "https://asd123.us1.dbt.com/",
+  "accountId": "123456789",
+  "apiToken": null
+}
+
+### Delete dbt account
+
+DELETE {{baseUrl}}/integrations/dbtaccounts/a37e0039-f9a3-4fc9-6f3e-08dd46d9220d
+x-api-key: {{apiKey}}
+
+
+
+### Create Function App
+
+POST {{baseUrl}}/integrations/functionapps
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "functionAppName": "test app",
+  "subscriptionId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "resourceGroupName": "test-rg",
+  "resourceName": "test-function-app",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentFunctionSteps": 0,
+  "functionAppKey": null
+}
+
+### Update Function App
+
+PUT {{baseUrl}}/integrations/functionapps/53a2040c-1646-447a-28b9-08dd46d99951
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "functionAppName": "test app updated",
+  "subscriptionId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "resourceGroupName": "test-rg",
+  "resourceName": "test-function-app",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentFunctionSteps": 3,
+  "functionAppKey": null
+}
+
+### Delete Function App
+
+DELETE {{baseUrl}}/integrations/functionapps/53a2040c-1646-447a-28b9-08dd46d99951
+x-api-key: {{apiKey}}
+
+
+
+### Create Data Factory
+
+POST {{baseUrl}}/integrations/pipelineclients/datafactory
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "pipelineClientName": "test data factory",
+  "subscriptionId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "resourceGroupName": "test-rg",
+  "resourceName": "test-data-factory",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentPipelineSteps": 0
+}
+
+### Update Data Factory
+
+PUT {{baseUrl}}/integrations/pipelineclients/datafactory/d4a6fe39-e96b-4d45-0521-08dd46d9f490
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "pipelineClientName": "test data factory updated",
+  "subscriptionId": "6f3daaf5-18ff-4357-ab9b-6a9163f9790a",
+  "resourceGroupName": "test-rg",
+  "resourceName": "test-data-factory",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentPipelineSteps": 10
+}
+
+### Create Synapse workspace
+
+POST {{baseUrl}}/integrations/pipelineclients/synapseworkspace
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "pipelineClientName": "test workspace",
+  "synapseWorkspaceUrl": "https://test.synapse.workspace.com/",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentPipelineSteps": 0
+}
+
+### Update Synapse workspace
+
+PUT {{baseUrl}}/integrations/pipelineclients/synapseworkspace/c97e979c-547e-4e7d-0522-08dd46d9f490
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "pipelineClientName": "test workspace updated",
+  "synapseWorkspaceUrl": "https://test.synapse.workspace.com/",
+  "azureCredentialId": "a13f785e-23d2-43c8-18f8-08dd1a03ce78",
+  "maxConcurrentPipelineSteps": 10
+}
+
+### Delete pipeline client
+
+DELETE {{baseUrl}}/integrations/pipelineclients/c97e979c-547e-4e7d-0522-08dd46d9f490
+x-api-key: {{apiKey}}
+
+
+
+### Create Qlik Cloud environment
+
+POST {{baseUrl}}/integrations/qlikcloudenvironments
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "qlikCloudEnvironmentName": "test environment",
+  "environmentUrl": "https://testcompany.eu.qlikcloud.com",
+  "apiToken": "test_token"
+}
+
+### Update Qlik Cloud environment
+
+PUT {{baseUrl}}/integrations/qlikcloudenvironments/001c9602-cbb5-4717-7952-08dd46dab11d
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "qlikCloudEnvironmentName": "test environment updated",
+  "environmentUrl": "https://testcompany.eu.qlikcloud.com",
+  "apiToken": "test_token_updated"
+}
+
+### Delete Qlik Cloud environment
+
+DELETE {{baseUrl}}/integrations/qlikcloudenvironments/001c9602-cbb5-4717-7952-08dd46dab11d
+x-api-key: {{apiKey}}
+
+
+
+### Create MS SQL connection
+
+POST {{baseUrl}}/integrations/sqlconnections/mssql
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName":  "test sql connection",
+  "maxConcurrentSqlSteps": 0,
+  "maxConcurrentPackageSteps":  0,
+  "executePackagesAsLogin": null,
+  "credentialId": null,
+  "scdDefaultTargetSchema": null,
+  "scdDefaultTargetTableSuffix":  null,
+  "scdDefaultStagingSchema": null,
+  "scdDefaultStagingTableSuffix":  null,
+  "connectionString": "Data Source=localhost;Database=TestDb;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;"
+}
+
+### Update MS SQL connection
+
+PUT {{baseUrl}}/integrations/sqlconnections/mssql/2a077113-9ea8-44af-b592-08dd46db3fb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName":  "test sql connection updated",
+  "maxConcurrentSqlSteps": 10,
+  "maxConcurrentPackageSteps":  5,
+  "executePackagesAsLogin": null,
+  "credentialId": null,
+  "scdDefaultTargetSchema": null,
+  "scdDefaultTargetTableSuffix":  null,
+  "scdDefaultStagingSchema": null,
+  "scdDefaultStagingTableSuffix":  null
+}
+
+### Create Snowflake connection
+
+POST {{baseUrl}}/integrations/sqlconnections/snowflake
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName":  "test snowflake connection",
+  "maxConcurrentSqlSteps": 0,
+  "scdDefaultTargetSchema": null,
+  "scdDefaultTargetTableSuffix":  null,
+  "scdDefaultStagingSchema": null,
+  "scdDefaultStagingTableSuffix":  null,
+  "connectionString": "ACCOUNT=ASD123;HOST=asdasd-ASD123.snowflakecomputing.com;ROLE=accountadmin;WAREHOUSE=COMPUTE_WH;USER=lorem;PASSWORD=ipsum;DB=SOUVENIR;SCHEMA=PUBLIC;"
+}
+
+### Update Snowflake connection
+
+PUT {{baseUrl}}/integrations/sqlconnections/snowflake/f6e94d21-010e-4516-b593-08dd46db3fb5
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "connectionName":  "test snowflake connection updated",
+  "maxConcurrentSqlSteps": 10,
+  "scdDefaultTargetSchema": null,
+  "scdDefaultTargetTableSuffix":  null,
+  "scdDefaultStagingSchema": null,
+  "scdDefaultStagingTableSuffix":  null
+}
+
+### Delete SQL connection
+
+DELETE {{baseUrl}}/integrations/sqlconnections/f6e94d21-010e-4516-b593-08dd46db3fb5
+x-api-key: {{apiKey}}
