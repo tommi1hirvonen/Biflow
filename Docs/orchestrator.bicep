@@ -403,7 +403,7 @@ resource virtualMachineResource 'Microsoft.Compute/virtualMachines@2024-07-01' =
         patchSettings: {
           patchMode: 'AutomaticByPlatform'
           automaticByPlatformSettings: {
-            rebootSetting: 'IfRequired'
+            rebootSetting: 'Never'
             bypassPlatformSafetyChecksOnUserSchedule: false
           }
           assessmentMode: 'ImageDefault'
