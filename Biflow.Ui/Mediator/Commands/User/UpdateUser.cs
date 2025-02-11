@@ -18,18 +18,32 @@ internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
         {
             return;
         }
+        
+        var dataTableIds = request.User.DataTables
+            .Select(x => x.DataTableId)
+            .ToArray();
+        var dataTables = await context.MasterDataTables
+            .Where(x => dataTableIds.Contains(x.DataTableId))
+            .ToArrayAsync(cancellationToken);
+        
+        var jobIds = request.User.Jobs
+            .Select(x => x.JobId)
+            .ToArray();
+        var jobs = await context.Jobs
+            .Where(x => jobIds.Contains(x.JobId))
+            .ToArrayAsync(cancellationToken);
 
         context.Entry(user).CurrentValues.SetValues(request.User);
         
         context.MergeCollections(
             user.DataTables,
-            request.User.DataTables,
+            dataTables,
             d => d.DataTableId,
             updateMatchingItemValues: false);
 
         context.MergeCollections(
             user.Jobs,
-            request.User.Jobs,
+            jobs,
             j => j.JobId,
             updateMatchingItemValues: false);
 
