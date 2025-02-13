@@ -3,7 +3,7 @@
 public enum SubscriptionType
 {
     Job,
-    JobTag,
-    Tag,
+    JobStepTag,
+    StepTag,
     Step
 }

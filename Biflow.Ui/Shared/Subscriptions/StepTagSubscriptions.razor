@@ -24,21 +24,21 @@
                 </tr>
             </thead>
             <tbody>
-                @if (User is null || Tags is null)
+                @if (User is null || StepTags is null)
                 {
                     <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
                 }
                 else
                 {
                     var subscriptions = User.Subscriptions
-                        .OfType<TagSubscription>()
-                        .Select(s => (Subscription: s, Tag: Tags.FirstOrDefault(t => t.TagId == s.TagId)))
+                        .OfType<StepTagSubscription>()
+                        .Select(s => (Subscription: s, Tag: StepTags.FirstOrDefault(t => t.TagId == s.TagId)))
                         .OrderBy(s => s.Tag?.TagName)
                         .ToArray();
                     @if (!subscriptions.Any())
                     {
                         <tr>
-                            <td colspan="3">No tag subscriptions</td>
+                            <td colspan="3">No step tag subscriptions</td>
                         </tr>
                     }
                     foreach (var (sub, tag) in subscriptions)
@@ -87,7 +87,7 @@
         <div class="row">
             <div class="col d-flex flex-wrap">
                 @{
-                    var tags = Tags
+                    var tags = StepTags
                         ?.Where(t => Subscriptions.All(s => t.TagId != s.TagId))
                         .Order()
                         .ToArray()
@@ -116,21 +116,21 @@
     public User? User { get; set; }
 
     [Parameter]
-    public IEnumerable<StepTag>? Tags { get; set; }
+    public IEnumerable<StepTag>? StepTags { get; set; }
 
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
     private HxOffcanvas? _selectTagOffcanvas;
 
-    private IEnumerable<TagSubscription> Subscriptions => User?.Subscriptions.OfType<TagSubscription>() ?? [];
+    private IEnumerable<StepTagSubscription> Subscriptions => User?.Subscriptions.OfType<StepTagSubscription>() ?? [];
 
     private async Task AddSubscriptionAsync(Guid tagId)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new TagSubscription(User.UserId, tagId);
+            var subscription = new StepTagSubscription(User.UserId, tagId);
             await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
@@ -141,7 +141,7 @@
         }
     }
 
-    private async Task ToggleSubscription(TagSubscription subscription, AlertType alert)
+    private async Task ToggleSubscription(StepTagSubscription subscription, AlertType alert)
     {
         try
         {

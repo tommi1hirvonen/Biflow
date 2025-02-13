@@ -152,7 +152,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Job = job1,
                 AlertType = AlertType.OnCompletion
             };
-            var sub2 = new JobTagSubscription(user1.UserId, job1.JobId, tag1.TagId)
+            var sub2 = new JobStepTagSubscription(user1.UserId, job1.JobId, tag1.TagId)
             {
                 User = user1,
                 Job = job1,
@@ -165,7 +165,7 @@ public class DatabaseFixture : IAsyncLifetime
                 Step = step1,
                 AlertType = AlertType.OnCompletion
             };
-            var sub4 = new TagSubscription(user1.UserId, tag1.TagId)
+            var sub4 = new StepTagSubscription(user1.UserId, tag1.TagId)
             {
                 User = user1,
                 Tag = tag1,

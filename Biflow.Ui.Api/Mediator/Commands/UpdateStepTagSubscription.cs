@@ -2,21 +2,21 @@ namespace Biflow.Ui.Api.Mediator.Commands;
 
 public record UpdateStepTagSubscriptionCommand(
     Guid SubscriptionId,
-    AlertType AlertType) : IRequest<TagSubscription>;
+    AlertType AlertType) : IRequest<StepTagSubscription>;
 
 [UsedImplicitly]
 internal class UpdateStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<UpdateStepTagSubscriptionCommand, TagSubscription>
+    : IRequestHandler<UpdateStepTagSubscriptionCommand, StepTagSubscription>
 {
-    public async Task<TagSubscription> Handle(UpdateStepTagSubscriptionCommand request,
+    public async Task<StepTagSubscription> Handle(UpdateStepTagSubscriptionCommand request,
         CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var subscription = await dbContext.TagSubscriptions
+        var subscription = await dbContext.StepTagSubscriptions
             .Include(s => s.Tag)
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.SubscriptionId == request.SubscriptionId, cancellationToken)
-            ?? throw new NotFoundException<TagSubscription>(request.SubscriptionId);
+            ?? throw new NotFoundException<StepTagSubscription>(request.SubscriptionId);
         
         subscription.AlertType = request.AlertType;
         

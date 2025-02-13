@@ -116,7 +116,7 @@ public class Job : IAuditable
     public IEnumerable<JobSubscription> JobSubscriptions { get; } = new List<JobSubscription>();
 
     [JsonIgnore]
-    public IEnumerable<JobTagSubscription> JobTagSubscriptions { get; } = new List<JobTagSubscription>();
+    public IEnumerable<JobStepTagSubscription> JobStepTagSubscriptions { get; } = new List<JobStepTagSubscription>();
 
     [JsonIgnore]
     public IEnumerable<User> Users { get; } = new List<User>();

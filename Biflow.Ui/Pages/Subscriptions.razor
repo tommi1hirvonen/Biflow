@@ -6,7 +6,7 @@
 
 <h4>Subscriptions</h4>
 
-<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" Tags="_tags" />
+<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" StepTags="_stepTags" />
 
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
@@ -15,7 +15,7 @@
 
     private User? _user;
     private List<JobProjection>? _jobs;
-    private List<StepTag>? _tags;
+    private List<StepTag>? _stepTags;
     private List<StepProjection>? _steps;
 
     protected override async Task OnInitializedAsync()
@@ -47,9 +47,9 @@
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
             .ToListAsync();
-        _tags = await context.StepTags
+        _stepTags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync();
-        _tags.Sort();
+        _stepTags.Sort();
     }
 }

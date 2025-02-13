@@ -4,13 +4,13 @@ public record CreateJobStepTagSubscriptionCommand(
     Guid UserId,
     Guid JobId,
     Guid StepTagId,
-    AlertType AlertType) : IRequest<JobTagSubscription>;
+    AlertType AlertType) : IRequest<JobStepTagSubscription>;
 
 [UsedImplicitly]
 internal class CreateJobStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<CreateJobStepTagSubscriptionCommand, JobTagSubscription>
+    : IRequestHandler<CreateJobStepTagSubscriptionCommand, JobStepTagSubscription>
 {
-    public async Task<JobTagSubscription> Handle(CreateJobStepTagSubscriptionCommand request,
+    public async Task<JobStepTagSubscription> Handle(CreateJobStepTagSubscriptionCommand request,
         CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -22,7 +22,7 @@ internal class CreateJobStepTagSubscriptionCommandHandler(IDbContextFactory<AppD
         var tag = await dbContext.StepTags.FirstOrDefaultAsync(t => t.TagId == request.StepTagId, cancellationToken)
                   ?? throw new NotFoundException<StepTag>(request.StepTagId);
 
-        var subscription = new JobTagSubscription(request.UserId, request.JobId, request.StepTagId)
+        var subscription = new JobStepTagSubscription(request.UserId, request.JobId, request.StepTagId)
         {
             User = user,
             Job = job,
@@ -32,7 +32,7 @@ internal class CreateJobStepTagSubscriptionCommandHandler(IDbContextFactory<AppD
         
         subscription.EnsureDataAnnotationsValidated();
         
-        dbContext.JobTagSubscriptions.Add(subscription);
+        dbContext.JobStepTagSubscriptions.Add(subscription);
         await dbContext.SaveChangesAsync(cancellationToken);
         
         return subscription;

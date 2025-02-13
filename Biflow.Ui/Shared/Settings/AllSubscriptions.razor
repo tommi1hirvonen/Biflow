@@ -21,7 +21,7 @@
     </div>
 </div>
 
-<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" Tags="_tags">
+<UserSubscriptions User="_user" Jobs="_jobs" Steps="_steps" StepTags="_stepTags">
     <MissingEmailAlertTemplate Context="user">
         <span>
             Email address for account <strong>@user.Username</strong> was not set. Go to the <a class="alert-link" href="settings/users">Users page</a> to enter a valid email address for the user.
@@ -31,7 +31,7 @@
 
 @code {
     private IEnumerable<JobProjection>? _jobs;
-    private List<StepTag>? _tags;
+    private List<StepTag>? _stepTags;
     private IEnumerable<StepProjection>? _steps;
     private Guid? _userId;
     private User? _user;
@@ -64,9 +64,9 @@
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
             .ToArrayAsync();
-        _tags = await context.StepTags
+        _stepTags = await context.StepTags
             .AsNoTrackingWithIdentityResolution()
             .ToListAsync();
-        _tags.Sort();
+        _stepTags.Sort();
     }
 }

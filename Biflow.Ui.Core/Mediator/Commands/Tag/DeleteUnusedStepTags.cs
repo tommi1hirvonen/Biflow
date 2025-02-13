@@ -16,8 +16,8 @@ internal class DeleteUnusedStepTagsCommandHandler(IDbContextFactory<AppDbContext
             .Where(t => !t.Steps.Any())
             .Where(t => !t.Schedules.Any())
             .Where(t => !t.JobSteps.Any())
-            .Where(t => !t.TagSubscriptions.Any())
-            .Where(t => !t.JobTagSubscriptions.Any())
+            .Where(t => !t.StepTagSubscriptions.Any())
+            .Where(t => !t.JobStepTagSubscriptions.Any())
             .ToArrayAsync(cancellationToken);
         context.StepTags.RemoveRange(tags);
         await context.SaveChangesAsync(cancellationToken);

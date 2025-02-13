@@ -18,10 +18,10 @@
             </HxAlert>
         }
         @{
-            var (jobSubs, jobTagSubs, tagSubs, stepSubs) = (
+            var (jobSubs, jobStepTagSubs, stepTagSubs, stepSubs) = (
                 User?.Subscriptions.OfType<JobSubscription>().Count(),
-                User?.Subscriptions.OfType<JobTagSubscription>().Count(),
-                User?.Subscriptions.OfType<TagSubscription>().Count(),
+                User?.Subscriptions.OfType<JobStepTagSubscription>().Count(),
+                User?.Subscriptions.OfType<StepTagSubscription>().Count(),
                 User?.Subscriptions.OfType<StepSubscription>().Count());
             string SubCountClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
         }
@@ -38,20 +38,20 @@
                         </span>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link @(_showType == SubscriptionType.JobTag ? "active" : null)"
-                        @onclick="() => _showType = SubscriptionType.JobTag">
-                            Job-tag subscriptions
-                            <span class="badge rounded-pill ms-3 @SubCountClass(jobTagSubs)">
-                                @jobTagSubs
+                        <span class="nav-link @(_showType == SubscriptionType.JobStepTag ? "active" : null)"
+                        @onclick="() => _showType = SubscriptionType.JobStepTag">
+                            Job-step tag subscriptions
+                            <span class="badge rounded-pill ms-3 @SubCountClass(jobStepTagSubs)">
+                                @jobStepTagSubs
                             </span>
                         </span>
                     </li>
                     <li class="nav-item">
-                        <span class="nav-link @(_showType == SubscriptionType.Tag ? "active" : null)"
-                        @onclick="() => _showType = SubscriptionType.Tag">
-                            Tag subscriptions
-                            <span class="badge rounded-pill ms-3 @SubCountClass(tagSubs)">
-                                @tagSubs
+                        <span class="nav-link @(_showType == SubscriptionType.StepTag ? "active" : null)"
+                        @onclick="() => _showType = SubscriptionType.StepTag">
+                            Step tag subscriptions
+                            <span class="badge rounded-pill ms-3 @SubCountClass(stepTagSubs)">
+                                @stepTagSubs
                             </span>
                         </span>
                     </li>
@@ -70,16 +70,17 @@
         @switch (_showType)
         {
             case SubscriptionType.Job:
-                <JobSubscriptions User="User" Jobs="Jobs" OnSubscriptionCountChanged="StateHasChanged" />
+                <JobSubscriptions User="User" Jobs="Jobs" OnSubscriptionCountChanged="StateHasChanged"/>
                 break;
-            case SubscriptionType.JobTag:
-                <JobTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
+            case SubscriptionType.JobStepTag:
+                <JobStepTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" StepTags="StepTags"
+                                         OnSubscriptionCountChanged="StateHasChanged"/>
                 break;
-            case SubscriptionType.Tag:
-                <TagSubscriptions User="User" Tags="Tags" OnSubscriptionCountChanged="StateHasChanged" />
+            case SubscriptionType.StepTag:
+                <StepTagSubscriptions User="User" StepTags="StepTags" OnSubscriptionCountChanged="StateHasChanged"/>
                 break;
             case SubscriptionType.Step:
-                <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" OnSubscriptionCountChanged="StateHasChanged" />
+                <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" OnSubscriptionCountChanged="StateHasChanged"/>
                 break;
         }
     </div>
@@ -93,7 +94,7 @@
     public IEnumerable<JobProjection>? Jobs { get; set; }
 
     [Parameter]
-    public IEnumerable<StepTag>? Tags { get; set; }
+    public IEnumerable<StepTag>? StepTags { get; set; }
 
     [Parameter]
     public IEnumerable<StepProjection>? Steps { get; set; }

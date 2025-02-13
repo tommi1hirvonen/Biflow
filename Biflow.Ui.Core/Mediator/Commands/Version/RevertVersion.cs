@@ -308,22 +308,22 @@ internal class RevertVersionCommandHandler(
                 .OfType<JobSubscription>()
                 .Where(s => snapshot.Jobs.Any(j => j.JobId == s.JobId));
 
-            var jobTagSubsToAdd = capturedSubscriptions
-                .OfType<JobTagSubscription>()
+            var jobStepTagSubsToAdd = capturedSubscriptions
+                .OfType<JobStepTagSubscription>()
                 .Where(s => snapshot.Jobs.Any(j => j.JobId == s.JobId) && snapshot.Tags.Any(t => t.TagId == s.TagId && t.TagType == TagType.Step));
 
             var stepSubsToAdd = capturedSubscriptions
                 .OfType<StepSubscription>()
                 .Where(sub => snapshot.Jobs.Any(job => job.Steps.Any(step => step.StepId == sub.StepId)));
 
-            var tagSubsToAdd = capturedSubscriptions
-                .OfType<TagSubscription>()
+            var stepTagSubsToAdd = capturedSubscriptions
+                .OfType<StepTagSubscription>()
                 .Where(s => snapshot.Tags.Any(t => t.TagId == s.TagId && t.TagType == TagType.Step));
 
             context.JobSubscriptions.AddRange(jobSubsToAdd);
-            context.JobTagSubscriptions.AddRange(jobTagSubsToAdd);
+            context.JobStepTagSubscriptions.AddRange(jobStepTagSubsToAdd);
             context.StepSubscriptions.AddRange(stepSubsToAdd);
-            context.TagSubscriptions.AddRange(tagSubsToAdd);
+            context.StepTagSubscriptions.AddRange(stepTagSubsToAdd);
 
             await context.SaveChangesAsync(cancellationToken);
 

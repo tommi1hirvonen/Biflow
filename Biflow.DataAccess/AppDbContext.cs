@@ -53,9 +53,9 @@ public class AppDbContext : DbContext
     public DbSet<Schedule> Schedules => Set<Schedule>();
     public DbSet<Subscription> Subscriptions => Set<Subscription>();
     public DbSet<JobSubscription> JobSubscriptions => Set<JobSubscription>();
-    public DbSet<JobTagSubscription> JobTagSubscriptions => Set<JobTagSubscription>();
+    public DbSet<JobStepTagSubscription> JobStepTagSubscriptions => Set<JobStepTagSubscription>();
     public DbSet<StepSubscription> StepSubscriptions => Set<StepSubscription>();
-    public DbSet<TagSubscription> TagSubscriptions => Set<TagSubscription>();
+    public DbSet<StepTagSubscription> StepTagSubscriptions => Set<StepTagSubscription>();
     public DbSet<User> Users => Set<User>();
     public DbSet<PipelineClient> PipelineClients => Set<PipelineClient>();
     public DbSet<DataFactory> DataFactories => Set<DataFactory>();

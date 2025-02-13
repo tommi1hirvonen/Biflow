@@ -65,7 +65,7 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
                 return Results.Created(url, subscription);
             })
             .ProducesValidationProblem()
-            .Produces<TagSubscription>()
+            .Produces<StepTagSubscription>()
             .WithSummary("Create step tag subscription")
             .WithDescription("Create a new step tag subscription")
             .WithName("CreateStepTagSubscription");
@@ -84,7 +84,7 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
                 return Results.Created(url, subscription);
             })
             .ProducesValidationProblem()
-            .Produces<TagSubscription>()
+            .Produces<StepTagSubscription>()
             .WithSummary("Create job-step tag subscription")
             .WithDescription("Create a new job-step tag subscription")
             .WithName("CreateJobStepTagSubscription");
@@ -134,7 +134,7 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
             })
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<TagSubscription>()
+            .Produces<StepTagSubscription>()
             .WithSummary("Update step tag subscription")
             .WithDescription("Update step tag subscription")
             .WithName("UpdateStepTagSubscription");
@@ -153,7 +153,7 @@ internal abstract class SubscriptionsWriteEndpoints : IEndpoints
             })
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<TagSubscription>()
+            .Produces<StepTagSubscription>()
             .WithSummary("Update job-step tag subscription")
             .WithDescription("Update job-step tag subscription")
             .WithName("UpdateJobStepTagSubscription");

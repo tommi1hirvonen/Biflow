@@ -14,8 +14,8 @@ public class StepTag(string tagName) : Tag(TagType.Step, tagName)
     public IEnumerable<Schedule> Schedules { get; } = new List<Schedule>();
 
     [JsonIgnore]
-    public IEnumerable<TagSubscription> TagSubscriptions { get; } = new List<TagSubscription>();
+    public IEnumerable<StepTagSubscription> StepTagSubscriptions { get; } = new List<StepTagSubscription>();
 
     [JsonIgnore]
-    public IEnumerable<JobTagSubscription> JobTagSubscriptions { get; } = new List<JobTagSubscription>();
+    public IEnumerable<JobStepTagSubscription> JobStepTagSubscriptions { get; } = new List<JobStepTagSubscription>();
 }

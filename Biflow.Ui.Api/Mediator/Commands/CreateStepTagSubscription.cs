@@ -3,13 +3,13 @@ namespace Biflow.Ui.Api.Mediator.Commands;
 public record CreateStepTagSubscriptionCommand(
     Guid UserId,
     Guid StepTagId,
-    AlertType AlertType) : IRequest<TagSubscription>;
+    AlertType AlertType) : IRequest<StepTagSubscription>;
 
 [UsedImplicitly]
 internal class CreateStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<CreateStepTagSubscriptionCommand, TagSubscription>
+    : IRequestHandler<CreateStepTagSubscriptionCommand, StepTagSubscription>
 {
-    public async Task<TagSubscription> Handle(CreateStepTagSubscriptionCommand request,
+    public async Task<StepTagSubscription> Handle(CreateStepTagSubscriptionCommand request,
         CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -19,7 +19,7 @@ internal class CreateStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbCo
         var tag = await dbContext.StepTags.FirstOrDefaultAsync(t => t.TagId == request.StepTagId, cancellationToken)
                   ?? throw new NotFoundException<StepTag>(request.StepTagId);
 
-        var subscription = new TagSubscription(request.UserId, request.StepTagId)
+        var subscription = new StepTagSubscription(request.UserId, request.StepTagId)
         {
             User = user,
             Tag = tag,
@@ -28,7 +28,7 @@ internal class CreateStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbCo
         
         subscription.EnsureDataAnnotationsValidated();
         
-        dbContext.TagSubscriptions.Add(subscription);
+        dbContext.StepTagSubscriptions.Add(subscription);
         await dbContext.SaveChangesAsync(cancellationToken);
         
         return subscription;

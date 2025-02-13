@@ -265,8 +265,8 @@
         .Where(t => !t.Steps.Any())
         .Where(t => !t.Schedules.Any())
         .Where(t => !t.JobSteps.Any())
-        .Where(t => !t.TagSubscriptions.Any())
-        .Where(t => !t.JobTagSubscriptions.Any())
+        .Where(t => !t.StepTagSubscriptions.Any())
+        .Where(t => !t.JobStepTagSubscriptions.Any())
         .Order()
         .AsEnumerable()
         ?? [];
@@ -281,8 +281,8 @@
             .Include(t => t.Schedules)
             .ThenInclude(s => s.Job)
             .Include(t => t.JobSteps)
-            .Include(t => t.TagSubscriptions)
-            .Include(t => t.JobTagSubscriptions)
+            .Include(t => t.StepTagSubscriptions)
+            .Include(t => t.JobStepTagSubscriptions)
             .ToListAsync();
     }
 

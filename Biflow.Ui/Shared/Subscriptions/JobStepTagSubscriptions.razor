@@ -27,17 +27,17 @@
                 </tr>
             </thead>
             <tbody>
-                @if (User is null || Jobs is null || Steps is null || Tags is null)
+                @if (User is null || Jobs is null || Steps is null || StepTags is null)
                 {
                     <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
                 }
                 else
                 {
                     var subscriptions = User.Subscriptions
-                        .OfType<JobTagSubscription>()
+                        .OfType<JobStepTagSubscription>()
                         .Select(sub =>
                         {
-                            var tag = Tags.FirstOrDefault(s => s.TagId == sub.TagId);
+                            var tag = StepTags.FirstOrDefault(s => s.TagId == sub.TagId);
                             var job = Jobs.FirstOrDefault(j => j.JobId == sub.JobId);
                             return (sub, job, tag);
                         })
@@ -47,7 +47,7 @@
                     @if (!subscriptions.Any())
                     {
                         <tr>
-                            <td colspan="3">No job-tag subscriptions</td>
+                            <td colspan="3">No job-step tag subscriptions</td>
                         </tr>
                     }
                     foreach (var (sub, job, tag) in subscriptions)
@@ -109,7 +109,7 @@
         <div class="row mt-3">
             <div class="col">
                 <div class="list-group">
-                    @if (Tags is not null && Jobs is not null && Steps is not null)
+                    @if (StepTags is not null && Jobs is not null && Steps is not null)
                     {
                         var jobs = Jobs
                             .Where(j => string.IsNullOrEmpty(_jobSearchTerm) || j.JobName.ContainsIgnoreCase(_jobSearchTerm))
@@ -179,7 +179,7 @@
     public IEnumerable<StepProjection>? Steps { get; set; }
 
     [Parameter]
-    public IEnumerable<StepTag>? Tags { get; set; }
+    public IEnumerable<StepTag>? StepTags { get; set; }
 
     [Parameter]
     public EventCallback OnSubscriptionCountChanged { get; set; }
@@ -189,14 +189,14 @@
     private HxOffcanvas? _selectJobTagOffcanvas;
     private string _jobSearchTerm = "";
 
-    private IEnumerable<JobTagSubscription> Subscriptions => User?.Subscriptions.OfType<JobTagSubscription>() ?? [];
+    private IEnumerable<JobStepTagSubscription> Subscriptions => User?.Subscriptions.OfType<JobStepTagSubscription>() ?? [];
 
     private async Task AddSubscriptionAsync(Guid jobId, Guid tagId)
     {
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new JobTagSubscription(User.UserId, jobId, tagId);
+            var subscription = new JobStepTagSubscription(User.UserId, jobId, tagId);
             await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
@@ -207,7 +207,7 @@
         }
     }
 
-    private async Task ToggleSubscription(JobTagSubscription subscription, AlertType alert)
+    private async Task ToggleSubscription(JobStepTagSubscription subscription, AlertType alert)
     {
         try
         {

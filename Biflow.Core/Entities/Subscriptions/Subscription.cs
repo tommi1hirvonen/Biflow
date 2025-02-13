@@ -3,9 +3,9 @@
 namespace Biflow.Core.Entities;
 
 [JsonDerivedType(typeof(JobSubscription), nameof(SubscriptionType.Job))]
-[JsonDerivedType(typeof(JobTagSubscription), nameof(SubscriptionType.JobTag))]
+[JsonDerivedType(typeof(JobStepTagSubscription), nameof(SubscriptionType.JobStepTag))]
 [JsonDerivedType(typeof(StepSubscription), nameof(SubscriptionType.Step))]
-[JsonDerivedType(typeof(TagSubscription), nameof(SubscriptionType.Tag))]
+[JsonDerivedType(typeof(StepTagSubscription), nameof(SubscriptionType.StepTag))]
 public abstract class Subscription(Guid userId, SubscriptionType subscriptionType)
 {
     public Guid SubscriptionId { get; init; }

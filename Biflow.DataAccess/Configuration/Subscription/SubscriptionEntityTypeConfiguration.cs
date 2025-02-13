@@ -9,9 +9,9 @@ internal class SubscriptionEntityTypeConfiguration : IEntityTypeConfiguration<Su
 
         builder.HasDiscriminator<SubscriptionType>("SubscriptionType")
             .HasValue<JobSubscription>(SubscriptionType.Job)
-            .HasValue<JobTagSubscription>(SubscriptionType.JobTag)
+            .HasValue<JobStepTagSubscription>(SubscriptionType.JobStepTag)
             .HasValue<StepSubscription>(SubscriptionType.Step)
-            .HasValue<TagSubscription>(SubscriptionType.Tag);
+            .HasValue<StepTagSubscription>(SubscriptionType.StepTag);
 
         builder.HasOne(x => x.User)
             .WithMany(x => x.Subscriptions)
