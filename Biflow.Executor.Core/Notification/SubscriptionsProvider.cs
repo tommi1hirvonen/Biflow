@@ -18,7 +18,7 @@ internal class SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbCont
                     _dbContext.StepExecutions.Any(e => e.ExecutionId == _execution.ExecutionId && e.StepId == s.StepId))
         .ToArrayAsync();
 
-    public async Task<IEnumerable<StepTagSubscription>> GetTagSubscriptionsAsync()
+    public async Task<IEnumerable<StepTagSubscription>> GetStepTagSubscriptionsAsync()
     {
         var subsQuery = _dbContext.StepTagSubscriptions
             .AsNoTracking()
@@ -35,7 +35,7 @@ internal class SubscriptionsProvider(IDbContextFactory<ExecutorDbContext> dbCont
         return subscriptions;
     }
 
-    public async Task<IEnumerable<JobStepTagSubscription>> GetJobTagSubscriptionsAsync()
+    public async Task<IEnumerable<JobStepTagSubscription>> GetJobStepTagSubscriptionsAsync()
     {
         var subsQuery = _dbContext.JobStepTagSubscriptions
             .AsNoTracking()

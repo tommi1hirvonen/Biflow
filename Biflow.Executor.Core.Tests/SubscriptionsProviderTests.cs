@@ -18,7 +18,7 @@ public class SubscriptionsProviderTests(DatabaseFixture fixture) : IClassFixture
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions.FirstAsync();
         var subscriptionsProvider = _subscriptionsProviderFactory.Create(execution);
-        var subs = await subscriptionsProvider.GetTagSubscriptionsAsync();
+        var subs = await subscriptionsProvider.GetStepTagSubscriptionsAsync();
         Assert.NotEmpty(subs);
     }
 
@@ -28,7 +28,7 @@ public class SubscriptionsProviderTests(DatabaseFixture fixture) : IClassFixture
         using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions.FirstAsync();
         var subscriptionsProvider = _subscriptionsProviderFactory.Create(execution);
-        var subs = await subscriptionsProvider.GetJobTagSubscriptionsAsync();
+        var subs = await subscriptionsProvider.GetJobStepTagSubscriptionsAsync();
         Assert.NotEmpty(subs);
     }
 }

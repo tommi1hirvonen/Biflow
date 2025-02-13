@@ -61,8 +61,8 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
 
         var jobSubscriptions = await provider.GetJobSubscriptionsAsync();
         var stepSubscriptions = await provider.GetStepSubscriptionsAsync();
-        var tagSubscriptions = await provider.GetTagSubscriptionsAsync();
-        var jobTagSubscriptions = await provider.GetJobTagSubscriptionsAsync();
+        var stepTagSubscriptions = await provider.GetStepTagSubscriptionsAsync();
+        var jobStepTagSubscriptions = await provider.GetJobStepTagSubscriptionsAsync();
 
         var jobSubscribers = jobSubscriptions
             .Where(s => JobSubscriptionShouldAlert(execution, s.AlertType))
@@ -70,17 +70,17 @@ public class SubscribersResolver(ISubscriptionsProviderFactory subscriptionsProv
         var stepSubscribers = stepSubscriptions
             .Where(s => StepSubscriptionShouldAlert(s.AlertType, s.StepId))
             .Select(s => s.User.Email ?? "");
-        var tagSubscribers = tagSubscriptions
+        var stepTagSubscribers = stepTagSubscriptions
             .Where(s => TagSubscriptionShouldAlert(s.AlertType, s.TagId))
             .Select(s => s.User.Email ?? "");
-        var jobTagSubscribers = jobTagSubscriptions
+        var jobStepTagSubscribers = jobStepTagSubscriptions
             .Where(s => TagSubscriptionShouldAlert(s.AlertType, s.TagId))
             .Select(s => s.User.Email ?? "");
 
         return jobSubscribers
             .Concat(stepSubscribers)
-            .Concat(tagSubscribers)
-            .Concat(jobTagSubscribers);
+            .Concat(stepTagSubscribers)
+            .Concat(jobStepTagSubscribers);
 
         bool StepSubscriptionShouldAlert(AlertType alert, Guid stepId) => (alert, execution.StepExecutions.FirstOrDefault(s => s.StepId == stepId)?.ExecutionStatus) switch
         {
