@@ -16,7 +16,6 @@ public class FunctionStepExecutionAttempt : StepExecutionAttempt
 
     public FunctionStepExecutionAttempt(FunctionStepExecution execution) : base(execution) { }
 
-    [Display(Name = "Function instance id")]
     [MaxLength(250)]
     public string? FunctionInstanceId { get; set; }
 }

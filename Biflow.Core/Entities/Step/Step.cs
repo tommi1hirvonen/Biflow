@@ -82,10 +82,8 @@ public abstract class Step : IComparable, IAuditable
 
     [Required]
     [MaxLength(250)]
-    [Display(Name = "Step name")]
     public string? StepName { get; set; }
 
-    [Display(Name = "Description")]
     public string? StepDescription
     {
         get;
@@ -93,25 +91,20 @@ public abstract class Step : IComparable, IAuditable
     }
 
     [Required]
-    [Display(Name = "Execution phase")]
     public int ExecutionPhase { get; set; }
 
-    [Display(Name = "Step type")]
     public StepType StepType { get; }
 
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
 
     [Required]
-    [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
     [Required]
-    [Display(Name = "Retry attempts")]
     [Range(0, 10)]
     public int RetryAttempts { get; set; }
 
     [Required]
-    [Display(Name = "Retry interval (min)")]
     [Range(0, 1000)]
     public double RetryIntervalMinutes { get; set; }
 
@@ -119,13 +112,11 @@ public abstract class Step : IComparable, IAuditable
 
     public DateTimeOffset CreatedOn { get; set; }
 
-    [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
     public DateTimeOffset LastModifiedOn { get; set; }
 
-    [Display(Name = "Last modified by")]
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 

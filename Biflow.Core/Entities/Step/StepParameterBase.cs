@@ -48,7 +48,6 @@ public abstract class StepParameterBase : DynamicParameter, IHasExpressionParame
             .ToList();
     }
 
-    [Display(Name = "Step id")]
     public Guid StepId { get; init; }
 
     public ParameterType ParameterType { get; }

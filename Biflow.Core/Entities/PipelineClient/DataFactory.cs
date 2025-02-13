@@ -8,18 +8,15 @@ namespace Biflow.Core.Entities;
 public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
 { 
     [Required]
-    [Display(Name = "Subscription id")]
     [MaxLength(36)]
     [MinLength(36)]
     public string? SubscriptionId { get; set; }
 
     [Required]
-    [Display(Name = "Resource group name")]
     [MaxLength(250)]
     public string? ResourceGroupName { get; set; }
 
     [Required]
-    [Display(Name = "Resource name")]
     [MaxLength(250)]
     public string? ResourceName { get; set; }
 

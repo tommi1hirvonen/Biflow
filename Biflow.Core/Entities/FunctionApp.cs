@@ -7,15 +7,12 @@ namespace Biflow.Core.Entities;
 
 public class FunctionApp
 {
-    [Display(Name = "Function app id")]
     public Guid FunctionAppId { get; init; }
 
     [Required]
-    [Display(Name = "Function app name")]
     [MaxLength(250)]
     public string FunctionAppName { get; set; } = "";
 
-    [Display(Name = "Function app key")]
     [MaxLength(1000)]
     [JsonSensitive]
     public string? FunctionAppKey
@@ -25,19 +22,16 @@ public class FunctionApp
     }
 
     [Required]
-    [Display(Name = "Subscription id")]
     [MaxLength(36)]
     [MinLength(36)]
     public string SubscriptionId { get; set; } = "";
 
     [Required]
     [MaxLength(250)]
-    [Display(Name = "Resource group name")]
     public string ResourceGroupName { get; set; } = "";
 
     [Required]
     [MaxLength(250)]
-    [Display(Name = "Resource name")]
     public string ResourceName { get; set; } = "";
 
     [Required]

@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -22,7 +21,6 @@ public class ExecutionDependency
 
     public Guid DependantOnStepId { get; private set; }
 
-    [Display(Name = "Type")]
     public DependencyType DependencyType { get; private set; }
 
     [JsonIgnore]

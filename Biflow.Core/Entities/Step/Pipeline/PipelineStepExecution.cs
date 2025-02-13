@@ -27,11 +27,9 @@ public class PipelineStepExecution : StepExecution,
         AddAttempt(new PipelineStepExecutionAttempt(this));
     }
 
-    [Display(Name = "Pipeline name")]
     [MaxLength(250)]
     public string PipelineName { get; private set; }
 
-    [Display(Name = "Pipeline client id")]
     public Guid PipelineClientId { get; [UsedImplicitly] private set; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }

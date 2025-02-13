@@ -23,16 +23,13 @@ public class TabularStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
         AddAttempt(new TabularStepExecutionAttempt(this));
     }
 
-    [Display(Name = "Model name")]
     [Required]
     [MaxLength(128)]
     public string TabularModelName { get; private set; }
 
-    [Display(Name = "Table name")]
     [MaxLength(128)]
     public string? TabularTableName { get; private set; }
 
-    [Display(Name = "Partition name")]
     [MaxLength(128)]
     public string? TabularPartitionName { get; private set; }
 

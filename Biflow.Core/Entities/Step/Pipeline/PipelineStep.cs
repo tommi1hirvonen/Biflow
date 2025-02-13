@@ -21,7 +21,6 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
@@ -29,7 +28,6 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     public Guid PipelineClientId { get; set; }
 
     [MaxLength(250)]
-    [Display(Name = "Pipeline name")]
     [Required]
     public string? PipelineName { get; set; }
 

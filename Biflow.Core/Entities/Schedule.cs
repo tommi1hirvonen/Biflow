@@ -20,30 +20,24 @@ public class Schedule : IAuditable
     public Job Job { get; set; } = null!;
 
     [Required]
-    [Display(Name = "Cron expression")]
     [CronExpression]
     [MaxLength(200)]
     public string CronExpression { get; set; } = "";
 
 
     [Required]
-    [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
 
     public bool DisallowConcurrentExecution { get; set; }
 
     [Required]
-    [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }
 
-    [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
-    [Display(Name = "Last modified")]
     public DateTimeOffset LastModifiedOn { get; set; }
 
-    [Display(Name = "Last modified by")]
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 

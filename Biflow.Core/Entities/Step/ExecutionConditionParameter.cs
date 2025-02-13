@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
@@ -38,7 +37,6 @@ public sealed class ExecutionConditionParameter : ParameterBase, IAsyncEvaluable
         }
     }
 
-    [Display(Name = "Step id")]
     public Guid StepId { get; init; }
 
     [JsonIgnore]

@@ -28,7 +28,6 @@ public class QlikStep : Step, IHasTimeout
     public QlikCloudEnvironment QlikCloudEnvironment { get; set; } = null!;
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 

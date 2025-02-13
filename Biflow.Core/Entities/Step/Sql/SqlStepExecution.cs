@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
@@ -29,10 +28,8 @@ public class SqlStepExecution : StepExecution,
 
     public Guid ConnectionId { get; [UsedImplicitly] private set; }
 
-    [Display(Name = "SQL statement")]
     public string SqlStatement { get; private set; }
 
-    [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; private set; }
 
     public ParameterValue ResultCaptureJobParameterValue { get; set; }

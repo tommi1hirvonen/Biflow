@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using Biflow.Core.Constants;
 
 namespace Biflow.Core.Entities;
@@ -20,7 +19,6 @@ public sealed class JobParameter : DynamicParameter
         job?.JobParameters.Add(this);
     }
 
-    [Display(Name = "Job")]
     public Guid JobId { get; init; }
 
     [JsonIgnore]

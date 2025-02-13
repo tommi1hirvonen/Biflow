@@ -21,11 +21,9 @@ public class AgentJobStep : Step, IHasSqlConnection, IHasTimeout
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
-    [Display(Name = "Agent job name")]
     [Required]
     [MinLength(1)]
     [MaxLength(128)]

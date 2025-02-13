@@ -29,13 +29,10 @@ public class Dependency : IAuditable
     [JsonIgnore]
     public Step DependantOnStep { get; set; } = null!;
 
-    [Display(Name = "Type")]
     public DependencyType DependencyType { get; set; }
 
-    [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }
 
-    [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 

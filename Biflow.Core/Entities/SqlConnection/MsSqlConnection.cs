@@ -12,7 +12,6 @@ public class MsSqlConnection() : SqlConnectionBase(SqlConnectionType.MsSql)
 
     public Credential? Credential { get; set; }
 
-    [Display(Name = "Execute packages as login")]
     [MaxLength(128)]
     public string? ExecutePackagesAsLogin
     {

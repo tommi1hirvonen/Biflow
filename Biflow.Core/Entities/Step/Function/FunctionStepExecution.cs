@@ -29,17 +29,13 @@ public class FunctionStepExecution : StepExecution,
         AddAttempt(new FunctionStepExecutionAttempt(this));
     }
 
-    [Display(Name = "Function app id")]
     public Guid FunctionAppId { get; [UsedImplicitly] private set; }
 
-    [Display(Name = "Function url")]
     [MaxLength(1000)]
     public string FunctionUrl { get; private set; }
 
-    [Display(Name = "Function input")]
     public string? FunctionInput { get; private set; }
 
-    [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; private set; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }

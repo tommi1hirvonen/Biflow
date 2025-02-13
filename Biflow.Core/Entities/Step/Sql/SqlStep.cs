@@ -44,11 +44,9 @@ public class SqlStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParameters<
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
-    [Display(Name = "SQL statement")]
     [Required]
     public string SqlStatement { get; set; } = "";
 
@@ -56,7 +54,6 @@ public class SqlStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParameters<
     [NotEmptyGuid]
     public Guid ConnectionId { get; set; }
 
-    [Display(Name = "Result capture job parameter")]
     public Guid? ResultCaptureJobParameterId { get; set; }
 
     [JsonIgnore]

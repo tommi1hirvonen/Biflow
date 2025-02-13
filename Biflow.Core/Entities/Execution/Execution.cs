@@ -42,42 +42,30 @@ public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus
 
     public Guid ExecutionId { get; private set; }
 
-    [Display(Name = "Job id")]
     public Guid JobId { get; private set; }
 
-    [Display(Name = "Job")]
     [MaxLength(250)]
     public string JobName { get; private set; } = jobName;
 
-    [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; private set; } = createdOn;
 
-    [Display(Name = "Started")]
     public DateTimeOffset? StartedOn { get; set; }
 
-    [Display(Name = "Ended")]
     public DateTimeOffset? EndedOn { get; set; }
 
-    [Display(Name = "Status")]
     public ExecutionStatus ExecutionStatus { get; set; } = executionStatus;
 
-    [Display(Name = "Dependency mode")]
     public ExecutionMode ExecutionMode { get; private set; }
 
-    [Display(Name = "Stop on first error")]
     public bool StopOnFirstError { get; private set; }
 
-    [Display(Name = "Max parallel steps (0 = use default)")]
     public int MaxParallelSteps { get; private set; }
 
-    [Display(Name = "Notification time limit (min, 0 = indefinite)")]
     public double OvertimeNotificationLimitMinutes { get; private set; }
 
-    [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; private set; }
 
-    [Display(Name = "Schedule id")]
     public Guid? ScheduleId { get; private set; }
 
     [MaxLength(250)]
@@ -86,16 +74,12 @@ public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus
     [MaxLength(200)]
     public string? CronExpression { get; private set; }
 
-    [Display(Name = "Executor PID")]
     public int? ExecutorProcessId { get; set; }
 
-    [Display(Name = "Notify")]
     public bool Notify { get; set; }
 
-    [Display(Name = "Notify caller")]
     public AlertType? NotifyCaller { get; set; }
 
-    [Display(Name = "Notify caller overtime")]
     public bool NotifyCallerOvertime { get; set; }
 
     public double TimeoutMinutes { get; set; }

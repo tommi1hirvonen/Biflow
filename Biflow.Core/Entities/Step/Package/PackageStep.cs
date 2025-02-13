@@ -26,7 +26,6 @@ public class PackageStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParamet
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
@@ -35,25 +34,20 @@ public class PackageStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParamet
     public Guid ConnectionId { get; set; }
 
     [MaxLength(128)]
-    [Display(Name = "Folder name")]
     [Required]
     public string? PackageFolderName { get; set; }
 
     [MaxLength(128)]
-    [Display(Name = "Project name")]
     [Required]
     public string? PackageProjectName { get; set; }
 
     [MaxLength(260)]
-    [Display(Name = "Package name")]
     [Required]
     public string? PackageName { get; set; }
 
     [Required]
-    [Display(Name = "32 bit mode")]
     public bool ExecuteIn32BitMode { get; set; }
 
-    [Display(Name = "Execute as login")]
     [MaxLength(128)]
     public string? ExecuteAsLogin
     {

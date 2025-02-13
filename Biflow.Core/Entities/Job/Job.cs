@@ -62,10 +62,8 @@ public class Job : IAuditable
 
     [Required]
     [MaxLength(250)]
-    [Display(Name = "Job name")]
     public string JobName { get; set; } = "";
 
-    [Display(Name = "Description")]
     public string? JobDescription
     {
         get;
@@ -73,30 +71,24 @@ public class Job : IAuditable
     }
 
     [Required]
-    [Display(Name = "Use dependency mode")]
     public ExecutionMode ExecutionMode { get; set; }
 
     [Required]
-    [Display(Name = "Stop on first error")]
     public bool StopOnFirstError { get; set; }
 
     [Required]
-    [Display(Name = "Max parallel steps (0 = use default)")]
     [Range(0, 100)]
     public int MaxParallelSteps { get; set; }
 
     [Required]
-    [Display(Name = "Overtime notification limit (min, 0 = indefinite)")]
     [Range(0, 10000)]
     public double OvertimeNotificationLimitMinutes { get; set; }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
     [Required]
-    [Display(Name = "Enabled")]
     public bool IsEnabled { get; set; } = true;
     
     public bool IsPinned { get; set; }
@@ -132,17 +124,13 @@ public class Job : IAuditable
     [JsonInclude]
     public ICollection<JobTag> Tags { get; private set; } = new List<JobTag>();
 
-    [Display(Name = "Created")]
     public DateTimeOffset CreatedOn { get; set; }
 
-    [Display(Name = "Created by")]
     [MaxLength(250)]
     public string? CreatedBy { get; set; }
 
-    [Display(Name = "Last modified")]
     public DateTimeOffset LastModifiedOn { get; set; }
 
-    [Display(Name = "Last modified by")]
     [MaxLength(250)]
     public string? LastModifiedBy { get; set; }
 

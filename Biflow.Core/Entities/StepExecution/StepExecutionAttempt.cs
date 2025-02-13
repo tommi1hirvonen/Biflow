@@ -58,7 +58,6 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
 
     public IList<InfoMessage> InfoMessages { get; [UsedImplicitly] private set; } = new List<InfoMessage>();
 
-    [Display(Name = "Stopped by")]
     [MaxLength(250)]
     public string? StoppedBy { get; set; }
 

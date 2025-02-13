@@ -20,7 +20,6 @@ public class JobConcurrency
     public StepType StepType { get; init; }
 
     [Required]
-    [Display(Name = "Max parallel steps (0 = use default)")]
     [Range(0, 100)]
     public int MaxParallelSteps { get; set; }
 

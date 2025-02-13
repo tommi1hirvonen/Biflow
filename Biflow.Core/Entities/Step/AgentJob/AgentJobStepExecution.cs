@@ -20,7 +20,6 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         AddAttempt(new AgentJobStepExecutionAttempt(this));
     }
 
-    [Display(Name = "Agent job name")]
     [Required]
     [MinLength(1)]
     [MaxLength(128)]

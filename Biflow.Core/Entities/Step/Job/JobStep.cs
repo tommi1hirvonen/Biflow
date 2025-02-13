@@ -22,15 +22,12 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
-    [Display(Name = "Job to execute")]
     [Required]
     public Guid? JobToExecuteId { get; set; }
 
-    [Display(Name = "Synchronized")]
     [Required]
     public bool JobExecuteSynchronized { get; set; }
 

@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Interfaces;
-using System.ComponentModel.DataAnnotations;
 using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
@@ -33,10 +32,8 @@ public class JobStepExecution : StepExecution,
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
-    [Display(Name = "Job to execute")]
     public Guid JobToExecuteId { get; private set; }
 
-    [Display(Name = "Synchronized")]
     public bool JobExecuteSynchronized { get; private set; }
 
     public IEnumerable<JobStepExecutionParameter> StepExecutionParameters { get; } = new List<JobStepExecutionParameter>();

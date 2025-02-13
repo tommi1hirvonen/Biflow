@@ -23,21 +23,17 @@ public class TabularStep : Step, IHasTimeout
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
-    [Display(Name = "Tabular model name")]
     [Required]
     [MinLength(1)]
     [MaxLength(128)]
     public string TabularModelName { get; set; } = "";
 
-    [Display(Name = "Table name")]
     [MaxLength(128)]
     public string? TabularTableName { get; set; }
 
-    [Display(Name = "Partition name")]
     [MaxLength(128)]
     public string? TabularPartitionName { get; set; }
 

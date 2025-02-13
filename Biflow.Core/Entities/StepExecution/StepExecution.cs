@@ -52,17 +52,13 @@ public abstract class StepExecution(string stepName, StepType stepType)
 
     private readonly List<StepExecutionAttempt> _stepExecutionAttempts = [];
 
-    [Display(Name = "Execution id")]
     public Guid ExecutionId { get; [UsedImplicitly] private set; }
 
-    [Display(Name = "Step id")]
     public Guid StepId { get; [UsedImplicitly] private set; }
 
-    [Display(Name = "Step")]
     [MaxLength(250)]
     public string StepName { get; [UsedImplicitly] private set; } = stepName;
 
-    [Display(Name = "Step type")]
     public StepType StepType { get; } = stepType;
 
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; private set; }

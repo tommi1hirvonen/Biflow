@@ -23,23 +23,19 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     }
 
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
     [Required]
-    [Display(Name = "File path")]
     [MaxLength(1000)]
     public string? ExeFileName { get; set; }
 
-    [Display(Name = "Arguments")]
     public string? ExeArguments
     {
         get;
         set => field = string.IsNullOrEmpty(value) ? null : value;
     }
 
-    [Display(Name = "Working directory")]
     [MaxLength(1000)]
     public string? ExeWorkingDirectory
     {
@@ -48,7 +44,6 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     }
 
 
-    [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; set; }
 
     public Guid? RunAsCredentialId { get; set; }

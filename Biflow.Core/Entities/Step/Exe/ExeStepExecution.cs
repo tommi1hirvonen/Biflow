@@ -32,18 +32,14 @@ public class ExeStepExecution : StepExecution,
         AddAttempt(new ExeStepExecutionAttempt(this));
     }
 
-    [Display(Name = "File path")]
     [MaxLength(1000)]
     public string ExeFileName { get; private set; }
 
-    [Display(Name = "Arguments")]
     public string? ExeArguments { get; private set; }
 
-    [Display(Name = "Working directory")]
     [MaxLength(1000)]
     public string? ExeWorkingDirectory { get; private set; }
 
-    [Display(Name = "Success exit code")]
     public int? ExeSuccessExitCode { get; private set; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }

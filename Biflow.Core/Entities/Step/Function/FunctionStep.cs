@@ -27,7 +27,6 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     }
         
     [Required]
-    [Display(Name = "Timeout (min)")]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
@@ -35,12 +34,10 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [NotEmptyGuid]
     public Guid FunctionAppId { get; set; }
 
-    [Display(Name = "Function url")]
     [MaxLength(1000)]
     [Required]
     public string FunctionUrl { get; set; } = "";
 
-    [Display(Name = "Function input")]
     public string? FunctionInput
     {
         get;
@@ -49,10 +46,8 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     
     public FunctionInputFormat FunctionInputFormat { get; set; } = FunctionInputFormat.PlainText;
 
-    [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; set; }
 
-    [Display(Name = "Function key")]
     [MaxLength(1000)]
     [JsonSensitive]
     public string? FunctionKey

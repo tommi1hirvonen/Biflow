@@ -6,13 +6,11 @@ namespace Biflow.Core.Entities;
 public abstract class ParameterBase
 {
     [Required]
-    [Display(Name = "Id")]
     [JsonInclude]
     public Guid ParameterId { get; protected set; }
 
     [Required]
     [MaxLength(128)]
-    [Display(Name = "Name")]
     public string ParameterName { get; set; } = string.Empty;
 
     public virtual ParameterValue ParameterValue { get; set; } = new("");

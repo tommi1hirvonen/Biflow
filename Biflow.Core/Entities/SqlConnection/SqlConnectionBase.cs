@@ -10,19 +10,15 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(SnowflakeConnection), nameof(SqlConnectionType.Snowflake))]
 public abstract class SqlConnectionBase(SqlConnectionType connectionType) : IComparable
 {
-    [Display(Name = "Connection id")]
     public Guid ConnectionId { get; init; }
 
-    [Display(Name = "Connection type")]
     public SqlConnectionType ConnectionType { get; } = connectionType;
 
     [Required]
     [MaxLength(250)]
-    [Display(Name = "Connection name")]
     public string ConnectionName { get; set; } = "";
 
     [Required]
-    [Display(Name = "Connection string")]
     [JsonSensitive(WhenContains = "password")]
     public string ConnectionString { get; set; } = "";
     
