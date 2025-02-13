@@ -103,7 +103,7 @@
         <div class="row justify-content-center">
             <div class="col-md-10">
                 <CodeEditor @ref="_editor"
-                            Language=""
+                            Language="@(Step.FunctionInputFormat == FunctionInputFormat.Json ? "json" : "")"
                             MinimapEnabled="false"
                             InitialValueExpression="() => Step.FunctionInput"
                             OnValueChanged="value => Step.FunctionInput = value"
@@ -118,14 +118,14 @@
             <div class="col-md-6">
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_raw"
-                           checked=@(_language == InputLanguage.Text)
-                           @onchange="() => SetLanguageAsync(InputLanguage.Text)">
-                    <label class="form-check-label fw-normal" for="radio_function_input_raw">Text</label>
+                           checked=@(Step.FunctionInputFormat == FunctionInputFormat.PlainText)
+                           @onchange="() => SetLanguageAsync(FunctionInputFormat.PlainText)">
+                    <label class="form-check-label fw-normal" for="radio_function_input_raw">Plain text</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input type="radio" class="form-check-input" id="radio_function_input_json"
-                           checked=@(_language == InputLanguage.Json)
-                           @onchange="() => SetLanguageAsync(InputLanguage.Json)">
+                           checked=@(Step.FunctionInputFormat == FunctionInputFormat.Json)
+                           @onchange="() => SetLanguageAsync(FunctionInputFormat.Json)">
                     <label class="form-check-label fw-normal" for="radio_function_input_json">JSON</label>
                 </div>
             </div>

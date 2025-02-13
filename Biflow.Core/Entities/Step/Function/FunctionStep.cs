@@ -18,6 +18,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
         FunctionApp = other.FunctionApp;
         FunctionUrl = other.FunctionUrl;
         FunctionInput = other.FunctionInput;
+        FunctionInputFormat = other.FunctionInputFormat;
         FunctionIsDurable = other.FunctionIsDurable;
         FunctionKey = other.FunctionKey;
         StepParameters = other.StepParameters
@@ -45,6 +46,8 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
         get;
         set => field = string.IsNullOrEmpty(value) ? null : value;
     }
+    
+    public FunctionInputFormat FunctionInputFormat { get; set; } = FunctionInputFormat.PlainText;
 
     [Display(Name = "Is durable")]
     public bool FunctionIsDurable { get; set; }

@@ -10,6 +10,7 @@ public class UpdateFunctionStepCommand : UpdateStepCommand<FunctionStep>
     public required Guid FunctionAppId { get; init; }
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
+    public required FunctionInputFormat FunctionInputFormat { get; init; }
     public required bool FunctionIsDurable { get; init; }
     /// <summary>
     /// If null, the previous FunctionKey value will be retained.
@@ -56,6 +57,7 @@ internal class UpdateFunctionStepCommandHandler(
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.FunctionUrl = request.FunctionUrl;
         step.FunctionInput = request.FunctionInput;
+        step.FunctionInputFormat = request.FunctionInputFormat;
         step.FunctionIsDurable = request.FunctionIsDurable;
         if (request.FunctionKey is not null)
         {

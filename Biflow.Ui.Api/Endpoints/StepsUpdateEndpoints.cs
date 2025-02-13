@@ -487,6 +487,7 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     FunctionAppId = stepDto.FunctionAppId,
                     FunctionUrl = stepDto.FunctionUrl,
                     FunctionInput = stepDto.FunctionInput,
+                    FunctionInputFormat = stepDto.FunctionInputFormat,
                     FunctionIsDurable = stepDto.FunctionIsDurable,
                     FunctionKey = stepDto.FunctionKey,
                     Parameters = parameters,

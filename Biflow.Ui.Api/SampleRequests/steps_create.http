@@ -198,6 +198,7 @@ Content-Type: application/json
   "functionAppId": "46141b84-8c24-42cc-c5e6-08dc50c2393e",
   "functionUrl": "https://testfunction.com/",
   "functionInput": "{ \"Value\": \"test\" }",
+  "functionInputFormat": "Json",
   "functionIsDurable": false,
   "functionKey": null
 }

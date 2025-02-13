@@ -22,7 +22,6 @@ public partial class FunctionStepEditModal(
 
     private FunctionSelectOffcanvas? _functionSelectOffcanvas;
     private CodeEditor? _editor;
-    private InputLanguage _language = InputLanguage.Text;
 
     private Task OpenFunctionSelectOffcanvas()
     {
@@ -38,7 +37,6 @@ public partial class FunctionStepEditModal(
 
     protected override async Task OnModalShownAsync(FunctionStep step)
     {
-        _language = InputLanguage.Text;
         if (_editor is not null)
         {
             try
@@ -49,13 +47,14 @@ public partial class FunctionStepEditModal(
         }
     }
 
-    private Task SetLanguageAsync(InputLanguage language)
+    private Task SetLanguageAsync(FunctionInputFormat language)
     {
-        _language = language;
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.FunctionInputFormat = language;
         ArgumentNullException.ThrowIfNull(_editor);
-        var inputLanguage = _language switch
+        var inputLanguage = language switch
         {
-            InputLanguage.Json => "json",
+            FunctionInputFormat.Json => "json",
             _ => ""
         };
         return _editor.SetLanguageAsync(inputLanguage);
@@ -85,6 +84,4 @@ public partial class FunctionStepEditModal(
             RetryIntervalMinutes = 0,
             FunctionAppId = FunctionApps.First().FunctionAppId
         };
-
-    private enum InputLanguage { Text, Json }
 }
