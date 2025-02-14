@@ -37,6 +37,16 @@ Content-Type: application/json
   "isVersionManager": false
 }
 
+### Reset password
+
+PATCH {{baseUrl}}/users/d1d6708d-8b8f-4f91-a822-08dd4d29b8f0/password
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "password": "Secure_Password_10000"
+}
+
 ### Delete user
 
 DELETE {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8

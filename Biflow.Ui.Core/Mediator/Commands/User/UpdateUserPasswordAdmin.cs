@@ -7,7 +7,10 @@ namespace Biflow.Ui.Core;
 /// </summary>
 /// <param name="UserId">User id of the user</param>
 /// <param name="Password">New password</param>
-public record UpdateUserPasswordAdminCommand(Guid UserId, string Password) : IRequest;
+public record UpdateUserPasswordAdminCommand(
+    Guid UserId,
+    [property: ComplexPassword]
+    string Password) : IRequest;
 
 [UsedImplicitly]
 internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -15,6 +18,8 @@ internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<AppDbCont
 {
     public async Task Handle(UpdateUserPasswordAdminCommand request, CancellationToken cancellationToken)
     {
+        // Ensure password meets ComplexPasswordAttribute requirements
+        request.EnsureDataAnnotationsValidated();
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var newHash = BC.HashPassword(request.Password);
         var affectedRows = await context.Users

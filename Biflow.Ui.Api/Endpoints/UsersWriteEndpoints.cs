@@ -79,6 +79,20 @@ public abstract class UsersWriteEndpoints : IEndpoints
             .WithSummary("Update user")
             .WithDescription("Update an existing user")
             .WithName("UpdateUser");
+        
+        group.MapPatch("/{userId:guid}/password",
+            async (Guid userId, PasswordDto dto, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateUserPasswordAdminCommand(userId, dto.Password);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok();
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status200OK)
+            .WithSummary("Reset user's password")
+            .WithDescription("Reset user's password")
+            .WithName("ResetPassword");
 
         group.MapDelete("/{userId:guid}",
             async (Guid userId, IMediator mediator, CancellationToken cancellationToken) =>
