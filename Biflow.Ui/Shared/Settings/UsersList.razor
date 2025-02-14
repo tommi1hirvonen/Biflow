@@ -90,20 +90,27 @@
                             </div>
                             <div class="col-2 text-center">
                                 <HxButtonGroup>
-                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)" title="Edit user">
-                                        <SvgIcon Icon="LucideIcon.Pen" />
+                                    <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
+                                              aria-label="edit" @onclick="async () => await ShowEditModalAsync(user)"
+                                              title="Edit user">
+                                        <SvgIcon Icon="LucideIcon.Pen"/>
                                     </HxButton>
 
                                     @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
                                     {
-                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="Change password" @onclick="() => _resetPasswordModal.LetAsync(x => x.ShowAsync(user.Username))" title="Reset password">
-                                            <SvgIcon Icon="LucideIcon.Key" />
+                                        <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
+                                                  aria-label="Change password"
+                                                  @onclick="() => _resetPasswordModal.LetAsync(x => x.ShowAsync(user.UserId, user.Username))"
+                                                  title="Reset password">
+                                            <SvgIcon Icon="LucideIcon.Key"/>
                                         </HxButton>
                                     }
 
                                     <HxDropdownButtonGroup>
-                                        <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small" aria-label="delete" title="Delete user">
-                                            <SvgIcon Icon="LucideIcon.Trash2" />
+                                        <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto"
+                                                                Size="ButtonSize.Small" aria-label="delete"
+                                                                title="Delete user">
+                                            <SvgIcon Icon="LucideIcon.Trash2"/>
                                         </HxDropdownToggleButton>
                                         <HxDropdownMenu>
                                             <HxDropdownHeader>Delete?</HxDropdownHeader>
