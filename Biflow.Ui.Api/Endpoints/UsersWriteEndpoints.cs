@@ -1,3 +1,5 @@
+using Biflow.Ui.Api.Mediator.Commands;
+
 namespace Biflow.Ui.Api.Endpoints;
 
 [UsedImplicitly]
@@ -11,6 +13,72 @@ public abstract class UsersWriteEndpoints : IEndpoints
         var group = app.MapGroup("/users")
             .WithTags(Scopes.UsersWrite)
             .AddEndpointFilter(endpointFilter);
+
+        group.MapPost("", async (CreateUser dto, IMediator mediator,
+            LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var role = dto.MainRole switch
+                {
+                    Models.UserRole.Admin => Mediator.Commands.UserRole.Admin,
+                    Models.UserRole.Editor => Mediator.Commands.UserRole.Editor,
+                    Models.UserRole.Operator => Mediator.Commands.UserRole.Operator,
+                    Models.UserRole.Viewer => Mediator.Commands.UserRole.Viewer,
+                    _ => throw new ArgumentOutOfRangeException($"Unrecognized user role {dto.MainRole}")
+                };
+                var command = new CreateUserCommand(
+                    Username: dto.Username, 
+                    Email: dto.Email, 
+                    AuthorizeAllJobs: dto.AuthorizeAllJobs, 
+                    AuthorizeAllDataTables: dto.AuthorizeAllDataTables, 
+                    AuthorizedJobIds: dto.AuthorizedJobIds, 
+                    AuthorizedDataTableIds: dto.AuthorizedDataTableIds, 
+                    MainRole: role, 
+                    IsSettingsEditor: dto.IsSettingsEditor, 
+                    IsDataTableMaintainer: dto.IsDataTableMaintainer, 
+                    IsVersionManager: dto.IsVersionManager, 
+                    Password: dto.Password);
+                var user = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetUser", new { userId = user.UserId });
+                return Results.Created(url, user);
+            })
+            .ProducesValidationProblem()
+            .Produces<User>()
+            .WithSummary("Create user")
+            .WithDescription("Create a new user")
+            .WithName("CreateUser");
+        
+        group.MapPut("/{userId:guid}", async (Guid userId, UpdateUser dto,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var role = dto.MainRole switch
+                {
+                    Models.UserRole.Admin => Mediator.Commands.UserRole.Admin,
+                    Models.UserRole.Editor => Mediator.Commands.UserRole.Editor,
+                    Models.UserRole.Operator => Mediator.Commands.UserRole.Operator,
+                    Models.UserRole.Viewer => Mediator.Commands.UserRole.Viewer,
+                    _ => throw new ArgumentOutOfRangeException($"Unrecognized user role {dto.MainRole}")
+                };
+                var command = new UpdateUserCommand(
+                    UserId: userId,
+                    Username: dto.Username, 
+                    Email: dto.Email, 
+                    AuthorizeAllJobs: dto.AuthorizeAllJobs, 
+                    AuthorizeAllDataTables: dto.AuthorizeAllDataTables, 
+                    AuthorizedJobIds: dto.AuthorizedJobIds, 
+                    AuthorizedDataTableIds: dto.AuthorizedDataTableIds, 
+                    MainRole: role, 
+                    IsSettingsEditor: dto.IsSettingsEditor, 
+                    IsDataTableMaintainer: dto.IsDataTableMaintainer, 
+                    IsVersionManager: dto.IsVersionManager);
+                var user = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(user);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<User>()
+            .WithSummary("Update user")
+            .WithDescription("Update an existing user")
+            .WithName("UpdateUser");
 
         group.MapDelete("/{userId:guid}",
             async (Guid userId, IMediator mediator, CancellationToken cancellationToken) =>

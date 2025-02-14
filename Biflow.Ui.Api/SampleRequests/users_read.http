@@ -5,20 +5,20 @@ x-api-key: {{apiKey}}
 
 ### User by id
 
-GET {{baseUrl}}/users/e2d1747e-6ddf-4ebb-a5f5-dfd9fadff4f1
+GET {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8
 x-api-key: {{apiKey}}
 
 ### User jobs
 
-GET {{baseUrl}}/users/e2d1747e-6ddf-4ebb-a5f5-dfd9fadff4f1/jobs
+GET {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8/jobs
 x-api-key: {{apiKey}}
 
 ### User data tables
 
-GET {{baseUrl}}/users/e2d1747e-6ddf-4ebb-a5f5-dfd9fadff4f1/datatables
+GET {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8/datatables
 x-api-key: {{apiKey}}
 
 ### User subscriptions
 
-GET {{baseUrl}}/users/e2d1747e-6ddf-4ebb-a5f5-dfd9fadff4f1/subscriptions
+GET {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8/subscriptions
 x-api-key: {{apiKey}}

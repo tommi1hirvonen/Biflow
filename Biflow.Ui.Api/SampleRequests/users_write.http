@@ -1,0 +1,43 @@
+### Create user
+
+POST {{baseUrl}}/users
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "username": "test-user",
+  "email": "test.user@testdomain.com",
+  "authorizeAllJobs": false,
+  "authorizeAllDataTables": false,
+  "authorizedJobIds": [],
+  "authorizedDataTableIds": [],
+  "mainRole": "Admin",
+  "isSettingsEditor": false,
+  "isDataTableMaintainer":  false,
+  "isVersionManager": false,
+  "password": "Secure_Password_9000"
+}
+
+### Update user
+
+PUT {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "username": "test-user",
+  "email": "test.user@testdomain.com",
+  "authorizeAllJobs": false,
+  "authorizeAllDataTables": false,
+  "authorizedJobIds": ["29a43f41-d2e4-4e86-62a0-08dbb695de54", "b03ddac3-5033-4bb1-5b46-08dc66907662"],
+  "authorizedDataTableIds": ["b871b522-c8ea-4bb8-7b1e-08dace566f2b", "9ad63ec4-261e-4d02-05a5-08dacf1f9580"],
+  "mainRole": "Viewer",
+  "isSettingsEditor": false,
+  "isDataTableMaintainer":  false,
+  "isVersionManager": false
+}
+
+### Delete user
+
+DELETE {{baseUrl}}/users/2d1ca49a-399d-4ad0-47fa-08dd4d24e5f8
+x-api-key: {{apiKey}}
