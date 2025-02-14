@@ -77,3 +77,13 @@ x-api-key: {{apiKey}}
 
 GET {{baseUrl}}/integrations/qlikcloudenvironments/18f63239-9ef3-4d4e-fb98-08dbc6a53327
 x-api-key: {{apiKey}}
+
+### All credentials
+
+GET {{baseUrl}}/integrations/credentials
+x-api-key: {{apiKey}}
+
+### Credential by id
+
+GET {{baseUrl}}/integrations/credentials/bd020872-8f60-4c2b-95d7-08dd4d173b3b
+x-api-key: {{apiKey}}

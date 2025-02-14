@@ -206,6 +206,58 @@ public class IntegrationsWriteEndpoints : IEndpoints
         
         #endregion
         
+        #region Credentials (on-premise)
+        
+        group.MapPost("/credentials",
+            async (CredentialDto dto, IMediator mediator, LinkGenerator linker, HttpContext ctx,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new CreateCredentialCommand(
+                    dto.Domain, dto.Username, dto.Password);
+                var credential = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetCredential",
+                    new { credentialId = credential.CredentialId });
+                return Results.Created(url, credential);
+            })
+            .ProducesValidationProblem()
+            .Produces<Credential>()
+            .WithSummary("Create on-premise/Windows credential")
+            .WithDescription("Create a new on-premise/Windows credential")
+            .WithName("CreateCredential");
+        
+        group.MapPut("/credentials/{credentialId:guid}",
+            async (Guid credentialId, CredentialDto dto,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateCredentialCommand(
+                    credentialId, dto.Domain, dto.Username, dto.Password);
+                var credential = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(credential);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<Credential>()
+            .WithSummary("Update on-premise/Windows credential")
+            .WithDescription("Update an existing on-premise/Windows credential. " +
+                             "Pass null as Password in the request body JSON model to retain the previous " +
+                             "password value.")
+            .WithName("UpdateCredential");
+        
+        group.MapDelete("/credentials/{credentialId:guid}",
+            async (Guid credentialId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteCredentialCommand(credentialId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete on-premise/Windows credential")
+            .WithDescription("Delete on-premise/Windows credential")
+            .WithName("DeleteCredential");
+        
+        #endregion
+        
         #region Databricks workspaces
         
         group.MapPost("/databricksworkspaces",

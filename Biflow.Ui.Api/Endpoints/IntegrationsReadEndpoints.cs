@@ -74,6 +74,36 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
                              "Sensitive data (password, client secret) will be replaced with an empty value.")
             .WithName("GetAzureCredential");
         
+        group.MapGet("/credentials", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.Credentials
+                    .AsNoTracking()
+                    .OrderBy(x => x.Domain)
+                    .ThenBy(x => x.Username)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .Produces<Credential[]>()
+            .WithSummary("Get all on-premise/Windows credentials")
+            .WithDescription("Get all on-premise/Windows credentials. Passwords will be replaced with an empty value.")
+            .WithName("GetCredentials");
+        
+        group.MapGet("/credentials/{credentialId:guid}",
+                async (ServiceDbContext dbContext, Guid credentialId, CancellationToken cancellationToken) =>
+                {
+                    var credential = await dbContext.Credentials
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(x => x.CredentialId == credentialId, cancellationToken);
+                    if (credential is null)
+                    {
+                        throw new NotFoundException<Credential>(credentialId);
+                    }
+                    return Results.Ok(credential);
+                })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<Credential>()
+            .WithSummary("Get on-premise/Windows credential by id")
+            .WithDescription("Get on-premise/Windows credential by id. Password will be replaced with an empty value.")
+            .WithName("GetCredential");
+        
         group.MapGet("/databricksworkspaces", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
                 await dbContext.DatabricksWorkspaces
                     .AsNoTracking()

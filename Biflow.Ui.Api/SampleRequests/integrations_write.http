@@ -109,6 +109,37 @@ x-api-key: {{apiKey}}
 
 
 
+### Create on-premise credential
+
+POST {{baseUrl}}/integrations/credentials
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "domain": ".",
+  "username": "srv_orchestrator",
+  "password": "123456789"
+}
+
+### Update on-premise credential
+
+PUT {{baseUrl}}/integrations/credentials/bd020872-8f60-4c2b-95d7-08dd4d173b3b
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "domain": "AD",
+  "username": "srv_orchestrator2",
+  "password": null
+}
+
+### Delete on-premise credential
+
+DELETE {{baseUrl}}/integrations/credentials/bd020872-8f60-4c2b-95d7-08dd4d173b3b
+x-api-key: {{apiKey}}
+
+
+
 ### Create Databricks workspace
 
 POST {{baseUrl}}/integrations/databricksworkspaces
