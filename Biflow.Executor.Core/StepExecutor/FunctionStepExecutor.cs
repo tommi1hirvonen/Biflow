@@ -247,13 +247,12 @@ internal class FunctionStepExecutor(
         // Add function security code as a request header. If the function specific code was defined, use that.
         // Otherwise, revert to the function app code if it was defined.
         var functionApp = step.GetApp();
-        ArgumentNullException.ThrowIfNull(functionApp);
 
-        functionKey ??= functionApp.FunctionAppKey;
-        if (!string.IsNullOrEmpty(functionKey))
-        {
-            message.Headers.Add("x-functions-key", functionKey);
-        }
+        functionKey ??= functionApp?.FunctionAppKey;
+        
+        ArgumentException.ThrowIfNullOrEmpty(functionKey);
+
+        message.Headers.Add("x-functions-key", functionKey);
         
         if (string.IsNullOrEmpty(step.FunctionInput))
         {

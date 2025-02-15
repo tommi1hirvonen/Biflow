@@ -9,7 +9,7 @@ public class FunctionStepExecution : StepExecution,
     IHasStepExecutionParameters<FunctionStepExecutionParameter>,
     IHasStepExecutionAttempts<FunctionStepExecutionAttempt>
 {
-    public FunctionStepExecution(string stepName, Guid functionAppId, string functionUrl) : base(stepName, StepType.Function)
+    public FunctionStepExecution(string stepName, Guid? functionAppId, string functionUrl) : base(stepName, StepType.Function)
     {
         FunctionAppId = functionAppId;
         FunctionUrl = functionUrl;
@@ -29,7 +29,7 @@ public class FunctionStepExecution : StepExecution,
         AddAttempt(new FunctionStepExecutionAttempt(this));
     }
 
-    public Guid FunctionAppId { get; [UsedImplicitly] private set; }
+    public Guid? FunctionAppId { get; [UsedImplicitly] private set; }
 
     [MaxLength(1000)]
     public string FunctionUrl { get; private set; }

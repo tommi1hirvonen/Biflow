@@ -3,7 +3,7 @@ namespace Biflow.Ui.Core;
 public class CreateFunctionStepCommand : CreateStepCommand<FunctionStep>
 {
     public required double TimeoutMinutes { get; init; }
-    public required Guid FunctionAppId { get; init; }
+    public required Guid? FunctionAppId { get; init; }
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public required FunctionInputFormat FunctionInputFormat { get; init; }
@@ -22,9 +22,10 @@ internal class CreateFunctionStepCommandHandler(
         CreateFunctionStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
         // Check that the function app exists.
-        if (!await dbContext.FunctionApps.AnyAsync(x => x.FunctionAppId == request.FunctionAppId, cancellationToken))
+        if (request.FunctionAppId is { } id &&
+            !await dbContext.FunctionApps.AnyAsync(x => x.FunctionAppId == id, cancellationToken))
         {
-            throw new NotFoundException<FunctionApp>(request.FunctionAppId);
+            throw new NotFoundException<FunctionApp>(id);
         }
         
         var step = new FunctionStep

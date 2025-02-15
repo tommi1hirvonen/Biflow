@@ -1,5 +1,4 @@
 ﻿using Biflow.Core.Attributes;
-using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
@@ -29,10 +28,8 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [Required]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
-
-    [Required]
-    [NotEmptyGuid]
-    public Guid FunctionAppId { get; set; }
+    
+    public Guid? FunctionAppId { get; set; }
 
     [MaxLength(1000)]
     [Required]
@@ -57,7 +54,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     }
 
     [JsonIgnore]
-    public FunctionApp FunctionApp { get; set; } = null!;
+    public FunctionApp? FunctionApp { get; set; }
 
     [ValidateComplexType]
     [JsonInclude]

@@ -108,7 +108,6 @@ public partial class StepsList(
         StepType.Sql => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
         StepType.Package => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
         StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
-        StepType.Function => ((FunctionApps?.Count ?? 0) == 0, "No Function Apps defined"),
         StepType.Dataset => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
         StepType.Dataflow => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
         StepType.Fabric => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),

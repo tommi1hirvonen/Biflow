@@ -28,13 +28,16 @@
                         <SvgIcon Icon="LucideIcon.Zap" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.FunctionAppId">
+                        <option value="">No function app</option>
                         @foreach (var app in FunctionApps)
                         {
                             <option value="@app.FunctionAppId">@app.FunctionAppName</option>
                         }
                     </InputSelect>
-                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="OpenFunctionSelectOffcanvas">
-                        <SvgIcon Icon="LucideIcon.Ellipsis" />
+                    <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                              Enabled="Step.FunctionAppId is not null"
+                              @onclick="OpenFunctionSelectOffcanvas">
+                        <SvgIcon Icon="LucideIcon.Ellipsis"/>
                         Browse functions
                     </HxButton>
                 </div>
@@ -67,15 +70,21 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey"></InputText>
                 </div>
                 @{
-                    var functionAppKey = FunctionApps.FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)?.FunctionAppKey;
+                    var functionAppKey = FunctionApps
+                        .FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)
+                        ?.FunctionAppKey;
                 }
-                @if (functionAppKey is null)
+                @if (Step.FunctionAppId is null)
+                {
+                    <div class="form-text">No function app was selected. A function key must be set.</div>
+                }
+                else if (functionAppKey is null)
                 {
                     <div class="form-text">No key was configured for the Function App in settings. A function key must be set.</div>
                 }
                 else
                 {
-                    <div class="form-text">Set a function key to override the Function App key configured in settings.</div>
+                    <div class="form-text">Optionally set a function key to override the Function App key configured in settings.</div>
                 }
             </div>
         </div>

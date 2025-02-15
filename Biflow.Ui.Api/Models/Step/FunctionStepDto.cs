@@ -4,7 +4,7 @@ namespace Biflow.Ui.Api.Models.Step;
 public record FunctionStepDto : StepDto
 {
     public required double TimeoutMinutes { get; init; }
-    public required Guid FunctionAppId { get; init; }
+    public Guid? FunctionAppId { get; init; }
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public FunctionInputFormat FunctionInputFormat { get; init; } = FunctionInputFormat.PlainText;

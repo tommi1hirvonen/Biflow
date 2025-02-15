@@ -25,8 +25,10 @@ public partial class FunctionStepEditModal(
 
     private Task OpenFunctionSelectOffcanvas()
     {
-        ArgumentNullException.ThrowIfNull(Step?.FunctionAppId);
-        return _functionSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.FunctionAppId));
+        ArgumentNullException.ThrowIfNull(Step);
+        return Step.FunctionAppId is { } id
+            ? _functionSelectOffcanvas.LetAsync(x => x.ShowAsync(id))
+            : Task.CompletedTask;
     }
 
     private void OnFunctionSelected(string functionUrl)
@@ -81,7 +83,6 @@ public partial class FunctionStepEditModal(
             JobId = job.JobId,
             Job = job,
             RetryAttempts = 0,
-            RetryIntervalMinutes = 0,
-            FunctionAppId = FunctionApps.First().FunctionAppId
+            RetryIntervalMinutes = 0
         };
 }

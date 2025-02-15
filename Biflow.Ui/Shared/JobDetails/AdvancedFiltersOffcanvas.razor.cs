@@ -95,7 +95,8 @@ public partial class AdvancedFiltersOffcanvas : ComponentBase
     private bool FunctionInputPredicate(Step step) =>
         FunctionInput.Length == 0 || step is FunctionStep f && (f.FunctionInput?.ContainsIgnoreCase(FunctionInput) ?? false);
     private bool FunctionAppsPredicate(Step step) =>
-        _functionAppsFilter.Count == 0 || step is FunctionStep f && _functionAppsFilter.Select(a => a.FunctionAppId).Contains(f.FunctionAppId);
+        _functionAppsFilter.Count == 0 ||
+        step is FunctionStep { FunctionAppId: { } id } && _functionAppsFilter.Select(a => a.FunctionAppId).Contains(id);
 
     private bool ExeFilePathPredicate(Step step) =>
         ExeFilePath.Length == 0 || step is ExeStep e && (e.ExeFileName?.ContainsIgnoreCase(ExeFilePath) ?? false);

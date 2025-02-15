@@ -62,6 +62,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             v.Add(new TabularStepValidator());
             v.Add(new DbtStepValidator());
             v.Add(new DatabricksStepValidator());
+            v.Add(new FunctionStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
         {
@@ -90,6 +91,16 @@ public class StepValidator : AsyncAbstractValidator<Step>
             .Distinct()
             .Count();
         return a.Length == distinctCount;
+    }
+}
+
+file class FunctionStepValidator : AbstractValidator<FunctionStep>
+{
+    public FunctionStepValidator()
+    {
+        RuleFor(step => step)
+            .Must(step => step.FunctionAppId is not null || !string.IsNullOrEmpty(step.FunctionKey))
+            .WithMessage("Either the function app or the function key property must be set");
     }
 }
 
