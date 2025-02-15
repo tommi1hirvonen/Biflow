@@ -47,6 +47,7 @@ builder.Services.Configure<JsonOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(s =>
 {
+    s.EnableAnnotations();
     s.UseOneOfForPolymorphism();
     s.SwaggerDoc("v1", new OpenApiInfo { Title = "Biflow API", Version = "v1" });
     s.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
@@ -74,7 +75,7 @@ builder.Services.AddUiCoreServices<UserService>(builder.Configuration, authentic
 builder.Services.AddValidationServices();
 builder.Services.AddSingleton<ApiKeyEndpointFilterFactory>();
 builder.Services.AddRequestHandlers<Program>();
-builder.Services.AddSingleton<ConcurrentDictionary<Guid, VersionRevertStatus>>();
+builder.Services.AddSingleton<VersionRevertJobDictionary>();
 builder.Services.AddSingleton<VersionRevertService>();
 builder.Services.AddHostedService(services => services.GetRequiredService<VersionRevertService>());
 

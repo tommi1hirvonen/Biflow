@@ -10,17 +10,17 @@ Content-Type: application/json
 
 ### Revert by id
 
-POST {{baseUrl}}/environmentversions/revert/24
+POST {{baseUrl}}/environmentversions/revert/25?retainIntegrationProperties=false
 x-api-key: {{apiKey}}
 
 ### Get version revert status
 
-GET {{baseUrl}}/environmentversions/revert/status/424cca55-1cfb-4e7b-a6cf-c18cf53c5b5e
+GET {{baseUrl}}/environmentversions/revert/status/7308a4f5-9689-4e11-b099-0853a7877306
 x-api-key: {{apiKey}}
 
 ### Revert to snapshot
 
-POST {{baseUrl}}/environmentversions/revert
+POST {{baseUrl}}/environmentversions/revert?retainIntegrationProperties=false
 x-api-key: {{apiKey}}
 Content-Type: application/json
 

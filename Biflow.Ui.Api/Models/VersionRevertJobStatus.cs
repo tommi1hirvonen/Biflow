@@ -1,6 +1,6 @@
 namespace Biflow.Ui.Api.Models;
 
-public enum VersionRevertStatus
+public enum VersionRevertJobStatus
 {
     Queued,
     Processing,

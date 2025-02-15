@@ -5,7 +5,7 @@ namespace Biflow.Ui.Api.Services;
 
 internal class VersionRevertService(
     ILogger<VersionRevertService> logger,
-    ConcurrentDictionary<Guid, VersionRevertStatus> statuses) : BackgroundService
+    VersionRevertJobDictionary statuses) : BackgroundService
 {
     private readonly SemaphoreSlim _semaphore = new(1, 1);
     private readonly Channel<VersionRevertJob> _channel =
@@ -20,9 +20,12 @@ internal class VersionRevertService(
             try
             {
                 await _semaphore.WaitAsync(stoppingToken);
-                statuses[job.Id] = VersionRevertStatus.Processing;
-                await job.TaskDelegate(stoppingToken);
-                statuses[job.Id] = VersionRevertStatus.Completed;
+                statuses[job.Id] = new VersionRevertJobState(VersionRevertJobStatus.Processing, []);
+                var response = await job.TaskDelegate(stoppingToken);
+                var integrations = response.NewIntegrations
+                    .Select(x => (x.Type.Name, x.Name))
+                    .ToArray();
+                statuses[job.Id] = new VersionRevertJobState(VersionRevertJobStatus.Completed, integrations);
             }
             catch (OperationCanceledException)
             {
@@ -30,7 +33,7 @@ internal class VersionRevertService(
             }
             catch (Exception ex)
             {
-                statuses[job.Id] = VersionRevertStatus.Failed;
+                statuses[job.Id] = new VersionRevertJobState(VersionRevertJobStatus.Failed, []);
                 logger.LogError(ex, "Error reverting environment version");
             }
             finally

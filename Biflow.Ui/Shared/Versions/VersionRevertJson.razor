@@ -166,7 +166,8 @@
         try
         {
             _result = null;
-            var command = new RevertVersionCommand(_snapshot);
+            // TODO Get RetainIntegrationProperties value from user input.
+            var command = new RevertVersionCommand(_snapshot, RetainIntegrationProperties: false);
             _revertTask = Mediator.SendAsync(command, _cts.Token);
             StateHasChanged();
             await _revertTask;

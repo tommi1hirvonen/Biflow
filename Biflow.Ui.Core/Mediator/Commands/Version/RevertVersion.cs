@@ -2,29 +2,58 @@
 
 namespace Biflow.Ui.Core;
 
-public record RevertVersionCommand(EnvironmentSnapshot Snapshot) : IRequest;
+/// <summary>
+/// 
+/// </summary>
+/// <param name="Snapshot">The snapshot object to which the environment should be reverted</param>
+/// <param name="RetainIntegrationProperties">Whether to retain previous integration properties.
+/// This should normally be set to true if transferring snapshots between environments (e.g. from test to prod)
+/// where integration property values for the same entity may be different (e.g. connection strings or resource names).
+/// </param>
+public record RevertVersionCommand(EnvironmentSnapshot Snapshot, bool RetainIntegrationProperties)
+    : IRequest<RevertVersionResponse>;
 
-public record RevertVersionByIdCommand(int VersionId) : IRequest;
+/// <summary>
+/// 
+/// </summary>
+/// <param name="VersionId">The version id of the snapshot to which the environment should be reverted</param>
+/// <param name="RetainIntegrationProperties">Whether to retain previous integration properties.
+/// This should normally be set to true if transferring snapshots between environments (e.g. from test to prod)
+/// where integration property values for the same entity may be different (e.g. connection strings or resource names).
+/// </param>
+public record RevertVersionByIdCommand(int VersionId, bool RetainIntegrationProperties)
+    : IRequest<RevertVersionResponse>;
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="NewIntegrations">Integrations that were added as part of the revert process.
+/// The property values of these integration entities should be checked after the revert
+/// as they may need to be filled in.</param>
+public record RevertVersionResponse(IReadOnlyList<(Type Type, string Name)> NewIntegrations);
 
 [UsedImplicitly]
 internal class RevertVersionByIdCommandHandler(IDbContextFactory<RevertDbContext> dbContextFactory, IMediator mediator)
-    : IRequestHandler<RevertVersionByIdCommand>
+    : IRequestHandler<RevertVersionByIdCommand, RevertVersionResponse>
 {
-    private readonly IRequestHandler<RevertVersionCommand> _handler =
-        mediator.GetRequestHandler<RevertVersionCommand>();
+    private readonly IRequestHandler<RevertVersionCommand, RevertVersionResponse> _handler =
+        mediator.GetRequestHandler<RevertVersionCommand, RevertVersionResponse>();
     
-    public async Task Handle(RevertVersionByIdCommand request, CancellationToken cancellationToken)
+    public async Task<RevertVersionResponse> Handle(RevertVersionByIdCommand request,
+        CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var snapshotJson = await context.EnvironmentVersions
             .AsNoTracking()
             .Where(v => v.VersionId == request.VersionId)
             .Select(v => v.SnapshotWithReferencesPreserved)
-            .FirstOrDefaultAsync(cancellationToken) ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
+            .FirstOrDefaultAsync(cancellationToken)
+            ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
         var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
         ArgumentNullException.ThrowIfNull(snapshot);
-        var command = new RevertVersionCommand(snapshot);
-        await _handler.Handle(command, cancellationToken);
+        var command = new RevertVersionCommand(snapshot, request.RetainIntegrationProperties);
+        var response = await _handler.Handle(command, cancellationToken);
+        return response;
     }
 }
 
@@ -33,9 +62,9 @@ internal class RevertVersionCommandHandler(
     IDbContextFactory<RevertDbContext> dbContextFactory,
     ISchedulerService schedulerService,
     ILogger<RevertVersionCommandHandler> logger)
-    : IRequestHandler<RevertVersionCommand>
+    : IRequestHandler<RevertVersionCommand, RevertVersionResponse>
 {
-    public async Task Handle(RevertVersionCommand request, CancellationToken cancellationToken)
+    public async Task<RevertVersionResponse> Handle(RevertVersionCommand request, CancellationToken cancellationToken)
     {
         try
         {
@@ -43,7 +72,8 @@ internal class RevertVersionCommandHandler(
 
             await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-            // Manually controlling transactions is allowed since RevertDbContext does not use retry-on-failure execution strategy.
+            // Manually controlling transactions is allowed since
+            // RevertDbContext does not use retry-on-failure execution strategy.
             await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
 
@@ -59,145 +89,412 @@ internal class RevertVersionCommandHandler(
                 .Include(u => u.DataTables)
                 .ToArrayAsync(cancellationToken);
 
-
-            // Capture some sensitive properties and fill missing data for entities coming from the snapshot.
+            // Handle integration entities.
+            // If RetainIntegrationProperties == true, use previous connection values for all integrations.
+            // Otherwise, capture some sensitive properties and fill missing data for entities coming from the snapshot.
             // The snapshot does not contain data for properties marked as sensitive.
 
-            var capturedSqlConnectionStrings = await context.SqlConnections
+            // Collect integrations that may need to be manually updated with sensitive properties.
+            var newIntegrations = new List<(Type Type, string Name)>();
+            
+            var capturedAsConnections = await context.AnalysisServicesConnections
                 .AsNoTracking()
                 .Select(c => new { c.ConnectionId, c.ConnectionString })
                 .ToArrayAsync(cancellationToken);
-
-            foreach (var connection in snapshot.SqlConnections.Where(c => string.IsNullOrEmpty(c.ConnectionString)))
-            {
-                connection.ConnectionString = capturedSqlConnectionStrings
-                    .FirstOrDefault(c => c.ConnectionId == connection.ConnectionId)
-                    ?.ConnectionString ?? "";
-            }
             
-            var capturedAsConnectionStrings = await context.AnalysisServicesConnections
-                .AsNoTracking()
-                .Select(c => new { c.ConnectionId, c.ConnectionString })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var connection in snapshot.AnalysisServicesConnections.Where(c => string.IsNullOrEmpty(c.ConnectionString)))
-            {
-                connection.ConnectionString = capturedAsConnectionStrings
-                  .FirstOrDefault(c => c.ConnectionId == connection.ConnectionId)
-                  ?.ConnectionString ?? "";
-            }
-
-            var capturedServicePrincipalSecrets = await context.ServicePrincipalCredentials
-                .AsNoTracking()
-                .Select(a => new { a.AzureCredentialId, a.ClientSecret })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var credential in snapshot.AzureCredentials
-                         .OfType<ServicePrincipalAzureCredential>()
-                         .Where(a => string.IsNullOrEmpty(a.ClientSecret)))
-            {
-                credential.ClientSecret = capturedServicePrincipalSecrets
-                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId)
-                    ?.ClientSecret ?? "";
-            }
-            
-            var capturedOrganizationalAccountPasswords = await context.OrganizationalAccountCredentials
-                .AsNoTracking()
-                .Select(a => new { a.AzureCredentialId, a.Password })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var credential in snapshot.AzureCredentials
-                         .OfType<OrganizationalAccountAzureCredential>()
-                         .Where(a => string.IsNullOrEmpty(a.Password)))
-            {
-                credential.Password = capturedOrganizationalAccountPasswords
-                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId)
-                    ?.Password ?? "";
-            }
-
-            var capturedBlobStorages = await context.BlobStorageClients
-                .AsNoTracking()
-                .Select(b => new { b.BlobStorageClientId, b.ConnectionMethod, b.StorageAccountUrl, b.ConnectionString })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var blob in snapshot.BlobStorageClients
-                .Where(b => b.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString && string.IsNullOrEmpty(b.ConnectionString)))
-            {
-                var cs = capturedBlobStorages
-                    .FirstOrDefault(b => b.BlobStorageClientId == blob.BlobStorageClientId && b.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
-                    ?.ConnectionString
-                    ?? "";
-                blob.UseConnectionString(cs);
-            }
-
-            foreach (var blob in snapshot.BlobStorageClients
-                .Where(b => b.ConnectionMethod == BlobStorageConnectionMethod.Url && string.IsNullOrEmpty(b.StorageAccountUrl)))
-            {
-                var url = capturedBlobStorages
-                    .FirstOrDefault(b => b.BlobStorageClientId == blob.BlobStorageClientId && b.ConnectionMethod == BlobStorageConnectionMethod.Url)
-                    ?.StorageAccountUrl
-                    ?? "";
-                blob.UseUrl(url);
-            }
-
-            var capturedFunctionAppKeys = await context.FunctionApps
-                .AsNoTracking()
-                .Select(f => new { f.FunctionAppId, f.FunctionAppKey })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var func in snapshot.FunctionApps.Where(f => string.IsNullOrEmpty(f.FunctionAppKey)))
-            {
-                func.FunctionAppKey = capturedFunctionAppKeys
-                    .FirstOrDefault(f => f.FunctionAppId == func.FunctionAppId)
-                    ?.FunctionAppKey;
-            }
-
-            var capturedQlikTokens = await context.QlikCloudEnvironments
-                .AsNoTracking()
-                .Select(q => new { q.QlikCloudEnvironmentId, q.ApiToken })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var qlik in snapshot.QlikCloudEnvironments.Where(q => string.IsNullOrEmpty(q.ApiToken)))
-            {
-                qlik.ApiToken = capturedQlikTokens
-                    .FirstOrDefault(q => q.QlikCloudEnvironmentId == qlik.QlikCloudEnvironmentId)
-                    ?.ApiToken ?? "";
-            }
-
-            var capturedDatabricksWorkspaceTokens = await context.DatabricksWorkspaces
-                .AsNoTracking()
-                .Select(w => new { w.WorkspaceId, w.ApiToken })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var workspace in snapshot.DatabricksWorkspaces.Where(w => string.IsNullOrEmpty(w.ApiToken)))
-            {
-                workspace.ApiToken = capturedDatabricksWorkspaceTokens
-                    .FirstOrDefault(w => w.WorkspaceId == workspace.WorkspaceId)
-                    ?.ApiToken ?? "";
-            }
-
-            var capturedDbtAccountTokens = await context.DbtAccounts
-                .AsNoTracking()
-                .Select(a => new { a.DbtAccountId, a.ApiToken })
-                .ToArrayAsync(cancellationToken);
-
-            foreach (var account in snapshot.DbtAccounts.Where(a => string.IsNullOrEmpty(a.ApiToken)))
-            {
-                account.ApiToken = capturedDbtAccountTokens
-                    .FirstOrDefault(a => a.DbtAccountId == account.DbtAccountId)
-                    ?.ApiToken ?? "";
-            }
-
             var capturedCredentials = await context.Credentials
                 .AsNoTracking()
-                .Select(c => new { c.CredentialId, c.Password })
+                .Select(c => new { c.CredentialId, c.Domain, c.Username, c.Password })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedDatabricksWorkspaces = await context.DatabricksWorkspaces
+                .AsNoTracking()
+                .Select(w => new { w.WorkspaceId, w.WorkspaceUrl, w.ApiToken })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedDbtAccounts = await context.DbtAccounts
+                .AsNoTracking()
+                .Select(a => new { a.DbtAccountId, a.AccountId, a.ApiBaseUrl, a.ApiToken })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedFunctionApps = await context.FunctionApps
+                .AsNoTracking()
+                .Select(f => new
+                {
+                    f.FunctionAppId, f.SubscriptionId, f.ResourceGroupName, f.ResourceName, f.FunctionAppKey
+                })
                 .ToArrayAsync(cancellationToken);
 
-            foreach (var credential in snapshot.Credentials.Where(c => string.IsNullOrEmpty(c.Password)))
+            var capturedSqlConnections = await context.SqlConnections
+                .AsNoTracking()
+                .Select(c => new { c.ConnectionId, c.ConnectionString })
+                .ToArrayAsync(cancellationToken);
+
+            var capturedServicePrincipals = await context.ServicePrincipalCredentials
+                .AsNoTracking()
+                .Select(a => new { a.AzureCredentialId, a.TenantId, a.ClientId, a.ClientSecret })
+                .ToArrayAsync(cancellationToken);
+
+            var capturedOrganizationalAccounts = await context.OrganizationalAccountCredentials
+                .AsNoTracking()
+                .Select(a => new { a.AzureCredentialId, a.TenantId, a.ClientId, a.Username, a.Password })
+                .ToArrayAsync(cancellationToken);
+
+            var capturedManagedIdentities = await context.ManagedIdentityCredentials
+                .AsNoTracking()
+                .Select(c => new { c.AzureCredentialId, c.AzureCredentialName })
+                .ToArrayAsync(cancellationToken);
+
+            var capturedDataFactories = await context.DataFactories
+                .AsNoTracking()
+                .Select(x => new
+                {
+                    x.PipelineClientId, x.SubscriptionId, x.ResourceGroupName, x.ResourceName
+                })
+                .ToArrayAsync(cancellationToken);
+
+            var capturedSynapseWorkspaces = await context.SynapseWorkspaces
+                .AsNoTracking()
+                .Select(x => new { x.PipelineClientId, x.SynapseWorkspaceUrl })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedQlikEnvs = await context.QlikCloudEnvironments
+                .AsNoTracking()
+                .Select(q => new { q.QlikCloudEnvironmentId, q.EnvironmentUrl, q.ApiToken })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedBlobStorages = await context.BlobStorageClients
+                .AsNoTracking()
+                .Select(b => new
+                {
+                    b.BlobStorageClientId,
+                    b.ConnectionMethod,
+                    b.StorageAccountUrl,
+                    b.ConnectionString,
+                    b.AzureCredentialId
+                })
+                .ToArrayAsync(cancellationToken);
+
+            foreach (var connection in snapshot.AnalysisServicesConnections)
             {
-                credential.Password = capturedCredentials
-                    .FirstOrDefault(c => c.CredentialId == credential.CredentialId)
-                    ?.Password;
+                var match = capturedAsConnections.FirstOrDefault(c => c.ConnectionId == connection.ConnectionId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the connection string is reset.
+                        connection.ConnectionString = "";
+                    }
+                    newIntegrations.Add((connection.GetType(), connection.ConnectionName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties || string.IsNullOrEmpty(connection.ConnectionString))
+                {
+                    connection.ConnectionString = match.ConnectionString;
+                }
+            }
+
+            foreach (var credential in snapshot.Credentials)
+            {
+                var match = capturedCredentials.FirstOrDefault(c => c.CredentialId == credential.CredentialId);
+                if (match is null)
+                {
+                    newIntegrations.Add((credential.GetType(), credential.DisplayName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    credential.Domain = match.Domain;
+                    credential.Username = match.Username;
+                    credential.Password = match.Password;
+                }
+                else if (string.IsNullOrEmpty(credential.Password))
+                {
+                    credential.Password = match.Password;
+                }
+            }
+            
+            foreach (var connection in snapshot.SqlConnections)
+            {
+                var match = capturedSqlConnections.FirstOrDefault(c => c.ConnectionId == connection.ConnectionId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the connection string is reset.
+                        connection.ConnectionString = "";
+                    }
+                    newIntegrations.Add((connection.GetType(), connection.ConnectionName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties || string.IsNullOrEmpty(connection.ConnectionString))
+                {
+                    connection.ConnectionString = match.ConnectionString;
+                }
+            }
+
+            foreach (var credential in snapshot.AzureCredentials.OfType<ServicePrincipalAzureCredential>())
+            {
+                var match = capturedServicePrincipals
+                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the service principal is reset.
+                        credential.TenantId = "";
+                        credential.ClientId = "";
+                        credential.ClientSecret = "";
+                    }
+                    newIntegrations.Add((credential.GetType(), credential.AzureCredentialName ?? ""));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    credential.TenantId = match.TenantId;
+                    credential.ClientId = match.ClientId;
+                    credential.ClientSecret = match.ClientSecret;
+                }
+                else if (string.IsNullOrEmpty(credential.ClientSecret))
+                {
+                    credential.ClientSecret = match.ClientSecret;
+                }
+            }
+
+            foreach (var credential in snapshot.AzureCredentials.OfType<OrganizationalAccountAzureCredential>())
+            {
+                var match = capturedOrganizationalAccounts
+                    .FirstOrDefault(a => a.AzureCredentialId == credential.AzureCredentialId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the account is reset.
+                        credential.TenantId = "";
+                        credential.ClientId = "";
+                        credential.Username = "";
+                        credential.Password = "";
+                    }
+                    newIntegrations.Add((credential.GetType(), credential.AzureCredentialName ?? ""));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    credential.TenantId = match.TenantId;
+                    credential.ClientId = match.ClientId;
+                    credential.Username = match.Username;
+                    credential.Password = match.Password;
+                }
+                else if (string.IsNullOrEmpty(credential.Password))
+                {
+                    credential.Password = match.Password;
+                }
+            }
+
+            foreach (var credential in snapshot.AzureCredentials.OfType<ManagedIdentityAzureCredential>())
+            {
+                var match = capturedManagedIdentities.FirstOrDefault(c =>
+                    c.AzureCredentialId == credential.AzureCredentialId);
+                if (match is not null) continue;
+                if (request.RetainIntegrationProperties)
+                {
+                    // Potential environment transfer without match => make sure the managed identity client id.
+                    credential.ClientId = null;
+                }
+                newIntegrations.Add((credential.GetType(), credential.AzureCredentialName ?? ""));
+            }
+            
+            foreach (var workspace in snapshot.DatabricksWorkspaces)
+            {
+                var match = capturedDatabricksWorkspaces.FirstOrDefault(w => w.WorkspaceId == workspace.WorkspaceId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the workspace is reset.
+                        workspace.WorkspaceUrl = "";
+                        workspace.ApiToken = "";
+                    }
+                    newIntegrations.Add((workspace.GetType(), workspace.WorkspaceName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    workspace.WorkspaceUrl = match.WorkspaceUrl;
+                    workspace.ApiToken = match.ApiToken;    
+                }
+                else if (string.IsNullOrEmpty(workspace.ApiToken))
+                {
+                    workspace.ApiToken = match.ApiToken;
+                }
+            }
+            
+            foreach (var account in snapshot.DbtAccounts)
+            {
+                var match = capturedDbtAccounts.FirstOrDefault(a => a.DbtAccountId == account.DbtAccountId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the account is reset.
+                        account.AccountId = "";
+                        account.ApiBaseUrl = "";
+                        account.ApiToken = "";
+                    }
+                    newIntegrations.Add((account.GetType(), account.DbtAccountName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    account.AccountId = match.AccountId;
+                    account.ApiBaseUrl = match.ApiBaseUrl;
+                    account.ApiToken = match.ApiToken;    
+                }
+                else if (string.IsNullOrEmpty(account.ApiToken))
+                {
+                    account.ApiToken = match.ApiToken;
+                }
+            }
+            
+            foreach (var func in snapshot.FunctionApps)
+            {
+                var match = capturedFunctionApps.FirstOrDefault(f => f.FunctionAppId == func.FunctionAppId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the function app is reset.
+                        func.SubscriptionId = "";
+                        func.ResourceGroupName = "";
+                        func.ResourceName = "";
+                        func.FunctionAppKey = "";
+                    }
+                    newIntegrations.Add((func.GetType(), func.FunctionAppName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    func.SubscriptionId = match.SubscriptionId;
+                    func.ResourceGroupName = match.ResourceGroupName;
+                    func.ResourceName = match.ResourceName;
+                    func.FunctionAppKey = match.FunctionAppKey;
+                }
+                else if (string.IsNullOrEmpty(func.FunctionAppKey))
+                {
+                    func.FunctionAppKey = match.FunctionAppKey;
+                }
+            }
+
+            foreach (var df in snapshot.PipelineClients.OfType<DataFactory>())
+            {
+                var match = capturedDataFactories.FirstOrDefault(x => x.PipelineClientId == df.PipelineClientId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the Data Factory is reset.
+                        df.SubscriptionId = "";
+                        df.ResourceGroupName = "";
+                        df.ResourceName = "";
+                    }
+                    newIntegrations.Add((df.GetType(), df.PipelineClientName));
+                    continue;
+                }
+                if (!request.RetainIntegrationProperties)
+                {
+                    continue;
+                }
+                df.SubscriptionId = match.SubscriptionId;
+                df.ResourceGroupName = match.ResourceGroupName;
+                df.ResourceName = match.ResourceName;
+            }
+
+            foreach (var synapse in snapshot.PipelineClients.OfType<SynapseWorkspace>())
+            {
+                var match = capturedSynapseWorkspaces
+                    .FirstOrDefault(x => x.PipelineClientId == synapse.PipelineClientId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the Synapse workspace is reset.
+                        synapse.SynapseWorkspaceUrl = "";
+                    }
+                    newIntegrations.Add((synapse.GetType(), synapse.PipelineClientName));
+                    continue;
+                }
+                if (!request.RetainIntegrationProperties)
+                {
+                    continue;
+                }
+                synapse.SynapseWorkspaceUrl = match.SynapseWorkspaceUrl;
+            }
+            
+            foreach (var qlik in snapshot.QlikCloudEnvironments)
+            {
+                var match = capturedQlikEnvs
+                    .FirstOrDefault(q => q.QlikCloudEnvironmentId == qlik.QlikCloudEnvironmentId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the Qlik env is reset.
+                        qlik.EnvironmentUrl = "";
+                        qlik.ApiToken = "";
+                    }
+                    newIntegrations.Add((qlik.GetType(), qlik.QlikCloudEnvironmentName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    qlik.EnvironmentUrl = match.EnvironmentUrl;
+                    qlik.ApiToken = match.ApiToken;
+                }
+                else if (string.IsNullOrEmpty(qlik.ApiToken))
+                {
+                    qlik.ApiToken = match.ApiToken;
+                }
+            }
+            
+            foreach (var blob in snapshot.BlobStorageClients)
+            {
+                var match = capturedBlobStorages
+                    .FirstOrDefault(b => b.BlobStorageClientId == blob.BlobStorageClientId
+                                         && b.ConnectionMethod == blob.ConnectionMethod);
+                if (match is null)
+                {
+                    newIntegrations.Add((blob.GetType(), blob.BlobStorageClientName));
+                    continue;
+                }
+                switch (blob.ConnectionMethod)
+                {
+                    case BlobStorageConnectionMethod.AppRegistration:
+                        if (request.RetainIntegrationProperties || string.IsNullOrEmpty(blob.StorageAccountUrl))
+                        {
+                            if (match.AzureCredentialId is { } id1
+                                && snapshot.AzureCredentials.Any(c => c.AzureCredentialId == id1))
+                            {
+                                blob.UseCredential(id1, match.StorageAccountUrl ?? "");
+                            }
+                            else if (blob.AzureCredentialId is { } id2)
+                            {
+                                blob.UseCredential(id2, match.StorageAccountUrl ?? "");
+                            }
+                        }
+                        break;
+                    case BlobStorageConnectionMethod.ConnectionString:
+                        if (request.RetainIntegrationProperties || string.IsNullOrEmpty(blob.ConnectionString))
+                        {
+                            blob.UseConnectionString(match.ConnectionString ?? "");
+                        }
+                        break;
+                    case BlobStorageConnectionMethod.Url:
+                        if (request.RetainIntegrationProperties || string.IsNullOrEmpty(blob.StorageAccountUrl))
+                        {
+                            blob.UseUrl(match.StorageAccountUrl ?? "");
+                        }
+                        break;
+                }
             }
 
             var capturedFunctionStepKeys = await context.FunctionSteps
@@ -310,7 +607,8 @@ internal class RevertVersionCommandHandler(
 
             var jobStepTagSubsToAdd = capturedSubscriptions
                 .OfType<JobStepTagSubscription>()
-                .Where(s => snapshot.Jobs.Any(j => j.JobId == s.JobId) && snapshot.Tags.Any(t => t.TagId == s.TagId && t.TagType == TagType.Step));
+                .Where(s => snapshot.Jobs.Any(j => j.JobId == s.JobId)
+                            && snapshot.Tags.Any(t => t.TagId == s.TagId && t.TagType == TagType.Step));
 
             var stepSubsToAdd = capturedSubscriptions
                 .OfType<StepSubscription>()
@@ -327,7 +625,8 @@ internal class RevertVersionCommandHandler(
 
             await context.SaveChangesAsync(cancellationToken);
 
-            // Add user job and data table authorizations that were captured at the beginning and where jobs and tables exist in the snapshot.
+            // Add user job and data table authorizations that were captured at the beginning
+            // and where jobs and tables exist in the snapshot.
 
             context.ChangeTracker.Clear();
 
@@ -363,6 +662,8 @@ internal class RevertVersionCommandHandler(
             await transaction.CommitAsync(cancellationToken);
 
             await schedulerService.SynchronizeAsync();
+
+            return new RevertVersionResponse(newIntegrations);
         }
         catch (Exception ex)
         {
