@@ -38,10 +38,10 @@
                             <VersionRevertInfo />
                         </div>
                     </div>
-                    <div class="row mt-3">
-                        <div class="col">
-                            @if (_revertTask is null)
-                            {
+                    @if (_revertTask is null)
+                    {
+                        <div class="row mt-3">
+                            <div class="col-auto">
                                 <HxDropdownButtonGroup>
                                     <HxDropdownToggleButton Color="ThemeColor.None" CssClass="btn-auto text-danger me-3" Spinner="false">
                                         <SvgIcon Icon="LucideIcon.CircleAlert" />
@@ -53,19 +53,29 @@
                                         </HxDropdownItem>
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
-                            }
+                            </div>
+                            <div class="col-auto align-self-center form-check form-check-inline ms-3">
+                                <input type="checkbox" class="form-check-input" id="check_retain_integration_props"
+                                       @bind-value="_retainIntegrationProperties"
+                                       checked=@_retainIntegrationProperties>
+                                <label class="form-check-label" for="check_retain_integration_props">
+                                    Retain integration properties
+                                    &nbsp;
+                                    <HxPopover Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top"
+                                               Content="Whether to retain previous integration properties. This should normally be set to true if transferring snapshots between environments (e. g. from test to prod) where integration property values for the same entity may be different (e. g. connection strings or resource names).">
+                                        <SvgIcon Icon="LucideIcon.Info" />
+                                    </HxPopover>
+                                </label>
+                            </div>
                         </div>
-                    </div>
-                    @if (_revertTask is not null)
+                    }
+                    else
                     {
                         <div class="row mt-2">
                             <div class="col">
                                 <HxAlert Color="ThemeColor.Info">
                                     <p>
-                                        @if (_revertTask is not null)
-                                        {
-                                            <HxSpinner Size="SpinnerSize.Small" Color="ThemeColor.None" />
-                                        }
+                                        <HxSpinner Size="SpinnerSize.Small" Color="ThemeColor.None" />
                                         <strong class="ms-1">
                                             Version revert in progress
                                         </strong>
@@ -80,14 +90,45 @@
                     }
                     @if (_result is not null)
                     {
-                        <div class="row mt-3">
+                        <div class="row mt-4">
                             <div class="col">
                                 <HxAlert Color="_result.Color">
                                     @if (_result.Title is not null)
                                     {
                                         <p><strong>@_result.Title</strong></p>
                                     }
-                                    @_result.Message
+                                    <span>@_result.Message</span>
+                                    @if (_result.NewIntegrations is { Count: > 0 })
+                                    {
+                                        <p class="mt-3">
+                                            <small><strong>New integration entities</strong></small>
+                                            &nbsp;
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top"
+                                                       Content="Integrations that were added as part of the revert process. The property values of these integration entities should be checked after the revert as they may need to be filled in or corrected.">
+                                                <SvgIcon Icon="LucideIcon.Info"/>
+                                            </HxPopover>
+                                        </p>
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Type</th>
+                                                    <th>Name</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var integration in _result.NewIntegrations
+                                                              .OrderBy(x => x.Type.Name).ThenBy(x => x.Name))
+                                                {
+                                                    <td>
+                                                        @integration.Type.Name 
+                                                    </td>
+                                                    <td>
+                                                        @integration.Name
+                                                    </td>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    }
                                 </HxAlert>
                             </div>
                         </div>
@@ -115,8 +156,9 @@
     private int _previousVersionId;
     private VersionProjection? _version;
     private CancellationTokenSource _cts = new();
-    private Task? _revertTask;
+    private Task<RevertVersionResponse>? _revertTask;
     private RevertResult? _result;
+    private bool _retainIntegrationProperties = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -141,18 +183,17 @@
         try
         {
             _result = null;
-            // TODO Get RetainIntegrationProperties value from user input.
-            var command = new RevertVersionByIdCommand(versionId, RetainIntegrationProperties: false);
+            var command = new RevertVersionByIdCommand(versionId, _retainIntegrationProperties);
             _revertTask = Mediator.SendAsync(command, _cts.Token);
             StateHasChanged();
-            await _revertTask;
-            _result = new(ThemeColor.Success, null, "Version reverted successfully");
+            var response = await _revertTask;
+            _result = new(ThemeColor.Success, null, "Version reverted successfully", response.NewIntegrations);
         }
         catch (OperationCanceledException)
         {
             _cts.Dispose();
             _cts = new();
-            _result = new(ThemeColor.Warning, null, "Revert was canceled");
+            _result = new(ThemeColor.Warning, null, "Revert was canceled", null);
         }
         catch (Exception ex)
         {
@@ -161,7 +202,7 @@
                 { InnerException: not null } when ex.Message.ContainsIgnoreCase("see the inner exception") => ex.InnerException.Message,
                 _ => ex.Message
             };
-            _result = new(ThemeColor.Danger, "Error reverting version", message);
+            _result = new(ThemeColor.Danger, "Error reverting version", message, null);
         }
         finally
         {
@@ -186,5 +227,9 @@
         _cts.Dispose();
     }
 
-    private record RevertResult(ThemeColor Color, string? Title, string? Message);
+    private record RevertResult(
+        ThemeColor Color,
+        string? Title,
+        string? Message,
+        IReadOnlyList<(Type Type, string Name)>? NewIntegrations);
 }
