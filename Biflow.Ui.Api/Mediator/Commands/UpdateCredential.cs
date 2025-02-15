@@ -27,7 +27,7 @@ internal class UpdateCredentialCommandHandler(IDbContextFactory<AppDbContext> db
         credential.Username = request.Username;
         if (request.Password is not null)
         {
-            credential.Password = string.IsNullOrEmpty(request.Password) 
+            credential.Password = request.Password.Length == 0
                 ? null 
                 : request.Password;
         }
