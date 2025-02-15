@@ -125,7 +125,12 @@ internal class RevertVersionCommandHandler(
                 })
                 .ToArrayAsync(cancellationToken);
 
-            var capturedSqlConnections = await context.SqlConnections
+            var capturedMsSqlConnections = await context.MsSqlConnections
+                .AsNoTracking()
+                .Select(c => new { c.ConnectionId, c.ConnectionString, c.CredentialId, c.ExecutePackagesAsLogin })
+                .ToArrayAsync(cancellationToken);
+            
+            var capturedSnowflakeConnections = await context.SnowflakeConnections
                 .AsNoTracking()
                 .Select(c => new { c.ConnectionId, c.ConnectionString })
                 .ToArrayAsync(cancellationToken);
@@ -214,9 +219,37 @@ internal class RevertVersionCommandHandler(
                 }
             }
             
-            foreach (var connection in snapshot.SqlConnections)
+            foreach (var connection in snapshot.SqlConnections.OfType<MsSqlConnection>())
             {
-                var match = capturedSqlConnections.FirstOrDefault(c => c.ConnectionId == connection.ConnectionId);
+                var match = capturedMsSqlConnections.FirstOrDefault(c => c.ConnectionId == connection.ConnectionId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the connection string is reset.
+                        connection.ConnectionString = "";
+                    }
+                    newIntegrations.Add((connection.GetType(), connection.ConnectionName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    connection.ConnectionString = match.ConnectionString;
+                    connection.CredentialId =
+                        match.CredentialId is { } id && snapshot.Credentials.Any(x => x.CredentialId == id) 
+                            ? match.CredentialId 
+                            : null;
+                    connection.ExecutePackagesAsLogin = match.ExecutePackagesAsLogin;
+                }
+                else if (string.IsNullOrEmpty(connection.ConnectionString))
+                {
+                    connection.ConnectionString = match.ConnectionString;
+                }
+            }
+            
+            foreach (var connection in snapshot.SqlConnections.OfType<SnowflakeConnection>())
+            {
+                var match = capturedSnowflakeConnections.FirstOrDefault(c => c.ConnectionId == connection.ConnectionId);
                 if (match is null)
                 {
                     if (request.RetainIntegrationProperties)
