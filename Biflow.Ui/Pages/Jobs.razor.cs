@@ -31,6 +31,7 @@ public partial class Jobs(
 
     private List<Job>? _jobs;    
     private Dictionary<Guid, Execution[]>? _lastExecutions;
+    private Guid[] _runningJobIds = [];
     private List<StepProjection> _steps = [];
     private bool _isLoading;
     private JobEditModal? _jobEditModal;
@@ -70,7 +71,10 @@ public partial class Jobs(
                     schedule,
                     nextExecution);
             })
-            .Where(j => statusFilter.Count == 0 || j.LastExecutions.FirstOrDefault() is { } e && statusFilter.Contains(e.ExecutionStatus))
+            .Where(j => statusFilter.Count == 0
+                        || j.LastExecutions.FirstOrDefault() is { } e && statusFilter.Contains(e.ExecutionStatus)
+                        // Handle running steps specially. If any execution of the job is currently running, include it.
+                        || statusFilter.Contains(ExecutionStatus.Running) && _runningJobIds.Contains(j.Job.JobId))
             .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
             ?? [];
         return sortMode switch
@@ -113,22 +117,24 @@ public partial class Jobs(
     {
         // Get each job's last execution.
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        var lastExecutions = await context.Executions
+        var lastExecutions = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
-            .Where(execution => context.Jobs.Any(j => j.JobId == execution.JobId) && execution.StartedOn != null)
-            .Select(execution => execution.JobId)
-            .Distinct()
-            .Select(key => new
+            .Select(job => new
             {
-                Key = key,
-                Execution = context.Executions
-                    .Where(execution => execution.JobId == key)
+                Key = job.JobId,
+                Executions = context.Executions
+                    .Where(execution => execution.JobId == job.JobId)
                     .OrderByDescending(e => e.CreatedOn)
                     .Take(5)
-                    .ToArray()
+                    .ToArray(),
+                IsRunning = context.Executions.Any(e => e.JobId == job.JobId && e.ExecutionStatus == ExecutionStatus.Running)
             })
             .ToListAsync(_cts.Token);
-        _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
+        _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Executions);
+        _runningJobIds = lastExecutions
+            .Where(e => e.IsRunning)
+            .Select(e => e.Key)
+            .ToArray();
         StateHasChanged();
     }
 

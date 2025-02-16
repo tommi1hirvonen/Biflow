@@ -61,6 +61,7 @@
             @{
                 var statusFilterItems = _lastExecutions?.Values
                     .Select(x => x.MaxBy(e => e.CreatedOn)?.ExecutionStatus)
+                    .Append(_runningJobIds.Length > 0 ? ExecutionStatus.Running : null)
                     .OfType<ExecutionStatus>()
                     .Concat(UserState.Jobs.StatusFilter)
                     .Distinct()
