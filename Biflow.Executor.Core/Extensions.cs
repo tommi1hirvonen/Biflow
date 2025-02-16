@@ -71,7 +71,7 @@ public static class Extensions
         var executionsGroup = app
             .MapGroup("/executions")
             .WithName("Executions")
-            .AddEndpointFilter<ApiKeyEndpointFilter>();
+            .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 
         executionsGroup.MapPost("/create", async (

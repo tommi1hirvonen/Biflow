@@ -1,7 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var executorApi = builder.AddProject<Projects.Biflow_Executor_WebApp>("executorapi")
-    .WithExternalHttpEndpoints();
+var executorApi = builder.AddProject<Projects.Biflow_Executor_WebApp>("executorapi");
 
 var schedulerApi = builder.AddProject<Projects.Biflow_Scheduler_WebApp>("schedulerapi")
     .WithReference(executorApi);
