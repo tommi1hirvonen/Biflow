@@ -27,6 +27,7 @@ var sqlDbName = 'sqldb-${appId}-orchestration-${envId}'
 var appServicePlanName = 'asp-${appId}-orchestration-${envId}'
 var uiWebAppName = 'app-${appId}-orchestration-ui-${envId}'
 var schedulerWebAppName = 'app-${appId}-orchestration-scheduler-${envId}'
+var apiWebAppName = 'app-${appId}-orchestration-api-${envId}'
 
 var privateEndpointSchedulerName = 'pep-${appId}-orchestration-scheduler-${envId}'
 
@@ -42,6 +43,7 @@ var osDiskName = 'vm-${appId}-orchestration-${envId}-osdisk'
 var logAnalyticsWorkspaceName = 'log-${appId}-orchestration-${envId}'
 var schedulerAppInsightsName = 'appi-${appId}-orchestration-scheduler-${envId}'
 var uiAppInsightsName = 'appi-${appId}-orchestration-ui-${envId}'
+var apiAppInsightsName = 'appi-${appId}-orchestration-api-${envId}'
 
 // Miscellaneous
 var keyVaultName = 'kv-${appId}-orchestration-${shortEnvId}' // NOTE: Key Vault names can only be max 24 characters long.
@@ -538,6 +540,48 @@ resource uiWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
+resource apiWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
+  name: apiWebAppName
+  location: region
+  kind: 'app,linux'
+  identity: {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentityResource.id}': {}
+    }
+  }
+  properties: {
+    serverFarmId: appServicePlanResource.id
+    siteConfig: {
+      numberOfWorkers: 1
+      linuxFxVersion: 'DOTNETCORE|9.0'
+      alwaysOn: true
+      publicNetworkAccess: 'Enabled'
+      ipSecurityRestrictions: [
+        {
+          ipAddress: '${firewallWhitelistIp}/32'
+          action: 'Allow'
+          tag: 'Default'
+          priority: 100
+          name: 'Allow VPN'
+        }
+        {
+          ipAddress: 'Any'
+          action: 'Deny'
+          priority: 2147483647
+          name: 'Deny all'
+          description: 'Deny all access'
+        }
+      ]
+      ipSecurityRestrictionsDefaultAction: 'Deny'
+      websiteTimeZone: websiteTimeZone
+    }
+    httpsOnly: true
+    virtualNetworkSubnetId: backendSubnet.id
+    keyVaultReferenceIdentity: managedIdentityResource.id
+  }
+}
+
 var schedulerPrivateIpAddress = '10.0.0.5'
 
 resource privateEndpointSchedulerResource 'Microsoft.Network/privateEndpoints@2024-01-01' = {
@@ -636,6 +680,16 @@ resource schedulerAppInsightsResource 'Microsoft.Insights/components@2020-02-02'
 
 resource uiAppInsightsResource 'Microsoft.Insights/components@2020-02-02' = {
   name: uiAppInsightsName
+  location: region
+  kind: 'web'
+  properties: {
+    Application_Type: 'web'
+    WorkspaceResourceId: logAnalyticsWorkspaceResource.id
+  }
+}
+
+resource apiAppInsightsResource 'Microsoft.Insights/components@2020-02-02' = {
+  name: apiAppInsightsName
   location: region
   kind: 'web'
   properties: {
@@ -784,6 +838,28 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
     APPINSIGHTS_INSTRUMENTATIONKEY: uiAppInsightsResource.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: uiAppInsightsResource.properties.ConnectionString
+  }
+  dependsOn: [
+    serviceApiKeyResource
+  ]
+}
+
+resource apiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
+  name: 'appsettings'
+  kind: 'string'
+  parent: apiWebAppResource
+  properties: {
+    UserAuthentication: 'BuiltIn'
+    ConnectionStrings__AppDbContext: appDbConnectionString
+    Executor__SelfHosted__PollingIntervalMs: '5000'
+    Executor__Type: 'WebApp'
+    Executor__WebApp__ApiKey: apiKeyReference
+    Executor__WebApp__Url: executionServiceUrl
+    Scheduler__Type: 'WebApp'
+    Scheduler__WebApp__ApiKey: apiKeyReference
+    Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
+    APPINSIGHTS_INSTRUMENTATIONKEY: apiAppInsightsResource.properties.InstrumentationKey
+    APPLICATIONINSIGHTS_CONNECTION_STRING: apiAppInsightsResource.properties.ConnectionString
   }
   dependsOn: [
     serviceApiKeyResource
