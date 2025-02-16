@@ -1,4 +1,10 @@
-﻿
+﻿<style>
+    .job-execution-status .lucide {
+        width: 18px;
+        height: 18px;
+    }
+</style>
+
 <PageTitle>Jobs | Biflow</PageTitle>
 
 <h4>Jobs</h4>
@@ -52,16 +58,25 @@
         
     <div class="col-xl-auto col-sm-4 mt-3 mt-sm-0">
         <HxButtonGroup Size="ButtonGroupSize.Small">
+            @{
+                var statusFilterItems = _lastExecutions?.Values
+                    .Select(x => x.MaxBy(e => e.CreatedOn)?.ExecutionStatus)
+                    .OfType<ExecutionStatus>()
+                    .Concat(UserState.Jobs.StatusFilter)
+                    .Distinct()
+                    .OrderBy(s => s)
+                    .AsEnumerable() ?? [];
+            }
             <FilterDropdown TItem="ExecutionStatus"
                             FilterSet="UserState.Jobs.StatusFilter"
-                            Items="_lastExecutions?.Values.Select(e => e.ExecutionStatus).Concat(UserState.Jobs.StatusFilter).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
+                            Items="statusFilterItems"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="LucideIcon.Info" />
+                    <SvgIcon Icon="LucideIcon.Info"/>
                     Status
                 </TitleTemplate>
                 <ItemTemplate Context="item">
-                    <JobExecutionStatusBadge ExecutionStatus="item" />
+                    <JobExecutionStatusBadge ExecutionStatus="item"/>
                 </ItemTemplate>
             </FilterDropdown>
             @{
@@ -79,22 +94,15 @@
                             IdSelector="t => t.TagId.ToString()"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
-                    <SvgIcon Icon="LucideIcon.Tag" />
+                    <SvgIcon Icon="LucideIcon.Tag"/>
                     Tag
                 </TitleTemplate>
                 <ItemTemplate Context="item">
-                    <TagBadge Tag="item" />
+                    <TagBadge Tag="item"/>
                 </ItemTemplate>
             </FilterDropdown>
-            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() =>
-                {
-                    UserState.Jobs.StatusFilter.Clear();
-                    UserState.Jobs.TagFilter.Clear();
-                    UserState.Jobs.JobNameFilter = string.Empty;
-                    UserState.Jobs.StepNameFilter = string.Empty;
-                    UserState.Jobs.StateFilter = StateFilter.All;
-                }">
-                <SvgIcon Icon="LucideIcon.X" />
+            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="() => { UserState.Jobs.StatusFilter.Clear(); UserState.Jobs.TagFilter.Clear(); UserState.Jobs.JobNameFilter = string.Empty; UserState.Jobs.StepNameFilter = string.Empty; UserState.Jobs.StateFilter = StateFilter.All; }">
+                <SvgIcon Icon="LucideIcon.X"/>
                 Clear
             </HxButton>
         </HxButtonGroup>
@@ -285,7 +293,8 @@
                 {
                     @foreach (var listItem in pageItems ?? [])
                     {
-                        var (item, lastExecution, schedule, nextStartTime) = listItem;
+                        var (item, lastExecutions, schedule, nextStartTime) = listItem;
+                        var lastExecution = lastExecutions.MaxBy(e => e.CreatedOn);
                         <ContextMenuToggle ContainerHtmlTag="tr" CssClass="@($"job-row {(item.IsEnabled ? null : "disabled")}")">
                             <ChildContent Context="menu">
                                 <td class="align-middle">
@@ -329,9 +338,18 @@
                                     }
                                 </td>
                                 <td class="align-middle">
-                                    @if (lastExecution is not null)
+                                    @foreach (var execution in lastExecutions)
                                     {
-                                        <JobExecutionStatusBadge ExecutionStatus="lastExecution.ExecutionStatus" />
+                                        var content = GetStatusPopoverHtml(execution);
+                                        <HxPopover Trigger="PopoverTrigger.Focus"
+                                                   Placement="PopoverPlacement.Top"
+                                                   WrapperCssClass="pointer job-execution-status"
+                                                   Html
+                                                   Content="@content">
+                                            <a tabindex="0" title="@execution.ExecutionStatus">
+                                                <JobExecutionStatusIcon ExecutionStatus="execution.ExecutionStatus"/>
+                                            </a>
+                                        </HxPopover>
                                     }
                                 </td>
                                 <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">

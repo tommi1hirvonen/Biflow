@@ -30,7 +30,7 @@ public partial class Jobs(
     private readonly CancellationTokenSource _cts = new();
 
     private List<Job>? _jobs;    
-    private Dictionary<Guid, Execution>? _lastExecutions;
+    private Dictionary<Guid, Execution[]>? _lastExecutions;
     private List<StepProjection> _steps = [];
     private bool _isLoading;
     private JobEditModal? _jobEditModal;
@@ -40,7 +40,7 @@ public partial class Jobs(
     private HashSet<Job> _selectedJobs = [];
     private JobHistoryOffcanvas? _jobHistoryOffcanvas;
 
-    private record ListItem(Job Job, Execution? LastExecution, Schedule? NextSchedule, DateTime? NextExecution);
+    private record ListItem(Job Job, Execution[] LastExecutions, Schedule? NextSchedule, DateTime? NextExecution);
 
     protected override Task OnInitializedAsync()
     {
@@ -64,9 +64,13 @@ public partial class Jobs(
             {
                 var schedule = GetNextSchedule(j);
                 var nextExecution = schedule?.NextFireTimes().FirstOrDefault();
-                return new ListItem(j, _lastExecutions?.GetValueOrDefault(j.JobId), schedule, nextExecution);
+                return new ListItem(
+                    j,
+                    _lastExecutions?.GetValueOrDefault(j.JobId) ?? [],
+                    schedule,
+                    nextExecution);
             })
-            .Where(j => statusFilter.Count == 0 || j.LastExecution is not null && statusFilter.Contains(j.LastExecution.ExecutionStatus))
+            .Where(j => statusFilter.Count == 0 || j.LastExecutions.FirstOrDefault() is { } e && statusFilter.Contains(e.ExecutionStatus))
             .Where(j => tagFilter.Count == 0 || j.Job.Tags.Any(t1 => tagFilter.Any(t2 => t1.TagId == t2.TagId)))
             ?? [];
         return sortMode switch
@@ -74,10 +78,10 @@ public partial class Jobs(
             JobSortMode.Pinned => items.OrderBy(i => !i.Job.IsPinned).ThenBy(i => i.Job.JobName),
             JobSortMode.NameAsc => items.OrderBy(i => i.Job.JobName),
             JobSortMode.NameDesc => items.OrderByDescending(i => i.Job.JobName),
-            JobSortMode.LastExecAsc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenBy(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            JobSortMode.LastExecDesc => items.OrderBy(i => i.LastExecution?.StartedOn is null).ThenByDescending(i => i.LastExecution?.StartedOn?.LocalDateTime),
-            JobSortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
-            JobSortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
+            JobSortMode.LastExecAsc => items.OrderBy(i => i.LastExecutions.All(e => e.StartedOn is null)).ThenByDescending(i => i.LastExecutions.Max(e => e.StartedOn)?.LocalDateTime),
+            JobSortMode.LastExecDesc => items.OrderBy(i => i.LastExecutions.All(e => e.StartedOn is null)).ThenBy(i => i.LastExecutions.Max(e => e.StartedOn)?.LocalDateTime),
+            JobSortMode.NextExecAsc => items.OrderBy(i => i.NextExecution is null).ThenByDescending(i => i.NextExecution),
+            JobSortMode.NextExecDesc => items.OrderBy(i => i.NextExecution is null).ThenBy(i => i.NextExecution),
             _ => items
         };
     }
@@ -117,7 +121,11 @@ public partial class Jobs(
             .Select(key => new
             {
                 Key = key,
-                Execution = context.Executions.Where(execution => execution.JobId == key).OrderByDescending(e => e.CreatedOn).First()
+                Execution = context.Executions
+                    .Where(execution => execution.JobId == key)
+                    .OrderByDescending(e => e.CreatedOn)
+                    .Take(5)
+                    .ToArray()
             })
             .ToListAsync(_cts.Token);
         _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Execution);
@@ -140,6 +148,39 @@ public partial class Jobs(
             .Select(s => new { Schedule = s, NextFireTime = s.NextFireTimes().FirstOrDefault() })
             .MinBy(s => s.NextFireTime);
         return schedule?.Schedule;
+    }
+
+    private static string GetStatusPopoverHtml(Execution execution)
+    {
+        var link = $"executions/{execution.ExecutionId}/list";
+        var time = execution.StartedOn?.LocalDateTime ?? execution.CreatedOn.LocalDateTime;
+        var createdBy = execution switch
+        {
+            { ScheduleName.Length: > 0 } => $"Scheduled by: {execution.ScheduleName}",
+            { CreatedBy.Length: > 0 } => $"Created by: {execution.CreatedBy}",
+            _ => null
+        };
+        var statusCss = execution.ExecutionStatus switch
+        {
+            ExecutionStatus.Succeeded => "text-success",
+            ExecutionStatus.Failed => "text-danger",
+            ExecutionStatus.Warning => "text-warning",
+            ExecutionStatus.Stopped => "text-warning",
+            ExecutionStatus.Suspended => "text-warning",
+            ExecutionStatus.Running => "text-primary",
+            ExecutionStatus.NotStarted => "text-secondary",
+            _ => ""
+        };
+        var html = $"""
+                    <a href="{link}">{time}</a>
+                    <br/>
+                    {execution.GetDurationInReadableFormat()}
+                    <br/>
+                    <strong class="{statusCss}">{execution.ExecutionStatus}</strong>
+                    <br/>
+                    <small>{createdBy}</small>
+                    """;
+        return html;
     }
 
     private async Task TogglePinned(Job job)

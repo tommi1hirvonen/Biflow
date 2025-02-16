@@ -1,0 +1,28 @@
+@using Biflow.Ui.Icons
+@using ES = Biflow.Core.Entities.ExecutionStatus
+
+@{
+    var (color, icon) = Icon;
+    var css = $"text-{color}";
+}
+
+<span class="d-inline-flex align-items-center @css"
+      style="padding: 0.1rem 0.3rem;">
+    <SvgIcon Icon="icon" />
+</span>
+
+@code {
+    [Parameter] public ES? ExecutionStatus { get; set; }
+
+    private (string Color, Svg Icon) Icon => ExecutionStatus switch
+    {
+        ES.Succeeded => ("success", LucideIcon.CircleCheck),
+        ES.Failed => ("danger", LucideIcon.OctagonAlert),
+        ES.Warning => ("warning", LucideIcon.TriangleAlert),
+        ES.Stopped => ("warning", LucideIcon.OctagonX),
+        ES.Suspended => ("warning", LucideIcon.TriangleAlert),
+        ES.Running => ("primary", LucideIcon.Play),
+        ES.NotStarted => ("secondary", LucideIcon.Clock),
+        _ => ("", LucideIcon.CircleHelp)
+    };
+}
