@@ -55,6 +55,9 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
         group.MapPost("/revert/{versionId:int}",
             (int versionId,
                 [FromQuery]
+                [SwaggerParameter("Whether to retain previous schedules.")]
+                bool retainSchedules,
+                [FromQuery]
                 [SwaggerParameter("Whether to retain previous integration properties. " +
                                   "This should normally be set to true if transferring snapshots between " +
                                   "environments (e. g. from test to prod) where integration property values for " +
@@ -66,7 +69,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                 VersionRevertService versionRevertService,
                 VersionRevertJobDictionary statuses) =>
             {
-                var command = new RevertVersionByIdCommand(versionId, retainIntegrationProperties);
+                var command = new RevertVersionByIdCommand(versionId, retainSchedules, retainIntegrationProperties);
                 var handler = mediator.GetRequestHandler<RevertVersionByIdCommand, RevertVersionResponse>();
                 var job = new VersionRevertJob(token => handler.Handle(command, token));
                 if (!versionRevertService.TryEnqueue(job))
@@ -90,6 +93,9 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
         
         group.MapPost("/revert", async (
                 [FromQuery]
+                [SwaggerParameter("Whether to retain previous schedules.")]
+                bool retainSchedules,
+                [FromQuery]
                 [SwaggerParameter("Whether to retain previous integration properties. " +
                                   "This should normally be set to true if transferring snapshots between " +
                                   "environments (e. g. from test to prod) where integration property values for " +
@@ -106,7 +112,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                 // Assume referencesPreserved = true, because only then is reverting of the snapshot supported.
                 var snapshot = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
                 ArgumentNullException.ThrowIfNull(snapshot);
-                var command = new RevertVersionCommand(snapshot, retainIntegrationProperties);
+                var command = new RevertVersionCommand(snapshot, retainSchedules, retainIntegrationProperties);
                 var handler = mediator.GetRequestHandler<RevertVersionCommand, RevertVersionResponse>();
                 var job = new VersionRevertJob(token => handler.Handle(command, token));
                 if (!versionRevertService.TryEnqueue(job))

@@ -6,23 +6,29 @@ namespace Biflow.Ui.Core;
 /// 
 /// </summary>
 /// <param name="Snapshot">The snapshot object to which the environment should be reverted</param>
+/// <param name="RetainSchedules">Whether to retain current schedules.</param>
 /// <param name="RetainIntegrationProperties">Whether to retain previous integration properties.
 /// This should normally be set to true if transferring snapshots between environments (e.g. from test to prod)
 /// where integration property values for the same entity may be different (e.g. connection strings or resource names).
 /// </param>
-public record RevertVersionCommand(EnvironmentSnapshot Snapshot, bool RetainIntegrationProperties)
-    : IRequest<RevertVersionResponse>;
+public record RevertVersionCommand(
+    EnvironmentSnapshot Snapshot,
+    bool RetainSchedules,
+    bool RetainIntegrationProperties) : IRequest<RevertVersionResponse>;
 
 /// <summary>
 /// 
 /// </summary>
 /// <param name="VersionId">The version id of the snapshot to which the environment should be reverted</param>
+/// <param name="RetainSchedules">Whether to retain current schedules.</param>
 /// <param name="RetainIntegrationProperties">Whether to retain previous integration properties.
 /// This should normally be set to true if transferring snapshots between environments (e.g. from test to prod)
 /// where integration property values for the same entity may be different (e.g. connection strings or resource names).
 /// </param>
-public record RevertVersionByIdCommand(int VersionId, bool RetainIntegrationProperties)
-    : IRequest<RevertVersionResponse>;
+public record RevertVersionByIdCommand(
+    int VersionId,
+    bool RetainSchedules,
+    bool RetainIntegrationProperties) : IRequest<RevertVersionResponse>;
 
 /// <summary>
 /// 
@@ -51,7 +57,10 @@ internal class RevertVersionByIdCommandHandler(IDbContextFactory<RevertDbContext
             ?? throw new NotFoundException<EnvironmentSnapshot>(request.VersionId);
         var snapshot = EnvironmentSnapshot.FromJson(snapshotJson, referencesPreserved: true);
         ArgumentNullException.ThrowIfNull(snapshot);
-        var command = new RevertVersionCommand(snapshot, request.RetainIntegrationProperties);
+        var command = new RevertVersionCommand(
+            snapshot,
+            request.RetainSchedules,
+            request.RetainIntegrationProperties);
         var response = await _handler.Handle(command, cancellationToken);
         return response;
     }
@@ -76,6 +85,38 @@ internal class RevertVersionCommandHandler(
             // RevertDbContext does not use retry-on-failure execution strategy.
             await using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
 
+            if (request.RetainSchedules)
+            {
+                var jobIds = snapshot.Jobs.Select(j => j.JobId).ToArray();
+                var schedules = await context.Schedules
+                    .AsNoTrackingWithIdentityResolution()
+                    .Where(s => jobIds.Contains(s.JobId))
+                    .Include(s => s.TagFilter)
+                    .Include(s => s.Tags)
+                    .ToArrayAsync(cancellationToken);
+                foreach (var schedule in schedules)
+                {
+                    // Synchronize tag references with those from the snapshot so that EF doesn't get confused.
+                    var tagFilter = schedule.TagFilter
+                        .Select(t1 => snapshot.Tags.OfType<StepTag>().FirstOrDefault(t2 => t1.TagId == t2.TagId))
+                        .OfType<StepTag>()
+                        .ToArray();
+                    var tags = schedule.Tags
+                        .Select(t1 => snapshot.Tags.OfType<ScheduleTag>().FirstOrDefault(t2 => t1.TagId == t2.TagId))
+                        .OfType<ScheduleTag>()
+                        .ToArray();
+                    schedule.TagFilter.Clear();
+                    schedule.Tags.Clear();
+                    foreach (var tag in tagFilter) schedule.TagFilter.Add(tag);
+                    foreach (var tag in tags) schedule.Tags.Add(tag);
+                }
+                foreach (var job in snapshot.Jobs)
+                {
+                    job.Schedules.Clear();
+                    foreach (var schedule in schedules.Where(s => s.JobId == job.JobId))
+                        job.Schedules.Add(schedule);
+                }
+            }
 
             // Capture subscriptions, job and data table authorizations.
             // These get automatically deleted when jobs, steps, tags and data tables are deleted.

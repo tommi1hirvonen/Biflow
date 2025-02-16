@@ -54,18 +54,37 @@
                                     </HxDropdownMenu>
                                 </HxDropdownButtonGroup>
                             </div>
-                            <div class="col-auto align-self-center form-check form-check-inline ms-3">
-                                <input type="checkbox" class="form-check-input" id="check_retain_integration_props"
-                                       @bind-value="_retainIntegrationProperties"
-                                       checked=@_retainIntegrationProperties>
-                                <label class="form-check-label" for="check_retain_integration_props">
-                                    Retain integration properties
-                                    &nbsp;
-                                    <HxPopover Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top"
-                                               Content="Whether to retain previous integration properties. This should normally be set to true if transferring snapshots between environments (e. g. from test to prod) where integration property values for the same entity may be different (e. g. connection strings or resource names).">
-                                        <SvgIcon Icon="LucideIcon.Info" />
-                                    </HxPopover>
-                                </label>
+                            <div class="col">
+                                <div class="row">
+                                    <div class="col align-self-center form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="check_retain_schedules"
+                                               @bind-value="_retainSchedules"
+                                               checked=@_retainSchedules>
+                                        <label class="form-check-label" for="check_retain_schedules">
+                                            Retain schedules
+                                            &nbsp;
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top"
+                                                       Content="Whether to retain previous schedules">
+                                                <SvgIcon Icon="LucideIcon.Info" />
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col align-self-center form-check form-check-inline">
+                                        <input type="checkbox" class="form-check-input" id="check_retain_integration_props"
+                                               @bind-value="_retainIntegrationProperties"
+                                               checked=@_retainIntegrationProperties>
+                                        <label class="form-check-label" for="check_retain_integration_props">
+                                            Retain integration properties
+                                            &nbsp;
+                                            <HxPopover Trigger="PopoverTrigger.Hover" Placement="PopoverPlacement.Top"
+                                                       Content="Whether to retain previous integration properties. This should normally be set to true if transferring snapshots between environments (e. g. from test to prod) where integration property values for the same entity may be different (e. g. connection strings or resource names).">
+                                                <SvgIcon Icon="LucideIcon.Info"/>
+                                            </HxPopover>
+                                        </label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     }
@@ -159,6 +178,7 @@
     private Task<RevertVersionResponse>? _revertTask;
     private RevertResult? _result;
     private bool _retainIntegrationProperties = false;
+    private bool _retainSchedules = false;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -183,7 +203,7 @@
         try
         {
             _result = null;
-            var command = new RevertVersionByIdCommand(versionId, _retainIntegrationProperties);
+            var command = new RevertVersionByIdCommand(versionId, _retainSchedules, _retainIntegrationProperties);
             _revertTask = Mediator.SendAsync(command, _cts.Token);
             StateHasChanged();
             var response = await _revertTask;
