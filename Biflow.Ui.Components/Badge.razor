@@ -1,8 +1,10 @@
-<span @attributes="InputAttributes" class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)" @onclick="OnClick">
+<span @attributes="InputAttributes"
+      class="badge d-inline-flex align-items-center py-1 px-2 @BadgeCss @CssClass @(Selected ? "text-decoration-underline" : null)"
+      @onclick="OnClick">
     @Text
     @if (IsRemovable)
     {
-        <span class="ms-1" @onclick="OnRemoveClick">
+        <span class="ms-1" @onclick="OnRemoveClick" style="cursor: pointer;">
             <SvgIcon Icon="LucideIcon.X" />
         </span>
     }
@@ -37,5 +39,6 @@
         _ => null
     };
 
-    private string BadgeCss => $"bg-{EffectiveColor}-subtle border border-{EffectiveColor}-subtle text-{EffectiveColor}-emphasis";
+    private string BadgeCss =>
+        $"bg-{EffectiveColor}-subtle border border-{EffectiveColor}-subtle text-{EffectiveColor}-emphasis";
 }
