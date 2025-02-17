@@ -69,7 +69,7 @@
                                 .OrderBy(x => x.DisplayName)
                                 .ToArray();
                             var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => _expandedStates[group] = !expanded">
+                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _expandedStates[group] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
@@ -100,8 +100,7 @@
                                         Notebook => LucideIcon.Notebook,
                                         _ => LucideIcon.CircleHelp
                                     };
-                                    <div class="list-group-item list-group-item-action @(item == _selectedItem?.Item ? "fw-bold bg-body" : null)"
-                                         style="cursor: pointer;"
+                                    <div class="list-group-item list-group-item-action cursor-pointer @(item == _selectedItem?.Item ? "fw-bold bg-body" : null)"
                                          @onclick="() => SelectItem(group.WorkspaceId, group.WorkspaceName, item)">
                                         <div class="row justify-content-between small">
                                             <div class="col d-flex align-items-center">

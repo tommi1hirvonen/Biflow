@@ -88,7 +88,7 @@
                     }
                     @foreach (var step in steps)
                     {
-                        <tr @onclick="() => AddDependency(step)" style="cursor: pointer;">
+                        <tr class="cursor-pointer" @onclick="() => AddDependency(step)">
                             <td class="align-middle small">
                                 <StepTypeIcon StepType="step.StepType" />
                                 <HighlightableText Text="@step.StepName" PartToHighlight="@_dependenciesFilterText" />

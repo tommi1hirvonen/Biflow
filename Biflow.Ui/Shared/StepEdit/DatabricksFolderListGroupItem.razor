@@ -10,7 +10,7 @@
     if (Folder.Depth > 0)
     {
         var folderPadding = $"{(Folder.Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-        <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
+        <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
             <div class="row">
                 <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
                     @if (folderExpanded)
@@ -45,7 +45,7 @@
         foreach (var file in files)
         {
             var filePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-            <div class="list-group-item list-group-item-action small @(file == SelectedFile ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnFileSelected.InvokeAsync(file)">
+            <div class="list-group-item list-group-item-action small cursor-pointer @(file == SelectedFile ? "bg-body" : null)" @onclick="() => OnFileSelected.InvokeAsync(file)">
                 <div class="row">
                     <div class="col d-flex align-items-center @(file == SelectedFile ? "fw-bold" : null)" style="padding-left: @(filePadding)">
                         <SvgIcon Icon="LucideIcon.File" />

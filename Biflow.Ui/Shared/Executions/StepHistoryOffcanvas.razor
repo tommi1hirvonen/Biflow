@@ -58,7 +58,7 @@
                         {
                             @foreach (var execution in _executions)
                             {
-                                <tr class="@(_selectedStepExecution == execution ? "bg-body-tertiary" : null)" style="cursor: pointer;" @onclick="() => ToggleSelectedStepExecution(execution)">
+                                <tr class="cursor-pointer @(_selectedStepExecution == execution ? "bg-body-tertiary" : null)" @onclick="() => ToggleSelectedStepExecution(execution)">
                                     <td>@execution.StartedOn?.LocalDateTime</td>
                                     <td>@execution.EndedOn?.LocalDateTime</td>
                                     <td>@execution.GetDurationInReadableFormat()</td>

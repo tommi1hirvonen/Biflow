@@ -17,14 +17,14 @@
                 <div class="row">
                     <div class="col">
                         <ul class="nav nav-underline">
-                            <li class="nav-item pointer">
+                            <li class="nav-item cursor-pointer">
                                 <span
                                     class="nav-link @(_view == View.Settings ? "active" : null)"
                                     @onclick="() => _view = View.Settings">
                                     Settings
                                 </span>
                             </li>
-                            <li class="nav-item pointer">
+                            <li class="nav-item cursor-pointer">
                                 <span
                                     class="nav-link @(_view == View.PreLoadScript ? "active" : null)"
                                     @onclick="() => _view = View.PreLoadScript">
@@ -40,7 +40,7 @@
                                     }
                                 </span>
                             </li>
-                            <li class="nav-item pointer">
+                            <li class="nav-item cursor-pointer">
                                 <span
                                     class="nav-link @(_view == View.PostLoadScript ? "active" : null)"
                                     @onclick="() => _view = View.PostLoadScript">
@@ -321,7 +321,7 @@
                                                 <SvgIcon Icon="LucideIcon.CircleAlert" />
                                                 &nbsp;
                                                 Connection was changed –&nbsp;
-                                                <span class="alert-link pointer text-decoration-underline"
+                                                <span class="alert-link cursor-pointer text-decoration-underline"
                                                       @onclick="async () => _columns = await LoadColumnsAsync()">
                                                     reimport columns
                                                 </span> 
@@ -351,7 +351,7 @@
                                                                 </HxPopover>
                                                             </th>
                                                             <th>
-                                                                <span class="pointer bold text-decoration-underline"
+                                                                <span class="cursor-pointer bold text-decoration-underline"
                                                                       @onclick="() => _table.NaturalKeyColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
                                                                     Clear all
                                                                 </span>
@@ -364,7 +364,7 @@
                                                             <tr>
                                                                 <td>@col</td>
                                                                 <td>
-                                                                    <span class="pointer bold text-decoration-underline"
+                                                                    <span class="cursor-pointer bold text-decoration-underline"
                                                                           @onclick="() => _table.NaturalKeyColumns.Remove(col)">
                                                                     Clear
                                                                 </span>
@@ -399,7 +399,7 @@
                                                                         </HxPopover>
                                                                     </th>
                                                                     <th>
-                                                                        <span class="pointer bold text-decoration-underline"
+                                                                        <span class="cursor-pointer bold text-decoration-underline"
                                                                               @onclick="() => _disabledConfiguration.IncludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
                                                                             Clear all
                                                                         </span>
@@ -412,7 +412,7 @@
                                                                     <tr>
                                                                         <td>@col</td>
                                                                         <td>
-                                                                            <span class="pointer bold text-decoration-underline"
+                                                                            <span class="cursor-pointer bold text-decoration-underline"
                                                                                   @onclick="() => _disabledConfiguration.IncludedColumns.Remove(col)">
                                                                             Clear
                                                                         </span>
@@ -443,7 +443,7 @@
                                                                         </HxPopover>
                                                                     </th>
                                                                     <th>
-                                                                        <span class="pointer bold text-decoration-underline"
+                                                                        <span class="cursor-pointer bold text-decoration-underline"
                                                                               @onclick="() => _enabledConfiguration.ExcludedColumns.RemoveAll(c1 => _columns.All(c2 => c1 != c2.ColumnName))">
                                                                             Clear all
                                                                         </span>
@@ -456,7 +456,7 @@
                                                                     <tr>
                                                                         <td>@col</td>
                                                                         <td>
-                                                                            <span class="pointer bold text-decoration-underline"
+                                                                            <span class="cursor-pointer bold text-decoration-underline"
                                                                                   @onclick="() => _enabledConfiguration.ExcludedColumns.Remove(col)">
                                                                                 Clear
                                                                             </span>

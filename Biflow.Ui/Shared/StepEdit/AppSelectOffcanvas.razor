@@ -77,7 +77,7 @@
                                 .OrderBy(a => a.Name)
                                 .ToArray();
                             var expanded = !string.IsNullOrEmpty(_appSearchTerm) || spaceExpandState.GetValueOrDefault(space);
-                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => spaceExpandState[space] = !expanded">
+                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => spaceExpandState[space] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
@@ -102,7 +102,7 @@
                             {
                                 foreach (var app in apps)
                                 {
-                                    <div class="list-group-item list-group-item-action @(app == _selectedApp ? "fw-bold bg-body" : null)" style="cursor: pointer;" @onclick="() => _selectedApp = app">
+                                    <div class="list-group-item list-group-item-action cursor-pointer @(app == _selectedApp ? "fw-bold bg-body" : null)" @onclick="() => _selectedApp = app">
                                         <div class="row">
                                             <div class="col d-flex align-items-center ps-5 small">
                                                 <SvgIcon Icon="LucideIcon.FileChartPie" />

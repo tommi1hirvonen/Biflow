@@ -39,7 +39,7 @@
                     Define SCD tables to automate loading of Slowly Changing Dimensions and start capturing changes to your data.
                     @if (!_infoExpanded)
                     {
-                        <span class="alert-link pointer text-decoration-underline"
+                        <span class="alert-link cursor-pointer text-decoration-underline"
                               @onclick="() => _infoExpanded = true">
                             Show more
                         </span> 
@@ -51,7 +51,7 @@
                             Any table or view with a unique key can be the source for an SCD table.
                             Type 2 historization is applied to all attribute columns.
                         </text>
-                        <span class="alert-link pointer text-decoration-underline"
+                        <span class="alert-link cursor-pointer text-decoration-underline"
                               @onclick="() => _infoExpanded = false">
                             Show less
                         </span>

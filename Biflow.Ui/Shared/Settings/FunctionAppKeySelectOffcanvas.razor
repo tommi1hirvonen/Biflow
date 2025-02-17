@@ -35,9 +35,8 @@
                         {
                             foreach (var key in _keys)
                             {
-                                <tr style="cursor: pointer;"
-                                    @onclick="() => _selectedKey = key.Key"
-                                    class="@(key.Key == _selectedKey ? "bg-body-tertiary fw-bold" : null)">
+                                <tr @onclick="() => _selectedKey = key.Key"
+                                    class="cursor-pointer @(key.Key == _selectedKey ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <small>
                                             @key.Type

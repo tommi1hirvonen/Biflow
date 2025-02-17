@@ -49,9 +49,8 @@
                                 .Where(function => function.FunctionName.ContainsIgnoreCase(_filterText))
                                 .OrderBy(function => function.FunctionName))
                             {
-                                <tr style="cursor: pointer;"
-                                    @onclick="() => _selectedFunctionUrl = function.FunctionUrl"
-                                    class="@(function.FunctionUrl == _selectedFunctionUrl ? "bg-body-tertiary fw-bold" : null)">
+                                <tr @onclick="() => _selectedFunctionUrl = function.FunctionUrl"
+                                    class="cursor-pointer @(function.FunctionUrl == _selectedFunctionUrl ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <small>
                                             <HighlightableText Text="@function.FunctionName" PartToHighlight="@_filterText" />

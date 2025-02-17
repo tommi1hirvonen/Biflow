@@ -54,7 +54,7 @@
                                 .OrderBy(x => x.DataflowName)
                                 .ToArray();
                             var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => _expandedStates[group] = !expanded">
+                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _expandedStates[group] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
@@ -79,8 +79,7 @@
                             {
                                 foreach (var dataflow in dataflows)
                                 {
-                                    <div class="list-group-item list-group-item-action @(dataflow == _selectedDataflow ? "fw-bold bg-body" : null)"
-                                         style="cursor: pointer;"
+                                    <div class="list-group-item list-group-item-action cursor-pointer @(dataflow == _selectedDataflow ? "fw-bold bg-body" : null)"
                                          @onclick="() => _selectedDataflow = dataflow">
                                         <div class="row">
                                             <div class="col d-flex align-items-center ps-5 small">

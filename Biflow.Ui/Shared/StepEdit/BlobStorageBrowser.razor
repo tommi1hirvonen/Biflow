@@ -8,21 +8,21 @@
     <div class="col small">
         @if (_accountName is not null)
         {
-            <span class="link-primary text-decoration-underline pointer" @onclick="() => _items = null">
+            <span class="link-primary text-decoration-underline cursor-pointer" @onclick="() => _items = null">
                 @_accountName
             </span>
             <span> / </span>
         }
         @if (_container is not null)
         {
-            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(_container)">
+            <span class="link-primary text-decoration-underline cursor-pointer" @onclick="() => BrowseAsync(_container)">
                 @_container.Name
             </span>
             <span> / </span>
         }
         @foreach (var (segment, index) in _prefix?.Split('/').SkipLast(1).Select((s, i) => (s, i)) ?? [])
         {
-            <span class="link-primary text-decoration-underline pointer" @onclick="() => BrowseAsync(index)">
+            <span class="link-primary text-decoration-underline cursor-pointer" @onclick="() => BrowseAsync(index)">
                 @segment
             </span>
             <span> / </span>
@@ -43,7 +43,7 @@
         {
             @if (i.IsBlob)
             {
-                <li class="list-group-item list-group-item-action pointer d-flex align-items-center @(_item == i.Blob ? "active" : null)" @onclick="() => SelectItemAsync(i.Blob)">
+                <li class="list-group-item list-group-item-action cursor-pointer d-flex align-items-center @(_item == i.Blob ? "active" : null)" @onclick="() => SelectItemAsync(i.Blob)">
                     <FileTypeIcon Filename="@i.Blob.Name" />
                     <span class="ms-1">
                         @i.Blob.Name.Substring(_prefix?.Length ?? 0)
@@ -54,7 +54,7 @@
             {
                 <li class="list-group-item d-flex align-items-center">
                     <SvgIcon Icon="LucideIcon.Folder" />
-                    <span class="link-primary text-decoration-underline pointer ms-1" @onclick="() => BrowseAsync(i)">
+                    <span class="link-primary text-decoration-underline cursor-pointer ms-1" @onclick="() => BrowseAsync(i)">
                         @i.Prefix.Substring(_prefix?.Length ?? 0, i.Prefix.Length - (_prefix?.Length ?? 0) - 1)
                     </span>
                 </li>
@@ -67,7 +67,7 @@
         {
             <li class="list-group-item d-flex align-items-center">
                 <SvgIcon Icon="LucideIcon.Container" />
-                <span class="link-primary text-decoration-underline pointer ms-1" @onclick="() => BrowseAsync(c)">
+                <span class="link-primary text-decoration-underline cursor-pointer ms-1" @onclick="() => BrowseAsync(c)">
                     @c.Name
                 </span>                
             </li>

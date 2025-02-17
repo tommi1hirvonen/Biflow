@@ -118,7 +118,7 @@
                     }
                     @foreach (var job in jobs)
                     {
-                        <div class="list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(job.JobId)" style="cursor: pointer;">
+                        <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => AddSubscriptionAsync(job.JobId)">
                             <HighlightableText Text="@job.JobName" PartToHighlight="@_jobSearchTerm" />
                         </div>
                     }

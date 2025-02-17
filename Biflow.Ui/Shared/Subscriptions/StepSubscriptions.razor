@@ -147,7 +147,7 @@
                             .Where(j => j.availableSteps.Length > 0);
                         @foreach (var (job, expanded, availableSteps) in jobs)
                         {
-                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => _jobExpandState[job.JobId] = !expanded">
+                            <div class="list-group-item cursor-pointer" @onclick="() => _jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
                                     {
@@ -164,7 +164,7 @@
                             {
                                 @foreach (var step in availableSteps)
                                 {
-                                    <div class="ps-5 list-group-item list-group-item-action" @onclick="() => AddSubscriptionAsync(step.StepId)" style="cursor: pointer;">
+                                    <div class="ps-5 list-group-item list-group-item-action cursor-pointer" @onclick="() => AddSubscriptionAsync(step.StepId)">
                                         <StepTypeIcon StepType="step.StepType" />
                                         <HighlightableText Text="@step.StepName" PartToHighlight="@_stepSearchTerm" />
                                     </div>

@@ -10,7 +10,7 @@
     @if (Folder.Depth > 0)
     {
         var folderPadding = $"{(Folder.Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-        <div class="list-group-item list-group-item-action" style="cursor: pointer;" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
+        <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => ExpandStatuses[Folder] = !folderExpanded">
             <div class="row">
                 <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
                     @if (folderExpanded)
@@ -40,7 +40,7 @@
     @foreach (var pipeline in pipelines)
     {
         var pipelinePadding = $"{(Folder.Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-        <div class="list-group-item list-group-item-action small @(pipeline == SelectedPipeline ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
+        <div class="list-group-item list-group-item-action small cursor-pointer @(pipeline == SelectedPipeline ? "bg-body" : null)" @onclick="() => OnPipelineSelected.InvokeAsync(pipeline)">
             <div class="row">
                 <div class="col d-flex align-items-center @(pipeline == SelectedPipeline ? "fw-bold" : null)" style="padding-left: @(pipelinePadding)">
                     <SvgIcon Icon="LucideIcon.Pipeline" />

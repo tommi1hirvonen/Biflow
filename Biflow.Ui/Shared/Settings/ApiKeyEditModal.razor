@@ -43,7 +43,7 @@
                                 @if (_key.Id == Guid.Empty)
                                 {
                                     <div class="form-text">Copy and save the API key someplace secure. You won't be able to view it in the UI after saving.</div>
-                                    <span class="text-decoration-underline pointer link-primary small"
+                                    <span class="text-decoration-underline cursor-pointer link-primary small"
                                           @onclick="CopyToClipboard">
                                         Copy to clipboard
                                     </span>
@@ -78,13 +78,13 @@
                             <div class="col">
                                 <div class="row mb-3 small">
                                     <div class="col-auto">
-                                        <span class="text-decoration-underline link-primary pointer"
+                                        <span class="text-decoration-underline link-primary cursor-pointer"
                                               @onclick="@(() => SelectAllScopes("Read"))">
                                             Select all
                                         </span>
                                     </div>
                                     <div class="col-auto">
-                                        <span class="text-decoration-underline link-primary pointer"
+                                        <span class="text-decoration-underline link-primary cursor-pointer"
                                               @onclick="@(() => DeselectAllScopes("Read"))">
                                             Deselect all
                                         </span>
@@ -108,13 +108,13 @@
                             <div class="col">
                                 <div class="row mb-3 small">
                                     <div class="col-auto">
-                                        <span class="text-decoration-underline link-primary pointer"
+                                        <span class="text-decoration-underline link-primary cursor-pointer"
                                               @onclick="@(() => SelectAllScopes("Write"))">
                                             Select all
                                         </span>
                                     </div>
                                     <div class="col-auto">
-                                        <span class="text-decoration-underline link-primary pointer"
+                                        <span class="text-decoration-underline link-primary cursor-pointer"
                                               @onclick="@(() => DeselectAllScopes("Write"))">
                                             Deselect all
                                         </span>

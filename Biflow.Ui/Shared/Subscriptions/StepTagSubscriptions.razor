@@ -99,7 +99,7 @@
                 }
                 @foreach (var tag in tags)
                 {
-                    <TagBadge Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(tag.TagId)" style="cursor: pointer;" />
+                    <TagBadge Tag="tag" CssClass="m-2 cursor-pointer" OnClick="() => AddSubscriptionAsync(tag.TagId)" />
                 }
             </div>
         </div>

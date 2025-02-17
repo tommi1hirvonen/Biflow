@@ -129,7 +129,7 @@
                             .Where(j => j.tags.Length > 0);
                         @foreach (var (job, expanded, tags) in jobs)
                         {
-                            <div class="list-group-item" style="cursor: pointer;" @onclick="() => _jobExpandState[job.JobId] = !expanded">
+                            <div class="list-group-item cursor-pointer" @onclick="() => _jobExpandState[job.JobId] = !expanded">
                                 <h6>
                                     @if (expanded)
                                     {
@@ -151,7 +151,7 @@
                                     }
                                     @foreach (var tag in tags)
                                     {
-                                        <TagBadge Tag="tag" CssClass="m-2" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" style="cursor: pointer;" />
+                                        <TagBadge Tag="tag" CssClass="m-2 cursor-pointer" OnClick="() => AddSubscriptionAsync(job.JobId, tag.TagId)" />
                                     }
                                 </div>
                             }

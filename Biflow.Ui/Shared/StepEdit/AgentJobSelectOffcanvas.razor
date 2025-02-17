@@ -45,9 +45,8 @@
                                 .Where(aj => aj.AgentJobName.ContainsIgnoreCase(_filterTextName))
                                 .OrderBy(aj => aj.AgentJobName))
                             {
-                                <tr style="cursor: pointer;"
-                                    @onclick="() => _selectedAgentJob = job.AgentJobName"
-                                    class="@(job.AgentJobName == _selectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
+                                <tr @onclick="() => _selectedAgentJob = job.AgentJobName"
+                                    class="cursor-pointer @(job.AgentJobName == _selectedAgentJob ? "bg-body-tertiary fw-bold" : null)">
                                     <td>
                                         <HighlightableText Text="@job.AgentJobName" PartToHighlight="@_filterTextName" />
                                     </td>

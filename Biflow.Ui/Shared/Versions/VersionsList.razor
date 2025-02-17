@@ -89,7 +89,7 @@
                                     <ContextMenuToggle ContainerHtmlTag="tr">
                                         <ChildContent Context="menu">
                                             <td class="align-middle">
-                                                <span class="pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
+                                                <span class="cursor-pointer text-decoration-underline" @onclick="() => OpenDetailsAsync(version.VersionId)">
                                                     @version.VersionId
                                                 </span>
                                             </td>
@@ -156,7 +156,7 @@
                 </div>
             </div>
             <div class="col-auto">
-                <span class="text-secondary small text-decoration-underline pointer" @onclick="CopyToClipboard">
+                <span class="text-secondary small text-decoration-underline cursor-pointer" @onclick="CopyToClipboard">
                     <SvgIcon Icon="LucideIcon.ClipboardCopy" />
                     Copy to clipboard
                 </span>

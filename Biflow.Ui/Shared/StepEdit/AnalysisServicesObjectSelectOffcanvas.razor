@@ -51,8 +51,7 @@
                         {
                             foreach (var model in _server.Models.OrderBy(m => m.ModelName))
                             {
-                                <tr style="cursor: pointer;"
-                                    class="@(model == _selectedModel ? "bg-body-tertiary fw-bold" : null)"
+                                <tr class="cursor-pointer @(model == _selectedModel ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectModel(model)">
                                     <td>@model.ModelName</td>
                                 </tr>
@@ -90,8 +89,7 @@
                         {
                             foreach (var table in _selectedModel.Tables.OrderBy(t => t.TableName))
                             {
-                                <tr style="cursor: pointer;"
-                                    class="@(table == _selectedTable ? "bg-body-tertiary fw-bold" : null)"
+                                <tr class="cursor-pointer @(table == _selectedTable ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectTable(table)">
                                     <td>@table.TableName</td>
                                 </tr>
@@ -129,8 +127,7 @@
                         {
                             foreach (var partition in _selectedTable.Partitions.OrderBy(p => p.PartitionName))
                             {
-                                <tr style="cursor: pointer;"
-                                    class="@(partition == _selectedPartition ? "bg-body-tertiary fw-bold" : null)"
+                                <tr class="cursor-pointer @(partition == _selectedPartition ? "bg-body-tertiary fw-bold" : null)"
                                     @onclick="() => SelectPartition(partition)">
                                     <td>@partition.PartitionName</td>
                                 </tr>

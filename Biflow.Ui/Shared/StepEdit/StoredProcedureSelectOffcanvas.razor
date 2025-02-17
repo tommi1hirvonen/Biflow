@@ -38,9 +38,8 @@
                         {
                             foreach (var proc in ProceduresFiltered)
                             {
-                                <tr style="cursor: pointer;"
-                                    @onclick="() => _selectedProcedure = proc"
-                                    class="@(Equals(proc, _selectedProcedure) ? "bg-body-tertiary fw-bold" : null)">
+                                <tr @onclick="() => _selectedProcedure = proc"
+                                    class="cursor-pointer @(Equals(proc, _selectedProcedure) ? "bg-body-tertiary fw-bold" : null)">
                                     <td class="small">
                                         <HighlightableText Text="@(proc.QuotedSchemaName)" PartToHighlight="@_filterTextSchema" />.<HighlightableText Text="@(proc.QuotedProcedureName)" PartToHighlight="@_filterTextName" />@proc.ArgumentSignature
                                     </td>

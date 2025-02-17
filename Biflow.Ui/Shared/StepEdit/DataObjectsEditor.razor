@@ -185,7 +185,7 @@
                         <tbody>
                             @foreach (var obj in objects)
                             {
-                                <tr style="cursor: pointer;" @onclick="() => { _newObject = obj; SubmitNewObject(); }">
+                                <tr class="cursor-pointer" @onclick="() => { _newObject = obj; SubmitNewObject(); }">
                                     <td class="align-middle font-monospace">
                                         <HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_newObject.ObjectUri" />
                                     </td>

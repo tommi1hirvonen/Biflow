@@ -173,9 +173,8 @@
                 var id = new StepExecutionId(item.ExecutionId, item.StepId, item.RetryAttemptIndex);
                 var checkBoxId = $"select_step_{item.StepId}_{item.RetryAttemptIndex}";
                 <ContextMenuToggle ContainerHtmlTag="tr"
-                                   CssClass="@(_selectedStepExecution == item ? "bg-body-tertiary" : null)"
+                                   CssClass="@(_selectedStepExecution == item ? "bg-body-tertiary cursor-pointer" : "cursor-pointer")"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
-                                   style="cursor: pointer;"
                                    @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     <ChildContent>
                         @if (ShowDetailed)

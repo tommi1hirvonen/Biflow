@@ -39,7 +39,7 @@
                                 .Where(pr => string.IsNullOrEmpty(_filterText) || pr.Packages.Values.Any(pa => pa.PackageName.ContainsIgnoreCase(_filterText)))
                                 .OrderBy(pr => pr.ProjectName)
                                 .ToArray();
-                            <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer;" @onclick="() => ToggleFolder(folder)">
+                            <div class="list-group-item list-group-item-action d-flex align-items-center small cursor-pointer" @onclick="() => ToggleFolder(folder)">
                                 @if (folderExpanded)
                                 {
                                     <SvgIcon Icon="LucideIcon.ChevronDown" />
@@ -74,7 +74,7 @@
                                     .Where(p => string.IsNullOrEmpty(_filterText) || p.PackageName.ContainsIgnoreCase(_filterText))
                                     .OrderBy(p => p.PackageName)
                                     .ToArray();
-                                <div class="list-group-item list-group-item-action d-flex align-items-center small" style="cursor: pointer; padding-left: 2rem;" @onclick="() => ToggleProject(project)">
+                                <div class="list-group-item list-group-item-action d-flex align-items-center small cursor-pointer" style="padding-left: 2rem;" @onclick="() => ToggleProject(project)">
                                     @if (projectExpanded)
                                     {
                                         <SvgIcon Icon="LucideIcon.ChevronDown" />
@@ -108,7 +108,7 @@
                                         .Where(p => !p.ConnectionManagerParameter || _showConnectionManagerParameters)
                                         .OrderBy(p => p.ProjectParameter)
                                         .ThenBy(p => p.ParameterName);
-                                    <div class="list-group-item list-group-item-action small @(package == _selectedPackage ? "bg-body" : null)" style="cursor: pointer;" @onclick="() => TogglePackage(package)">
+                                    <div class="list-group-item list-group-item-action small cursor-pointer @(package == _selectedPackage ? "bg-body" : null)" @onclick="() => TogglePackage(package)">
                                         <div class="row" style="padding-left: 3rem;">
                                             <div class="col d-flex align-items-center @(package == _selectedPackage ? "fw-bold" : null)">
                                                 <SvgIcon Icon="LucideIcon.Package" />

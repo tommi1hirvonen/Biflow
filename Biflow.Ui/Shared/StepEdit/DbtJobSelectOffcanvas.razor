@@ -25,7 +25,7 @@
                         foreach (var project in _projects)
                         {
                             var projectExpanded = _projectExpandedStates.GetValueOrDefault(project);
-                            <div class="list-group-item list-group-item-action pointer" @onclick="() => ToggleProjectAsync(project)">
+                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => ToggleProjectAsync(project)">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (projectExpanded)
@@ -74,7 +74,7 @@
                                 foreach (var environment in environments ?? [])
                                 {
                                     var environmentExpanded = _environmentExpandedStates.GetValueOrDefault(environment);
-                                    <div class="list-group-item list-group-item-action pointer" @onclick="() => ToggleEnvironmentAsync(environment)">
+                                    <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => ToggleEnvironmentAsync(environment)">
                                         <div class="row">
                                             <div class="col d-flex align-items-center small" style="padding-left: 2.5rem;">
                                                 @if (environmentExpanded)
@@ -127,7 +127,7 @@
                                     {
                                         var item = (project, environment, job);
                                         var selected = item == _selectedJob;
-                                        <div class="list-group-item list-group-item-action pointer @(selected ? "fw-bold bg-body" : null)" @onclick="() => _selectedJob = item">
+                                        <div class="list-group-item list-group-item-action cursor-pointer @(selected ? "fw-bold bg-body" : null)" @onclick="() => _selectedJob = item">
                                             <div class="row">
                                                 <div class="col small" style="padding-left: 4rem;">
                                                     @job.Name

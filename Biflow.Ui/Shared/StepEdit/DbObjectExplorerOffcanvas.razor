@@ -70,7 +70,7 @@
                         @foreach (var dbObject in _databaseObjects ?? [])
                         {
                             var tuple = (dbObject.Server, dbObject.Database, dbObject.Schema, dbObject.Object);
-                            <tr style="cursor: pointer;" @onclick="() => SelectDbObjectAsync(tuple, true)">
+                            <tr class="cursor-pointer" @onclick="() => SelectDbObjectAsync(tuple, true)">
                                 <td class="align-middle"><HighlightableText Text="@dbObject.Schema" PartToHighlight="@_schemaSearchTerm" /></td>
                                 <td class="align-middle"><HighlightableText Text="@dbObject.Object" PartToHighlight="@_nameSearchTerm" /></td>
                                 <td class="align-middle">@dbObject.Type</td>

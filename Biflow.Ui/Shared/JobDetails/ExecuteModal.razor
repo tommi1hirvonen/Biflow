@@ -19,7 +19,7 @@
             string BadgeClass(int? count) => count > 0 ? "bg-primary" : "bg-secondary";
             <ul class="nav nav-underline mt-2" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(_activeView == View.Steps ? "active" : null)" @onclick="() => _activeView = View.Steps" style="cursor: pointer;">
+                    <a class="nav-link cursor-pointer @(_activeView == View.Steps ? "active" : null)" @onclick="() => _activeView = View.Steps">
                         Steps
                         <span class="badge rounded-pill ms-3 @BadgeClass(stepsCount)">
                             @stepsCount
@@ -27,7 +27,7 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(_activeView == View.StepParameters ? "active" : null)" @onclick="() => _activeView = View.StepParameters" style="cursor: pointer;">
+                    <a class="nav-link cursor-pointer @(_activeView == View.StepParameters ? "active" : null)" @onclick="() => _activeView = View.StepParameters">
                         Step parameters
                         <span class="badge rounded-pill ms-3 @BadgeClass(stepParamsCount)">
                             @stepParamsCount
@@ -35,7 +35,7 @@
                     </a>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <a class="nav-link @(_activeView == View.JobParameters ? "active" : null)" @onclick="() => _activeView = View.JobParameters" style="cursor: pointer;">
+                    <a class="nav-link cursor-pointer @(_activeView == View.JobParameters ? "active" : null)" @onclick="() => _activeView = View.JobParameters">
                         Job parameters
                         <span class="badge rounded-pill ms-3 @BadgeClass(jobParamsCount)">
                             @jobParamsCount
@@ -147,7 +147,7 @@
                                     <tbody>
                                     @foreach (var step in StepsAvailableToExecute)
                                     {
-                                        <tr style="cursor: pointer;" title="@(step.IsEnabled ? null : "Step is disabled")">
+                                        <tr class="cursor-pointer" title="@(step.IsEnabled ? null : "Step is disabled")">
                                             <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
                                                 <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
@@ -189,7 +189,7 @@
                                     <tbody>
                                     @foreach (var step in _builder.StepExecutions)
                                     {
-                                        <tr style="cursor: pointer;" @onclick="() => step.RemoveFromExecution()">
+                                        <tr class="cursor-pointer" @onclick="() => step.RemoveFromExecution()">
                                             <td>
                                                 <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
@@ -234,7 +234,7 @@
                                     <tbody>
                                     @foreach (var step in _builder.StepExecutions.Where(s => s.Parameters.Any()))
                                     {
-                                        <tr style="cursor: pointer;" class="@(step.StepId == _parameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
+                                        <tr class="cursor-pointer @(step.StepId == _parameterEditStep?.StepId ? "fw-bold" : null)" @onclick="() => ToggleParameterEditStep(step)">
                                             <td>
                                                 <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;

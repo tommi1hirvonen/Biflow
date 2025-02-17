@@ -76,11 +76,11 @@
         <li class="list-group-item list-group-header">
             <div class="row align-items-center">
                 <div class="col">
-                    <span class="pointer small hover-underline" title="Collapse all" @onclick="CollapseAll">
+                    <span class="cursor-pointer small hover-underline" title="Collapse all" @onclick="CollapseAll">
                         <SvgIcon Icon="LucideIcon.ChevronsUp" />
                         Collapse all
                     </span>
-                    <span class="ms-3 pointer small hover-underline" title="Expand all" @onclick="ExpandAll">
+                    <span class="ms-3 cursor-pointer small hover-underline" title="Expand all" @onclick="ExpandAll">
                         <SvgIcon Icon="LucideIcon.ChevronsDown" />
                         Expand all
                     </span>
@@ -113,14 +113,14 @@
                         <div class="col my-1">
                             @if (state.IsExpanded)
                             {
-                                <span class="pointer hover-underline" title="Collapse" @onclick="() => state.IsExpanded = false">
+                                <span class="cursor-pointer hover-underline" title="Collapse" @onclick="() => state.IsExpanded = false">
                                     <SvgIcon Icon="LucideIcon.ChevronDown"/>
                                     @(category?.CategoryName ?? "No category")
                                 </span>
                             }
                             else
                             {
-                                <span class="pointer hover-underline" title="Expand" @onclick="() => state.IsExpanded = true">
+                                <span class="cursor-pointer hover-underline" title="Expand" @onclick="() => state.IsExpanded = true">
                                     <SvgIcon Icon="LucideIcon.ChevronRight"/>
                                     @(category?.CategoryName ?? "No category")
                                 </span>

@@ -238,8 +238,7 @@
                             <ul class="list-group list-group-numbered">
                                 @foreach (var column in _editTable?.ColumnOrder ?? Enumerable.Empty<string>())
                                 {
-                                    <li class="list-group-item list-group-item-action @(column == _columnOrderSelected ? "active" : null)"
-                                        style="cursor: pointer;"
+                                    <li class="list-group-item list-group-item-action cursor-pointer @(column == _columnOrderSelected ? "active" : null)"
                                         @onclick="() => _columnOrderSelected = _columnOrderSelected != column ? column : string.Empty">
                                         @column
                                     </li>
