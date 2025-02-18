@@ -29,7 +29,7 @@ public class MasterDataTableLookup
     public LookupDisplayType LookupDisplayType { get; set; }
 
     [JsonIgnore]
-    public MasterDataTable Table { get; init; } = null!;
+    public MasterDataTable Table { get; set; } = null!;
 
     [JsonIgnore]
     public MasterDataTable LookupTable { get; set; } = null!;

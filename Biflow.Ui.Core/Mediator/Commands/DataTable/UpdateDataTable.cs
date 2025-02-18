@@ -76,14 +76,17 @@ internal class UpdateDataTableCommandHandler(
         {
             dataTable.ColumnOrder.Clear();
             dataTable.ColumnOrder.AddRange(request.ColumnOrder);
+            dbContext.Entry(dataTable).Property(x => x.ColumnOrder).IsModified = true;
         }
         if (!dataTable.HiddenColumns.SequenceEqual(request.HiddenColumns))
         {
             dataTable.HiddenColumns = request.HiddenColumns.ToList();
+            dbContext.Entry(dataTable).Property(x => x.HiddenColumns).IsModified = true;
         }
         if (!dataTable.LockedColumns.SequenceEqual(request.LockedColumns))
         {
             dataTable.LockedColumns = request.LockedColumns.ToList();
+            dbContext.Entry(dataTable).Property(x => x.LockedColumns).IsModified = true;
         }
         
         // Synchronize lookups

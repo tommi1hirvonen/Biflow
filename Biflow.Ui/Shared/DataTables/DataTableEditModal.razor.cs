@@ -9,19 +9,20 @@ public partial class DataTableEditModal(
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory,
     IJSRuntime js,
-    DataTableValidator dataTableValidator) : ComponentBase, IDisposable
+    IMediator mediator,
+    DataTableValidator dataTableValidator) : ComponentBase
 {
     [Parameter] public EventCallback<MasterDataTable> OnTableSubmitted { get; set; }
 
     private readonly ToasterService _toaster = toaster;
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly IJSRuntime _js = js;
+    private readonly IMediator _mediator = mediator;
     private readonly DataTableValidator _dataTableValidator = dataTableValidator;
     private readonly ConditionalWeakTable<MasterDataTableLookup, IEnumerable<string>> _lookupColumns = [];
 
     private HxModal? _modal;
     private DatabaseTableSelectOffcanvas? _offcanvas;
-    private AppDbContext? _editContext;
     private MasterDataTable? _editTable;
     private TableEditView _currentView = TableEditView.Settings;
     private IEnumerable<MasterDataTable>? _tables;
@@ -32,43 +33,37 @@ public partial class DataTableEditModal(
 
     private enum TableEditView { Settings, ColumnOrder, Lookups }
 
-    public async Task SetEditContextAsync(MasterDataTable? table = null)
+    public async Task ShowAsync(Guid? tableId = null)
     {
         _currentView = TableEditView.Settings;
         _columnOrderSelected = "";
         await _modal.LetAsync(x => x.ShowAsync());
-        if (_editContext is not null) await _editContext.DisposeAsync();
-        _editContext = await _dbContextFactory.CreateDbContextAsync();
-        _connections = await _editContext.MsSqlConnections
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        _connections = await dbContext.MsSqlConnections
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(c => c.ConnectionName)
             .ToListAsync();
-        _categories = await _editContext.MasterDataTableCategories
+        _categories = await dbContext.MasterDataTableCategories
+            .AsNoTrackingWithIdentityResolution()
             .OrderBy(c => c.CategoryName)
             .ToListAsync();
-        _tables = await _editContext.MasterDataTables
+        _tables = await dbContext.MasterDataTables
+            .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Connection)
             .ThenInclude(c => c.Credential)
             .Include(t => t.Category)
             .OrderBy(t => t.Category!.CategoryName)
             .ThenBy(t => t.DataTableName)
             .ToListAsync();
-        if (table is null)
+        if (tableId is { } id)
         {
-            // New table
-            _editTable = new()
-            {
-                Connection = _connections.First(),
-                ConnectionId = _connections!.First().ConnectionId
-            };
-        }
-        else
-        {
-            _editTable = await _editContext.MasterDataTables
+            _editTable = await dbContext.MasterDataTables
+                .AsNoTrackingWithIdentityResolution()
                 .Include(t => t.Connection)
                 .ThenInclude(c => c.Credential)
                 .Include(t => t.Lookups)
                 .ThenInclude(l => l.LookupTable)
-                .FirstAsync(t => t.DataTableId == table.DataTableId);
+                .FirstAsync(t => t.DataTableId == id);
             _columns = await _editTable.GetColumnNamesAsync();
 
             foreach (var lookup in _editTable.Lookups)
@@ -76,6 +71,16 @@ public partial class DataTableEditModal(
                 _lookupColumns.AddOrUpdate(lookup, await lookup.LookupTable.GetColumnNamesAsync());
             }
         }
+        else
+        {
+            // New table
+            _editTable = new MasterDataTable
+            {
+                Connection = _connections.First(),
+                ConnectionId = _connections!.First().ConnectionId
+            };
+        }
+        
         StateHasChanged();
     }
 
@@ -111,10 +116,9 @@ public partial class DataTableEditModal(
         }
     }
 
-    private async Task EndEditContext()
+    private async Task HideAsync()
     {
         await _modal.LetAsync(x => x.HideAsync());
-        if (_editContext is not null) await _editContext.DisposeAsync();
         await Task.Delay(500);
         _editTable = null;
         _columns = null;
@@ -167,10 +171,8 @@ public partial class DataTableEditModal(
 
     private async Task SubmitEditTableAsync()
     {
-        if (_editContext is null || _editTable is null)
-        {
-            return;
-        }
+        ArgumentNullException.ThrowIfNull(_editTable);
+        ArgumentNullException.ThrowIfNull(_tables);
 
         if (_editTable.Lookups.Any(lookup => lookup.LookupTable.ConnectionId != _editTable.ConnectionId))
         {
@@ -178,20 +180,73 @@ public partial class DataTableEditModal(
             return;
         }
 
+        foreach (var lookup in _editTable.Lookups)
+        {
+            lookup.Table = _editTable;
+            lookup.LookupTable = _tables.First(t => t.DataTableId == lookup.LookupTableId);
+        }
+
         try
         {
             if (_editTable.DataTableId == Guid.Empty)
             {
-                _editContext.MasterDataTables.Add(_editTable);
+                var command = new CreateDataTableCommand(
+                    DataTableName: _editTable.DataTableName,
+                    DataTableDescription: _editTable.DataTableDescription, 
+                    TargetSchemaName: _editTable.TargetSchemaName, 
+                    TargetTableName: _editTable.TargetTableName, 
+                    ConnectionId: _editTable.ConnectionId, 
+                    CategoryId: _editTable.CategoryId, 
+                    AllowInsert: _editTable.AllowInsert, 
+                    AllowDelete: _editTable.AllowDelete, 
+                    AllowUpdate: _editTable.AllowUpdate, 
+                    AllowImport: _editTable.AllowImport, 
+                    LockedColumns: _editTable.LockedColumns.ToArray(), 
+                    LockedColumnsExcludeMode: _editTable.LockedColumnsExcludeMode, 
+                    HiddenColumns: _editTable.HiddenColumns.ToArray(), 
+                    ColumnOrder: _editTable.ColumnOrder.ToArray(), 
+                    Lookups: _editTable.Lookups
+                        .Select(l => new DataTableLookup(
+                            LookupId: null, 
+                            ColumnName: l.ColumnName, 
+                            LookupDataTableId: l.LookupTableId, 
+                            LookupValueColumn: l.LookupValueColumn, 
+                            LookupDescriptionColumn: l.LookupDescriptionColumn, 
+                            LookupDisplayType: l.LookupDisplayType))
+                        .ToArray());
+                _ = await _mediator.SendAsync(command);
             }
             else
             {
-                // Force update of ColumnOrder as EF may not consider it modified if items only change places.
-                _editContext.Entry(_editTable).Property(p => p.ColumnOrder).IsModified = true;
+                var command = new UpdateDataTableCommand(
+                    DataTableId: _editTable.DataTableId,
+                    DataTableName: _editTable.DataTableName,
+                    DataTableDescription: _editTable.DataTableDescription, 
+                    TargetSchemaName: _editTable.TargetSchemaName, 
+                    TargetTableName: _editTable.TargetTableName, 
+                    ConnectionId: _editTable.ConnectionId, 
+                    CategoryId: _editTable.CategoryId, 
+                    AllowInsert: _editTable.AllowInsert, 
+                    AllowDelete: _editTable.AllowDelete, 
+                    AllowUpdate: _editTable.AllowUpdate, 
+                    AllowImport: _editTable.AllowImport, 
+                    LockedColumns: _editTable.LockedColumns.ToArray(), 
+                    LockedColumnsExcludeMode: _editTable.LockedColumnsExcludeMode, 
+                    HiddenColumns: _editTable.HiddenColumns.ToArray(), 
+                    ColumnOrder: _editTable.ColumnOrder.ToArray(), 
+                    Lookups: _editTable.Lookups
+                        .Select(l => new DataTableLookup(
+                            LookupId: l.LookupId, 
+                            ColumnName: l.ColumnName, 
+                            LookupDataTableId: l.LookupTableId, 
+                            LookupValueColumn: l.LookupValueColumn, 
+                            LookupDescriptionColumn: l.LookupDescriptionColumn, 
+                            LookupDisplayType: l.LookupDisplayType))
+                        .ToArray());
+                _ = await _mediator.SendAsync(command);
             }
-            await _editContext.SaveChangesAsync();
             await OnTableSubmitted.InvokeAsync(_editTable);
-            await EndEditContext();
+            await HideAsync();
         }
         catch (DbUpdateConcurrencyException)
         {
@@ -231,7 +286,7 @@ public partial class DataTableEditModal(
         var oldIndex = _editTable.ColumnOrder.IndexOf(_columnOrderSelected);
         if (oldIndex < 0 || oldIndex >= _editTable.ColumnOrder.Count - 1)
         {
-            // Cannot demote any more.
+            // Cannot demote anymore.
             return;
         }
         _editTable.ColumnOrder.RemoveAt(oldIndex);
@@ -244,7 +299,7 @@ public partial class DataTableEditModal(
         var oldIndex = _editTable.ColumnOrder.IndexOf(_columnOrderSelected);
         if (oldIndex < 1)
         {
-            // Cannot promote any more.
+            // Cannot promote anymore.
             return;
         }
         _editTable.ColumnOrder.RemoveAt(oldIndex);
@@ -257,6 +312,4 @@ public partial class DataTableEditModal(
         (_editTable.TargetSchemaName, _editTable.TargetTableName) = table;
         _columns = await _editTable.GetColumnNamesAsync();
     }
-
-    public void Dispose() => _editContext?.Dispose();
 }
