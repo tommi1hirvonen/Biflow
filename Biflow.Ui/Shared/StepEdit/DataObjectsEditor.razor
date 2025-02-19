@@ -452,7 +452,9 @@
         ArgumentNullException.ThrowIfNull(Step);
         var reference = new StepDataObject
         {
+            StepId = Step.StepId,
             Step = Step,
+            ObjectId = dataObject.ObjectId,
             DataObject = dataObject,
             ReferenceType = ReferenceType
         };

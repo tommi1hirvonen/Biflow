@@ -55,7 +55,10 @@
         try
         {
             ArgumentNullException.ThrowIfNull(_editObject);
-            await Mediator.SendAsync(new UpdateDataObjectCommand(_editObject));
+            await Mediator.SendAsync(new UpdateDataObjectCommand(
+                _editObject.ObjectId,
+                _editObject.ObjectUri,
+                _editObject.MaxConcurrentWrites));
             await _offcanvas.LetAsync(x => x.HideAsync());
             await OnDataObjectSubmitted.InvokeAsync(_editObject);
             _editObject = null;

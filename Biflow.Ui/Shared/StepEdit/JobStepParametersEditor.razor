@@ -82,6 +82,9 @@ else if (Step is not null && _targetJob is not null)
                     }
                     else
                     {
+                        // TODO Changing parameter from dynamic back to static now leaves it in
+                        // ParameterValueType.Empty state without being able to change the type
+                        // because StaticEditTemplate is used.
                         <DynamicParameterEditor Parameter="param" TParameter="StepParameterBase"
                                            OnParameterEdit="OnParameterEdit">
                             <StaticEditTemplate>

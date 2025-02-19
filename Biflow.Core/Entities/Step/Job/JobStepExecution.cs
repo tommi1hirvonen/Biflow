@@ -14,10 +14,8 @@ public class JobStepExecution : StepExecution,
 
     public JobStepExecution(JobStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.JobToExecuteId);
-
         TimeoutMinutes = step.TimeoutMinutes;
-        JobToExecuteId = (Guid)step.JobToExecuteId;
+        JobToExecuteId = step.JobToExecuteId;
         JobExecuteSynchronized = step.JobExecuteSynchronized;
         _tagFilters = step.TagFilters
             .Select(t => new TagFilter(t.TagId, t.TagName))

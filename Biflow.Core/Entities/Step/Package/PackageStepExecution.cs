@@ -18,10 +18,6 @@ public class PackageStepExecution : StepExecution,
 
     public PackageStepExecution(PackageStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.PackageFolderName);
-        ArgumentNullException.ThrowIfNull(step.PackageProjectName);
-        ArgumentNullException.ThrowIfNull(step.PackageName);
-
         PackageFolderName = step.PackageFolderName;
         PackageProjectName = step.PackageProjectName;
         PackageName = step.PackageName;

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Attributes.Validation;
 
 namespace Biflow.Core.Entities;
 
@@ -24,6 +25,7 @@ public class DatasetStep : Step
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
+    [NotEmptyGuid]
     public string WorkspaceId { get; set; } = "";
     
     [MaxLength(250)]
@@ -32,6 +34,7 @@ public class DatasetStep : Step
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
+    [NotEmptyGuid]
     public string DatasetId { get; set; } = "";
     
     [MaxLength(250)]

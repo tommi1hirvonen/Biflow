@@ -35,15 +35,15 @@ public class PackageStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParamet
 
     [MaxLength(128)]
     [Required]
-    public string? PackageFolderName { get; set; }
+    public string PackageFolderName { get; set; } = "";
 
     [MaxLength(128)]
     [Required]
-    public string? PackageProjectName { get; set; }
+    public string PackageProjectName { get; set; } = "";
 
     [MaxLength(260)]
     [Required]
-    public string? PackageName { get; set; }
+    public string PackageName { get; set; } = "";
 
     [Required]
     public bool ExecuteIn32BitMode { get; set; }

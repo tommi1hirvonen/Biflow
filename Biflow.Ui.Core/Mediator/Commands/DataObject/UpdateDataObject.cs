@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateDataObjectCommand(
+public record UpdateDataObjectCommand(
     Guid ObjectId,
     string ObjectUri, 
     int MaxConcurrentWrites) : IRequest<DataObject>;

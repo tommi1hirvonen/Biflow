@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record CreateDataObjectCommand(string ObjectUri, int MaxConcurrentWrites) : IRequest<DataObject>;
+public record CreateDataObjectCommand(string ObjectUri, int MaxConcurrentWrites) : IRequest<DataObject>;
 
 [UsedImplicitly]
 internal class CreateDataObjectCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)

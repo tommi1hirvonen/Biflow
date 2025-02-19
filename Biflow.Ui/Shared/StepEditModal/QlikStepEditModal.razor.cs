@@ -4,11 +4,11 @@ namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class QlikStepEditModal(
     IHttpClientFactory httpClientFactory,
+    IMediator mediator,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
-    : StepEditModal<QlikStep>(toaster, dbContextFactory)
+    : StepEditModal<QlikStep>(mediator, toaster, dbContextFactory)
 {
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
 
     internal override string FormId => "qlik_step_edit_form";
 
@@ -46,8 +46,8 @@ public partial class QlikStepEditModal(
             QlikCloudEnvironmentId = client.QlikCloudEnvironmentId
         };
     }
-
-    protected override Task OnSubmitAsync(AppDbContext context, QlikStep step)
+    
+    protected override async Task<QlikStep> OnSubmitCreateAsync(QlikStep step)
     {
         // Store the app and automation names only for audit purposes.
         if (step.QlikStepSettings is QlikAppReloadSettings reload)
@@ -62,11 +62,98 @@ public partial class QlikStepEditModal(
                 ?.FirstOrDefault(a => a.Id == run.AutomationId)
                 ?.Name;
         }
+        
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new CreateExecutionConditionParameter(
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var command = new CreateQlikStepCommand
+        {
+            JobId = step.JobId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            QlikCloudEnvironmentId = step.QlikCloudEnvironmentId,
+            Settings = step.QlikStepSettings,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray()
+        };
+        return await Mediator.SendAsync(command);
+    }
 
-        // Change tracking does not identify changes to cluster configuration.
-        // Tell the change tracker that the config has changed just in case.
-        context.Entry(step).Property(p => p.QlikStepSettings).IsModified = true;
-        return Task.CompletedTask;
+    protected override async Task<QlikStep> OnSubmitUpdateAsync(QlikStep step)
+    {
+        // Store the app and automation names only for audit purposes.
+        if (step.QlikStepSettings is QlikAppReloadSettings reload)
+        {
+            reload.AppName ??= _apps
+                ?.FirstOrDefault(a => a.Id == reload.AppId)
+                ?.Name;
+        }
+        else if (step.QlikStepSettings is QlikAutomationRunSettings run)
+        {
+            run.AutomationName ??= _automations
+                ?.FirstOrDefault(a => a.Id == run.AutomationId)
+                ?.Name;
+        }
+        
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new UpdateExecutionConditionParameter(
+                p.ParameterId,
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var command = new UpdateQlikStepCommand
+        {
+            StepId = step.StepId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            QlikCloudEnvironmentId = step.QlikCloudEnvironmentId,
+            Settings = step.QlikStepSettings,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray()
+        };
+        return await Mediator.SendAsync(command);
     }
 
     private void OnAppSelected(QlikApp selected)
@@ -97,7 +184,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(_httpClientFactory);
+                using var client = environment.CreateClient(httpClientFactory);
                 return await client.GetAppAsync(value);
             }
             catch (Exception ex)
@@ -118,7 +205,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(_httpClientFactory);
+                using var client = environment.CreateClient(httpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 _apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -148,7 +235,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(_httpClientFactory);
+                using var client = environment.CreateClient(httpClientFactory);
                 return await client.GetAutomationAsync(value);
             }
             catch (Exception ex)
@@ -169,7 +256,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(_httpClientFactory);
+                using var client = environment.CreateClient(httpClientFactory);
                 var automations = await client.GetAutomationsAsync();
                 this._automations = automations.OrderBy(a => a.Name).ToArray();
             }

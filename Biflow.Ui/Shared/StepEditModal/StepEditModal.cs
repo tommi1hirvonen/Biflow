@@ -1,8 +1,9 @@
 ﻿namespace Biflow.Ui.Shared.StepEditModal;
 
 public abstract class StepEditModal<TStep>(
+    IMediator mediator,
     ToasterService toaster,
-    IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase, IDisposable, IStepEditModal where TStep : Step
+    IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase, IStepEditModal where TStep : Step
 {
     [CascadingParameter] public Job? Job { get; set; }
 
@@ -40,19 +41,26 @@ public abstract class StepEditModal<TStep>(
 
     public List<StepTag>? AllTags { get; private set; }
 
+    protected IMediator Mediator { get; } = mediator;
+
     protected ToasterService Toaster { get; } = toaster;
 
     protected IDbContextFactory<AppDbContext> DbContextFactory { get; } = dbContextFactory;
 
-    private AppDbContext? _context;
     private IEnumerable<DataObject>? _dataObjects;
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
 
     public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
     {
-        ArgumentNullException.ThrowIfNull(_context);
-        _dataObjects ??= await _context.DataObjects.ToListAsync();
+        if (_dataObjects is not null)
+        {
+            return _dataObjects;
+        }
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+        _dataObjects = await dbContext.DataObjects
+            .AsNoTrackingWithIdentityResolution()
+            .ToListAsync();
         return _dataObjects;
     }
 
@@ -61,7 +69,7 @@ public abstract class StepEditModal<TStep>(
     /// The Step loaded from the context should be tracked in order to track changes made to the object.
     /// </summary>
     /// <param name="context">Instance of <see cref="AppDbContext"/></param>
-    /// <param name="stepId">Id of an existing Step that is to be edited</param>
+    /// <param name="stepId">ID of an existing Step that is to be edited</param>
     /// <returns></returns>
     protected abstract Task<TStep> GetExistingStepAsync(AppDbContext context, Guid stepId);
 
@@ -73,19 +81,9 @@ public abstract class StepEditModal<TStep>(
     /// <returns></returns>
     protected abstract TStep CreateNewStep(Job job);
 
-    /// <summary>
-    /// Called when the step is submitted.
-    /// Invoking takes place after tags and other objects are mapped but before the step is saved.
-    /// </summary>
-    protected virtual Task OnSubmitAsync(AppDbContext context, TStep step) => Task.CompletedTask;
+    protected abstract Task<TStep> OnSubmitCreateAsync(TStep step);
 
-    private async Task ResetContext()
-    {
-        if (_context is not null)
-            await _context.DisposeAsync();
-
-        _context = await DbContextFactory.CreateDbContextAsync();
-    }
+    protected abstract Task<TStep> OnSubmitUpdateAsync(TStep step);
 
     internal void OnClosed()
     {
@@ -102,29 +100,19 @@ public abstract class StepEditModal<TStep>(
 
         try
         {
-            ArgumentNullException.ThrowIfNull(_context);
             if (Step is null)
             {
                 Toaster.AddError("Error submitting step", "Step was null");
                 return;
             }
 
-            await MapExistingDataObjectsAsync(Step.DataObjects);
+            await AddNewDataObjectsAsync(Step.DataObjects);
 
-            await OnSubmitAsync(_context, Step);
+            var step = Step.StepId == Guid.Empty
+                ? await OnSubmitCreateAsync(Step)
+                : await OnSubmitUpdateAsync(Step);
 
-            // Save changes.
-
-            // New step
-            if (Step.StepId == Guid.Empty)
-            {
-                _context.Steps.Add(Step);
-            }
-            // If the Step was an existing Step, the context has been tracking its changes.
-            // => No need to attach it to the context separately.
-            await _context.SaveChangesAsync();
-
-            await OnStepSubmit.InvokeAsync(Step);
+            await OnStepSubmit.InvokeAsync(step);
             await Modal.LetAsync(x => x.HideAsync());
         }
         catch (DbUpdateConcurrencyException)
@@ -142,13 +130,20 @@ public abstract class StepEditModal<TStep>(
         }
     }
 
-    private async Task MapExistingDataObjectsAsync(ICollection<StepDataObject> dataObjects)
+    private async Task AddNewDataObjectsAsync(ICollection<StepDataObject> dataObjects)
     {
-        var allObjects = await GetDataObjectsAsync();
-        var replace = dataObjects.Where(d => d.ObjectId == Guid.Empty && allObjects.Any(o => o.UriEquals(d.DataObject))).ToArray();
-        foreach (var dataObject in replace)
+        var newDataObjects = dataObjects
+            .Where(x => x.DataObject.ObjectId == Guid.Empty)
+            .GroupBy(x => x.DataObject)
+            .Select(g => (g.Key, g.ToList()));
+        foreach (var (newDataObject, stepDataObjects) in newDataObjects)
         {
-            dataObject.DataObject = allObjects.First(o => o.UriEquals(dataObject.DataObject));
+            var command = new CreateDataObjectCommand(newDataObject.ObjectUri, 1);
+            var dataObject = await Mediator.SendAsync(command);
+            foreach (var stepDataObject in stepDataObjects)
+            {
+                stepDataObject.DataObject = dataObject;
+            }
         }
     }
 
@@ -156,17 +151,18 @@ public abstract class StepEditModal<TStep>(
     {
         CurrentView = startView;
         await Modal.LetAsync(x => x.ShowAsync());
-        await ResetContext();
-        ArgumentNullException.ThrowIfNull(_context);
-        AllTags = await _context.StepTags.ToListAsync();
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+        AllTags = await dbContext.StepTags
+            .AsNoTrackingWithIdentityResolution()
+            .ToListAsync();
         AllTags.Sort();
         // Use slim classes to only load selected columns from the db.
         // When loading all steps from the db, the number of steps may be very high.
-        JobSlims = await _context.Jobs
+        JobSlims = await dbContext.Jobs
             .AsNoTrackingWithIdentityResolution()
             .Select(j => new JobProjection(j.JobId, j.JobName, j.ExecutionMode))
             .ToDictionaryAsync(j => j.JobId);
-        StepSlims = await _context.Steps
+        StepSlims = await dbContext.Steps
             .AsNoTrackingWithIdentityResolution()
             .Select(s => new StepProjection(
                 s.StepId,
@@ -181,17 +177,21 @@ public abstract class StepEditModal<TStep>(
             .ToDictionaryAsync(s => s.StepId);
         if (stepId != Guid.Empty)
         {
-            Step = await GetExistingStepAsync(_context, stepId);
+            Step = await GetExistingStepAsync(dbContext, stepId);
         }
         else if (stepId == Guid.Empty && Job is not null)
         {
-            var job = await _context.Jobs.Include(j => j.JobParameters).FirstAsync(j => j.JobId == Job.JobId);
+            var job = await dbContext.Jobs
+                .AsNoTrackingWithIdentityResolution()
+                .Include(j => j.JobParameters)
+                .FirstAsync(j => j.JobId == Job.JobId);
             Step = CreateNewStep(job);
         }
         StateHasChanged();
         if (Step is not null)
+        {
             await OnModalShownAsync(Step);
+        }
     }
-
-    public virtual void Dispose() => _context?.Dispose();
+    
 }

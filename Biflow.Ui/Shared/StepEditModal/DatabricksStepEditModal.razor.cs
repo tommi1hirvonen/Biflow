@@ -6,8 +6,10 @@ using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo;
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class DatabricksStepEditModal(
-    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
-    : StepEditModal<DatabricksStep>(toaster, dbContextFactory)
+    IMediator mediator,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<DatabricksStep>(mediator, toaster, dbContextFactory)
 {
     [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];
 
@@ -68,8 +70,8 @@ public partial class DatabricksStepEditModal(
             DatabricksWorkspaceId = workspace.WorkspaceId
         };
     }
-
-    protected override Task OnSubmitAsync(AppDbContext context, DatabricksStep step)
+    
+    protected override async Task<DatabricksStep> OnSubmitCreateAsync(DatabricksStep step)
     {
         switch (step.DatabricksStepSettings)
         {
@@ -91,11 +93,131 @@ public partial class DatabricksStepEditModal(
                     ?.ClusterName;
                 break;
         }
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new CreateExecutionConditionParameter(
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var parameters = step.StepParameters
+            .Select(p => new CreateStepParameter(
+                p.ParameterName,
+                p.ParameterValue,
+                p.UseExpression,
+                p.Expression.Expression,
+                p.InheritFromJobParameterId,
+                p.ExpressionParameters
+                    .Select(e => new CreateExpressionParameter(e.ParameterName, e.InheritFromJobParameterId))
+                    .ToArray()))
+            .ToArray();
+        var command = new CreateDatabricksStepCommand
+        {
+            JobId = step.JobId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            DatabricksWorkspaceId = step.DatabricksWorkspaceId,
+            DatabricksStepSettings = step.DatabricksStepSettings,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Parameters = parameters
+        };
+        return await Mediator.SendAsync(command);
+    }
 
-        // Change tracking does not identify changes to cluster configuration.
-        // Tell the change tracker that the config has changed just in case.
-        context.Entry(step).Property(p => p.DatabricksStepSettings).IsModified = true;
-        return Task.CompletedTask;
+    protected override async Task<DatabricksStep> OnSubmitUpdateAsync(DatabricksStep step)
+    {
+        switch (step.DatabricksStepSettings)
+        {
+            // Store the pipeline or job name only for audit purposes.
+            case DbPipelineStepSettings pipeline:
+                pipeline.PipelineName ??= _pipelines
+                    ?.FirstOrDefault(p => p.PipelineId == pipeline.PipelineId)
+                    ?.Name;
+                break;
+            case DbJobStepSettings job:
+                job.JobName ??= _dbJobs
+                    ?.FirstOrDefault(j => j.JobId == job.JobId)
+                    ?.JobName;
+                break;
+            // Also store the cluster name if applicable.
+            case DatabricksClusterStepSettings { ClusterConfiguration: ExistingClusterConfiguration existing }:
+                existing.ClusterName ??= _clusters
+                    ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
+                    ?.ClusterName;
+                break;
+        }
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new UpdateExecutionConditionParameter(
+                p.ParameterId,
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var parameters = step.StepParameters
+            .Select(p => new UpdateStepParameter(
+                p.ParameterId,
+                p.ParameterName,
+                p.ParameterValue,
+                p.UseExpression,
+                p.Expression.Expression,
+                p.InheritFromJobParameterId,
+                p.ExpressionParameters
+                    .Select(e => new UpdateExpressionParameter(
+                        e.ParameterId,
+                        e.ParameterName,
+                        e.InheritFromJobParameterId))
+                    .ToArray()))
+            .ToArray();
+        var command = new UpdateDatabricksStepCommand
+        {
+            StepId = step.StepId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            DatabricksWorkspaceId = step.DatabricksWorkspaceId,
+            DatabricksStepSettings = step.DatabricksStepSettings,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Parameters = parameters
+        };
+        return await Mediator.SendAsync(command);
     }
 
     private Task OpenFileSelectOffcanvas()

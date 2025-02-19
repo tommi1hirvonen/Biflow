@@ -16,8 +16,6 @@ public class PipelineStepExecution : StepExecution,
 
     public PipelineStepExecution(PipelineStep step, Execution execution) : base(step, execution)
     {
-        ArgumentNullException.ThrowIfNull(step.PipelineName);
-
         PipelineName = step.PipelineName;
         PipelineClientId = step.PipelineClientId;
         TimeoutMinutes = step.TimeoutMinutes;

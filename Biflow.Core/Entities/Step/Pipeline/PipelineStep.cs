@@ -29,7 +29,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
 
     [MaxLength(250)]
     [Required]
-    public string? PipelineName { get; set; }
+    public string PipelineName { get; set; } = "";
 
     [JsonIgnore]
     public PipelineClient? PipelineClient { get; set; }

@@ -24,7 +24,7 @@
             </div>
             <div class="col-md-6">
                 <HxAutosuggest TItem="ScdTable"
-                               TValue="Guid?"
+                               TValue="Guid"
                                DataProvider="GetSuggestionsAsync"
                                ItemFromValueResolver="tableId => Task.FromResult(ScdTables.FirstOrDefault(t => t.ScdTableId == tableId)!)"
                                ValueSelector="table => table.ScdTableId"

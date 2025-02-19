@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Biflow.Core.Attributes.Validation;
 
 namespace Biflow.Core.Entities;
 
@@ -22,9 +23,9 @@ public class ScdStep : Step, IHasTimeout, IHasSqlConnection
     [Required]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
-
-    [Required]
-    public Guid? ScdTableId { get; set; }
+    
+    [NotEmptyGuid]
+    public Guid ScdTableId { get; set; }
 
     [JsonIgnore]
     public ScdTable ScdTable { get; set; } = null!;

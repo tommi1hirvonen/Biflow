@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Attributes.Validation;
 using Biflow.Core.Interfaces;
 
 namespace Biflow.Core.Entities;
@@ -26,6 +27,7 @@ public class DataflowStep : Step, IHasTimeout
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
+    [NotEmptyGuid]
     public string WorkspaceId { get; set; } = "";
     
     [MaxLength(250)]
@@ -34,6 +36,7 @@ public class DataflowStep : Step, IHasTimeout
     [MaxLength(36)]
     [MinLength(36)]
     [Required]
+    [NotEmptyGuid]
     public string DataflowId { get; set; } = "";
     
     [MaxLength(250)]

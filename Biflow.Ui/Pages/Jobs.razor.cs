@@ -322,7 +322,7 @@ public partial class Jobs(
         await using (var context = await _dbContextFactory.CreateDbContextAsync())
         {
             var executingSteps = await context.JobSteps
-                .Where(s => s.JobToExecuteId != null && jobIds.Contains((Guid)s.JobToExecuteId))
+                .Where(s => jobIds.Contains(s.JobToExecuteId))
                 .Include(s => s.Job)
                 .OrderBy(s => s.Job.JobName)
                 .ThenBy(s => s.StepName)

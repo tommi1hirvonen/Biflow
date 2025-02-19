@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Attributes.Validation;
 
 namespace Biflow.Core.Entities;
 
@@ -24,9 +25,9 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
     [Required]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
-
-    [Required]
-    public Guid? JobToExecuteId { get; set; }
+    
+    [NotEmptyGuid]
+    public Guid JobToExecuteId { get; set; }
 
     [Required]
     public bool JobExecuteSynchronized { get; set; }

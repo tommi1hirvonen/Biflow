@@ -4,8 +4,10 @@ using Biflow.Ui.SqlMetadataExtensions;
 namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class SqlStepEditModal(
-    ToasterService toaster, IDbContextFactory<AppDbContext> dbContextFactory)
-    : StepEditModal<SqlStep>(toaster, dbContextFactory)
+    IMediator mediator,
+    ToasterService toaster,
+    IDbContextFactory<AppDbContext> dbContextFactory)
+    : StepEditModal<SqlStep>(mediator, toaster, dbContextFactory)
 {
     internal override string FormId => "sql_step_edit_form";
 
@@ -19,8 +21,8 @@ public partial class SqlStepEditModal(
         </div>
         """;
 
-    private StoredProcedureSelectOffcanvas? storedProcedureSelectModal;
-    private CodeEditor? editor;
+    private StoredProcedureSelectOffcanvas? _storedProcedureSelectModal;
+    private CodeEditor? _editor;
     
     private SqlConnectionBase? Connection
     {
@@ -48,19 +50,7 @@ public partial class SqlStepEditModal(
         .ThenInclude(s => s.DataObject)
         .Include(step => step.ExecutionConditionParameters)
         .FirstAsync(step => step.StepId == stepId);
-
-    protected override async Task OnModalShownAsync(SqlStep step)
-    {
-        if (editor is not null)
-        {
-            try
-            {
-                await editor.SetValueAsync(step.SqlStatement);
-            }
-            catch { /* ignored */ }
-        }
-    }
-
+    
     protected override SqlStep CreateNewStep(Job job) =>
         new()
         {
@@ -70,12 +60,137 @@ public partial class SqlStepEditModal(
             RetryIntervalMinutes = 0,
             ConnectionId = SqlConnections.First().ConnectionId
         };
+    
+    protected override async Task<SqlStep> OnSubmitCreateAsync(SqlStep step)
+    {
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new CreateExecutionConditionParameter(
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var parameters = step.StepParameters
+            .Select(p => new CreateStepParameter(
+                p.ParameterName,
+                p.ParameterValue,
+                p.UseExpression,
+                p.Expression.Expression,
+                p.InheritFromJobParameterId,
+                p.ExpressionParameters
+                    .Select(e => new CreateExpressionParameter(e.ParameterName, e.InheritFromJobParameterId))
+                    .ToArray()))
+            .ToArray();
+        var command = new CreateSqlStepCommand
+        {
+            JobId = step.JobId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            ConnectionId = step.ConnectionId,
+            SqlStatement = step.SqlStatement,
+            ResultCaptureJobParameterId = step.ResultCaptureJobParameterId,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Parameters = parameters
+        };
+        return await Mediator.SendAsync(command);
+    }
+
+    protected override async Task<SqlStep> OnSubmitUpdateAsync(SqlStep step)
+    {
+        var dependencies = step.Dependencies.ToDictionary(
+            key => key.DependantOnStepId,
+            value => value.DependencyType);
+        var executionConditionParameters = step.ExecutionConditionParameters
+            .Select(p => new UpdateExecutionConditionParameter(
+                p.ParameterId,
+                p.ParameterName,
+                p.ParameterValue,
+                p.JobParameterId))
+            .ToArray();
+        var parameters = step.StepParameters
+            .Select(p => new UpdateStepParameter(
+                p.ParameterId,
+                p.ParameterName,
+                p.ParameterValue,
+                p.UseExpression,
+                p.Expression.Expression,
+                p.InheritFromJobParameterId,
+                p.ExpressionParameters
+                    .Select(e => new UpdateExpressionParameter(
+                        e.ParameterId,
+                        e.ParameterName,
+                        e.InheritFromJobParameterId))
+                    .ToArray()))
+            .ToArray();
+        var command = new UpdateSqlStepCommand
+        {
+            StepId = step.StepId,
+            StepName = step.StepName ?? "",
+            StepDescription = step.StepDescription,
+            ExecutionPhase = step.ExecutionPhase,
+            DuplicateExecutionBehaviour = step.DuplicateExecutionBehaviour,
+            IsEnabled = step.IsEnabled,
+            RetryAttempts = step.RetryAttempts,
+            RetryIntervalMinutes = step.RetryIntervalMinutes,
+            ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
+            StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
+            TimeoutMinutes = step.TimeoutMinutes,
+            ConnectionId = step.ConnectionId,
+            SqlStatement = step.SqlStatement,
+            ResultCaptureJobParameterId = step.ResultCaptureJobParameterId,
+            Dependencies = dependencies,
+            ExecutionConditionParameters = executionConditionParameters,
+            Sources = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Source)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Targets = step.DataObjects
+                .Where(x => x.ReferenceType == DataObjectReferenceType.Target)
+                .Select(x => new DataObjectRelation(x.DataObject.ObjectId, x.DataAttributes.ToArray()))
+                .ToArray(),
+            Parameters = parameters
+        };
+        return await Mediator.SendAsync(command);
+    }
+
+    protected override async Task OnModalShownAsync(SqlStep step)
+    {
+        if (_editor is not null)
+        {
+            try
+            {
+                await _editor.SetValueAsync(step.SqlStatement);
+            }
+            catch { /* ignored */ }
+        }
+    }
+
+    
 
     private Task OpenStoredProcedureSelectModal()
     {
         var connection = Connection;
         ArgumentNullException.ThrowIfNull(connection);
-        return storedProcedureSelectModal.LetAsync(x => x.ShowAsync(connection));
+        return _storedProcedureSelectModal.LetAsync(x => x.ShowAsync(connection));
     }
 
     private async Task ImportParametersAsync()
@@ -124,10 +239,10 @@ public partial class SqlStepEditModal(
 
     private Task OnStoredProcedureSelected(IStoredProcedure procedure)
     {
-        ArgumentNullException.ThrowIfNull(editor);
+        ArgumentNullException.ThrowIfNull(_editor);
         ArgumentNullException.ThrowIfNull(Step);
         Step.SqlStatement = procedure.InvokeSqlStatement;
-        return editor.SetValueAsync(Step.SqlStatement);
+        return _editor.SetValueAsync(Step.SqlStatement);
     }
     
 }
