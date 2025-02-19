@@ -4,7 +4,9 @@ public class CreateDatasetStepCommand : CreateStepCommand<DatasetStep>
 {
     public required Guid AzureCredentialId { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required Guid DatasetId { get; init; }
+    public required string? DatasetName { get; init; }
 }
 
 [UsedImplicitly]
@@ -37,7 +39,9 @@ internal class CreateDatasetStepCommandHandler(
                 { Expression = request.ExecutionConditionExpression },
             AzureCredentialId = request.AzureCredentialId,
             WorkspaceId = request.WorkspaceId.ToString(),
+            WorkspaceName = request.WorkspaceName,
             DatasetId = request.DatasetId.ToString(),
+            DatasetName = request.DatasetName
         };
 
         return step;

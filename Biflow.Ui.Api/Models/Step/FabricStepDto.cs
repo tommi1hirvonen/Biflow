@@ -5,8 +5,10 @@ public record FabricStepDto : StepDto
 {
     public required double TimeoutMinutes { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public string? WorkspaceName { get; init; }
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
+    public string? ItemName { get; init; }
     public required Guid AzureCredentialId { get; init; }
     public StepParameterDto[] Parameters { get; init; } = [];
 }

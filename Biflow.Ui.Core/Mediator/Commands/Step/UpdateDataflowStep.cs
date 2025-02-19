@@ -5,7 +5,9 @@ public class UpdateDataflowStepCommand : UpdateStepCommand<DataflowStep>
     public required double TimeoutMinutes { get; init; }
     public required Guid AzureCredentialId { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required Guid DataflowId { get; init; }
+    public required string? DataflowName { get; init; }
 }
 
 [UsedImplicitly]
@@ -41,6 +43,8 @@ internal class UpdateDataflowStepCommandHandler(
         
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.WorkspaceId = request.WorkspaceId.ToString();
+        step.WorkspaceName = request.WorkspaceName;
         step.DataflowId = request.DataflowId.ToString();
+        step.DataflowName = request.DataflowName;
     }
 }

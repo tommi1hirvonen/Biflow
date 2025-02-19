@@ -4,8 +4,10 @@ public class UpdateFabricStepCommand : UpdateStepCommand<FabricStep>
 {
     public required double TimeoutMinutes { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
+    public required string? ItemName { get; init; }
     public required Guid AzureCredentialId { get; init; }
     public required UpdateStepParameter[] Parameters { get; init; }
 }
@@ -44,8 +46,10 @@ internal class UpdateFabricStepCommandHandler(
         
         step.TimeoutMinutes = request.TimeoutMinutes;
         step.WorkspaceId = request.WorkspaceId;
+        step.WorkspaceName = request.WorkspaceName;
         step.ItemType = request.ItemType;
         step.ItemId = request.ItemId;
+        step.ItemName = request.ItemName;
         step.AzureCredentialId = request.AzureCredentialId;
         
         await SynchronizeParametersAsync<FabricStepParameter, UpdateStepParameter>(

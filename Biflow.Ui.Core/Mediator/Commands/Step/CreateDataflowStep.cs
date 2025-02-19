@@ -5,7 +5,9 @@ public class CreateDataflowStepCommand : CreateStepCommand<DataflowStep>
     public required double TimeoutMinutes { get; init; }
     public required Guid AzureCredentialId { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required Guid DataflowId { get; init; }
+    public required string? DataflowName { get; init; }
 }
 
 [UsedImplicitly]
@@ -39,7 +41,9 @@ internal class CreateDataflowStepCommandHandler(
             TimeoutMinutes = request.TimeoutMinutes,
             AzureCredentialId = request.AzureCredentialId,
             WorkspaceId = request.WorkspaceId.ToString(),
+            WorkspaceName = request.WorkspaceName,
             DataflowId = request.DataflowId.ToString(),
+            DataflowName = request.DataflowName
         };
 
         return step;

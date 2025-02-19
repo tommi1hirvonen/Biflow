@@ -4,8 +4,10 @@ public class CreateFabricStepCommand : CreateStepCommand<FabricStep>
 {
     public required double TimeoutMinutes { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
+    public required string? ItemName { get; init; }
     public required Guid AzureCredentialId { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }
 }
@@ -40,8 +42,10 @@ internal class CreateFabricStepCommandHandler(
                 { Expression = request.ExecutionConditionExpression },
             TimeoutMinutes = request.TimeoutMinutes,
             WorkspaceId = request.WorkspaceId,
+            WorkspaceName = request.WorkspaceName,
             ItemType = request.ItemType,
             ItemId = request.ItemId,
+            ItemName = request.ItemName,
             AzureCredentialId = request.AzureCredentialId
         };
         

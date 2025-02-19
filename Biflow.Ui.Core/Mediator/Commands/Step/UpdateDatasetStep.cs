@@ -4,7 +4,9 @@ public class UpdateDatasetStepCommand : UpdateStepCommand<DatasetStep>
 {
     public required Guid AzureCredentialId { get; init; }
     public required Guid WorkspaceId { get; init; }
+    public required string? WorkspaceName { get; init; }
     public required Guid DatasetId { get; init; }
+    public required string? DatasetName { get; init; }
 }
 
 [UsedImplicitly]
@@ -36,6 +38,8 @@ internal class UpdateDatasetStepCommandHandler(
         }
         
         step.WorkspaceId = request.WorkspaceId.ToString();
+        step.WorkspaceName = request.WorkspaceName;
         step.DatasetId = request.DatasetId.ToString();
+        step.DatasetName = request.DatasetName;
     }
 }
