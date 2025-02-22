@@ -13,6 +13,6 @@ public static class ChartColors
     public const string Pink    = "#e83e8c";
     public const string Purple  = "#6f42c1";
 
-    public static string[] AsArray() =>
+    public static IReadOnlyList<string> AsReadOnlyList() =>
         [Indigo, Teal, Blue, Red, Yellow, Green, Orange, Cyan, Pink, Purple];
 }
