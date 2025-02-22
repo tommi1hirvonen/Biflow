@@ -1,4 +1,4 @@
-export function draw(chartId, series, yAxisTitle, yMin, yStepSize, isDarkTheme) {
+export function draw(chartId, series, yAxisTitle, yMin, yStepSize, title, isDarkTheme) {
 
     const datasets = JSON.parse(series);
 
@@ -46,6 +46,10 @@ export function draw(chartId, series, yAxisTitle, yMin, yStepSize, isDarkTheme) 
                 }
             },
             plugins: {
+                title: {
+                  display: title && title !== "",
+                  text: title && title !== "" ? title : ""  
+                },
                 legend: {
                     labels: {
                         color: textColor

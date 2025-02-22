@@ -4,4 +4,5 @@ public record LineChartDataset(
     IEnumerable<LineChartSeries> Series,
     string? YAxisTitle = null,
     int? YMin = null,
-    int? YStepSize = null);
+    int? YStepSize = null,
+    string? Title = null);
