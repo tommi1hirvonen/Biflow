@@ -154,16 +154,34 @@
             return;
         }
 
-        var datapoints = _executions
+        var chartSeries = _executions
             .Where(e => e.StartedOn is not null)
-            .GroupBy(group => ((DateTimeOffset)group.StartedOn!).Date)
-            .Select(select => new TimeSeriesDataPoint(DateOnly.FromDateTime(select.Key.Date), select.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60))) // Calculate avg. duration in minutes per day
+            .Select(e => new
+            {
+                Schedule = e.ScheduleName ?? "Manual executions",
+                e.ExecutionInSeconds,
+                Date = DateOnly.FromDateTime(e.CreatedOn.LocalDateTime)
+            })
+            .GroupBy(e => e.Schedule)
+            .Select((scheduleGrouping, index) =>
+            {
+                var dataPoints = scheduleGrouping
+                    .GroupBy(e => e.Date)
+                    .Select(dateGrouping => new TimeSeriesDataPoint(
+                        dateGrouping.Key,
+                        dateGrouping.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60)))
+                    .ToArray();
+                var colorIndex = index % ChartColors.AsReadOnlyList().Count;
+                var color = ChartColors.AsReadOnlyList()[colorIndex];
+                return new LineChartSeries(scheduleGrouping.Key, dataPoints, color);
+            })
             .ToArray();
-        var series = new LineChartSeries[]
-        {
-            new("Avg. duration", datapoints)
-        };
-        _lineChartDataset = new LineChartDataset(series, "min", 0);
+        
+        _lineChartDataset = new LineChartDataset(
+            Title: "Avg. duration",
+            Series: chartSeries,
+            YAxisTitle: "min",
+            YMin: 0);
     }
 
     private void OnClosed()

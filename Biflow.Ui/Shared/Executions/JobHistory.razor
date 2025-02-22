@@ -31,26 +31,6 @@
             </HxButton>
         </HxButtonGroup>
     </div>
-    <div class="col-auto align-items-center d-flex">
-        <div class="form-check form-check-inline">
-            <input type="radio" class="form-check-input" id="radio_scheduled"
-                    checked=@(_startTypeFilter == StartType.Scheduled)
-                    @onchange="() => SetStartTypeFilter(StartType.Scheduled)">
-            <label class="form-check-label" for="radio_scheduled">Scheduled</label>
-        </div>
-        <div class="form-check form-check-inline ms-2">
-            <input type="radio" class="form-check-input" id="radio_manual"
-                    checked=@(_startTypeFilter == StartType.Manual)
-                    @onchange="() => SetStartTypeFilter(StartType.Manual)">
-            <label class="form-check-label" for="radio_manual">Manual</label>
-        </div>
-        <div class="form-check form-check-inline ms-2">
-            <input type="radio" class="form-check-input" id="radio_all"
-                   checked=@(_startTypeFilter == StartType.All)
-                    @onchange="() => SetStartTypeFilter(StartType.All)">
-            <label class="form-check-label" for="radio_all">All</label>
-        </div>
-    </div>
 </div>
 
 <div class="row mt-1">
@@ -94,33 +74,21 @@
                 </tr>
             </thead>
             <tbody>
-                @{
-                    var executions = FilteredExecutions.ToArray();
-                }
                 @if (_executions is null)
                 {
                     <tr><td colspan="6" class="text-center"><HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" /></td></tr>
                 }
-                else if (!executions.Any())
+                else if (!_executions.Any())
                 {
                     <tr>
                         <td colspan="6">
-                            @{
-                                RenderFragment renderFragment = _startTypeFilter switch
-                                {
-                                    StartType.All => @<span>No executions</span>,
-                                    StartType.Scheduled => @<span>No <strong>scheduled</strong> executions</span>,
-                                    StartType.Manual => @<span>No <strong>manual</strong> executions</span>,
-                                    _ => @<span>No executions</span>
-                                };
-                            }
-                            @renderFragment
+                            No executions
                         </td>
                     </tr>
                 }
                 else
                 {
-                    @foreach (var item in FilteredExecutions)
+                    @foreach (var item in _executions)
                     {
                         var createdBy = item switch
                         {
@@ -175,19 +143,14 @@
 
     private IEnumerable<ExecutionProjection>? _executions;
     private int _maxExecutions = DefaultMaxExecutions;
-    private StartType _startTypeFilter = StartType.All;
     private bool _showChart = false;
     private LineChartDataset? _dataset;
 
-    private IEnumerable<ExecutionProjection> FilteredExecutions =>
-        _executions?
-        .Where(e => _startTypeFilter == StartType.All ||
-                    _startTypeFilter == StartType.Scheduled && e.ScheduleId is not null ||
-                    _startTypeFilter == StartType.Manual && e.ScheduleId is null)
-        ?? [];
-
     private double AverageDurationInSeconds =>
-        (int)(FilteredExecutions.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded).Average(e => e.ExecutionInSeconds) ?? 0);
+        (int)(_executions
+            ?.Where(e => e.ExecutionStatus == ExecutionStatus.Succeeded)
+            .Average(e => e.ExecutionInSeconds)
+              ?? 0);
 
     protected override async Task OnParametersSetAsync()
     {
@@ -195,12 +158,6 @@
         {
             await ReloadAsync();
         }
-    }
-
-    private void SetStartTypeFilter(StartType startType)
-    {
-        _startTypeFilter = startType;
-        CalculateChartDataset();
     }
 
     private async Task ReloadAsync()
@@ -226,22 +183,37 @@
                 e.StepExecutions.Count(),
                 Array.Empty<TagProjection>()))
             .ToArrayAsync(_cts.Token);
-        CalculateChartDataset();
-        StateHasChanged();
-    }
-
-    private void CalculateChartDataset()
-    {
-        var dataPoints = FilteredExecutions
+        
+        var chartSeries = _executions
             .Where(e => e.StartedOn is not null)
-            .GroupBy(e => DateOnly.FromDateTime(e.CreatedOn.LocalDateTime))
-            .Select(grouping => new TimeSeriesDataPoint(grouping.Key, grouping.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60)))
+            .Select(e => new
+            {
+                Schedule = e.ScheduleName ?? "Manual executions",
+                e.ExecutionInSeconds,
+                Date = DateOnly.FromDateTime(e.CreatedOn.LocalDateTime)
+            })
+            .GroupBy(e => e.Schedule)
+            .Select((scheduleGrouping, index) =>
+            {
+                var dataPoints = scheduleGrouping
+                    .GroupBy(e => e.Date)
+                    .Select(dateGrouping => new TimeSeriesDataPoint(
+                        dateGrouping.Key,
+                        dateGrouping.Average(total => (decimal)(total.ExecutionInSeconds ?? 0) / 60)))
+                    .ToArray();
+                var colorIndex = index % ChartColors.AsReadOnlyList().Count;
+                var color = ChartColors.AsReadOnlyList()[colorIndex];
+                return new LineChartSeries(scheduleGrouping.Key, dataPoints, color);
+            })
             .ToArray();
-        var series = new LineChartSeries[]
-        {
-            new("Avg. duration", dataPoints)
-        };
-        _dataset = new LineChartDataset(series, "min", 0);
+        
+        _dataset = new LineChartDataset(
+            Title: "Avg. duration",
+            Series: chartSeries,
+            YAxisTitle: "min",
+            YMin: 0);
+        
+        StateHasChanged();
     }
 
     public void Dispose()
