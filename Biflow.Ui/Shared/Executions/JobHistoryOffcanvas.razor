@@ -3,23 +3,90 @@
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject NavigationManager NavigationManager
 
+@{
+    var presetText = _preset.GetPresetText();
+}
+
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="@JobName" OnClosed="OnClosed">
     <BodyTemplate>
         <div class="row">
-            <div class="col-auto d-inline-flex align-items-center">
-                <label>No of executions</label>
-                <input @bind-value="_maxExecutions" class="form-control form-control-sm ms-3" type="number" style="max-width: 5rem;">
+            <div class="col-auto">
+                <HxDropdownButtonGroup>
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.Secondary">
+                        <SvgIcon Icon="LucideIcon.Bookmark" />
+                        @if (!string.IsNullOrEmpty(presetText))
+                        {
+                            <span class="ms-1">Presets:</span>
+                            <span class="fw-normal">@presetText</span>
+                        }
+                        else
+                        {
+                            <span class="ms-1">Presets</span>
+                        }
+                    </HxDropdownToggleButton>
+                    <HxDropdownMenu>
+                        <HxDropdownItem CssClass="@(_preset == PeriodPreset.Week ? "active" : null)"
+                                        @onclick="() => ApplyPresetAsync(PeriodPreset.Week)">
+                            Last week
+                        </HxDropdownItem>
+                        <HxDropdownItem CssClass="@(_preset == PeriodPreset.Month ? "active" : null)"
+                                        @onclick="() => ApplyPresetAsync(PeriodPreset.Month)">
+                            Last month
+                        </HxDropdownItem>
+                        <HxDropdownItem CssClass="@(_preset == PeriodPreset.ThreeMonths ? "active" : null)"
+                                        @onclick="() => ApplyPresetAsync(PeriodPreset.ThreeMonths)">
+                            Last 3 months
+                        </HxDropdownItem>
+                        <HxDropdownItem CssClass="@(_preset == PeriodPreset.SixMonths ? "active" : null)"
+                                        @onclick="() => ApplyPresetAsync(PeriodPreset.SixMonths)">
+                            Last 6 months
+                        </HxDropdownItem>
+                        <HxDropdownItem CssClass="@(_preset == PeriodPreset.TwelveMonths ? "active" : null)"
+                                        @onclick="() => ApplyPresetAsync(PeriodPreset.TwelveMonths)">
+                            Last 12 months
+                        </HxDropdownItem>
+                    </HxDropdownMenu>
+                </HxDropdownButtonGroup>
             </div>
-            <div class="col">
+            <div class="col-auto">
                 <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="ReloadAsync">
-                    <SvgIcon Icon="LucideIcon.RefreshCw" />
+                    <SvgIcon Icon="LucideIcon.RefreshCw"/>
                     Refresh
                 </HxButton>
             </div>
         </div>
+        <div class="row mt-3">
+            <div class="col">
+                <form class="d-inline-flex align-items-center"
+                      id="executions_form"
+                      @onsubmit="ReloadAsync"
+                      style="flex-direction: unset !important;">
+                    <label class="me-1">From</label>
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.Calendar" />
+                        </div>
+                        <input @bind="_fromDateTime"
+                               @bind:format="yyyy-MM-ddTHH:mm:ss"
+                               class="form-control form-control-sm"
+                               type="datetime-local">
+                    </div>
+                    <label class="ms-2 me-1">To</label>
+                    <div class="input-group">
+                        <div class="input-group-text">
+                            <SvgIcon Icon="LucideIcon.Calendar" />
+                        </div>
+                        <input @bind="_toDateTime"
+                               @bind:format="yyyy-MM-ddTHH:mm:ss"
+                               class="form-control form-control-sm"
+                               type="datetime-local">
+                    </div>
+                </form>
+            </div>
+        </div>
         <div class="row mt-1">
             <div class="col">
-                <small class="text-muted">Actual no of executions: @_executions?.Count()</small>
+                <small class="text-muted">No of executions: @_executions?.Count()</small>
             </div>
         </div>
 
@@ -98,10 +165,10 @@
     private HxOffcanvas? _offcanvas;
     private LineChartDataset? _lineChartDataset;
     private IEnumerable<ExecutionProjection>? _executions;
-    private int _maxExecutions = DefaultMaxExecutions;
     private Guid _jobId;
-
-    private const int DefaultMaxExecutions = 50;
+    private DateTime _fromDateTime = DateTime.Today.AddDays(-30);
+    private DateTime _toDateTime = DateTime.Today.AddDays(1);
+    private PeriodPreset _preset = PeriodPreset.Month;
 
     private string JobName => _executions?.FirstOrDefault()?.JobName ?? "";
 
@@ -115,9 +182,8 @@
     {
         _jobId = jobId;
         _executions = null;
-        _maxExecutions = DefaultMaxExecutions;
         await _offcanvas.LetAsync(x => x.ShowAsync());
-        await ReloadAsync();
+        await ApplyPresetAsync(PeriodPreset.Month);
         StateHasChanged();
     }
 
@@ -129,10 +195,8 @@
             _executions = await context.Executions
                 .AsNoTracking()
                 .IgnoreQueryFilters()
-                .Where(e => e.JobId == _jobId)
-                .OrderByDescending(execution => execution.CreatedOn)
-                .ThenByDescending(execution => execution.StartedOn)
-                .Take(_maxExecutions)
+                .Where(e => e.JobId == _jobId && e.CreatedOn >= _fromDateTime && e.CreatedOn <= _toDateTime)
+                .OrderByDescending(e => e.CreatedOn)
                 .Select(e => new ExecutionProjection(
                     e.ExecutionId,
                     e.JobId,
@@ -195,5 +259,11 @@
     {
         _cts.Cancel();
         _cts.Dispose();
+    }
+    private async Task ApplyPresetAsync(PeriodPreset preset)
+    {
+        (_fromDateTime, _toDateTime) = preset.GetPresetRange();
+        _preset = preset;
+        await ReloadAsync();
     }
 }
