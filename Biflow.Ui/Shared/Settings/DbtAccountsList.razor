@@ -1,4 +1,6 @@
-﻿@implements IDisposable
+﻿@using CreateDbtAccountCommand = Biflow.Ui.Core.CreateDbtAccountCommand
+@using UpdateDbtAccountCommand = Biflow.Ui.Core.UpdateDbtAccountCommand
+@implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
@@ -198,14 +200,19 @@
     {
         if (account.DbtAccountId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateDbtAccountCommand(account));
+            var command = new CreateDbtAccountCommand(
+                account.DbtAccountName, account.ApiBaseUrl, account.AccountId, account.ApiToken);
+            var response = await Mediator.SendAsync(command);
+            _accounts?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateDbtAccountCommand(account));
+            var command = new UpdateDbtAccountCommand(
+                account.DbtAccountId, account.DbtAccountName, account.ApiBaseUrl, account.AccountId, account.ApiToken);
+            _ = await Mediator.SendAsync(command);
             _accounts?.RemoveAll(a => a.DbtAccountId == account.DbtAccountId);
+            _accounts?.Add(account);
         }
-        _accounts?.Add(account);
         StateHasChanged();
     }
 

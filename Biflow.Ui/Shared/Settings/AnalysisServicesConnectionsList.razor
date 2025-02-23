@@ -199,14 +199,24 @@
     {
         if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateAnalysisServicesConnectionCommand(connection));
+            var command = new CreateAnalysisServicesConnectionCommand(
+                connection.ConnectionName,
+                connection.ConnectionString,
+                connection.CredentialId);
+            var response = await Mediator.SendAsync(command);
+            _connections?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateAnalysisServicesConnectionCommand(connection));
+            var command = new UpdateAnalysisServicesConnectionCommand(
+                connection.ConnectionId,
+                connection.ConnectionName,
+                connection.ConnectionString,
+                connection.CredentialId);
+            _ = await Mediator.SendAsync(command);
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            _connections?.Add(connection);
         }
-        _connections?.Add(connection);
         _connections?.SortBy(c => c.ConnectionName);
         StateHasChanged();
     }

@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using Biflow.Core.Attributes.Validation;
 
 namespace Biflow.Core.Entities;
 
@@ -17,7 +18,8 @@ public abstract class PipelineClient(PipelineClientType type)
     public PipelineClientType PipelineClientType { get; } = type;
 
     [Required]
-    public Guid? AzureCredentialId { get; set; }
+    [NotEmptyGuid]
+    public Guid AzureCredentialId { get; set; }
 
     [JsonIgnore]
     public AzureCredential AzureCredential { get; init; } = null!;

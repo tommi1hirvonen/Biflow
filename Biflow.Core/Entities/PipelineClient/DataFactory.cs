@@ -6,19 +6,19 @@ using System.ComponentModel.DataAnnotations;
 namespace Biflow.Core.Entities;
 
 public class DataFactory() : PipelineClient(PipelineClientType.DataFactory)
-{ 
+{
     [Required]
     [MaxLength(36)]
     [MinLength(36)]
-    public string? SubscriptionId { get; set; }
+    public string SubscriptionId { get; set; } = "";
 
     [Required]
     [MaxLength(250)]
-    public string? ResourceGroupName { get; set; }
+    public string ResourceGroupName { get; set; } = "";
 
     [Required]
     [MaxLength(250)]
-    public string? ResourceName { get; set; }
+    public string ResourceName { get; set; } = "";
 
     internal const string ResourceUrl = "https://management.azure.com//.default";
 

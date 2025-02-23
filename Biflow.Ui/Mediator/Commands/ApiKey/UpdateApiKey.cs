@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record UpdateApiKeyCommand(ApiKey ApiKey) : IRequest;
 
+[UsedImplicitly]
 internal class UpdateApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateApiKeyCommand>
 {

@@ -209,14 +209,30 @@
     {
         if (dataFactory.PipelineClientId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreatePipelineClientCommand(dataFactory));
+            var command = new CreateDataFactoryCommand(
+                dataFactory.PipelineClientName,
+                dataFactory.MaxConcurrentPipelineSteps,
+                dataFactory.AzureCredentialId,
+                dataFactory.SubscriptionId,
+                dataFactory.ResourceGroupName,
+                dataFactory.ResourceName);
+            var response = await Mediator.SendAsync(command);
+            _dataFactories?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdatePipelineClientCommand(dataFactory));
+            var command = new UpdateDataFactoryCommand(
+                dataFactory.PipelineClientId,
+                dataFactory.PipelineClientName,
+                dataFactory.MaxConcurrentPipelineSteps,
+                dataFactory.AzureCredentialId,
+                dataFactory.SubscriptionId,
+                dataFactory.ResourceGroupName,
+                dataFactory.ResourceName);
+            _ = await Mediator.SendAsync(command);
             _dataFactories?.RemoveAll(df => df.PipelineClientId == dataFactory.PipelineClientId);
+            _dataFactories?.Add(dataFactory);
         }
-        _dataFactories?.Add(dataFactory);
         StateHasChanged();
     }
 }

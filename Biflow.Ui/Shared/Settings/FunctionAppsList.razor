@@ -220,14 +220,32 @@
     {
         if (functionApp.FunctionAppId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateFunctionAppCommand(functionApp));
+            var command = new CreateFunctionAppCommand(
+                functionApp.FunctionAppName,
+                functionApp.SubscriptionId,
+                functionApp.ResourceGroupName,
+                functionApp.ResourceName,
+                functionApp.AzureCredentialId,
+                functionApp.MaxConcurrentFunctionSteps,
+                functionApp.FunctionAppKey);
+            var response = await Mediator.SendAsync(command);
+            _functionApps?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateFunctionAppCommand(functionApp));
+            var command = new UpdateFunctionAppCommand(
+                functionApp.FunctionAppId,
+                functionApp.FunctionAppName,
+                functionApp.SubscriptionId,
+                functionApp.ResourceGroupName,
+                functionApp.ResourceName,
+                functionApp.AzureCredentialId,
+                functionApp.MaxConcurrentFunctionSteps,
+                functionApp.FunctionAppKey);
+            _ = await Mediator.SendAsync(command);
             _functionApps?.RemoveAll(f => f.FunctionAppId == functionApp.FunctionAppId);
+            _functionApps?.Add(functionApp);
         }
-        _functionApps?.Add(functionApp);
         StateHasChanged();
     }
 

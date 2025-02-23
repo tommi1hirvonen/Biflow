@@ -209,14 +209,26 @@
     {
         if (workspace.PipelineClientId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreatePipelineClientCommand(workspace));
+            var command = new CreateSynapseWorkspaceCommand(
+                workspace.PipelineClientName,
+                workspace.MaxConcurrentPipelineSteps,
+                workspace.AzureCredentialId,
+                workspace.SynapseWorkspaceUrl);
+            var response = await Mediator.SendAsync(command);
+            _workspaces?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdatePipelineClientCommand(workspace));
+            var command = new UpdateSynapseWorkspaceCommand(
+                workspace.PipelineClientId,
+                workspace.PipelineClientName,
+                workspace.MaxConcurrentPipelineSteps,
+                workspace.AzureCredentialId,
+                workspace.SynapseWorkspaceUrl);
+            _ = await Mediator.SendAsync(command);
             _workspaces?.RemoveAll(df => df.PipelineClientId == workspace.PipelineClientId);
+            _workspaces?.Add(workspace);
         }
-        _workspaces?.Add(workspace);
         StateHasChanged();
     }
 }

@@ -1,10 +1,14 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record ClearAzureCredentialTokensCommand(Guid AzureCredentialId) : IRequest;
 
+[UsedImplicitly]
 internal class ClearAzureCredentialTokensCommandHandler(
-    IDbContextFactory<AppDbContext> dbContextFactory, ITokenService tokenService, IExecutorService executorService)
-    : IRequestHandler<ClearAzureCredentialTokensCommand>
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ITokenService tokenService,
+    IExecutorService executorService) : IRequestHandler<ClearAzureCredentialTokensCommand>
 {
     public async Task Handle(ClearAzureCredentialTokensCommand request, CancellationToken cancellationToken)
     {

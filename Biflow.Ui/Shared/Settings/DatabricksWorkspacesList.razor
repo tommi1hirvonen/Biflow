@@ -1,4 +1,6 @@
-﻿@implements IDisposable
+﻿@using CreateDatabricksWorkspaceCommand = Biflow.Ui.Core.CreateDatabricksWorkspaceCommand
+@using UpdateDatabricksWorkspaceCommand = Biflow.Ui.Core.UpdateDatabricksWorkspaceCommand
+@implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbFactory
 @inject ToasterService Toaster
@@ -196,14 +198,19 @@
     {
         if (workspace.WorkspaceId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateDatabricksWorkspaceCommand(workspace));
+            var command = new CreateDatabricksWorkspaceCommand(
+                workspace.WorkspaceName, workspace.WorkspaceUrl, workspace.ApiToken);
+            var response = await Mediator.SendAsync(command);
+            _workspaces?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateDatabricksWorkspaceCommand(workspace));
+            var command = new UpdateDatabricksWorkspaceCommand(
+                workspace.WorkspaceId, workspace.WorkspaceName, workspace.WorkspaceUrl, workspace.ApiToken);
+            _ = await Mediator.SendAsync(command);
             _workspaces?.RemoveAll(w => w.WorkspaceId == workspace.WorkspaceId);
+            _workspaces?.Add(workspace);
         }
-        _workspaces?.Add(workspace);
         StateHasChanged();
     }
 

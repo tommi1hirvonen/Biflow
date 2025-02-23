@@ -127,6 +127,7 @@
 
     public async Task ShowAsync(Guid pipelineClientId)
     {
+        ArgumentNullException.ThrowIfNull(AzureCredentials);
         _synapseWorkspace = null;
         await _modal.LetAsync(x => x.ShowAsync());
         if (pipelineClientId != Guid.Empty)
@@ -142,7 +143,7 @@
         {
             _synapseWorkspace = new()
             {
-                AzureCredentialId = AzureCredentials?.FirstOrDefault()?.AzureCredentialId,
+                AzureCredentialId = AzureCredentials.First().AzureCredentialId,
             };
         }
         _connectionTestSuccess = null;

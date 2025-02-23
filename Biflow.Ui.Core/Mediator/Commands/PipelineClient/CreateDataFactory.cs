@@ -1,6 +1,4 @@
-using System.Data;
-
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 public record CreateDataFactoryCommand(
     string PipelineClientName,

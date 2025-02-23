@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record DeleteApiKeyCommand(Guid ApiKeyId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<DeleteApiKeyCommand>
 {

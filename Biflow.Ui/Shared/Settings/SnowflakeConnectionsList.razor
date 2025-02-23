@@ -188,14 +188,32 @@
     {
         if (connection.ConnectionId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateSqlConnectionCommand(connection));
+            var command = new CreateSnowflakeConnectionCommand(
+                ConnectionName: connection.ConnectionName,
+                MaxConcurrentSqlSteps: connection.MaxConcurrentSqlSteps,
+                ScdDefaultTargetSchema: connection.ScdDefaultTargetSchema,
+                ScdDefaultTargetTableSuffix: connection.ScdDefaultTargetTableSuffix,
+                ScdDefaultStagingSchema: connection.ScdDefaultStagingSchema,
+                ScdDefaultStagingTableSuffix: connection.ScdDefaultStagingTableSuffix,
+                ConnectionString: connection.ConnectionString);
+            var response = await Mediator.SendAsync(command);
+            _connections?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateSqlConnectionCommand(connection));
+            var command = new UpdateSnowflakeConnectionCommand(
+                ConnectionId: connection.ConnectionId,
+                ConnectionName: connection.ConnectionName,
+                MaxConcurrentSqlSteps: connection.MaxConcurrentSqlSteps,
+                ScdDefaultTargetSchema: connection.ScdDefaultTargetSchema,
+                ScdDefaultTargetTableSuffix: connection.ScdDefaultTargetTableSuffix,
+                ScdDefaultStagingSchema: connection.ScdDefaultStagingSchema,
+                ScdDefaultStagingTableSuffix: connection.ScdDefaultStagingTableSuffix,
+                ConnectionString: connection.ConnectionString);
+            _ = await Mediator.SendAsync(command);
             _connections?.RemoveAll(c => c.ConnectionId == connection.ConnectionId);
+            _connections?.Add(connection);
         }
-        _connections?.Add(connection);
         _connections?.Sort();
         StateHasChanged();
     }

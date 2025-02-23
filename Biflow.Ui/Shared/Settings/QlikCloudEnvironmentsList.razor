@@ -183,14 +183,22 @@
     {
         if (environment.QlikCloudEnvironmentId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateQlikCloudEnvironmentCommand(environment));
+            var command = new CreateQlikCloudEnvironmentCommand(
+                environment.QlikCloudEnvironmentName, environment.EnvironmentUrl, environment.ApiToken);
+            var response = await Mediator.SendAsync(command);
+            _environments?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateQlikCloudEnvironmentCommand(environment));
+            var command = new UpdateQlikCloudEnvironmentCommand(
+                environment.QlikCloudEnvironmentId,
+                environment.QlikCloudEnvironmentName,
+                environment.EnvironmentUrl,
+                environment.ApiToken);
+            _ = await Mediator.SendAsync(command);
             _environments?.RemoveAll(c => c.QlikCloudEnvironmentId == environment.QlikCloudEnvironmentId);
+            _environments?.Add(environment);
         }
-        _environments?.Add(environment);
         StateHasChanged();
     }
 

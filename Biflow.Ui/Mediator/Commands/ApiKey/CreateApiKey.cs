@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record CreateApiKeyCommand(ApiKey ApiKey) : IRequest;
 
+[UsedImplicitly]
 internal class CreateApiKeyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<CreateApiKeyCommand>
 {
