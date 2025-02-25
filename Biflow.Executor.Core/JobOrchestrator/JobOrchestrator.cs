@@ -1,4 +1,5 @@
-﻿using Biflow.Executor.Core.Common;
+﻿using System.Collections.Concurrent;
+using Biflow.Executor.Core.Common;
 using Biflow.Executor.Core.OrchestrationTracker;
 using Biflow.Executor.Core.Orchestrator;
 using Microsoft.Extensions.Logging;
@@ -13,7 +14,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
     private readonly Execution _execution;
     private readonly Dictionary<StepExecution, ExtendedCancellationTokenSource> _cancellationTokenSources;
-    private readonly Dictionary<StepExecution, List<SemaphoreSlim>> _enteredSemaphores = [];
+    private readonly ConcurrentDictionary<StepExecution, List<SemaphoreSlim>> _enteredSemaphores = [];
 
     public JobOrchestrator(
         ILogger<JobOrchestrator> logger,
@@ -128,7 +129,8 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         }
     }
 
-    public async Task OnPreExecuteAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task OnPreExecuteAsync(StepExecution stepExecution,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
 
@@ -157,7 +159,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
             semaphore.Release();
         }
 
-        _enteredSemaphores.Remove(stepExecution);
+        _ = _enteredSemaphores.TryRemove(stepExecution, out _);
 
         _logger.LogInformation("{ExecutionId} {step} Finished step execution", _execution.ExecutionId, stepExecution);
         return Task.CompletedTask;
