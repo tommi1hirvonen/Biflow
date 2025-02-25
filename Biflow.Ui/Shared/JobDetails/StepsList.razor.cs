@@ -177,7 +177,8 @@ public partial class StepsList(
         var value = (bool)args.Value!;
         try
         {
-            await _mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
+            var command = new ToggleStepEnabledCommand(step.StepId, value);
+            await _mediator.SendAsync(command);
             step.IsEnabled = value;
             var message = value ? "Step enabled" : "Step disabled";
             _toaster.AddSuccess(message, 2500);
@@ -268,12 +269,16 @@ public partial class StepsList(
 
     private async Task ToggleSelectedStepsEnabledAsync(bool enabled)
     {
-        var steps = _selectedSteps
-            .Where(s => s.IsEnabled != enabled)
-            .ToArray();
         try
         {
-            await _mediator.SendAsync(new ToggleStepsCommand(steps, enabled));
+            var steps = _selectedSteps
+                .Where(s => s.IsEnabled != enabled)
+                .ToArray();
+            var stepIds = steps
+                .Select(s => s.StepId)
+                .ToArray();
+            var command = new ToggleStepsEnabledCommand(stepIds, enabled);
+            await _mediator.SendAsync(command);
             foreach (var step in steps)
             {
                 step.IsEnabled = enabled;

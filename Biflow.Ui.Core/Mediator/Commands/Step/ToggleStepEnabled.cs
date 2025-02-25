@@ -2,6 +2,7 @@ namespace Biflow.Ui.Core;
 
 public record ToggleStepEnabledCommand(Guid StepId, bool IsEnabled) : IRequest;
 
+[UsedImplicitly]
 internal class ToggleStepEnabledCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<ToggleStepEnabledCommand>
 {

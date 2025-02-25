@@ -260,7 +260,8 @@ public partial class DependenciesGraph(
         {
             ArgumentNullException.ThrowIfNull(Steps);
             var step = Steps.First(s => s.StepId == projection.StepId);
-            await _mediator.SendAsync(new ToggleStepsCommand(step.StepId, value));
+            var command = new ToggleStepEnabledCommand(step.StepId, value);
+            await _mediator.SendAsync(command);
             step.IsEnabled = value;
             await LoadGraphAsync();
         }
