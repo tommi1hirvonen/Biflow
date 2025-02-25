@@ -109,7 +109,11 @@
         ArgumentNullException.ThrowIfNull(_editJob);
         try
         {
-            await Mediator.SendAsync(new UpdateJobConcurrenciesCommand(_editJob));
+            var command = new UpdateJobConcurrenciesCommand(
+                _editJob.JobId,
+                _editJob.MaxParallelSteps,
+                _editJob.JobConcurrencies.ToDictionary(x => x.StepType, x => x.MaxParallelSteps));
+            await Mediator.SendAsync(command);
             Toaster.AddSuccess("Concurrency settings saved successfully");
         }
         catch (DbUpdateConcurrencyException)

@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateJobConcurrenciesCommand(
+public record UpdateJobConcurrenciesCommand(
     Guid JobId,
     int MaxParallelSteps,
     IDictionary<StepType, int> JobConcurrencies) : IRequest;
