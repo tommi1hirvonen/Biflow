@@ -1,4 +1,4 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 public record CreateDataTableCategoryCommand(string CategoryName) : IRequest<MasterDataTableCategory>;
 

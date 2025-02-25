@@ -51,11 +51,18 @@
     {
         try
         {
-            IRequest command = _category.CategoryId == Guid.Empty
-                ? new CreateDataTableCategoryCommand(_category)
-                : new UpdateDataTableCategoryCommand(_category);
-            await Mediator.SendAsync(command);
-            await OnCategorySubmitted.InvokeAsync(_category);
+            if (_category.CategoryId == Guid.Empty)
+            {
+                var command = new CreateDataTableCategoryCommand(_category.CategoryName);
+                var category = await Mediator.SendAsync(command);
+                await OnCategorySubmitted.InvokeAsync(category);
+            }
+            else
+            {
+                var command = new UpdateDataTableCategoryCommand(_category.CategoryId, _category.CategoryName);
+                _ = await Mediator.SendAsync(command);
+                await OnCategorySubmitted.InvokeAsync(_category);
+            }
             await _modal.LetAsync(x => x.HideAsync());
         }
         catch (Exception ex)
