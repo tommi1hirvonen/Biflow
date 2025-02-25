@@ -1,10 +1,10 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 [UsedImplicitly]
-internal record UpdateJobCommand(
+public record UpdateJobCommand(
     Guid JobId,
     string JobName,
-    string JobDescription,
+    string? JobDescription,
     ExecutionMode ExecutionMode,
     bool StopOnFirstError,
     int MaxParallelSteps,

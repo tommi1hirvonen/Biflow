@@ -93,7 +93,19 @@
         try
         {
             ArgumentNullException.ThrowIfNull(_editJob);
-            await Mediator.SendAsync(new UpdateJobCommand(_editJob));
+            var command = new UpdateJobCommand(
+                JobId: _editJob.JobId,
+                JobName: _editJob.JobName,
+                JobDescription: _editJob.JobDescription,
+                ExecutionMode: _editJob.ExecutionMode,
+                StopOnFirstError: _editJob.StopOnFirstError,
+                MaxParallelSteps: _editJob.MaxParallelSteps,
+                OvertimeNotificationLimitMinutes: _editJob.OvertimeNotificationLimitMinutes,
+                TimeoutMinutes: _editJob.TimeoutMinutes,
+                IsEnabled: _editJob.IsEnabled,
+                IsPinned: _editJob.IsPinned,
+                JobTagIds: _editJob.Tags.Select(t => t.TagId).ToArray());
+            await Mediator.SendAsync(command);
             Toaster.AddSuccess("Job settings saved successfully");
             OnJobUpdated?.Invoke(_editJob);
         }

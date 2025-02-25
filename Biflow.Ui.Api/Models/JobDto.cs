@@ -4,7 +4,7 @@ namespace Biflow.Ui.Api.Models;
 public record JobDto
 {
     public required string JobName { get; init; }
-    public required string JobDescription { get; init; }
+    public required string? JobDescription { get; init; }
     public required ExecutionMode ExecutionMode { get; init; }
     public required bool StopOnFirstError { get; init; }
     public required int MaxParallelSteps { get; init; }

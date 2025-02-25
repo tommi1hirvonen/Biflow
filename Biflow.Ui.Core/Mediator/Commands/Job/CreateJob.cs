@@ -1,8 +1,8 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record CreateJobCommand(
+public record CreateJobCommand(
     string JobName,
-    string JobDescription,
+    string? JobDescription,
     ExecutionMode ExecutionMode,
     bool StopOnFirstError,
     int MaxParallelSteps,
