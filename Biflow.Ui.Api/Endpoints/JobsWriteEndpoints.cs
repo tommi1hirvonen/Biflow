@@ -49,7 +49,6 @@ public abstract class JobsWriteEndpoints : IEndpoints
                     JobDescription: request.JobDescription,
                     ExecutionMode: request.ExecutionMode,
                     StopOnFirstError: request.StopOnFirstError,
-                    MaxParallelSteps: request.MaxParallelSteps,
                     OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: request.TimeoutMinutes,
                     JobTagIds: request.JobTagIds);
@@ -76,11 +75,12 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithName("DeleteJob");
 
         group.MapPatch("/{jobId:guid}/concurrencies",
-            async ([FromRoute] Guid jobId, [FromBody] JobConcurrencyDto[] concurrencies,
+            async ([FromRoute] Guid jobId, [FromBody] JobConcurrencies concurrencies,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var dictionary = concurrencies.ToDictionary(key => key.StepType, value => value.MaxParallelSteps);
-                var command = new UpdateJobConcurrenciesCommand(jobId, dictionary);
+                var dictionary = concurrencies.StepTypeConcurrencies
+                    .ToDictionary(key => key.StepType, value => value.MaxParallelSteps);
+                var command = new UpdateJobConcurrenciesCommand(jobId, concurrencies.MaxParallelSteps, dictionary);
                 await mediator.SendAsync(command, cancellationToken);
                 return Results.NoContent();
             })

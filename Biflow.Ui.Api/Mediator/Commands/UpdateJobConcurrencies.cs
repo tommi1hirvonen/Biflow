@@ -1,6 +1,9 @@
 namespace Biflow.Ui.Api.Mediator.Commands;
 
-internal record UpdateJobConcurrenciesCommand(Guid JobId, IDictionary<StepType, int> JobConcurrencies) : IRequest;
+internal record UpdateJobConcurrenciesCommand(
+    Guid JobId,
+    int MaxParallelSteps,
+    IDictionary<StepType, int> JobConcurrencies) : IRequest;
 
 [UsedImplicitly]
 internal class UpdateJobConcurrenciesCommandHandler(
@@ -23,11 +26,13 @@ internal class UpdateJobConcurrenciesCommandHandler(
                 MaxParallelSteps = x.Value
             })
             .ToArray();
+        job.MaxParallelSteps = request.MaxParallelSteps;
         dbContext.MergeCollections(job.JobConcurrencies, newItems, x => new { x.JobId, x.StepType });
         foreach (var jobConcurrency in job.JobConcurrencies)
         {
             jobConcurrency.EnsureDataAnnotationsValidated();
         }
+        job.EnsureDataAnnotationsValidated();
         await jobValidator.EnsureValidatedAsync(job, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
     }

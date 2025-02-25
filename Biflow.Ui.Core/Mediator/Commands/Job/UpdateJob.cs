@@ -7,7 +7,6 @@ public record UpdateJobCommand(
     string? JobDescription,
     ExecutionMode ExecutionMode,
     bool StopOnFirstError,
-    int MaxParallelSteps,
     double OvertimeNotificationLimitMinutes,
     double TimeoutMinutes,
     Guid[] JobTagIds) : IRequest<Job>;
@@ -41,7 +40,6 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
         job.JobDescription = request.JobDescription;
         job.ExecutionMode = request.ExecutionMode;
         job.StopOnFirstError = request.StopOnFirstError;
-        job.MaxParallelSteps = request.MaxParallelSteps;
         job.OvertimeNotificationLimitMinutes = request.OvertimeNotificationLimitMinutes;
         job.TimeoutMinutes = request.TimeoutMinutes;
         
