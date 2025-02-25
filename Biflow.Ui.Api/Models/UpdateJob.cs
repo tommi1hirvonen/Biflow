@@ -1,7 +1,7 @@
 namespace Biflow.Ui.Api.Models;
 
 [PublicAPI]
-public record JobDto
+public record UpdateJob
 {
     public required string JobName { get; init; }
     public required string? JobDescription { get; init; }
@@ -10,7 +10,5 @@ public record JobDto
     public required int MaxParallelSteps { get; init; }
     public required double OvertimeNotificationLimitMinutes { get; init; }
     public required double TimeoutMinutes { get; init; }
-    public required bool IsEnabled { get; init; }
-    public required bool IsPinned { get; init; }
     public Guid[] JobTagIds { get; init; } = [];
 }

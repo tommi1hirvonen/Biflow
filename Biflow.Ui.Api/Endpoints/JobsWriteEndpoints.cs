@@ -16,7 +16,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .AddEndpointFilter(endpointFilter);
         
         group.MapPost("",
-            async ([FromBody] JobDto request, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            async ([FromBody] CreateJob request, IMediator mediator, LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
             {
                 var command = new CreateJobCommand(
                     JobName: request.JobName,
@@ -41,7 +41,7 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithName("CreateJob");
         
         group.MapPut("/{jobId:guid}",
-            async (Guid jobId, [FromBody] JobDto request, IMediator mediator, CancellationToken cancellationToken) =>
+            async (Guid jobId, [FromBody] UpdateJob request, IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new UpdateJobCommand(
                     JobId: jobId,
@@ -52,8 +52,6 @@ public abstract class JobsWriteEndpoints : IEndpoints
                     MaxParallelSteps: request.MaxParallelSteps,
                     OvertimeNotificationLimitMinutes: request.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: request.TimeoutMinutes,
-                    IsEnabled: request.IsEnabled,
-                    IsPinned: request.IsPinned,
                     JobTagIds: request.JobTagIds);
                 var job = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(job);
@@ -117,6 +115,19 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithSummary("Create job parameter")
             .WithDescription("Create a new job parameter")
             .WithName("CreateJobParameter");
+        
+        group.MapPatch("/{jobId:guid}/pinned",
+            async (Guid jobId, PinnedDto pinned, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new ToggleJobPinnedCommand(jobId, pinned.IsPinned);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Toggle whether job is pinned or not")
+            .WithDescription("Toggle whether the job is pinned or not")
+            .WithName("ToggleJobPinned");
         
         group.MapPatch("/{jobId:guid}/state",
             async (Guid jobId, StateDto state, IMediator mediator, CancellationToken cancellationToken) =>

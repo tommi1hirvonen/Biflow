@@ -10,8 +10,6 @@ public record UpdateJobCommand(
     int MaxParallelSteps,
     double OvertimeNotificationLimitMinutes,
     double TimeoutMinutes,
-    bool IsEnabled,
-    bool IsPinned,
     Guid[] JobTagIds) : IRequest<Job>;
 
 [UsedImplicitly]
@@ -46,8 +44,6 @@ internal class UpdateJobCommandHandler(IDbContextFactory<AppDbContext> dbContext
         job.MaxParallelSteps = request.MaxParallelSteps;
         job.OvertimeNotificationLimitMinutes = request.OvertimeNotificationLimitMinutes;
         job.TimeoutMinutes = request.TimeoutMinutes;
-        job.IsEnabled = request.IsEnabled;
-        job.IsPinned = request.IsPinned;
         
         // Synchronize tags
         var jobTagsToAdd = jobTags.Where(t1 => job.Tags.All(t2 => t2.TagId != t1.TagId));

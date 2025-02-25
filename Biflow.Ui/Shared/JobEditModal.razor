@@ -59,8 +59,8 @@
                     MaxParallelSteps: _job.MaxParallelSteps,
                     OvertimeNotificationLimitMinutes: _job.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: _job.TimeoutMinutes,
-                    IsEnabled: _job.IsEnabled,
-                    IsPinned: _job.IsPinned,
+                    IsEnabled: true,
+                    IsPinned: false,
                     JobTagIds: _job.Tags.Select(t => t.TagId).ToArray())
                 : new UpdateJobCommand(
                     JobId: _job.JobId,
@@ -71,8 +71,6 @@
                     MaxParallelSteps: _job.MaxParallelSteps,
                     OvertimeNotificationLimitMinutes: _job.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: _job.TimeoutMinutes,
-                    IsEnabled: _job.IsEnabled,
-                    IsPinned: _job.IsPinned,
                     JobTagIds: _job.Tags.Select(t => t.TagId).ToArray());
             await Mediator.SendAsync(command);
             await _offcanvas.LetAsync(x => x.HideAsync());

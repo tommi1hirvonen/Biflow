@@ -19,7 +19,7 @@ Content-Type: application/json
 
 ### Update job
 
-PUT {{baseUrl}}/jobs/1fb73732-1083-4dc5-74ca-08dd39e8b1d4
+PUT {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851
 x-api-key: {{apiKey}}
 Content-Type: application/json
 
@@ -27,13 +27,31 @@ Content-Type: application/json
   "JobName": "API test job renamed",
   "JobDescription": "Job created from API",
   "ExecutionMode": "ExecutionPhase",
-  "StopOnFirstError": false,
+  "StopOnFirstError": true,
   "MaxParallelSteps": 10,
   "OvertimeNotificationLimitMinutes": 0,
   "TimeoutMinutes": 0,
-  "IsEnabled": true,
-  "IsPinned": false,
   "JobTagIds": []
+}
+
+### Update job state
+
+PATCH {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/state
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "isEnabled": false
+}
+
+### Update job pinned
+
+PATCH {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/pinned
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "isPinned": true
 }
 
 ### Update job concurrencies

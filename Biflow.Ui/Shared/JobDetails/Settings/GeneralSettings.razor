@@ -102,8 +102,6 @@
                 MaxParallelSteps: _editJob.MaxParallelSteps,
                 OvertimeNotificationLimitMinutes: _editJob.OvertimeNotificationLimitMinutes,
                 TimeoutMinutes: _editJob.TimeoutMinutes,
-                IsEnabled: _editJob.IsEnabled,
-                IsPinned: _editJob.IsPinned,
                 JobTagIds: _editJob.Tags.Select(t => t.TagId).ToArray());
             await Mediator.SendAsync(command);
             Toaster.AddSuccess("Job settings saved successfully");
