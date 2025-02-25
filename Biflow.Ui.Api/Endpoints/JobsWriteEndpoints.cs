@@ -73,6 +73,34 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithSummary("Delete job by id")
             .WithDescription("Delete a job with the given id")
             .WithName("DeleteJob");
+        
+        group.MapPatch("/{jobId:guid}/parameters",
+            async ([FromRoute] Guid jobId, [FromBody] JobParameterDto[] parameters,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var updateParameters = parameters
+                    .Select(x => new UpdateJobParameter(
+                        x.ParameterId,
+                        x.ParameterName,
+                        x.ParameterValue,
+                        x.UseExpression,
+                        x.Expression))
+                    .ToArray();
+                var command = new UpdateJobParametersCommand(jobId, updateParameters);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Update job parameters")
+            .WithDescription("Update job parameters for an existing job. " +
+                             "Parameters with a matching parameter id will be updated. " +
+                             "Parameters in the request body with no matching id will be created/added. " +
+                             "Existing parameters with no matching parameter id in the request body will be removed. " +
+                             "NOTE: Step parameters may reference job parameters. Before removing job parameters, " +
+                             "make sure there are no step parameters that reference the job parameter.")
+            .WithName("UpdateJobParameters");
 
         group.MapPatch("/{jobId:guid}/concurrencies",
             async ([FromRoute] Guid jobId, [FromBody] JobConcurrencies concurrencies,
@@ -90,31 +118,6 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithSummary("Update job concurrencies")
             .WithDescription("Update job concurrencies for an existing job")
             .WithName("UpdateJobConcurrencies");
-        
-        group.MapPost("/{jobId:guid}/parameters",
-            async ([FromRoute] Guid jobId,
-                [FromBody] JobParameterDto parameterDto,
-                IMediator mediator,
-                LinkGenerator linker,
-                HttpContext ctx,
-                CancellationToken cancellationToken) =>
-            {
-                var command = new CreateJobParameterCommand(
-                    JobId: jobId,
-                    ParameterName: parameterDto.ParameterName,
-                    ParameterValue: parameterDto.ParameterValue,
-                    UseExpression: parameterDto.UseExpression,
-                    Expression: parameterDto.Expression);
-                var jobParameter = await mediator.SendAsync(command, cancellationToken);
-                var url = linker.GetUriByName(ctx, "GetJobParameter", new { parameterId = jobParameter.ParameterId });
-                return Results.Created(url, jobParameter);
-            })
-            .ProducesProblem(StatusCodes.Status409Conflict)
-            .ProducesValidationProblem()
-            .Produces<JobParameter>(StatusCodes.Status201Created)
-            .WithSummary("Create job parameter")
-            .WithDescription("Create a new job parameter")
-            .WithName("CreateJobParameter");
         
         group.MapPatch("/{jobId:guid}/pinned",
             async (Guid jobId, PinnedDto pinned, IMediator mediator, CancellationToken cancellationToken) =>
@@ -141,38 +144,6 @@ public abstract class JobsWriteEndpoints : IEndpoints
             .WithSummary("Toggle the state of a job")
             .WithDescription("Toggle the state of an existing job (enabled/disabled)")
             .WithName("ToggleJobEnabled");
-        
-        group.MapPut("/parameters/{parameterId:guid}", async (Guid parameterId, [FromBody] JobParameterDto parameterDto,
-            IMediator mediator, CancellationToken cancellationToken) =>
-            {
-                var command = new UpdateJobParameterCommand(
-                    ParameterId: parameterId,
-                    ParameterName: parameterDto.ParameterName,
-                    ParameterValue: parameterDto.ParameterValue,
-                    UseExpression: parameterDto.UseExpression,
-                    Expression: parameterDto.Expression);
-                var jobParameter = await mediator.SendAsync(command, cancellationToken);
-                return Results.Ok(jobParameter);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .ProducesValidationProblem()
-            .Produces<JobParameter>()
-            .WithSummary("Update job parameter by id")
-            .WithDescription("Update an existing job parameter by id")
-            .WithName("UpdateJobParameter");
-        
-        group.MapDelete("/parameters/{parameterId:guid}", async (Guid parameterId, IMediator mediator,
-            CancellationToken cancellationToken) =>
-            {
-                var command = new DeleteJobParameterCommand(parameterId);
-                await mediator.SendAsync(command, cancellationToken);
-                return Results.NoContent();
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces(StatusCodes.Status204NoContent)
-            .WithSummary("Delete job parameter by id")
-            .WithDescription("Delete a job parameter by id")
-            .WithName("DeleteJobParameter");
         
         group.MapPost("/{jobId:guid}/tags/{tagId:guid}",
             async (Guid jobId, Guid tagId, IMediator mediator, CancellationToken cancellationToken) =>

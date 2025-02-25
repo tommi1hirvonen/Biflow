@@ -128,21 +128,6 @@ public abstract class JobsReadEndpoints : IEndpoints
             .WithName("GetJobSchedules")
             .AddEndpointFilter(jobSchedulesEndpointFilter);
         
-        group.MapGet("/parameters/{parameterId:guid}",
-            async (ServiceDbContext dbContext, Guid parameterId, CancellationToken cancellationToken) =>
-            {
-                var parameter = await dbContext.Set<JobParameter>()
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(p => p.ParameterId == parameterId, cancellationToken)
-                    ?? throw new NotFoundException<JobParameter>(parameterId);
-                return Results.Ok(parameter);
-            })
-            .ProducesProblem(StatusCodes.Status404NotFound)
-            .Produces<JobParameter>()
-            .WithSummary("Get job parameter by id")
-            .WithDescription("Get job parameter")
-            .WithName("GetJobParameter");
-        
         group.MapGet("/tags", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
             {
                 var tags = await dbContext.JobTags.AsNoTracking().ToArrayAsync(cancellationToken);

@@ -53,6 +53,27 @@ Content-Type: application/json
   "isPinned": true
 }
 
+### Update job parameters
+
+PATCH {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/parameters
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+[
+  {
+    "parameterId": "10168487-55ed-4e84-9ff7-08dd55d097dd",
+    "parameterName": "TestParam",
+    "parameterValue": { "valueType": "String", "valueString": "hello world" },
+    "useExpression": false,
+    "expression": "DateTime.Now.ToString(\"o\")"
+  },
+  {
+    "parameterId": null,
+    "parameterName": "TestParam2",
+    "parameterValue": { "valueType": "Int32", "valueInt32": 123 }
+  }
+]
+
 ### Update job concurrencies
 
 PATCH {{baseUrl}}/jobs/98ed48f1-4977-4c3c-c50b-08dd39ebf851/concurrencies
