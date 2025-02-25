@@ -9,8 +9,8 @@
 
 <div @attributes="AdditionalAttributes" class="border" style="resize: both; overflow: hidden;">
     <div class="p-1 @CssClass">
-        <svg id="@svgId" viewBox="0 0 2000 1000">
-            <g @ref="graphContainer" id="g_dependency_graph" />
+        <svg id="@_svgId" viewBox="0 0 2000 1000">
+            <g @ref="_graphContainer" id="g_dependency_graph" />
         </svg>
     </div>
 </div>
@@ -26,29 +26,29 @@
 
     [Parameter] public string? CssClass { get; set; }
 
-    private ElementReference graphContainer;
-    private string svgId = $"svg-{Guid.NewGuid().ToString()}";
-    private DotNetObjectReference<DependencyGraph<TItem>>? dotNetObject;
-    private IJSObjectReference? jsObject;
+    private ElementReference _graphContainer;
+    private string _svgId = $"svg-{Guid.NewGuid().ToString()}";
+    private DotNetObjectReference<DependencyGraph<TItem>>? _dotNetObject;
+    private IJSObjectReference? _jsObject;
 
     protected override void OnInitialized()
     {
-        dotNetObject = DotNetObjectReference.Create(this);
+        _dotNetObject = DotNetObjectReference.Create(this);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
+            _jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/DependencyGraph.js");
             await AfterRender.InvokeAsync();
         }
     }
 
     public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges, DependencyGraphDirection direction = default)
     {
-        ArgumentNullException.ThrowIfNull(jsObject);
-        ArgumentNullException.ThrowIfNull(dotNetObject);
+        ArgumentNullException.ThrowIfNull(_jsObject);
+        ArgumentNullException.ThrowIfNull(_dotNetObject);
         var nodesJson = JsonSerializer.Serialize(nodes);
         var edgesJson = JsonSerializer.Serialize(edges);
         var rankdir = direction switch
@@ -59,7 +59,7 @@
             DependencyGraphDirection.BottomToTop => "BT",
             _ => "LR"
         };
-        await jsObject.InvokeVoidAsync("drawDependencyGraph", dotNetObject, graphContainer, svgId, nodesJson, edgesJson, rankdir);
+        await _jsObject.InvokeVoidAsync("drawDependencyGraph", _dotNetObject, _graphContainer, _svgId, nodesJson, edgesJson, rankdir);
     }
 
     [JSInvokable]
@@ -81,14 +81,14 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (jsObject is not null)
+        if (_jsObject is not null)
         {
             try
             {
-                await jsObject.DisposeAsync();
+                await _jsObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
         }
-        dotNetObject?.Dispose();
+        _dotNetObject?.Dispose();
     }
 }

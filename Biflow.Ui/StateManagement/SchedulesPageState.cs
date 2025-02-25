@@ -34,33 +34,33 @@ public class SchedulesPageState
 
     public DateTime? TriggersAfter
     {
-        get => triggersAfter;
+        get => _triggersAfter;
         set
         {
-            triggersAfter = value;
-            if (triggersBefore < value)
+            _triggersAfter = value;
+            if (_triggersBefore < value)
             {
-                triggersBefore = value;
+                _triggersBefore = value;
             }
         }
     }
 
-    private DateTime? triggersAfter;
+    private DateTime? _triggersAfter;
 
     public DateTime? TriggersBefore
     {
-        get => triggersBefore;
+        get => _triggersBefore;
         set
         {
-            triggersBefore = value;
-            if (triggersAfter > value)
+            _triggersBefore = value;
+            if (_triggersAfter > value)
             {
-                triggersAfter = value;
+                _triggersAfter = value;
             }
         }
     }
 
-    private DateTime? triggersBefore;
+    private DateTime? _triggersBefore;
 
     public Func<Schedule, bool> JobPredicate { get; }
     
@@ -85,7 +85,7 @@ public class SchedulesPageState
         ScheduleTagFilter.Clear();
         ScheduleFilter = "";
         StateFilter = StateFilter.All;
-        triggersAfter = null;
-        triggersBefore = null;
+        _triggersAfter = null;
+        _triggersBefore = null;
     }
 }

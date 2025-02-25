@@ -28,13 +28,13 @@ public class ContextMenuToggle(ContextMenuService contextMenuService) : Componen
 
     private readonly ContextMenuService _contextMenuService = contextMenuService;
 
-    private bool isShowing;
+    private bool _isShowing;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         builder.OpenElement(0, ContainerHtmlTag);
         builder.AddMultipleAttributes(1, InputAttributes);
-        var cssClass = $"context-menu-toggle {(isShowing ? "open" : null)} {CssClass} {CssClassDelegate?.Invoke(isShowing)}";
+        var cssClass = $"context-menu-toggle {(_isShowing ? "open" : null)} {CssClass} {CssClassDelegate?.Invoke(_isShowing)}";
         builder.AddAttribute(2, "class", cssClass);
         builder.AddAttribute(3, "oncontextmenu", EventCallback.Factory.Create<MouseEventArgs>(this, ShowContextMenuAsync));
         builder.AddEventPreventDefaultAttribute(4, "oncontextmenu", true);
@@ -55,10 +55,10 @@ public class ContextMenuToggle(ContextMenuService contextMenuService) : Componen
         {
             return;
         }
-        isShowing = true;
+        _isShowing = true;
         StateHasChanged();
         await _contextMenuService.ShowContextMenuAsync(e, MenuContent);
-        isShowing = false;
+        _isShowing = false;
         StateHasChanged();
     }
 }

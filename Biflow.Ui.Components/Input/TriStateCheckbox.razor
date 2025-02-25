@@ -29,19 +29,19 @@
 
     private ElementReference _inputElement;
     private Guid _elementId = Guid.NewGuid();
-    private IJSObjectReference? jsObject;
+    private IJSObjectReference? _jsObject;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            jsObject = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TriStateCheckbox.js");
+            _jsObject = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TriStateCheckbox.js");
         }
-        if (Indeterminate.HasValue && jsObject is not null)
+        if (Indeterminate.HasValue && _jsObject is not null)
         {
             try
             {
-                await jsObject.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
+                await _jsObject.InvokeVoidAsync("setPropByElement", _inputElement, "indeterminate", Indeterminate.Value);
             }
             catch (JSDisconnectedException) { }
         }
@@ -56,11 +56,11 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (jsObject is not null)
+        if (_jsObject is not null)
         {
             try
             {
-                await jsObject.DisposeAsync();
+                await _jsObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
         }

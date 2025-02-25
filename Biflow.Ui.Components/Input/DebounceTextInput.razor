@@ -4,47 +4,47 @@
 
 @inherits InputText
 
-<input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="OnSearchEvent" />
+<input @attributes="@AdditionalAttributes" class="@CssClass" @bind-value="_inputText" @bind-value:event="oninput" @onkeyup="ResetTimer" @onsearch="OnSearchEvent" />
 
 @code {
-    private string inputText = "";
-    private Timer timer = new(550); // Debounce (delay) time in ms
+    private string _inputText = "";
+    private Timer _timer = new(550); // Debounce (delay) time in ms
 
     protected override void OnInitialized()
     {
-        timer.Elapsed += UpdateCurrentValue;
-        timer.AutoReset = false;
+        _timer.Elapsed += UpdateCurrentValue;
+        _timer.AutoReset = false;
     }
 
     protected override void OnParametersSet()
     {
-        if (CurrentValueAsString is not null && CurrentValueAsString != inputText)
+        if (CurrentValueAsString is not null && CurrentValueAsString != _inputText)
         {
-            inputText = CurrentValueAsString;
+            _inputText = CurrentValueAsString;
         }
     }
 
     private void OnSearchEvent()
     {
-        if (string.IsNullOrEmpty(inputText))
+        if (string.IsNullOrEmpty(_inputText))
         {
             // The input value was cleared using the type="search" input clear button.
             // Clear the internal value as well.
-            CurrentValueAsString = inputText;
+            CurrentValueAsString = _inputText;
         }
     }
 
     private void ResetTimer(KeyboardEventArgs e)
     {
-        timer.Stop();
-        timer.Start();
+        _timer.Stop();
+        _timer.Start();
     }
 
     private async void UpdateCurrentValue(object? source, ElapsedEventArgs e)
     {
         await InvokeAsync(() =>
         {
-            CurrentValueAsString = inputText;
+            CurrentValueAsString = _inputText;
         }); 
     }
 }

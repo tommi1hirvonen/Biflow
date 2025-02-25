@@ -4,7 +4,7 @@
 
 @implements IDisposable
 
-<div @attributes="@InputAttributes" class="toast @ToastClass show @CssClass @(hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
+<div @attributes="@InputAttributes" class="toast @ToastClass show @CssClass @(_hiding ? "fade-out" : null) @(Title is null ? "d-flex" : null)"
      role="alert" aria-live="assertive" aria-atomic="true">
     @if (Title is not null)
     {
@@ -48,8 +48,8 @@
 
     [Parameter] public EventCallback OnToastHidden { get; set; }
 
-    private bool hiding;
-    private CancellationTokenSource cts = new();
+    private bool _hiding;
+    private CancellationTokenSource _cts = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -57,7 +57,7 @@
         {
             try
             {
-                await Task.Delay((int)AutoHideDelay, cts.Token);
+                await Task.Delay((int)AutoHideDelay, _cts.Token);
             }
             catch
             {
@@ -69,12 +69,12 @@
 
     private async Task HideAsync()
     {
-        if (hiding)
+        if (_hiding)
         {
             return;
         }
-        await cts.CancelAsync();
-        hiding = true;
+        await _cts.CancelAsync();
+        _hiding = true;
         StateHasChanged();
         await Task.Delay(300);
         await OnToastHidden.InvokeAsync();
@@ -97,5 +97,5 @@
         _ => LucideIcon.Info
     };
 
-    public void Dispose() => cts.Dispose();
+    public void Dispose() => _cts.Dispose();
 }

@@ -9,9 +9,9 @@ namespace Biflow.Executor.Core.Test;
 
 public class DatabaseFixture : IAsyncLifetime
 {
-    private static readonly string _connectionString =
+    private const string ConnectionString =
         "Data Source=localhost;Database=BiflowTest;Integrated Security=sspi;Encrypt=true;TrustServerCertificate=true;";
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+    private static readonly SemaphoreSlim Semaphore = new(1, 1);
     private static bool _databaseInitialized;
 
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory;
@@ -23,7 +23,7 @@ public class DatabaseFixture : IAsyncLifetime
     {
         var settings = new Dictionary<string, string?>
         {
-            { "ConnectionStrings:AppDbContext", _connectionString },
+            { "ConnectionStrings:AppDbContext", ConnectionString },
             { "PollingIntervalMs", "5000" },
             { "EmailSettings:SmtpServer", "" },
             { "EmailSettings:EnableSsl", "true" },
@@ -51,7 +51,7 @@ public class DatabaseFixture : IAsyncLifetime
     {
         try
         {
-            await _semaphore.WaitAsync(); // Synchronize access
+            await Semaphore.WaitAsync(); // Synchronize access
 
             if (_databaseInitialized)
             {
@@ -66,7 +66,7 @@ public class DatabaseFixture : IAsyncLifetime
             var sqlConnection1 = new MsSqlConnection
             {
                 ConnectionName = "Test SQL connection",
-                ConnectionString = _connectionString
+                ConnectionString = ConnectionString
             };
 
             var job1 = new Job
@@ -186,7 +186,7 @@ public class DatabaseFixture : IAsyncLifetime
         }
         finally
         {
-            _semaphore.Release();
+            Semaphore.Release();
         }
     }
 }

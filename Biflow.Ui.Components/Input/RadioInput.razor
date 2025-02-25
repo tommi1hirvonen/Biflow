@@ -1,11 +1,11 @@
 @namespace Biflow.Ui.Components
 
 <div @attributes="InputAttributes" class="form-check @CssClass @(Inline ? "form-check-inline" : null)">
-    <input type="radio" class="form-check-input @InputCssClass" id="@id"
+    <input type="radio" class="form-check-input @InputCssClass" id="@_id"
            disabled=@Disabled
            checked=@Checked 
            @onchange="OnEnabled">
-    <label class="form-check-label @LabelCssClass" for="@id">
+    <label class="form-check-label @LabelCssClass" for="@_id">
         @ChildContent
     </label>
 </div>
@@ -31,13 +31,13 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
-    private Guid id = Guid.NewGuid();
+    private Guid _id = Guid.NewGuid();
 
     protected override void OnParametersSet()
     {
-        if (Id != Guid.Empty && Id != id)
+        if (Id != Guid.Empty && Id != _id)
         {
-            id = Id;
+            _id = Id;
         }
     }
 }

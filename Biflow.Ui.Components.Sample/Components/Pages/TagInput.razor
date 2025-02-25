@@ -8,8 +8,8 @@
 
 <StringTagInput Label="No custom values"
                 Placeholder="Search for tags"
-                Items="tags"
-                SelectedItems="selected"
+                Items="_tags"
+                SelectedItems="_selected"
                 AllowCustomValues="false"
                 TagColorSelector="GetTagColor" />
 
@@ -17,8 +17,8 @@
 
 <StringTagInput Label="Allow custom values"
                 Placeholder="Search for tags"
-                Items="tags2"
-                SelectedItems="selected2"
+                Items="_tags2"
+                SelectedItems="_selected2"
                 AllowCustomValues
                 TagColorSelector="GetTagColor" />
 
@@ -26,8 +26,8 @@
 
 <StringTagInput Label="Disabled"
                 Placeholder="Search for tags"
-                Items="tags2"
-                SelectedItems="selected2"
+                Items="_tags2"
+                SelectedItems="_selected2"
                 AllowCustomValues
                 TagColorSelector="GetTagColor"
                 IsDisabled />
@@ -36,19 +36,19 @@
 
 <Biflow.Ui.Components.Input.TagInput Label="Tag type"
                                      Placeholder="Search for tags"
-                                     Items="tags3"
-                                     SelectedItems="selected3"
+                                     Items="_tags3"
+                                     SelectedItems="_selected3"
                                      AllowCustomValues
                                      NewItemFromText="text => new Tag(Guid.NewGuid(), text, TagColor.DarkGray, 0)" />
 
 @code {
-    private readonly List<string> tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+    private readonly List<string> _tags = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
 
-    private readonly List<string> tags2 = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
+    private readonly List<string> _tags2 = ["economy", "politics", "sports", "domestic", "abroad", "food", "health", "art"];
 
-    private readonly List<string> selected = ["sports", "health"];
+    private readonly List<string> _selected = ["sports", "health"];
 
-    private readonly List<string> selected2 = ["food", "art"];
+    private readonly List<string> _selected2 = ["food", "art"];
 
     private static TagColor GetTagColor(string text) => text switch
     {
@@ -58,11 +58,11 @@
         _ => TagColor.DarkGray
     };
 
-    private readonly List<Tag> tags3 = Enum.GetValues<TagColor>()
+    private readonly List<Tag> _tags3 = Enum.GetValues<TagColor>()
         .Select(color => new Tag(Guid.NewGuid(), color.ToString().ToLower(), color, 0))
         .ToList();
 
-    private readonly List<Tag> selected3 = [];
+    private readonly List<Tag> _selected3 = [];
     
     private record Tag(Guid TagId, string TagName, TagColor Color, int SortOrder) : ITag;
 }

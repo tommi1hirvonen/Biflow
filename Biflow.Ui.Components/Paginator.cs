@@ -52,9 +52,9 @@ public class Paginator<TItem> : ComponentBase, IPaginator
         }
     }
 
-    private bool initialPageSizeSet = false;
-    private bool initialPageSet = false;
-    private bool itemsSet = false;
+    private bool _initialPageSizeSet = false;
+    private bool _initialPageSet = false;
+    private bool _itemsSet = false;
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
@@ -68,20 +68,20 @@ public class Paginator<TItem> : ComponentBase, IPaginator
     {
         if (Items is not null && Items.Any())
         {
-            itemsSet = true;
+            _itemsSet = true;
         }
 
-        if (InitialPageSize > 0 && !initialPageSizeSet)
+        if (InitialPageSize > 0 && !_initialPageSizeSet)
         {
-            initialPageSizeSet = true;
+            _initialPageSizeSet = true;
             PageSize = InitialPageSize;
         }
 
         // Set initial page only after items have been set.
         // Otherwise, the current page might be reset in the next step.
-        if (InitialPage > 0 && !initialPageSet && itemsSet)
+        if (InitialPage > 0 && !_initialPageSet && _itemsSet)
         {
-            initialPageSet = true;
+            _initialPageSet = true;
             CurrentPage = InitialPage;
         }
 

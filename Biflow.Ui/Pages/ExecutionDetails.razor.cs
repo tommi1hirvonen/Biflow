@@ -49,7 +49,7 @@ public partial class ExecutionDetails(
     // This same component instance can be used to switch between different job executions.
     // This list allows for stopping multiple executions concurrently
     // and to modify the view based on which job execution is being shown.
-    private readonly List<Guid> stoppingExecutions = [];
+    private readonly List<Guid> _stoppingExecutions = [];
 
     private bool AutoRefresh
     {
@@ -65,7 +65,7 @@ public partial class ExecutionDetails(
         }
     } = true;
 
-    private bool Stopping => stoppingExecutions.Any(id => id == ExecutionId);
+    private bool Stopping => _stoppingExecutions.Any(id => id == ExecutionId);
 
     private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
     {
@@ -243,7 +243,7 @@ public partial class ExecutionDetails(
             return;
         }
 
-        stoppingExecutions.Add(ExecutionId);
+        _stoppingExecutions.Add(ExecutionId);
         try
         {
             ArgumentNullException.ThrowIfNull(AuthenticationState);
@@ -257,12 +257,12 @@ public partial class ExecutionDetails(
         catch (TimeoutException)
         {
             _toaster.AddError("Operation timed out", "The executor process may no longer be running");
-            stoppingExecutions.RemoveAll(id => id == ExecutionId);
+            _stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
         catch (Exception ex)
         {
             _toaster.AddError("Error stopping execution", ex.Message);
-            stoppingExecutions.RemoveAll(id => id == ExecutionId);
+            _stoppingExecutions.RemoveAll(id => id == ExecutionId);
         }
     }
 

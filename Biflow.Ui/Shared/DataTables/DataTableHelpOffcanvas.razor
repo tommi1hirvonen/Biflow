@@ -1,4 +1,4 @@
-﻿<HxOffcanvas @ref="offcanvas" Size="OffcanvasSize.Large" Title="Data Tables">
+﻿<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Data Tables">
     <BodyTemplate>
         <p>
             Manage tables whose data can be edited in the Biflow UI. Users can be granted access to individual tables to edit their content.
@@ -28,14 +28,14 @@
         </table>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await offcanvas.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" OnClick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
             Close
         </HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
-    private HxOffcanvas? offcanvas;
+    private HxOffcanvas? _offcanvas;
 
-    public Task ShowAsync() => offcanvas.LetAsync(x => x.ShowAsync());
+    public Task ShowAsync() => _offcanvas.LetAsync(x => x.ShowAsync());
 }

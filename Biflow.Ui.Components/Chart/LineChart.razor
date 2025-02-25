@@ -5,51 +5,51 @@
 @inject IJSRuntime Js
 @inject ThemeService Theme
 
-<canvas class="w-100" id="@canvasId" width="900" height="400"></canvas>
+<canvas class="w-100" id="@_canvasId" width="900" height="400"></canvas>
 
 @code {
     [Parameter] public EventCallback AfterFirstRender { get; set; }
 
     [Parameter] public LineChartDataset? Dataset { get; set; }
 
-    private LineChartDataset? prevDataset;
+    private LineChartDataset? _prevDataset;
 
-    private readonly string canvasId = $"chart_{Guid.NewGuid().ToString()}";
-    private readonly JsonSerializerOptions serializationOptions = new()
+    private readonly string _canvasId = $"chart_{Guid.NewGuid().ToString()}";
+    private readonly JsonSerializerOptions _serializationOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
     };
     
-    private IJSObjectReference? jsObject;
-    private bool shouldRender = false;
+    private IJSObjectReference? _jsObject;
+    private bool _shouldRender = false;
 
     protected override void OnParametersSet()
     {
-        if (Dataset is null || Dataset == prevDataset)
+        if (Dataset is null || Dataset == _prevDataset)
         {
             return;
         }
-        prevDataset = Dataset;
-        shouldRender = true;
+        _prevDataset = Dataset;
+        _shouldRender = true;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/LineChart.js");
+            _jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/LineChart.js");
             await AfterFirstRender.InvokeAsync();
         }
-        if (jsObject is not null && shouldRender)
+        if (_jsObject is not null && _shouldRender)
         {
-            shouldRender = false;
+            _shouldRender = false;
             await DrawAsync();
         }
     }
 
     public async Task DrawAsync()
     {
-        ArgumentNullException.ThrowIfNull(jsObject);
+        ArgumentNullException.ThrowIfNull(_jsObject);
         if (Dataset is null)
         {
             return;
@@ -64,10 +64,10 @@
             data = s.DataPoints.OrderBy(d => d.XValue).Select(d => new { x = d.XValue.ToString("o"), y = d.YValue }),
             tension = s.Tension
         });
-        var seriesJson = JsonSerializer.Serialize(series, serializationOptions);
+        var seriesJson = JsonSerializer.Serialize(series, _serializationOptions);
         var isDarkTheme = Theme.CurrentTheme == Components.Theme.Dark;
-        await jsObject.InvokeVoidAsync("draw",
-            canvasId,
+        await _jsObject.InvokeVoidAsync("draw",
+            _canvasId,
             seriesJson,
             Dataset.YAxisTitle,
             Dataset.YMin,
@@ -78,11 +78,11 @@
 
     public async ValueTask DisposeAsync()
     {
-        if (jsObject is not null)
+        if (_jsObject is not null)
         {
             try
             {
-                await jsObject.DisposeAsync();
+                await _jsObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
         }

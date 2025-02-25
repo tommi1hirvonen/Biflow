@@ -3,12 +3,12 @@
 @inject ToasterService Toaster
 @inject ITokenService TokenService
 
-<HxModal @ref="modal" Size="ModalSize.Large" OnClosed="() => connectionTestSuccess = null" Title="@(client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + client?.BlobStorageClientName)">
+<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + _client?.BlobStorageClientName)">
     <BodyTemplate>
-        @if (client is not null)
+        @if (_client is not null)
         {
             <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
-            <EditForm Model="client" id="blob_client_edit_form" OnValidSubmit="SubmitClientAsync">
+            <EditForm Model="_client" id="blob_client_edit_form" OnValidSubmit="SubmitClientAsync">
                 <div class="row">
                     <div class="col mx-3">
                         <DataAnnotationsValidator />
@@ -16,16 +16,16 @@
 
                         <div>
                             <label class="form-label">Blob storage client name</label>
-                            <InputText class="form-control" @bind-Value="client.BlobStorageClientName"></InputText>
+                            <InputText class="form-control" @bind-Value="_client.BlobStorageClientName"></InputText>
                         </div>
 
                         <div class="row mt-3">
                             <div class="col">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_azure_credential"
-                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
+                                           checked=@(_client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
                                            disabled=@(!AzureCredentials?.Any() ?? true)
-                                           @onchange="@(_ => client.UseCredential(AzureCredentials!.First(), client.StorageAccountUrl ?? ""))">
+                                           @onchange="@(_ => _client.UseCredential(AzureCredentials!.First(), _client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_azure_credential">
                                         Azure credential
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use an Azure credential to authenticate against the Blob Storage account. The account url also needs to be provided. It is most likely in the format https://<accountname>.blob.core.windows.net/">
@@ -35,8 +35,8 @@
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_connection_string"
-                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
-                                           @onchange="@(_ => client.UseConnectionString(client.ConnectionString ?? ""))">
+                                           checked=@(_client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
+                                           @onchange="@(_ => _client.UseConnectionString(_client.ConnectionString ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_connection_string">
                                         Connection string
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a connection string to authenticate against the Blob Storage account. The connection string may contain either an account key or a SAS token.">
@@ -46,8 +46,8 @@
                                 </div>
                                 <div class="form-check mt-1">
                                     <input class="form-check-input" type="radio" id="connection_method_radio_url"
-                                           checked=@(client.ConnectionMethod == BlobStorageConnectionMethod.Url)
-                                           @onchange="@(_ => client.UseUrl(client.StorageAccountUrl ?? ""))">
+                                           checked=@(_client.ConnectionMethod == BlobStorageConnectionMethod.Url)
+                                           @onchange="@(_ => _client.UseUrl(_client.StorageAccountUrl ?? ""))">
                                     <label class="form-check-label fw-normal" for="connection_method_radio_url">
                                         URL
                                         <HxPopover Trigger="PopoverTrigger.Hover" Content="Use a URL containing a SAS token to authenticate against the Blob Storage account.">
@@ -58,12 +58,12 @@
                             </div>
                         </div>
 
-                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
+                        @if (_client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration)
                         {
                             <div class="row mt-3">
                                 <div class="col-lg-6">
                                     <label class="form-label">Azure credential</label>
-                                    <InputSelect class="form-select" @bind-Value:get="client.AzureCredentialId" @bind-Value:set="AzureCredentialChanged">
+                                    <InputSelect class="form-select" @bind-Value:get="_client.AzureCredentialId" @bind-Value:set="AzureCredentialChanged">
                                         @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
                                         {
                                             <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
@@ -73,32 +73,32 @@
                             </div>
                         }
                         
-                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration || client.ConnectionMethod == BlobStorageConnectionMethod.Url)
+                        @if (_client.ConnectionMethod == BlobStorageConnectionMethod.AppRegistration || _client.ConnectionMethod == BlobStorageConnectionMethod.Url)
                         {
                             <div class="row mt-3">
                                 <div class="col-lg">
                                     <label class="form-label">Blob storage URL</label>
-                                    <InputText class="form-control" @bind-Value:get="client.StorageAccountUrl" @bind-Value:set="UrlChanged"></InputText>
+                                    <InputText class="form-control" @bind-Value:get="_client.StorageAccountUrl" @bind-Value:set="UrlChanged"></InputText>
                                 </div>
                             </div>
                         }
                         
-                        @if (client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
+                        @if (_client.ConnectionMethod == BlobStorageConnectionMethod.ConnectionString)
                         {
                             <div class="row mt-3">
                                 <div class="col-lg">
                                     <label class="form-label">Connection string</label>
-                                    <InputText class="form-control" @bind-Value:get="client.ConnectionString" @bind-Value:set="ConnectionStringChanged"></InputText>
+                                    <InputText class="form-control" @bind-Value:get="_client.ConnectionString" @bind-Value:set="ConnectionStringChanged"></InputText>
                                 </div>
                             </div>
                         }
 
                         <div class="row my-3">
                             <div class="col">
-                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!testingConnection">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
                                     Test connection
                                 </HxButton>
-                                @switch (connectionTestSuccess)
+                                @switch (_connectionTestSuccess)
                                 {
                                     case true:
                                         <span class="badge bg-success ms-3">Success</span>
@@ -115,8 +115,8 @@
         }
     </BodyTemplate>
     <FooterTemplate>
-        <HxSubmit form="blob_client_edit_form" Color="ThemeColor.Success">@(client?.BlobStorageClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxSubmit form="blob_client_edit_form" Color="ThemeColor.Success">@(_client?.BlobStorageClientId == Guid.Empty ? "Add" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
     </FooterTemplate>
 </HxModal>
 
@@ -127,76 +127,76 @@
     [Parameter]
     public List<AzureCredential>? AzureCredentials { get; set; }
 
-    private BlobStorageClient? client;
-    private HxModal? modal;
-    private bool? connectionTestSuccess = null;
-    private bool testingConnection = false;
+    private BlobStorageClient? _client;
+    private HxModal? _modal;
+    private bool? _connectionTestSuccess = null;
+    private bool _testingConnection = false;
 
     public async Task ShowAsync(Guid clientId)
     {
-        client = null;
-        connectionTestSuccess = null;
-        await modal.LetAsync(x => x.ShowAsync());
+        _client = null;
+        _connectionTestSuccess = null;
+        await _modal.LetAsync(x => x.ShowAsync());
         if (clientId != Guid.Empty)
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            client = await context.BlobStorageClients
+            _client = await context.BlobStorageClients
                 .AsNoTrackingWithIdentityResolution()
                 .Include(c => c.AzureCredential)
                 .FirstAsync(c => c.BlobStorageClientId == clientId);
         }
         else
         {
-            client = new();
+            _client = new();
         }
     }
 
     private async Task SubmitClientAsync()
     {
-        await OnBlobClientSubmit.InvokeAsync(client);
-        await modal.LetAsync(x => x.HideAsync());
+        await OnBlobClientSubmit.InvokeAsync(_client);
+        await _modal.LetAsync(x => x.HideAsync());
     }
 
     private async Task TestConnection()
     {
-        connectionTestSuccess = null;
-        testingConnection = true;
+        _connectionTestSuccess = null;
+        _testingConnection = true;
         try
         {
-            if (client is not null) await client.CreateExplorer(TokenService).GetContainersAsync(CancellationToken.None);
-            connectionTestSuccess = true;
+            if (_client is not null) await _client.CreateExplorer(TokenService).GetContainersAsync(CancellationToken.None);
+            _connectionTestSuccess = true;
         }
         catch (Exception ex)
         {
-            connectionTestSuccess = false;
+            _connectionTestSuccess = false;
             Toaster.AddError("Connection test failed", ex.Message);
         }
-        testingConnection = false;
+        _testingConnection = false;
     }
 
     private void ConnectionStringChanged(string? connectionString)
     {
-        client?.UseConnectionString(connectionString ?? "");
+        _client?.UseConnectionString(connectionString ?? "");
     }
 
     private void UrlChanged(string? url)
     {
-        if (client is { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration, AzureCredential: not null })
+        if (_client is { ConnectionMethod: BlobStorageConnectionMethod.AppRegistration, AzureCredential: not null })
         {
-            client.UseCredential(client.AzureCredential, url ?? "");
+            _client.UseCredential(_client.AzureCredential, url ?? "");
         }
         else
         {
-            client?.UseUrl(url ?? "");    
+            _client?.UseUrl(url ?? "");    
         }
     }
 
     private void AzureCredentialChanged(Guid? id)
     {
         var azureCredential = AzureCredentials?.FirstOrDefault(a => a.AzureCredentialId == id);
-        if (azureCredential is not null && client is not null)
+        if (azureCredential is not null && _client is not null)
         {
-            client.UseCredential(azureCredential, client?.StorageAccountUrl ?? "");
+            _client.UseCredential(azureCredential, _client?.StorageAccountUrl ?? "");
         }
     }
 

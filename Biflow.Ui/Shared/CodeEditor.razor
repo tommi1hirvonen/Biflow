@@ -15,11 +15,11 @@
 }
 
 <style>
-    @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
+    @($"#{_editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
 </style>
 
 <StandaloneCodeEditor @ref="_editor"
-                      Id="@editorId"
+                      Id="@_editorId"
                       ConstructionOptions="GetEditorOptions"
                       OnDidChangeModelContent="OnDidChangeModelContent"
                       CssClass="border" />
@@ -44,7 +44,7 @@
 
     [Parameter] public int? FontSize { get; set; }
     
-    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
+    private readonly string _editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
     private StandaloneCodeEditor? _editor;
     
     public enum CodeEditorResize { Vertical, Horizontal, Both }

@@ -5,27 +5,27 @@ namespace Biflow.Ui.Components;
 
 public class ThemeManager(IJSRuntime js, ThemeService themeService) : ComponentBase, IAsyncDisposable
 {
-    private IJSObjectReference? jsObject;
+    private IJSObjectReference? _jsObject;
 
-    private DotNetObjectReference<ThemeManager>? dotNetObject;
+    private DotNetObjectReference<ThemeManager>? _dotNetObject;
 
     public async Task ToggleThemeAsync(Theme theme)
     {
-        ArgumentNullException.ThrowIfNull(jsObject);
+        ArgumentNullException.ThrowIfNull(_jsObject);
         var themeName = theme switch
         {
             Theme.Light => "light",
             Theme.Dark => "dark",
             _ => throw new ArgumentException("Unrecognized theme value", nameof(theme))
         };
-        _ = await jsObject.InvokeAsync<string>("setTheme", themeName);
+        _ = await _jsObject.InvokeAsync<string>("setTheme", themeName);
         themeService.SetTheme(theme, false);
     }
 
     public async Task ToggleThemeAutoAsync()
     {
-        ArgumentNullException.ThrowIfNull(jsObject);
-        var effectiveTheme = await jsObject.InvokeAsync<string>("setTheme", "auto");
+        ArgumentNullException.ThrowIfNull(_jsObject);
+        var effectiveTheme = await _jsObject.InvokeAsync<string>("setTheme", "auto");
         var theme = effectiveTheme switch
         {
             "light" => Theme.Light,
@@ -37,18 +37,18 @@ public class ThemeManager(IJSRuntime js, ThemeService themeService) : ComponentB
 
     protected override void OnInitialized()
     {
-        dotNetObject = DotNetObjectReference.Create(this);
+        _dotNetObject = DotNetObjectReference.Create(this);
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            ArgumentNullException.ThrowIfNull(dotNetObject);
-            jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ThemeManager.js");
-            await jsObject.InvokeVoidAsync("setPreferredThemeChangedListener", dotNetObject);
-            var preferredTheme = await jsObject.InvokeAsync<string>("getPreferredTheme");
-            var effectiveTheme = await jsObject.InvokeAsync<string>("setTheme", preferredTheme);
+            ArgumentNullException.ThrowIfNull(_dotNetObject);
+            _jsObject = await js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ThemeManager.js");
+            await _jsObject.InvokeVoidAsync("setPreferredThemeChangedListener", _dotNetObject);
+            var preferredTheme = await _jsObject.InvokeAsync<string>("getPreferredTheme");
+            var effectiveTheme = await _jsObject.InvokeAsync<string>("setTheme", preferredTheme);
             var theme = effectiveTheme switch
             {
                 "light" => Theme.Light,
@@ -75,10 +75,10 @@ public class ThemeManager(IJSRuntime js, ThemeService themeService) : ComponentB
     {
         try
         {
-            if (jsObject is not null)
-                await jsObject.DisposeAsync();
+            if (_jsObject is not null)
+                await _jsObject.DisposeAsync();
         }
         catch (JSDisconnectedException) { }
-        dotNetObject?.Dispose();
+        _dotNetObject?.Dispose();
     }
 }

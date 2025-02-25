@@ -5,12 +5,12 @@ namespace Biflow.Core.Test.Deserialize;
 
 public class StepParameterDeserializeTests
 {
-    private readonly StepParameterBase parameter = CreateParameter();
+    private readonly StepParameterBase _parameter = CreateParameter();
 
     [Fact]
     public void ExpressionParameters_NotEmpty()
     {
-        Assert.NotEmpty(parameter.ExpressionParameters);
+        Assert.NotEmpty(_parameter.ExpressionParameters);
     }
 
     private static SqlStepParameter CreateParameter()

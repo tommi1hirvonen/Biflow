@@ -8,10 +8,10 @@
 
 @inject IJSRuntime Js
 
-<div @ref="comboboxElement" @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
+<div @ref="_comboboxElement" @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
     @if (Label is not null)
     {
-        <label for="@($"{id}_input")" class="form-label mb-0">@Label</label>
+        <label for="@($"{_id}_input")" class="form-label mb-0">@Label</label>
     }
 
     <div class="taginput form-control p-1 d-flex flex-wrap border @(IsDisabled ? "disabled" : null)">
@@ -31,13 +31,13 @@
         {
             <div class="d-flex flex-grow-1" style="max-width: 100%;">
                 <input class="d-flex flex-grow-1 border-0 small"
-                       @ref="inputElement"
+                       @ref="_inputElement"
                        type="text"
-                       id="@($"{id}_input")"
+                       id="@($"{_id}_input")"
                        placeholder="@Placeholder"
                        spellcheck="false"
                        autocomplete="off"
-                       value="@inputValue"
+                       value="@_inputValue"
                        @onfocusin="ShowSuggestionsAsync"
                        @oninput="SearchValueChanged"
                        @onkeydown="OnKeyDownAsync"
@@ -45,7 +45,7 @@
                 @onkeypress:preventDefault>
             </div>
 
-            <span class="m-1 @(inputValue.Length > 0 ? null : "d-none")" @onclick="ClearInputValue" style="cursor: pointer;">
+            <span class="m-1 @(_inputValue.Length > 0 ? null : "d-none")" @onclick="ClearInputValue" style="cursor: pointer;">
                 <SvgIcon Icon="LucideIcon.X" />
             </span>
 
@@ -56,8 +56,8 @@
 
     </div>
 
-    <div @ref="dropdownElement"
-         class="dropdown-menu position-absolute overflow-auto shadow-sm @(suggestionsVisible ? "show" : null) @(showUp ? "up" : null)"
+    <div @ref="_dropdownElement"
+         class="dropdown-menu position-absolute overflow-auto shadow-sm @(_suggestionsVisible ? "show" : null) @(_showUp ? "up" : null)"
          style="max-height: 20rem; scrollbar-width: thin;">
         @{
             var filteredItems = FilteredItems;
@@ -74,7 +74,7 @@
             index++;
             var text = TagTextSelector?.Invoke(item) ?? "";
             var color = TagColorSelector?.Invoke(item) ?? TagColor.DarkGray;
-            <div role="button" class="dropdown-item @(index == focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
+            <div role="button" class="dropdown-item @(index == _focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
                 <Badge Text="@text" Color="color" />
             </div>
         }
@@ -114,33 +114,33 @@
         .Where(i =>
         {
             var text = TagTextSelector?.Invoke(i);
-            var containsInputValue = text?.Contains(inputValue, StringComparison.InvariantCultureIgnoreCase) ?? false;
+            var containsInputValue = text?.Contains(_inputValue, StringComparison.InvariantCultureIgnoreCase) ?? false;
             var alreadySelected = SelectedItems.Any(s => TagTextSelector?.Invoke(s) == text);
             return containsInputValue && !alreadySelected;
         }) ?? [];
 
-    private readonly string id = Guid.NewGuid().ToString();
-    private ElementReference inputElement;
-    private ElementReference comboboxElement;
-    private ElementReference dropdownElement;
+    private readonly string _id = Guid.NewGuid().ToString();
+    private ElementReference _inputElement;
+    private ElementReference _comboboxElement;
+    private ElementReference _dropdownElement;
 
-    private string inputValue = "";
-    private int? focusIndex = null;
+    private string _inputValue = "";
+    private int? _focusIndex = null;
 
-    private bool suggestionsVisible;
-    private bool showUp;
+    private bool _suggestionsVisible;
+    private bool _showUp;
 
-    private DotNetObjectReference<GenericTagInput<TTag>>? dotNetObject;
-    private IJSObjectReference? jSObject;
+    private DotNetObjectReference<GenericTagInput<TTag>>? _dotNetObject;
+    private IJSObjectReference? _jSObject;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            dotNetObject = DotNetObjectReference.Create(this);
-            jSObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
-            if (dotNetObject is not null)
-                await jSObject.InvokeVoidAsync("create", comboboxElement, dotNetObject);
+            _dotNetObject = DotNetObjectReference.Create(this);
+            _jSObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
+            if (_dotNetObject is not null)
+                await _jSObject.InvokeVoidAsync("create", _comboboxElement, _dotNetObject);
         }
     }
 
@@ -153,8 +153,8 @@
 
     private void SearchValueChanged(ChangeEventArgs args)
     {
-        inputValue = args.Value?.ToString() ?? "";
-        suggestionsVisible = true;
+        _inputValue = args.Value?.ToString() ?? "";
+        _suggestionsVisible = true;
     }
 
     private async Task RemoveItemAsync(TTag item)
@@ -169,14 +169,14 @@
         {
             return;
         }
-        inputValue = "";
+        _inputValue = "";
         SelectedItems.Add(item);
         await OnSelectedItemsChanged.InvokeAsync();
     }
 
     private async Task ToggleSuggestionsAsync()
     {
-        if (suggestionsVisible)
+        if (_suggestionsVisible)
         {
             HideSuggestions();
         }
@@ -188,22 +188,22 @@
 
     private async Task ShowSuggestionsAsync()
     {
-        suggestionsVisible = true;
-        showUp = await (jSObject?.InvokeAsync<bool>("calculateShowUp", dropdownElement) ?? ValueTask.FromResult(false));
-        await inputElement.FocusAsync();
+        _suggestionsVisible = true;
+        _showUp = await (_jSObject?.InvokeAsync<bool>("calculateShowUp", _dropdownElement) ?? ValueTask.FromResult(false));
+        await _inputElement.FocusAsync();
         await OnSuggestionsShown.InvokeAsync();
     }
 
     private void HideSuggestions()
     {
-        showUp = false;
-        suggestionsVisible = false;
+        _showUp = false;
+        _suggestionsVisible = false;
     }
 
     private async Task ClearInputValue()
     {
-        inputValue = "";
-        await inputElement.FocusAsync();
+        _inputValue = "";
+        await _inputElement.FocusAsync();
     }
 
     private async Task OnKeyDownAsync(KeyboardEventArgs args)
@@ -212,50 +212,50 @@
         switch (args.Key)
         {
             case "Escape":
-                focusIndex = null;
+                _focusIndex = null;
                 HideSuggestions();
                 break;
-            case "ArrowDown" when focusIndex < filteredItems.Length - 1:
-                focusIndex++;
+            case "ArrowDown" when _focusIndex < filteredItems.Length - 1:
+                _focusIndex++;
                 break;
             case "ArrowDown":
-                focusIndex = 0;
+                _focusIndex = 0;
                 break;
-            case "ArrowUp" when focusIndex > 0:
-                focusIndex--;
+            case "ArrowUp" when _focusIndex > 0:
+                _focusIndex--;
                 break;
             case "ArrowUp":
-                focusIndex = filteredItems.Length - 1;
+                _focusIndex = filteredItems.Length - 1;
                 break;
-            case "PageDown" when focusIndex is null:
-                focusIndex = 0;
+            case "PageDown" when _focusIndex is null:
+                _focusIndex = 0;
                 break;
-            case "PageDown" when focusIndex < filteredItems.Length - 10:
-                focusIndex += 10;
+            case "PageDown" when _focusIndex < filteredItems.Length - 10:
+                _focusIndex += 10;
                 break;
             case "PageDown":
-            case "PageUp" when focusIndex is null:
-                focusIndex = filteredItems.Length - 1;
+            case "PageUp" when _focusIndex is null:
+                _focusIndex = filteredItems.Length - 1;
                 break;
-            case "PageUp" when focusIndex > 10:
-                focusIndex -= 10;
+            case "PageUp" when _focusIndex > 10:
+                _focusIndex -= 10;
                 break;
             case "PageUp":
             case "Home":
-                focusIndex = 0;
+                _focusIndex = 0;
                 break;
             case "End":
-                focusIndex = filteredItems.Length - 1;
+                _focusIndex = filteredItems.Length - 1;
                 break;
-            case "Enter" when filteredItems.Any() && focusIndex >= 0 && focusIndex < filteredItems.Length:
-                var item = filteredItems[(int)focusIndex];
-                if (focusIndex == filteredItems.Length - 1)
+            case "Enter" when filteredItems.Any() && _focusIndex >= 0 && _focusIndex < filteredItems.Length:
+                var item = filteredItems[(int)_focusIndex];
+                if (_focusIndex == filteredItems.Length - 1)
                 {
-                    focusIndex--;
+                    _focusIndex--;
                 }
                 await SelectItemAsync(item);
                 break;
-            case "Backspace" when !inputValue.Any():
+            case "Backspace" when !_inputValue.Any():
                 var lastItem = SelectedItems.LastOrDefault();
                 if (lastItem is not null)
                 {
@@ -263,7 +263,7 @@
                 }
                 break;
             case "Backspace":
-                inputValue = inputValue[..^1];
+                _inputValue = _inputValue[..^1];
                 break;
             case " ":
                 AddNewItem();
@@ -278,13 +278,13 @@
             return;
         }
         var key = args.Key;
-        inputValue += key;
+        _inputValue += key;
         await ShowSuggestionsAsync();
     }
 
     private async void AddNewItem()
     {
-        if (!inputValue.Any() || !AllowCustomValues || NewItemFromText is null || TagTextSelector is null)
+        if (!_inputValue.Any() || !AllowCustomValues || NewItemFromText is null || TagTextSelector is null)
         {
             return;
         }
@@ -292,27 +292,27 @@
         var existingTags =
             from item in Items?.Concat(SelectedItems) ?? []
             select TagTextSelector.Invoke(item);
-        if (existingTags.Any(text => text == inputValue))
+        if (existingTags.Any(text => text == _inputValue))
         {
             return;
         }
 
-        var newItem = NewItemFromText(inputValue);
+        var newItem = NewItemFromText(_inputValue);
         await SelectItemAsync(newItem);
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (jSObject is not null)
+        if (_jSObject is not null)
         {
             try
             {
-                await jSObject.InvokeVoidAsync("dispose", comboboxElement);
-                await jSObject.DisposeAsync();
+                await _jSObject.InvokeVoidAsync("dispose", _comboboxElement);
+                await _jSObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
         }
-        dotNetObject?.Dispose();
-        dotNetObject = null;
+        _dotNetObject?.Dispose();
+        _dotNetObject = null;
     }
 }

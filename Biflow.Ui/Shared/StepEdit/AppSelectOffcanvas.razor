@@ -76,8 +76,8 @@
                                 .Where(a => string.IsNullOrEmpty(_appSearchTerm) || a.Name.ContainsIgnoreCase(_appSearchTerm))
                                 .OrderBy(a => a.Name)
                                 .ToArray();
-                            var expanded = !string.IsNullOrEmpty(_appSearchTerm) || spaceExpandState.GetValueOrDefault(space);
-                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => spaceExpandState[space] = !expanded">
+                            var expanded = !string.IsNullOrEmpty(_appSearchTerm) || _spaceExpandState.GetValueOrDefault(space);
+                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _spaceExpandState[space] = !expanded">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
                                         @if (expanded)
@@ -137,7 +137,7 @@
 
     [Parameter] public EventCallback<QlikApp> OnAppSelected { get; set; }
 
-    private readonly Dictionary<QlikSpace, bool> spaceExpandState = [];
+    private readonly Dictionary<QlikSpace, bool> _spaceExpandState = [];
 
     private Guid _clientId;
     private HxOffcanvas? _offcanvas;
@@ -177,7 +177,7 @@
     {
         _spaces = null;
         _selectedApp = null;
-        spaceExpandState.Clear();
+        _spaceExpandState.Clear();
 
         try
         {
@@ -194,7 +194,7 @@
 
     private void OnClosed()
     {
-        spaceExpandState.Clear();
+        _spaceExpandState.Clear();
         (_selectedApp, _spaces) = (null, null);
     }
     

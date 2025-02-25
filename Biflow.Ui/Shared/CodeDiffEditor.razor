@@ -15,11 +15,11 @@
 }
 
 <style>
-    @($"#{editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
+    @($"#{_editorId} {{ height: {InitialHeight}; resize: {resize}; overflow: hidden; }}")
 </style>
 
 <StandaloneDiffEditor @ref="_editor"
-                      Id="@editorId"
+                      Id="@_editorId"
                       ConstructionOptions="GetEditorOptions"
                       CssClass="border" />
 
@@ -33,7 +33,7 @@
 
     [Parameter] public int? FontSize { get; set; }
     
-    private readonly string editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
+    private readonly string _editorId = $"_{Guid.NewGuid().ToString()}"; // prefix with underscore as html id cannot start with a number
     private StandaloneDiffEditor? _editor;
     
     public enum CodeEditorResize { Vertical, Horizontal, Both }
@@ -78,12 +78,12 @@
 
     public async Task GotoPreviousDiffAsync()
     {
-        await Js.InvokeVoidAsync("diffNavigationPrevious", editorId);
+        await Js.InvokeVoidAsync("diffNavigationPrevious", _editorId);
     }
 
     public async Task GotoNextDiffAsync()
     {
-        await Js.InvokeVoidAsync("diffNavigationNext", editorId);
+        await Js.InvokeVoidAsync("diffNavigationNext", _editorId);
     }
 
     private void OnThemeChanged(Theme theme, bool isAuto)

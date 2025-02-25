@@ -9,22 +9,22 @@
 @inject ContextMenuService ContextMenuService
 
 <div class="dropdown position-absolute">
-    <ul @ref="dropdown" class="dropdown-menu context-menu">
-        @menuContent
+    <ul @ref="_dropdown" class="dropdown-menu context-menu">
+        @_menuContent
     </ul>
 </div>
 
 @code {
-    private IJSObjectReference? jsObject;
-    private ElementReference dropdown;
-    private DotNetObjectReference<ContextMenu>? dotNetObject;
-    private RenderFragment? menuContent;
-    private MouseEventArgs? eventArgs;
-    private TaskCompletionSource tcs = new();
+    private IJSObjectReference? _jsObject;
+    private ElementReference _dropdown;
+    private DotNetObjectReference<ContextMenu>? _dotNetObject;
+    private RenderFragment? _menuContent;
+    private MouseEventArgs? _eventArgs;
+    private TaskCompletionSource _tcs = new();
 
     protected override void OnInitialized()
     {
-        dotNetObject = DotNetObjectReference.Create(this);
+        _dotNetObject = DotNetObjectReference.Create(this);
         ContextMenuService.OnShowContextMenu += HandleContextMenu;
     }
 
@@ -32,14 +32,14 @@
     {
         if (firstRender)
         {
-            jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
-            await jsObject.InvokeVoidAsync("attachWindowListeners", dropdown, dotNetObject);
+            _jsObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ContextMenu.js");
+            await _jsObject.InvokeVoidAsync("attachWindowListeners", _dropdown, _dotNetObject);
         }
-        if (eventArgs is not null && jsObject is not null && dotNetObject is not null)
+        if (_eventArgs is not null && _jsObject is not null && _dotNetObject is not null)
         {
-            var e = eventArgs;
-            eventArgs = null; // Reset event arguments before showing menu (could take a while).
-            await jsObject.InvokeVoidAsync("showContextMenu", dropdown, e.ClientX, e.ClientY, dotNetObject);
+            var e = _eventArgs;
+            _eventArgs = null; // Reset event arguments before showing menu (could take a while).
+            await _jsObject.InvokeVoidAsync("showContextMenu", _dropdown, e.ClientX, e.ClientY, _dotNetObject);
         }
     }
 
@@ -51,41 +51,41 @@
         }
         await InvokeAsync(() =>
         {
-            menuContent = renderFragment;
-            eventArgs = e; // Store event arguments...
+            _menuContent = renderFragment;
+            _eventArgs = e; // Store event arguments...
             StateHasChanged(); // ...and request rerender.
             return Task.CompletedTask;
         });
-        tcs.SetResult();
-        tcs = new();
-        await tcs.Task;
+        _tcs.SetResult();
+        _tcs = new();
+        await _tcs.Task;
     }
 
     [JSInvokable]
     public void OnMenuHidden()
     {
-        tcs.SetResult();
-        tcs = new();
-        if (eventArgs is not null)
+        _tcs.SetResult();
+        _tcs = new();
+        if (_eventArgs is not null)
         {
             // The menu is waiting for render while it is being requested to be hidden => do nothing.
             return;
         }
-        menuContent = null;
+        _menuContent = null;
         InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
     {
         ContextMenuService.OnShowContextMenu -= HandleContextMenu;
-        if (jsObject is not null)
+        if (_jsObject is not null)
         {
             try
             {
-                await jsObject.InvokeVoidAsync("detachWindowListeners");
-                await jsObject.DisposeAsync();
+                await _jsObject.InvokeVoidAsync("detachWindowListeners");
+                await _jsObject.DisposeAsync();
             } catch (JSDisconnectedException) {}
         }
-        dotNetObject?.Dispose();
+        _dotNetObject?.Dispose();
     }
 }

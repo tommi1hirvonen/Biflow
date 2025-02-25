@@ -40,7 +40,7 @@ else if (_builder is null)
             <div class="col-auto mt-3">
                 <HxButtonGroup>
                     <FilterDropdown TItem="StepType"
-                                    FilterSet="stepTypeFilter"
+                                    FilterSet="_stepTypeFilter"
                                     Items="_builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
@@ -68,7 +68,7 @@ else if (_builder is null)
                             </ItemTemplate>
                         </FilterDropdown>
                     <FilterDropdown TItem="StepExecutionStatus"
-                                    FilterSet="statusFilter"
+                                    FilterSet="_statusFilter"
                                     Items="Statuses"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
@@ -80,7 +80,7 @@ else if (_builder is null)
                         </ItemTemplate>
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                                @onclick="() => { _tagFilter.Clear(); stepTypeFilter.Clear(); statusFilter.Clear(); _stepNameFilter = string.Empty; }">
+                                @onclick="() => { _tagFilter.Clear(); _stepTypeFilter.Clear(); _statusFilter.Clear(); _stepNameFilter = string.Empty; }">
                         <SvgIcon Icon="LucideIcon.X" />
                         Clear
                     </HxButton>
@@ -252,8 +252,8 @@ else if (_builder is null)
 
     [Parameter] public Execution? Execution { get; set; }
 
-    private readonly HashSet<StepType> stepTypeFilter = [];
-    private readonly HashSet<StepExecutionStatus> statusFilter = [];
+    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<StepExecutionStatus> _statusFilter = [];
 
     private ExecutionBuilder? _builder;
     private string _stepNameFilter = string.Empty;
@@ -282,13 +282,13 @@ else if (_builder is null)
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => _builder?.Steps
         .Where(step => _stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => step.StepName?.ContainsIgnoreCase(_stepNameFilter) == true) // Step name filter
-        .Where(step => !stepTypeFilter.Any() || stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+        .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.StepType)) // Filter based on step type
         .Where(step => _tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
         .Where(step =>
         {
-            if (!statusFilter.Any()) return true;
+            if (!_statusFilter.Any()) return true;
             var status = GetStepExecutionStatus(step.StepId);
-            return status is not null && statusFilter.Contains((StepExecutionStatus)status);
+            return status is not null && _statusFilter.Contains((StepExecutionStatus)status);
         }) // Status filter
         ?? [];
 

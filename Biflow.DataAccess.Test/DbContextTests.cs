@@ -8,12 +8,12 @@ namespace Biflow.DataAccess.Test;
 [Collection(nameof(DatabaseCollection))]
 public class DbContextTests(DatabaseFixture fixture)
 {
-    private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     [Fact]
     public async Task TestLoadingSteps()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var steps = await context.Steps.Include("StepParameters").ToListAsync();
         
         var parametersExist = steps.Any(s => s is IHasStepParameters p && p.StepParameters.Any());
@@ -26,7 +26,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestLoadingStepExecutions()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var stepExecutions = await context.StepExecutions.Include("StepExecutionParameters").ToListAsync();
         
         var parametersExist = stepExecutions.Any(s => s is IHasStepExecutionParameters p && p.StepExecutionParameters.Any());
@@ -39,7 +39,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestLoadingExecutions()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var executions = await context.Executions
             .Include(e => e.StepExecutions)
             .Include($"{nameof(Execution.StepExecutions)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}").ToListAsync();
@@ -64,7 +64,7 @@ public class DbContextTests(DatabaseFixture fixture)
     public async Task TestStepExecutionParameterExpression()
     {
         SqlStepExecution execution;
-        await using (var ctx1 = await dbContextFactory.CreateDbContextAsync())
+        await using (var ctx1 = await _dbContextFactory.CreateDbContextAsync())
         {
             execution = (SqlStepExecution)await ctx1.StepExecutions
                 .Include(e => e.Execution)
@@ -85,7 +85,7 @@ public class DbContextTests(DatabaseFixture fixture)
     public async Task TestStepExecutionInheritedParameterExpression()
     {
         SqlStepExecution execution;
-        await using (var ctx1 = await dbContextFactory.CreateDbContextAsync())
+        await using (var ctx1 = await _dbContextFactory.CreateDbContextAsync())
         {
             execution = (SqlStepExecution)await ctx1.StepExecutions
                 .Include(e => e.Execution)
@@ -101,7 +101,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task TestLoadingStepExecutionDependentOnSteps()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions
             .AsNoTrackingWithIdentityResolution()
             .Include(e => e.StepExecutions)
@@ -114,7 +114,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task GetExecutionWithEntireGraphNotInclude()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var executionId = await context.Executions
             .Where(e => e.JobName == "Test job 1")
             .Select(e => e.ExecutionId)
@@ -128,7 +128,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task GetExecutionWithEntireGraphInclude1()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var executionId = await context.Executions
             .Where(e => e.JobName == "Test job 1")
             .Select(e => e.ExecutionId)
@@ -142,7 +142,7 @@ public class DbContextTests(DatabaseFixture fixture)
     [Fact]
     public async Task GetExecutionWithEntireGraphInclude2()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var executionId = await context.Executions
             .Where(e => e.JobName == "Test job 2")
             .Select(e => e.ExecutionId)

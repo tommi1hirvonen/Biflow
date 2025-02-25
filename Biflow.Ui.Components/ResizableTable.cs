@@ -16,13 +16,13 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
 
     private readonly IJSRuntime _js = js;
 
-    private DotNetObjectReference<ResizableTable>? dotNetObject;
-    private IJSObjectReference? jsObject;
-    private ElementReference tableElement;
+    private DotNetObjectReference<ResizableTable>? _dotNetObject;
+    private IJSObjectReference? _jsObject;
+    private ElementReference _tableElement;
 
     protected override void OnInitialized()
     {
-        dotNetObject = DotNetObjectReference.Create(this);
+        _dotNetObject = DotNetObjectReference.Create(this);
     }
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
@@ -31,7 +31,7 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
         var cssClass = $"table table-resizable {CssClass}";
         builder.AddAttribute(1, "class", cssClass);
         builder.AddMultipleAttributes(2, InputAttributes);
-        builder.AddElementReferenceCapture(3, element => tableElement = element);
+        builder.AddElementReferenceCapture(3, element => _tableElement = element);
         if (ChildContent is not null)
         {
             builder.AddContent(4, ChildContent);
@@ -43,11 +43,11 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            jsObject = await _js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
+            _jsObject = await _js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
         }
-        if (jsObject is not null && dotNetObject is not null)
+        if (_jsObject is not null && _dotNetObject is not null)
         {
-            await jsObject.InvokeVoidAsync("createResizableTable", tableElement, dotNetObject);
+            await _jsObject.InvokeVoidAsync("createResizableTable", _tableElement, _dotNetObject);
         }
     }
 
@@ -60,14 +60,14 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
-        if (jsObject is not null)
+        if (_jsObject is not null)
         {
             try
             {
-                await jsObject.DisposeAsync();
+                await _jsObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
         }
-        dotNetObject?.Dispose();
+        _dotNetObject?.Dispose();
     }
 }

@@ -8,7 +8,7 @@ namespace Biflow.DataAccess.Test;
 
 public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
 {
-    private readonly IDbContextFactory<AppDbContext> dbContextFactory = fixture.DbContextFactory;
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = fixture.DbContextFactory;
 
     public SqlConnectionBase[] SqlConnections { get; private set; } = [];
     public AnalysisServicesConnection[] AnalysisServicesConnections { get; private set; } = [];
@@ -35,7 +35,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
 
         SqlConnections = await context.SqlConnections
             .AsNoTracking()
