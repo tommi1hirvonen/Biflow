@@ -2,14 +2,14 @@ namespace Biflow.Ui.Core;
 
 public record UpdateJobParametersCommand(
     Guid JobId,
-    UpdateJobParameter[] Parameters) : IRequest;
+    UpdateJobParameter[] Parameters) : IRequest<JobParameter[]>;
 
 [UsedImplicitly]
 internal class UpdateJobParametersCommandHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
-    JobValidator jobValidator) : IRequestHandler<UpdateJobParametersCommand>
+    JobValidator jobValidator) : IRequestHandler<UpdateJobParametersCommand, JobParameter[]>
 {
-    public async Task Handle(UpdateJobParametersCommand request, CancellationToken cancellationToken)
+    public async Task<JobParameter[]> Handle(UpdateJobParametersCommand request, CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
@@ -59,5 +59,7 @@ internal class UpdateJobParametersCommandHandler(
         
         await jobValidator.EnsureValidatedAsync(job, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        return job.JobParameters.ToArray();
     }
 }

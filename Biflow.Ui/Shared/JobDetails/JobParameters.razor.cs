@@ -77,7 +77,20 @@ public partial class JobParameters(
                     x.Expression.Expression))
                 .ToArray();
             var command = new UpdateJobParametersCommand(_editJob.JobId, parameters);
-            await _mediator.SendAsync(command);
+            var response = await _mediator.SendAsync(command);
+            // Synchronize parameters so that newly added parameters are managed using their proper parameter ids
+            // coming from the response. 
+            foreach (var parameter in _editJob.JobParameters
+                         .Where(p1 => response.All(p2 => p1.ParameterId != p2.ParameterId)).ToArray())
+            {
+                _editJob.JobParameters.Remove(parameter);
+            }
+            foreach (var parameter in response
+                         .Where(p1 => _editJob.JobParameters.All(p2 => p1.ParameterId != p2.ParameterId)))
+            {
+                _editJob.JobParameters.Add(parameter);
+            }
+            _editJob.JobParameters.SortBy(p => p.ParameterName);
             _hasChanges = false;
             _toaster.AddSuccess("Job parameters updated successfully");
         }
