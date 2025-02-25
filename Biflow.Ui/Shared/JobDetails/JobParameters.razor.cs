@@ -68,7 +68,16 @@ public partial class JobParameters(
 
         try
         {
-            await _mediator.SendAsync(new UpdateJobParametersCommand(_editJob));
+            var parameters = _editJob.JobParameters
+                .Select(x => new UpdateJobParameter(
+                    x.ParameterId == Guid.Empty ? null : x.ParameterId,
+                    x.ParameterName,
+                    x.ParameterValue,
+                    x.UseExpression,
+                    x.Expression.Expression))
+                .ToArray();
+            var command = new UpdateJobParametersCommand(_editJob.JobId, parameters);
+            await _mediator.SendAsync(command);
             _hasChanges = false;
             _toaster.AddSuccess("Job parameters updated successfully");
         }
