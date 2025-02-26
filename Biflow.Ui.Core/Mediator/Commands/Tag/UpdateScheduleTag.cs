@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateScheduleTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder)
+public record UpdateScheduleTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder)
     : IRequest<ScheduleTag>;
 
 [UsedImplicitly]

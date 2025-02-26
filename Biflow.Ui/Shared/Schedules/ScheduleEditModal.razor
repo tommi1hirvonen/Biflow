@@ -158,8 +158,17 @@
         {
             try
             {
-                await Mediator.SendAsync(new CreateScheduleCommand(_schedule));
-                await OnSubmit.InvokeAsync(_schedule);
+                await HandleTagsAsync(_schedule);
+                var command = new CreateScheduleCommand(
+                    _schedule.JobId,
+                    _schedule.ScheduleName,
+                    _schedule.CronExpression,
+                    _schedule.IsEnabled,
+                    _schedule.DisallowConcurrentExecution,
+                    _schedule.Tags.Select(t => t.TagId).ToArray(),
+                    _schedule.TagFilter.Select(t => t.TagId).ToArray());
+                var schedule = await Mediator.SendAsync(command);
+                await OnSubmit.InvokeAsync(schedule);
                 await _offcanvas.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
@@ -172,8 +181,17 @@
         {
             try
             {
-                await Mediator.SendAsync(new UpdateScheduleCommand(_schedule));
-                await OnSubmit.InvokeAsync(_schedule);
+                await HandleTagsAsync(_schedule);
+                var command = new UpdateScheduleCommand(
+                    _schedule.ScheduleId,
+                    _schedule.ScheduleName,
+                    _schedule.CronExpression,
+                    _schedule.IsEnabled,
+                    _schedule.DisallowConcurrentExecution,
+                    _schedule.Tags.Select(t => t.TagId).ToArray(),
+                    _schedule.TagFilter.Select(t => t.TagId).ToArray());
+                var schedule = await Mediator.SendAsync(command);
+                await OnSubmit.InvokeAsync(schedule);
                 await _offcanvas.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
@@ -204,6 +222,18 @@
         }
 
         await _offcanvas.LetAsync(x => x.ShowAsync());
+    }
+    
+    private async Task HandleTagsAsync(Schedule schedule)
+    {
+        var newTags = schedule.Tags.Where(t => t.TagId == Guid.Empty).ToArray();
+        foreach (var tag in newTags)
+        {
+            var command = new CreateScheduleTagCommand(tag.TagName, tag.Color, tag.SortOrder);
+            var createdTag = await Mediator.SendAsync(command);
+            schedule.Tags.Remove(tag);
+            schedule.Tags.Add(createdTag);
+        }
     }
 
     private Task<AutosuggestDataProviderResult<Job>> GetJobSuggestionsAsync(AutosuggestDataProviderRequest request)

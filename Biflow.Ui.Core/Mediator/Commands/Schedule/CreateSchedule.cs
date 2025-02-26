@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record CreateScheduleCommand(
+public record CreateScheduleCommand(
     Guid JobId,
     string ScheduleName,
     string CronExpression,

@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateStepTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<StepTag>;
+public record UpdateStepTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<StepTag>;
 
 [UsedImplicitly]
 internal class UpdateStepTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)

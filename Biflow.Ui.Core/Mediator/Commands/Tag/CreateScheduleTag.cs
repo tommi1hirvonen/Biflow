@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record CreateScheduleTagCommand(string TagName, TagColor Color, int SortOrder) : IRequest<ScheduleTag>;
+public record CreateScheduleTagCommand(string TagName, TagColor Color, int SortOrder) : IRequest<ScheduleTag>;
 
 [UsedImplicitly]
 internal class CreateScheduleTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)

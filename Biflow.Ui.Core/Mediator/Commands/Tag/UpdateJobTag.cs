@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateJobTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<JobTag>;
+public record UpdateJobTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<JobTag>;
 
 [UsedImplicitly]
 internal class UpdateJobTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
