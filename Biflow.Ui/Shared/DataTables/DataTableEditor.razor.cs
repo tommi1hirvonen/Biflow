@@ -15,8 +15,9 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
     private readonly IJSRuntime _js = js;
     private readonly List<(string Column, bool Descending)> _orderBy = [];
     private readonly HashSet<string> _columnSelections = [];
-    private readonly Dictionary<Column, HashSet<object?>> _quickFilters = [];
+    private readonly Dictionary<string, HashSet<object?>> _quickFilters = [];
     private readonly Dictionary<string, string> _columnWidths = [];
+    private readonly Dictionary<string, Column> _columns = [];
 
     private TableData? _tableData;
     private FilterSet? _filterSet;
@@ -53,7 +54,11 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
             return null;
         }
         var rows = _tableData.Rows
-            .Where(r =>  _quickFilters.All(f => f.Value.Count == 0 || f.Value.Contains(LookupValueOrValue(r, f.Key))))
+            .Where(r => 
+                _quickFilters
+                    .All(f => f.Value.Count == 0 ||
+                              _columns.TryGetValue(f.Key, out var column) && 
+                              f.Value.Contains(LookupValueOrValue(r, column))))
             .OrderBy(r => !r.StickToTop);
         foreach (var orderBy in _orderBy)
         {
@@ -122,6 +127,11 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         {
             _tableData = await Table.LoadDataAsync(TopRows, _filterSet);
             _filterSet ??= _tableData.EmptyFilterSet;
+            _columns.Clear();
+            foreach (var column in _tableData.Columns)
+            {
+                _columns[column.Name] = column;
+            }
         }
         catch (Exception ex)
         {
