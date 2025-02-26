@@ -55,6 +55,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         }
         var rows = _tableData.Rows
             .Where(r => 
+                r.IsNewRow || // show new rows regardless of quick filters
                 _quickFilters
                     .All(f => f.Value.Count == 0 ||
                               _columns.TryGetValue(f.Key, out var column) && 
