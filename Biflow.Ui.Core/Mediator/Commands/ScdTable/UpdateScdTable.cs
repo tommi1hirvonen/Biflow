@@ -1,9 +1,9 @@
 using Biflow.Core.Entities.Scd;
 using Biflow.Ui.Core.Validation;
 
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record UpdateScdTableCommand(
+public record UpdateScdTableCommand(
     Guid ScdTableId,
     Guid ConnectionId,
     string ScdTableName,

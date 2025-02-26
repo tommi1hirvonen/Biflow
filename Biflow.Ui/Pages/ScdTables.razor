@@ -351,14 +351,48 @@
     {
         if (table.ScdTableId == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateScdTableCommand(table));
+            var command = new CreateScdTableCommand(
+                ConnectionId: table.ConnectionId,
+                ScdTableName: table.ScdTableName,
+                SourceTableSchema: table.SourceTableSchema,
+                SourceTableName: table.SourceTableName,
+                TargetTableSchema: table.TargetTableSchema,
+                TargetTableName: table.TargetTableName,
+                StagingTableSchema: table.StagingTableSchema,
+                StagingTableName: table.StagingTableName,
+                PreLoadScript: table.PreLoadScript,
+                PostLoadScript: table.PostLoadScript,
+                FullLoad: table.FullLoad,
+                ApplyIndexesOnCreate: table.ApplyIndexesOnCreate,
+                SelectDistinct: table.SelectDistinct,
+                NaturalKeyColumns: table.NaturalKeyColumns.ToArray(),
+                SchemaDriftConfiguration: table.SchemaDriftConfiguration);
+            var response = await Mediator.SendAsync(command);
+            _tables?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateScdTableCommand(table));
+            var command = new UpdateScdTableCommand(
+                ScdTableId: table.ScdTableId,
+                ConnectionId: table.ConnectionId,
+                ScdTableName: table.ScdTableName,
+                SourceTableSchema: table.SourceTableSchema,
+                SourceTableName: table.SourceTableName,
+                TargetTableSchema: table.TargetTableSchema,
+                TargetTableName: table.TargetTableName,
+                StagingTableSchema: table.StagingTableSchema,
+                StagingTableName: table.StagingTableName,
+                PreLoadScript: table.PreLoadScript,
+                PostLoadScript: table.PostLoadScript,
+                FullLoad: table.FullLoad,
+                ApplyIndexesOnCreate: table.ApplyIndexesOnCreate,
+                SelectDistinct: table.SelectDistinct,
+                NaturalKeyColumns: table.NaturalKeyColumns.ToArray(),
+                SchemaDriftConfiguration: table.SchemaDriftConfiguration);
+            _ = await Mediator.SendAsync(command);
             _tables?.RemoveAll(t => t.ScdTableId == table.ScdTableId);
+            _tables?.Add(table);
         }
-        _tables?.Add(table);
         UpdateNonDistinctTargetTables();
         StateHasChanged();
     }
