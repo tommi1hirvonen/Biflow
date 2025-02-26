@@ -51,6 +51,7 @@
     {
         try
         {
+            await HandleTagsAsync(_job);
             IRequest<Job> command = _job.JobId == Guid.Empty
                 ? new CreateJobCommand(JobName: _job.JobName,
                     JobDescription: _job.JobDescription,
@@ -105,6 +106,18 @@
         catch (Exception ex)
         {
             Toaster.AddError("Error loading job", ex.Message);
+        }
+    }
+
+    private async Task HandleTagsAsync(Job job)
+    {
+        var newTags = job.Tags.Where(t => t.TagId == Guid.Empty).ToArray();
+        foreach (var tag in newTags)
+        {
+            var command = new CreateJobTagCommand(tag.TagName, tag.Color, tag.SortOrder);
+            var createdTag = await Mediator.SendAsync(command);
+            job.Tags.Remove(tag);
+            job.Tags.Add(createdTag);
         }
     }
 }

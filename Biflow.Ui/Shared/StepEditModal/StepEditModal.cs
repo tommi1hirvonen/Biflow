@@ -106,6 +106,7 @@ public abstract class StepEditModal<TStep>(
                 return;
             }
 
+            await HandleTagsAsync(Step);
             await AddNewDataObjectsAsync(Step.DataObjects);
 
             var step = Step.StepId == Guid.Empty
@@ -127,6 +128,18 @@ public abstract class StepEditModal<TStep>(
         finally
         {
             Saving = false;
+        }
+    }
+
+    private async Task HandleTagsAsync(TStep step)
+    {
+        var newTags = step.Tags.Where(t => t.TagId == Guid.Empty).ToArray();
+        foreach (var tag in newTags)
+        {
+            var command = new CreateStepTagCommand(tag.TagName, tag.Color, tag.SortOrder);
+            var createdTag = await Mediator.SendAsync(command);
+            step.Tags.Remove(tag);
+            step.Tags.Add(createdTag);
         }
     }
 

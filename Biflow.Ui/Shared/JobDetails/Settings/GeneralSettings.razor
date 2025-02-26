@@ -93,6 +93,7 @@
         try
         {
             ArgumentNullException.ThrowIfNull(_editJob);
+            await HandleTagsAsync(_editJob);
             var command = new UpdateJobCommand(
                 JobId: _editJob.JobId,
                 JobName: _editJob.JobName,
@@ -113,6 +114,18 @@
         catch (Exception ex)
         {
             Toaster.AddError("Error updating job", ex.Message);
+        }
+    }
+    
+    private async Task HandleTagsAsync(Job job)
+    {
+        var newTags = job.Tags.Where(t => t.TagId == Guid.Empty).ToArray();
+        foreach (var tag in newTags)
+        {
+            var command = new CreateJobTagCommand(tag.TagName, tag.Color, tag.SortOrder);
+            var createdTag = await Mediator.SendAsync(command);
+            job.Tags.Remove(tag);
+            job.Tags.Add(createdTag);
         }
     }
 }

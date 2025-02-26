@@ -1,6 +1,6 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-internal record CreateJobTagCommand(string TagName, TagColor Color, int SortOrder) : IRequest<JobTag>;
+public record CreateJobTagCommand(string TagName, TagColor Color, int SortOrder) : IRequest<JobTag>;
 
 [UsedImplicitly]
 internal class CreateJobTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
