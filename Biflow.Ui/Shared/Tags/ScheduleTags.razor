@@ -234,7 +234,12 @@
             ArgumentNullException.ThrowIfNull(_editTag);
             _editTag.TagName = _template.TagName;
             _editTag.SortOrder = _template.SortOrder;
-            await Mediator.SendAsync(new UpdateTagCommand(_editTag));
+            var command = new UpdateScheduleTagCommand(
+                _editTag.TagId,
+                _editTag.TagName,
+                _editTag.Color, 
+                _editTag.SortOrder);
+            _ = await Mediator.SendAsync(command);
             _editTag = null;
             _template = new("");
         }
@@ -267,7 +272,12 @@
     private async Task SetTagColorAsync(Tag tag, TagColor color)
     {
         tag.Color = color;
-        await Mediator.SendAsync(new UpdateTagCommand(tag));
+        var command = new UpdateScheduleTagCommand(
+            tag.TagId,
+            tag.TagName,
+            tag.Color, 
+            tag.SortOrder);
+        _ = await Mediator.SendAsync(command);
     }
 
     private async Task ShowEditModalAsync(ScheduleTag tag)
