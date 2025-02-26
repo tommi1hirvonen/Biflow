@@ -199,7 +199,7 @@
                                     var id = Convert.ToHexString(hash);
                                     var width = _columnWidths.GetValueOrDefault(id) is { } s ? $"width: {s};" : null;
                                     var orderBy = _orderBy.FirstOrDefault(o => o.Column == column.Name);
-                                    var filterSet = _quickFilters.GetOrCreate(column);
+                                    var filterSet = _quickFilters.GetOrCreate(column.Name);
                                     <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width">
                                         <div class="row g-0">
                                             <div class="col d-flex">
