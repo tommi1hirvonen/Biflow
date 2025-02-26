@@ -190,7 +190,14 @@
         try
         {
             key.IsRevoked = true;
-            await Mediator.SendAsync(new UpdateApiKeyCommand(key));
+            var command = new UpdateApiKeyCommand(
+                key.Id,
+                key.Name,
+                key.ValidFrom,
+                key.ValidTo,
+                key.IsRevoked,
+                key.Scopes.ToArray());
+            _ = await Mediator.SendAsync(command);
         }
         catch (Exception ex)
         {
@@ -202,14 +209,28 @@
     {
         if (key.Id == Guid.Empty)
         {
-            await Mediator.SendAsync(new CreateApiKeyCommand(key));
+            var command = new CreateApiKeyCommand(
+                key.Name,
+                key.Value,
+                key.ValidFrom,
+                key.ValidTo,
+                key.Scopes.ToArray());
+            var response = await Mediator.SendAsync(command);
+            _keys?.Add(response);
         }
         else
         {
-            await Mediator.SendAsync(new UpdateApiKeyCommand(key));
+            var command = new UpdateApiKeyCommand(
+                key.Id,
+                key.Name,
+                key.ValidFrom,
+                key.ValidTo,
+                key.IsRevoked,
+                key.Scopes.ToArray());
+            var response = await Mediator.SendAsync(command);
             _keys?.RemoveAll(k => k.Id == key.Id);
+            _keys?.Add(response);
         }
-        _keys?.Add(key);
         StateHasChanged();
     }
 

@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Biflow.Core.Entities;
 
-public class ApiKey : IAuditable
+public class ApiKey(string? value = null) : IAuditable
 {
     public Guid Id { get; init; }
 
@@ -12,7 +12,7 @@ public class ApiKey : IAuditable
     [MaxLength(250)]
     public string Name { get; set; } = "";
 
-    public string Value { get; private set; } = GenerateApiKey();
+    public string Value { get; private set; } = value ?? GenerateApiKey();
 
     public DateTimeOffset ValidFrom { get; set; }
 
