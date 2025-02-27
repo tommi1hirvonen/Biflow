@@ -1,7 +1,8 @@
-﻿namespace Biflow.Ui;
+﻿namespace Biflow.Ui.Core;
 
 public record UpdateBlobStorageClientCommand(BlobStorageClient Client) : IRequest;
 
+[UsedImplicitly]
 internal class UpdateBlobStorageClientCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateBlobStorageClientCommand>
 {
