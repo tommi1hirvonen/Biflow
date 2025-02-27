@@ -10,7 +10,7 @@ public class NotFoundException<T> : NotFoundException
     {
     }
 
-    public NotFoundException(params (string Field, Guid Value)[] key)
+    public NotFoundException(params (string Field, object Value)[] key)
         : base($"Object of type {typeof(T).Name} with key {{ " +
                string.Join(", ", key.Select(x => $"{x.Field}={x.Value}")) +
                " } was not found.")
