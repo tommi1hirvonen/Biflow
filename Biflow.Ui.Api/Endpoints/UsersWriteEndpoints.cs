@@ -19,10 +19,10 @@ public abstract class UsersWriteEndpoints : IEndpoints
             {
                 var role = dto.MainRole switch
                 {
-                    Models.UserRole.Admin => Mediator.Commands.UserRole.Admin,
-                    Models.UserRole.Editor => Mediator.Commands.UserRole.Editor,
-                    Models.UserRole.Operator => Mediator.Commands.UserRole.Operator,
-                    Models.UserRole.Viewer => Mediator.Commands.UserRole.Viewer,
+                    Models.UserRole.Admin => Core.UserRole.Admin,
+                    Models.UserRole.Editor => Core.UserRole.Editor,
+                    Models.UserRole.Operator => Core.UserRole.Operator,
+                    Models.UserRole.Viewer => Core.UserRole.Viewer,
                     _ => throw new ArgumentOutOfRangeException($"Unrecognized user role {dto.MainRole}")
                 };
                 var command = new CreateUserCommand(
@@ -52,10 +52,10 @@ public abstract class UsersWriteEndpoints : IEndpoints
             {
                 var role = dto.MainRole switch
                 {
-                    Models.UserRole.Admin => Mediator.Commands.UserRole.Admin,
-                    Models.UserRole.Editor => Mediator.Commands.UserRole.Editor,
-                    Models.UserRole.Operator => Mediator.Commands.UserRole.Operator,
-                    Models.UserRole.Viewer => Mediator.Commands.UserRole.Viewer,
+                    Models.UserRole.Admin => Core.UserRole.Admin,
+                    Models.UserRole.Editor => Core.UserRole.Editor,
+                    Models.UserRole.Operator => Core.UserRole.Operator,
+                    Models.UserRole.Viewer => Core.UserRole.Viewer,
                     _ => throw new ArgumentOutOfRangeException($"Unrecognized user role {dto.MainRole}")
                 };
                 var command = new UpdateUserCommand(

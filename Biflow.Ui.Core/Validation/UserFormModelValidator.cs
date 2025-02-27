@@ -6,7 +6,7 @@ public class UserFormModelValidator : AbstractValidator<UserFormModel>
 {
     public UserFormModelValidator(IEnumerable<string> reservedUsernames)
     {
-        RuleFor(m => m.User.Username)
+        RuleFor(m => m.Username)
             .Must(n => !reservedUsernames.Contains(n))
             .WithMessage("Username already in use");
     }

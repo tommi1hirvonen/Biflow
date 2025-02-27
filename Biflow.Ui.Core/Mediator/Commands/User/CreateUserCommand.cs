@@ -1,7 +1,8 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+using BC = BCrypt.Net.BCrypt;
 
-public record UpdateUserCommand(
-    Guid UserId,
+namespace Biflow.Ui.Core;
+
+public record CreateUserCommand(
     string Username,
     string? Email,
     bool AuthorizeAllJobs,
@@ -11,22 +12,20 @@ public record UpdateUserCommand(
     UserRole MainRole,
     bool IsSettingsEditor,
     bool IsDataTableMaintainer,
-    bool IsVersionManager) : IRequest<User>;
+    bool IsVersionManager,
+    [property: ComplexPassword]
+    string? Password) : IRequest<User>;
 
 [UsedImplicitly]
-internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<UpdateUserCommand, User>
+internal class CreateUserCommandHandler(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    AuthenticationMethodResolver authenticationResolver)
+    : IRequestHandler<CreateUserCommand, User>
 {
-    public async Task<User> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    public async Task<User> Handle(CreateUserCommand request, CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var user = await dbContext.Users
-            .Include(u => u.Jobs)
-            .Include(u => u.DataTables)
-            .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
-            ?? throw new NotFoundException<User>(request.UserId);
-        
         var jobs = await dbContext.Jobs
             .Where(j => request.AuthorizedJobIds.Contains(j.JobId))
             .ToArrayAsync(cancellationToken);
@@ -50,19 +49,15 @@ internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
                 throw new NotFoundException<MasterDataTable>(id);
             }
         }
-        
-        dbContext.MergeCollections(
-            user.DataTables,
-            dataTables,
-            d => d.DataTableId,
-            updateMatchingItemValues: false);
 
-        dbContext.MergeCollections(
-            user.Jobs,
-            jobs,
-            j => j.JobId,
-            updateMatchingItemValues: false);
-        
+        var user = new User
+        {
+            Username = request.Username,
+            Email = request.Email,
+            AuthorizeAllJobs = request.AuthorizeAllJobs,
+            AuthorizeAllDataTables = request.AuthorizeAllDataTables
+        };
+
         switch (request.MainRole)
         {
             case UserRole.Admin:
@@ -85,15 +80,27 @@ internal class UpdateUserCommandHandler(IDbContextFactory<AppDbContext> dbContex
         user.SetIsDataTableMaintainer(request.IsDataTableMaintainer);
         user.SetIsVersionManager(request.IsVersionManager);
 
-        user.Username = request.Username;
-        user.Email = request.Email;
-        user.AuthorizeAllJobs = request.AuthorizeAllJobs;
-        user.AuthorizeAllDataTables = request.AuthorizeAllDataTables;
+        foreach (var job in jobs)
+        {
+            user.Jobs.Add(job);
+        }
+        foreach (var dataTable in dataTables)
+        {
+            user.DataTables.Add(dataTable);
+        }
         
         user.EnsureDataAnnotationsValidated();
+        
+        dbContext.Users.Add(user);
 
+        if (authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn)
+        {
+            // Ensure password meets ComplexPasswordAttribute requirements
+            request.EnsureDataAnnotationsValidated();
+            var hash = BC.HashPassword(request.Password);
+            dbContext.Entry(user).Property("PasswordHash").CurrentValue = hash;
+        }
         await dbContext.SaveChangesAsync(cancellationToken);
-
         return user;
     }
 }

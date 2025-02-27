@@ -34,28 +34,18 @@ public partial class UserEditModal(
     {
         ArgumentNullException.ThrowIfNull(_model);
         var enabled = (bool)args.Value!;
-        if (enabled)
-        {
-            _model.User.Jobs.Add(job);
-        }
-        else
-        {
-            _model.User.Jobs.Remove(job);
-        }
+        _ = enabled
+            ? _model.AuthorizedJobIds.Add(job.JobId)
+            : _model.AuthorizedJobIds.Remove(job.JobId);
     }
 
     private void ToggleDataTableAuthorization(ChangeEventArgs args, MasterDataTable table)
     {
         ArgumentNullException.ThrowIfNull(_model);
         var enabled = (bool)args.Value!;
-        if (enabled)
-        {
-            _model.User.DataTables.Add(table);
-        }
-        else
-        {
-            _model.User.DataTables.Remove(table);
-        }
+        _ = enabled
+            ? _model.AuthorizedDataTableIds.Add(table.DataTableId)
+            : _model.AuthorizedDataTableIds.Remove(table.DataTableId);
     }
 
     private void OnClosed()
@@ -70,7 +60,8 @@ public partial class UserEditModal(
         if (IsNewUser)
         {
             ArgumentNullException.ThrowIfNull(_model.PasswordModel);
-            if (_authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn && !_model.PasswordModel.Password.Equals(_model.PasswordModel.ConfirmPassword))
+            if (_authenticationResolver.AuthenticationMethod == AuthenticationMethod.BuiltIn &&
+                !_model.PasswordModel.Password.Equals(_model.PasswordModel.ConfirmPassword))
             {
                 _toaster.AddError("The two passwords do not match");
                 return;
@@ -78,8 +69,20 @@ public partial class UserEditModal(
 
             try
             {
-                await _mediator.SendAsync(new CreateUserCommand(_model.User, _model.PasswordModel));
-                await OnUserSubmit.InvokeAsync(_model.User);
+                var command = new CreateUserCommand(
+                    Username: _model.Username, 
+                    Email: _model.Email, 
+                    AuthorizeAllJobs: _model.AuthorizeAllJobs, 
+                    AuthorizeAllDataTables: _model.AuthorizeAllDataTables, 
+                    AuthorizedJobIds: _model.AuthorizedJobIds.ToArray(), 
+                    AuthorizedDataTableIds: _model.AuthorizedDataTableIds.ToArray(), 
+                    MainRole: _model.Role, 
+                    IsSettingsEditor: _model.IsSettingsEditor, 
+                    IsDataTableMaintainer: _model.IsDataTableMaintainer, 
+                    IsVersionManager: _model.IsVersionManager, 
+                    Password: _model.PasswordModel.Password);
+                var user = await _mediator.SendAsync(command);
+                await OnUserSubmit.InvokeAsync(user);
                 _model = null;
                 await _modal.LetAsync(x => x.HideAsync());
             }
@@ -93,9 +96,20 @@ public partial class UserEditModal(
         {
             try
             {
-                ArgumentNullException.ThrowIfNull(_model);
-                await _mediator.SendAsync(new UpdateUserCommand(_model.User));
-                await OnUserSubmit.InvokeAsync(_model.User);
+                var command = new UpdateUserCommand(
+                    UserId: _model.UserId,
+                    Username: _model.Username,
+                    Email: _model.Email,
+                    AuthorizeAllJobs: _model.AuthorizeAllJobs,
+                    AuthorizeAllDataTables: _model.AuthorizeAllDataTables,
+                    AuthorizedJobIds: _model.AuthorizedJobIds.ToArray(),
+                    AuthorizedDataTableIds: _model.AuthorizedDataTableIds.ToArray(),
+                    MainRole: _model.Role,
+                    IsSettingsEditor: _model.IsSettingsEditor,
+                    IsDataTableMaintainer: _model.IsDataTableMaintainer,
+                    IsVersionManager: _model.IsVersionManager);
+                var user = await _mediator.SendAsync(command);
+                await OnUserSubmit.InvokeAsync(user);
                 await _modal.LetAsync(x => x.HideAsync());
             }
             catch (Exception ex)
@@ -117,7 +131,7 @@ public partial class UserEditModal(
             {
                 Username = ""
             };
-            _model = new(user, new());
+            _model = new UserFormModel(user, new PasswordModel());
         }
         else
         {
@@ -126,7 +140,7 @@ public partial class UserEditModal(
                 .Include(u => u.DataTables)
                 .FirstAsync(user => user.UserId == userId);
             _currentUsername = user.Username;
-            _model = new(user, null); // no password model for existing users
+            _model = new UserFormModel(user, null); // no password model for existing users
         }
         _jobs = await context.Jobs
             .OrderBy(j => j.JobName)
@@ -137,10 +151,10 @@ public partial class UserEditModal(
             .ToListAsync();
         var reservedUsernames = await context.Users
             .AsNoTracking()
-            .Where(u => u.Username != _model.User.Username)
+            .Where(u => u.Username != _model.Username)
             .Select(u => u.Username)
             .ToArrayAsync();
-        _validator = new(reservedUsernames);
+        _validator = new UserFormModelValidator(reservedUsernames);
     }
 
     private async Task OnBeforeInternalNavigation(LocationChangingContext context)
