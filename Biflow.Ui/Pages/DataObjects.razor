@@ -273,7 +273,8 @@
 
     private async Task DeleteReferenceAsync(StepDataObject reference)
     {
-        await Mediator.SendAsync(new DeleteStepDataObjectCommand(reference));
+        var command = new DeleteStepDataObjectCommand(reference.StepId, reference.ObjectId, reference.ReferenceType);
+        await Mediator.SendAsync(command);
         reference.DataObject.Steps.Remove(reference);
         reference.Step.DataObjects.Remove(reference);
     }
