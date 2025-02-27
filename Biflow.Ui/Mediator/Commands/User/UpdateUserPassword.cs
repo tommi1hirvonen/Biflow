@@ -1,9 +1,11 @@
-﻿using BC = BCrypt.Net.BCrypt;
+﻿using JetBrains.Annotations;
+using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui;
 
-public record UpdateUserPasswordCommand(string Username, string OldPassword, string NewPassword) : IRequest;
+internal record UpdateUserPasswordCommand(string Username, string OldPassword, string NewPassword) : IRequest;
 
+[UsedImplicitly]
 internal class UpdateUserPasswordCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateUserPasswordCommand>
 {

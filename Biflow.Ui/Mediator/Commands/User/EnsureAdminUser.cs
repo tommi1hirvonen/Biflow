@@ -1,4 +1,5 @@
-﻿using BC = BCrypt.Net.BCrypt;
+﻿using JetBrains.Annotations;
+using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui;
 
@@ -8,8 +9,9 @@ namespace Biflow.Ui;
 /// <param name="Username">Username for the admin user</param>
 /// <param name="Password">Password for the admin user.
 /// <see langword="null"/> can be passed when using an authentication method other than built-in.</param>
-public record EnsureAdminUserCommand(string Username, string? Password = null) : IRequest;
+internal record EnsureAdminUserCommand(string Username, string? Password = null) : IRequest;
 
+[UsedImplicitly]
 internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<EnsureAdminUserCommand>
 {
