@@ -130,8 +130,8 @@
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new StepTagSubscription(User.UserId, tagId);
-            await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
+            var command = new CreateStepTagSubscriptionCommand(User.UserId, tagId, AlertType.OnFailure);
+            var subscription = await Mediator.SendAsync(command);
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }
@@ -146,7 +146,8 @@
         try
         {
             subscription.AlertType = alert;
-            await Mediator.SendAsync(new UpdateSubscriptionCommand(subscription));
+            var command = new UpdateStepTagSubscriptionCommand(subscription.SubscriptionId, alert);
+            await Mediator.SendAsync(command);
         }
         catch (Exception)
         {

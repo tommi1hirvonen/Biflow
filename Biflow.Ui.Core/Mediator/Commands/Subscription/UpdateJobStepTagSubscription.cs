@@ -1,24 +1,24 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
-public record UpdateJobSubscriptionCommand(
+public record UpdateJobStepTagSubscriptionCommand(
     Guid SubscriptionId,
-    AlertType? AlertType,
-    bool NotifyOnOvertime) : IRequest<JobSubscription>;
+    AlertType AlertType) : IRequest<JobStepTagSubscription>;
 
 [UsedImplicitly]
-internal class UpdateJobSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
-    : IRequestHandler<UpdateJobSubscriptionCommand, JobSubscription>
+internal class UpdateJobStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<UpdateJobStepTagSubscriptionCommand, JobStepTagSubscription>
 {
-    public async Task<JobSubscription> Handle(UpdateJobSubscriptionCommand request, CancellationToken cancellationToken)
+    public async Task<JobStepTagSubscription> Handle(UpdateJobStepTagSubscriptionCommand request,
+        CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var subscription = await dbContext.JobSubscriptions
+        var subscription = await dbContext.JobStepTagSubscriptions
             .Include(s => s.Job)
+            .Include(s => s.Tag)
             .Include(s => s.User)
             .FirstOrDefaultAsync(s => s.SubscriptionId == request.SubscriptionId, cancellationToken)
             ?? throw new NotFoundException<JobSubscription>(request.SubscriptionId);
         
-        subscription.NotifyOnOvertime = request.NotifyOnOvertime;
         subscription.AlertType = request.AlertType;
         
         subscription.EnsureDataAnnotationsValidated();

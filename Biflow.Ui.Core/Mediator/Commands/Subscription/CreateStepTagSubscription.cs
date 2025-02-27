@@ -1,4 +1,4 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 public record CreateStepTagSubscriptionCommand(
     Guid UserId,
@@ -14,10 +14,13 @@ internal class CreateStepTagSubscriptionCommandHandler(IDbContextFactory<AppDbCo
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
-                   ?? throw new NotFoundException<User>(request.UserId);
-        var tag = await dbContext.StepTags.FirstOrDefaultAsync(t => t.TagId == request.StepTagId, cancellationToken)
-                  ?? throw new NotFoundException<StepTag>(request.StepTagId);
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
+            ?? throw new NotFoundException<User>(request.UserId);
+        
+        var tag = await dbContext.StepTags
+            .FirstOrDefaultAsync(t => t.TagId == request.StepTagId, cancellationToken)
+            ?? throw new NotFoundException<StepTag>(request.StepTagId);
 
         var subscription = new StepTagSubscription(request.UserId, request.StepTagId)
         {

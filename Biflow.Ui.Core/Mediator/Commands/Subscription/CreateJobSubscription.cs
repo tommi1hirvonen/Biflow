@@ -1,4 +1,4 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 public record CreateJobSubscriptionCommand(
     Guid UserId,
@@ -14,9 +14,12 @@ internal class CreateJobSubscriptionCommandHandler(IDbContextFactory<AppDbContex
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
             ?? throw new NotFoundException<User>(request.UserId);
-        var job = await dbContext.Jobs.FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken)
+        
+        var job = await dbContext.Jobs
+            .FirstOrDefaultAsync(j => j.JobId == request.JobId, cancellationToken)
             ?? throw new NotFoundException<Job>(request.JobId);
 
         var subscription = new JobSubscription(request.UserId, request.JobId)

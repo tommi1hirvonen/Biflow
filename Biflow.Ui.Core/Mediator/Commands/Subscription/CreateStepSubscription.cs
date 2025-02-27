@@ -1,4 +1,4 @@
-namespace Biflow.Ui.Api.Mediator.Commands;
+namespace Biflow.Ui.Core;
 
 public record CreateStepSubscriptionCommand(
     Guid UserId,
@@ -13,10 +13,13 @@ internal class CreateStepSubscriptionCommandHandler(IDbContextFactory<AppDbConte
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         
-        var user = await dbContext.Users.FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
-                   ?? throw new NotFoundException<User>(request.UserId);
-        var step = await dbContext.Steps.FirstOrDefaultAsync(s => s.StepId == request.StepId, cancellationToken)
-                  ?? throw new NotFoundException<Step>(request.StepId);
+        var user = await dbContext.Users
+            .FirstOrDefaultAsync(u => u.UserId == request.UserId, cancellationToken)
+            ?? throw new NotFoundException<User>(request.UserId);
+        
+        var step = await dbContext.Steps
+            .FirstOrDefaultAsync(s => s.StepId == request.StepId, cancellationToken)
+            ?? throw new NotFoundException<Step>(request.StepId);
 
         var subscription = new StepSubscription(request.UserId, request.StepId)
         {

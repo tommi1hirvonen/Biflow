@@ -196,8 +196,8 @@
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new JobStepTagSubscription(User.UserId, jobId, tagId);
-            await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
+            var command = new CreateJobStepTagSubscriptionCommand(User.UserId, jobId, tagId, AlertType.OnFailure);
+            var subscription = await Mediator.SendAsync(command);
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }
@@ -212,7 +212,8 @@
         try
         {
             subscription.AlertType = alert;
-            await Mediator.SendAsync(new UpdateSubscriptionCommand(subscription));
+            var command = new UpdateJobStepTagSubscriptionCommand(subscription.SubscriptionId, alert);
+            await Mediator.SendAsync(command);
         }
         catch (Exception)
         {

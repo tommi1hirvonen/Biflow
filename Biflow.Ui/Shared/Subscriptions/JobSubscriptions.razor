@@ -168,8 +168,8 @@
         try
         {
             ArgumentNullException.ThrowIfNull(User);
-            var subscription = new JobSubscription(User.UserId, jobId);
-            await Mediator.SendAsync(new CreateSubscriptionCommand(subscription));
+            var command = new CreateJobSubscriptionCommand(User.UserId, jobId, AlertType.OnFailure, false);
+            var subscription = await Mediator.SendAsync(command);
             User.Subscriptions.Add(subscription);
             await OnSubscriptionCountChanged.InvokeAsync();
         }
@@ -184,7 +184,11 @@
         try
         {
             subscription.AlertType = alert;
-            await Mediator.SendAsync(new UpdateSubscriptionCommand(subscription));
+            var command = new UpdateJobSubscriptionCommand(
+                subscription.SubscriptionId,
+                alert,
+                subscription.NotifyOnOvertime);
+            await Mediator.SendAsync(command);
         }
         catch (Exception)
         {
@@ -197,7 +201,11 @@
         try
         {
             subscription.NotifyOnOvertime = onOvertime;
-            await Mediator.SendAsync(new UpdateSubscriptionCommand(subscription));
+            var command = new UpdateJobSubscriptionCommand(
+                subscription.SubscriptionId,
+                subscription.AlertType,
+                onOvertime);
+            await Mediator.SendAsync(command);
         }
         catch (Exception)
         {
