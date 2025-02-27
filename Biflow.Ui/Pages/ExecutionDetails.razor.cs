@@ -275,7 +275,8 @@ public partial class ExecutionDetails(
                 _execution.ExecutionStatus = status;
                 _execution.StartedOn ??= DateTimeOffset.Now;
                 _execution.EndedOn ??= DateTimeOffset.Now;
-                await _mediator.SendAsync(new UpdateExecutionCommand(_execution));
+                var command = new UpdateExecutionStatusCommand([_execution.ExecutionId], status);
+                await _mediator.SendAsync(command);
             }
             _toaster.AddSuccess("Status updated successfully");
         }

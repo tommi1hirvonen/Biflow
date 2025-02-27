@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record DeleteExecutionCommand(Guid ExecutionId) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteExecutionCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteExecutionCommand>
 {

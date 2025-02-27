@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record UpdateExecutionStatusCommand(Guid[] ExecutionIds, ExecutionStatus Status) : IRequest;
 
+[UsedImplicitly]
 internal class UpdateExecutionStatusCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateExecutionStatusCommand>
 {

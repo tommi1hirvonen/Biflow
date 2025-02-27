@@ -1,7 +1,10 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record DeleteExecutionsCommand(DateTimeOffset RangeStart, DateTimeOffset RangeEnd) : IRequest;
 
+[UsedImplicitly]
 internal class DeleteExecutionsCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
     : IRequestHandler<DeleteExecutionsCommand>
 {
