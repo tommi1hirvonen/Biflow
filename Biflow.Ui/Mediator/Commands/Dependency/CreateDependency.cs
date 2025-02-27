@@ -1,21 +1,38 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
 
-public record CreateDependencyCommand(Dependency Dependency) : IRequest;
+namespace Biflow.Ui;
 
-internal class CreateDependencyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory) : IRequestHandler<CreateDependencyCommand>
+internal record CreateDependencyCommand(Guid StepId, Guid DependentOnStepId, DependencyType DependencyType) : IRequest;
+
+[UsedImplicitly]
+internal class CreateDependencyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+    : IRequestHandler<CreateDependencyCommand>
 {
     public async Task Handle(CreateDependencyCommand request, CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var exists = await context.Dependencies
-            .AnyAsync(d => d.StepId == request.Dependency.StepId && d.DependantOnStepId == request.Dependency.DependantOnStepId,
-                cancellationToken);
-        if (!exists)
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var stepExists = await dbContext.Steps
+            .AnyAsync(s => s.StepId == request.StepId, cancellationToken);
+        if (!stepExists)
         {
-            request.Dependency.Step = null!;
-            request.Dependency.DependantOnStep = null!;
-            context.Dependencies.Add(request.Dependency);
-            await context.SaveChangesAsync(cancellationToken);
+            throw new NotFoundException<Step>(request.StepId);
         }
+
+        var dependentOnStepExists = await dbContext.Steps
+            .AnyAsync(s => s.StepId == request.DependentOnStepId, cancellationToken); 
+        if (!dependentOnStepExists)
+        {
+            throw new NotFoundException<Step>(request.DependentOnStepId);
+        }
+
+        var dependency = new Dependency
+        {
+            StepId = request.StepId,
+            DependantOnStepId = request.DependentOnStepId,
+            DependencyType = request.DependencyType
+        };
+        dbContext.Dependencies.Add(dependency);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

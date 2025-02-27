@@ -102,7 +102,11 @@ public partial class DependenciesSynchronizer(
     private async Task AddDependencyAsync(Dependency dependency)
     {
         // Add dependency to database.
-        await _mediator.SendAsync(new CreateDependencyCommand(dependency));
+        var command = new CreateDependencyCommand(
+            dependency.StepId,
+            dependency.DependantOnStepId,
+            dependency.DependencyType);
+        await _mediator.SendAsync(command);
 
         // Add dependency to the step loaded into memory.
         var step = Steps?.FirstOrDefault(s => s.StepId == dependency.StepId);
