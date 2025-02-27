@@ -42,7 +42,7 @@
 
         // For admins and editors, show all available table categories.
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        if (authState.User.IsInRole(Roles.Admin) || authState.User.IsInRole(Roles.Editor))
+        if (authState.User.IsInRole(Roles.Admin))
         {
             _categories = await context.MasterDataTableCategories
                 .AsNoTrackingWithIdentityResolution()
