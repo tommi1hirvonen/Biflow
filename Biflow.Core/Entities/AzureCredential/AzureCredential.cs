@@ -17,7 +17,7 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
 
     [Required]
     [MaxLength(250)]
-    public string? AzureCredentialName { get; set; }
+    public string AzureCredentialName { get; set; } = "";
     
     public AzureCredentialType AzureCredentialType { get; init; } = azureCredentialType;
 
