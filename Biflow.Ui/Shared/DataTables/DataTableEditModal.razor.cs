@@ -214,7 +214,8 @@ public partial class DataTableEditModal(
                             LookupDescriptionColumn: l.LookupDescriptionColumn, 
                             LookupDisplayType: l.LookupDisplayType))
                         .ToArray());
-                _ = await _mediator.SendAsync(command);
+                var table = await _mediator.SendAsync(command);
+                await OnTableSubmitted.InvokeAsync(table);
             }
             else
             {
@@ -244,8 +245,8 @@ public partial class DataTableEditModal(
                             LookupDisplayType: l.LookupDisplayType))
                         .ToArray());
                 _ = await _mediator.SendAsync(command);
+                await OnTableSubmitted.InvokeAsync(_editTable);
             }
-            await OnTableSubmitted.InvokeAsync(_editTable);
             await HideAsync();
         }
         catch (DbUpdateConcurrencyException)
