@@ -8,16 +8,16 @@
                 All data tables
             </a>
             <span>&nbsp;/&nbsp;</span>
-            @if (Table?.Category is not null)
+            @if (_table?.Category is not null)
             {
-                <span>@Table.Category.CategoryName /&nbsp;</span>
+                <span>@_table.Category.CategoryName /&nbsp;</span>
             }
-            <strong>@Table?.DataTableName</strong>
+            <strong>@_table?.DataTableName</strong>
         </div>
     </div>
 </div>
 
-@if (Table is null) return;
+@if (_table is null) return;
 
 <div class="row mt-3">
     <div class="col-auto">
@@ -82,15 +82,15 @@
 
                 @{
                     var isNotEditable = !_tableData?.IsEditable ?? true;
-                    var importDisabled = isNotEditable || !Table.AllowImport;
+                    var importDisabled = isNotEditable || !_table.AllowImport;
                 }
-                <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@Table.DataTableId">
+                <a class="btn btn-sm btn-auto @(importDisabled ? "disabled" : null)" href="/datatables/import/@_table.DataTableId">
                     <SvgIcon Icon="LucideIcon.Upload" />
                     Import
                 </a>
 
                 <HxButton Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small"
-                          Enabled="!string.IsNullOrEmpty(Table.DataTableDescription)"
+                          Enabled="!string.IsNullOrEmpty(_table.DataTableDescription)"
                           OnClick="async () => await _tableInfoOffcanvas.LetAsync(x => x.ShowAsync())">
                     <SvgIcon Icon="LucideIcon.Info" />
                     Table info
@@ -112,13 +112,13 @@
 
             <HxButton Color="ThemeColor.Success" Size="ButtonSize.Small"
                       CssClass="ms-3"
-                      Enabled="_tableData is not null && _tableData.IsEditable && (Table.AllowInsert || Table.AllowUpdate || Table.AllowDelete)"
+                      Enabled="_tableData is not null && _tableData.IsEditable && (_table.AllowInsert || _table.AllowUpdate || _table.AllowDelete)"
                       OnClick="SaveChangesAsync">
                 <SvgIcon Icon="LucideIcon.Save" />
                 Save changes
             </HxButton>
 
-            @if (Table.AllowInsert)
+            @if (_table.AllowInsert)
             {
                 <HxButton CssClass="ms-3" Color="ThemeColor.Secondary" Size="ButtonSize.Small"
                       Enabled="_tableData is not null && _tableData.IsEditable"
@@ -180,8 +180,8 @@
                 {
                     var columns = _tableData.Columns
                         .Where(c => IsColumnSelected(c.Name) && !c.IsHidden)
-                        .OrderBy(c => !Table.ColumnOrder.Contains(c.Name))
-                        .ThenBy(c => Table.ColumnOrder.IndexOf(c.Name));
+                        .OrderBy(c => !_table.ColumnOrder.Contains(c.Name))
+                        .ThenBy(c => _table.ColumnOrder.IndexOf(c.Name));
                     @if (_tableData.HasChanges)
                     {
                         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
@@ -391,13 +391,13 @@
                                                 <button class="btn btn-sm btn-auto" @onclick="row.RevertChanges" title="Revert changes" disabled=@(!row.HasChanges)>
                                                     <SvgIcon Icon="LucideIcon.Undo2" />
                                                 </button>
-                                                @if (Table.AllowInsert)
+                                                @if (_table.AllowInsert)
                                                 {
                                                     <button class="btn btn-sm btn-auto" @onclick="() => _tableData.AddRow(row)" title="Copy record">
                                                         <SvgIcon Icon="LucideIcon.Copy" />
                                                     </button>
                                                 }
-                                                @if (Table.AllowDelete)
+                                                @if (_table.AllowDelete)
                                                 {
                                                     <button class="btn btn-sm btn-auto btn-delete-record" @onclick="row.Delete" title="Delete record">
                                                         <SvgIcon Icon="LucideIcon.Delete" />
@@ -412,7 +412,7 @@
                         </tbody>
                     </ResizableTable>
                 }
-                else if (Table is not null)
+                else if (_table is not null)
                 {
                     <p class="px-3">Loading data...</p>
                 }
@@ -421,10 +421,10 @@
     </div>
 </div>
 
-<HxOffcanvas @ref="_tableInfoOffcanvas" Title="@Table?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+<HxOffcanvas @ref="_tableInfoOffcanvas" Title="@_table?.DataTableName" Size="OffcanvasSize.Small" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
     <BodyTemplate>
         <p>
-            @Table?.DataTableDescription
+            @_table?.DataTableDescription
         </p>
     </BodyTemplate>
 </HxOffcanvas>

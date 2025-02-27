@@ -8,10 +8,10 @@
 @switch (Page)
 {
     case null:
-        <DataTablesList Tables="_tables" Categories="_categories" Connections="_connections" />
+        <DataTablesList Tables="_tables" Categories="_categories" ConnectionsExist="_connectionsExist" />
         break;
     case "edit":
-        <DataTableEditor Table="_table" />
+        <DataTableEditor TableId="TableId" />
         break;
     case "import":
         <DataTableImport TableId="TableId" />
@@ -24,12 +24,11 @@
 @code {
     [Parameter] public string? Page { get; set; }
 
-    [Parameter] public Guid? TableId { get; set; }
+    [Parameter] public Guid TableId { get; set; }
 
-    private MasterDataTable? _table;
     private List<MasterDataTable>? _tables;
-    private List<MsSqlConnection>? _connections;
     private List<MasterDataTableCategory>? _categories;
+    private bool _connectionsExist;
 
     protected override async Task OnInitializedAsync()
     {
@@ -37,40 +36,9 @@
         _tables = await context.MasterDataTables
             .AsNoTrackingWithIdentityResolution()
             .Include(t => t.Category)
-            .Include(t => t.Connection)
-            .ThenInclude(c => c.Credential)
             .Include(t => t.Lookups)
             .OrderBy(t => t.DataTableName)
             .ToListAsync();
-
-        var lookupTableIds = _tables
-            .SelectMany(t => t.Lookups)
-            .Select(l => l.LookupTableId)
-            .Distinct()
-            .ToList();
-
-        // Instead of including lookup tables in the main query, fetch them here with IgnoreQueryFilters().
-        // This way we can ensure that all lookups are included even if the user has no authorization on all data tables.
-        var lookupTables = await context.MasterDataTables
-            .AsNoTrackingWithIdentityResolution()
-            .IgnoreQueryFilters()
-            .Include(t => t.Connection)
-            .ThenInclude(c => c.Credential)
-            .Where(t => lookupTableIds.Contains(t.DataTableId))
-            .ToListAsync();
-
-        // Map lookup tables to the main tables list.
-        foreach (var table in _tables)
-        {
-            foreach (var lookup in table.Lookups)
-            {
-                var lt = lookupTables.FirstOrDefault(t => t.DataTableId == lookup.LookupTableId);
-                if (lt is not null)
-                {
-                    lookup.LookupTable = lt;
-                }
-            }
-        }
 
         // For admins and editors, show all available table categories.
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
@@ -91,15 +59,7 @@
                 .DistinctBy(c => c.CategoryId)
                 .ToList();
         }
-        _connections = await context.MsSqlConnections
-            .AsNoTrackingWithIdentityResolution()
-            .Include(c => c.Credential)
-            .OrderBy(c => c.ConnectionName)
-            .ToListAsync();
-    }
-
-    protected override void OnParametersSet()
-    {
-        _table = _tables?.FirstOrDefault(t => t.DataTableId == TableId);
+        
+        _connectionsExist = await context.MsSqlConnections.AnyAsync();
     }
 }

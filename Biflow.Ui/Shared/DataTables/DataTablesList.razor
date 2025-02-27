@@ -10,14 +10,14 @@
         <div class="col-auto">
             <HxButtonToolbar>
                 <HxButton Color="ThemeColor.Success"
-                          Enabled="Connections?.Any() ?? false"
+                          Enabled="ConnectionsExist"
                           OnClick="() => _editModal.LetAsync(x => x.ShowAsync(null))"
                           Spinner="false">
                     Add table
                 </HxButton>
                 <HxButton Color="ThemeColor.Secondary"
                           CssClass="ms-3"
-                          Enabled="Connections?.Any() ?? false"
+                          Enabled="ConnectionsExist"
                           OnClick="() => _categoryEditModal.LetAsync(x => x.ShowAsync())"
                           Spinner="false">
                     Add category
@@ -257,7 +257,7 @@
 
     [Parameter] public List<MasterDataTableCategory>? Categories { get; set; }
 
-    [Parameter] public List<MsSqlConnection>? Connections { get; set; }
+    [Parameter] public bool ConnectionsExist { get; set; }
 
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
@@ -276,14 +276,6 @@
         }
         Tables?.Add(table);
         Tables?.SortBy(x => x.DataTableName);
-
-        foreach (var lookup in Tables?.SelectMany(t => t.Lookups) ?? [])
-        {
-            if (lookup.LookupTableId == table.DataTableId)
-            {
-                lookup.LookupTable = table;
-            }
-        }
     }
 
     private async Task ConfirmAndDeleteTableAsync(MasterDataTable table)

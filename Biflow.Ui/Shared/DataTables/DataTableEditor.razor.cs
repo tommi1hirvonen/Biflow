@@ -6,19 +6,27 @@ using System.Text.RegularExpressions;
 
 namespace Biflow.Ui.Shared.DataTables;
 
-public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxService messageBox, IJSRuntime js) : ComponentBase
+public partial class DataTableEditor(
+    IDbContextFactory<AppDbContext> dbContextFactory,
+    ToasterService toaster,
+    IHxMessageBoxService messageBox,
+    IJSRuntime js,
+    ILogger<DataTableEditor> logger) : ComponentBase
 {
-    [Parameter] public MasterDataTable? Table { get; set; }
+    [Parameter] public Guid TableId { get; set; }
 
+    private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly ToasterService _toaster = toaster;
     private readonly IHxMessageBoxService _messageBox = messageBox;
     private readonly IJSRuntime _js = js;
+    private readonly ILogger<DataTableEditor> _logger = logger;
     private readonly List<(string Column, bool Descending)> _orderBy = [];
     private readonly HashSet<string> _columnSelections = [];
     private readonly Dictionary<string, HashSet<object?>> _quickFilters = [];
     private readonly Dictionary<string, string> _columnWidths = [];
     private readonly Dictionary<string, Column> _columns = [];
 
+    private MasterDataTable? _table;
     private TableData? _tableData;
     private FilterSet? _filterSet;
     private FilterSetOffcanvas? _filterSetOffcanvas;
@@ -26,7 +34,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
     private bool _editModeEnabled = true;
     private bool _exporting = false;
     private bool _discardChanges = false; // used to prevent double confirmation when switching tables
-    private bool _initialLoad;
+    private bool _initialLoadStarted;
 
     private int TopRows
     {
@@ -37,14 +45,52 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
     private bool IsColumnSelected(string column) =>
         _columnSelections.Count == 0 || _columnSelections.Contains(column);
 
-    protected override Task OnParametersSetAsync()
+    protected override async Task OnParametersSetAsync()
     {
-        if (Table is null || _initialLoad)
+        if (TableId == Guid.Empty || _initialLoadStarted)
         {
-            return Task.CompletedTask;
+            return;
         }
-        _initialLoad = true;
-        return ReloadDataAsync();
+        _initialLoadStarted = true;
+        
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+        
+        _table = await dbContext.MasterDataTables
+            .AsNoTrackingWithIdentityResolution()
+            .Include(x => x.Category)
+            .Include(x => x.Connection)
+            .ThenInclude(x => x.Credential)
+            .Include(x => x.Lookups)
+            .FirstOrDefaultAsync(x => x.DataTableId == TableId);
+
+        if (_table is null) return;
+        
+        var lookupTableIds = _table.Lookups
+            .Select(l => l.LookupTableId)
+            .Distinct()
+            .ToList();
+
+        // Instead of including lookup tables in the main query, fetch them here with IgnoreQueryFilters().
+        // This way we can ensure that all lookups are included even if the user has no authorization on all data tables.
+        var lookupTables = await dbContext.MasterDataTables
+            .AsNoTrackingWithIdentityResolution()
+            .IgnoreQueryFilters()
+            .Include(t => t.Connection)
+            .ThenInclude(c => c.Credential)
+            .Where(t => lookupTableIds.Contains(t.DataTableId))
+            .ToListAsync();
+
+        // Map lookup tables to the main table.
+        foreach (var lookup in _table.Lookups)
+        {
+            var lt = lookupTables.FirstOrDefault(t => t.DataTableId == lookup.LookupTableId);
+            if (lt is not null)
+            {
+                lookup.LookupTable = lt;
+            }
+        }
+        
+        await ReloadDataAsync();
     }
 
     private Row[]? GetOrderedRowRecords()
@@ -118,15 +164,15 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         _tableData = null;
         StateHasChanged();
 
-        if (Table is null)
+        if (_table is null)
         {
-            _toaster.AddError("Error loading data", $"Selected table was null.");
+            _toaster.AddError("Error loading data", "Selected table was null.");
             return;
         }
 
         try
         {
-            _tableData = await Table.LoadDataAsync(TopRows, _filterSet);
+            _tableData = await _table.LoadDataAsync(TopRows, _filterSet);
             _filterSet ??= _tableData.EmptyFilterSet;
             _columns.Clear();
             foreach (var column in _tableData.Columns)
@@ -136,6 +182,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Error loading data");
             _toaster.AddError("Error loading data", ex.Message);
         }
     }
@@ -170,7 +217,7 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
                 message.Append("Deleted ").Append(deleted).Append(" record(s)").AppendLine();
             }
             _toaster.AddSuccess("Changes saved", message.ToString());
-            _tableData = await Table.LetAsync(x => x.LoadDataAsync(TopRows, _filterSet)) ?? _tableData;
+            _tableData = await _table.LetAsync(x => x.LoadDataAsync(TopRows, _filterSet)) ?? _tableData;
         }
         catch (Exception ex)
         {
@@ -183,14 +230,14 @@ public partial class DataTableEditor(ToasterService toaster, IHxMessageBoxServic
         _exporting = true;
         try
         {
-            ArgumentNullException.ThrowIfNull(Table);
+            ArgumentNullException.ThrowIfNull(_table);
             var filterSet = filtered ? _filterSet : null;
-            var dataset = await Table.LoadDataAsync(filters: filterSet);
+            var dataset = await _table.LoadDataAsync(filters: filterSet);
             await using var stream = dataset.GetExcelExportStream();
 
             var regexSearch = new string(Path.GetInvalidFileNameChars());
             var regex = new Regex($"[{Regex.Escape(regexSearch)}]");
-            var tableName = Table is not null ? regex.Replace(Table.DataTableName, "") : "export";
+            var tableName = _table is not null ? regex.Replace(_table.DataTableName, "") : "export";
             var fileName = $"{tableName}.xlsx";
             using var streamRef = new DotNetStreamReference(stream: stream);
             await _js.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
