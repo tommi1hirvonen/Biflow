@@ -52,8 +52,9 @@
         try
         {
             await HandleTagsAsync(_job);
-            IRequest<Job> command = _job.JobId == Guid.Empty
-                ? new CreateJobCommand(JobName: _job.JobName,
+            if (_job.JobId == Guid.Empty)
+            {
+                var command = new CreateJobCommand(JobName: _job.JobName,
                     JobDescription: _job.JobDescription,
                     ExecutionMode: _job.ExecutionMode,
                     StopOnFirstError: _job.StopOnFirstError,
@@ -62,8 +63,13 @@
                     TimeoutMinutes: _job.TimeoutMinutes,
                     IsEnabled: true,
                     IsPinned: false,
-                    JobTagIds: _job.Tags.Select(t => t.TagId).ToArray())
-                : new UpdateJobCommand(
+                    JobTagIds: _job.Tags.Select(t => t.TagId).ToArray());
+                var job = await Mediator.SendAsync(command);
+                await OnJobSubmitted.InvokeAsync(job);
+            }
+            else
+            {
+                var command = new UpdateJobCommand(
                     JobId: _job.JobId,
                     JobName: _job.JobName,
                     JobDescription: _job.JobDescription,
@@ -72,9 +78,10 @@
                     OvertimeNotificationLimitMinutes: _job.OvertimeNotificationLimitMinutes,
                     TimeoutMinutes: _job.TimeoutMinutes,
                     JobTagIds: _job.Tags.Select(t => t.TagId).ToArray());
-            await Mediator.SendAsync(command);
+                _ = await Mediator.SendAsync(command);
+                await OnJobSubmitted.InvokeAsync(_job);
+            }
             await _offcanvas.LetAsync(x => x.HideAsync());
-            await OnJobSubmitted.InvokeAsync(_job);
             _job = new();
         }
         catch (Exception ex)
