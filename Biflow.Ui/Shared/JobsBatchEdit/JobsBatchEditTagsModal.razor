@@ -37,10 +37,10 @@
                 @if (_jobs is not null)
                 {
                     <TagInput TTag="JobTag"
-                    Items="_allTags"
-                    SelectedItems="_tags"
-                    AllowCustomValues="_editMode == EditMode.Add"
-                    NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }" />
+                              Items="_allTags"
+                              SelectedItems="_tags"
+                              AllowCustomValues="_editMode == EditMode.Add"
+                              NewItemFromText="text => new JobTag(text) { Color = TagColor.DarkGray }"/>
                 }
                 else
                 {
