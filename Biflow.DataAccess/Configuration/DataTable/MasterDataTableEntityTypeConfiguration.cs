@@ -27,6 +27,8 @@ internal class MasterDataTableEntityTypeConfiguration(AppDbContext context)
             .HasMaxLength(8000)
             .IsUnicode(false);
 
+        builder.Property(x => x.DefaultEditorRowLimit).HasDefaultValue(100);
+
         builder.HasMany(t => t.Lookups).WithOne(l => l.Table);
         builder.HasOne(t => t.Category)
         .WithMany(c => c.Tables)

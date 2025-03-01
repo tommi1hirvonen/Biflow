@@ -112,6 +112,20 @@
                             <InputTextArea class="form-control form-control-sm" rows="4" @bind-Value="_editTable.DataTableDescription" />
                         </div>
                     </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                            <label class="form-label mb-lg-0">
+                                Default editor row limit
+                                <HxPopover Trigger="PopoverTrigger.Hover" Content="Initial query row limit when opening the data table editor">
+                                    <SvgIcon Icon="LucideIcon.Info" />
+                                </HxPopover>
+                            </label>
+                        </div>
+                        <div class="col-md-2">
+                            <InputNumber class="form-control form-control-sm" autocomplete="off" @bind-Value="_editTable.DefaultEditorRowLimit" />
+                        </div>
+                    </div>
 
                     <div class="row">
                         <div class="col-md-4 d-md-flex justify-content-end">

@@ -13,6 +13,7 @@ public record DataTableDto
     public required bool AllowDelete { get; init; }
     public required bool AllowUpdate { get; init; }
     public required bool AllowImport { get; init; }
+    public required int DefaultEditorRowLimit { get; init; }
     public required string[] LockedColumns { get; init; }
     public required bool LockedColumnsExcludeMode { get; init; }
     public required string[] HiddenColumns { get; init; }

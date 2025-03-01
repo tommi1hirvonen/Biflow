@@ -42,6 +42,9 @@ public class MasterDataTable
 
     public List<string> ColumnOrder { get; init; } = [];
 
+    [Range(0, int.MaxValue)]
+    public int DefaultEditorRowLimit { get; set; } = 100;
+
     [JsonIgnore]
     public MasterDataTableCategory? Category { get; init; }
 

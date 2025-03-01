@@ -64,6 +64,8 @@ public partial class DataTableEditor(
             .FirstOrDefaultAsync(x => x.DataTableId == TableId);
 
         if (_table is null) return;
+
+        TopRows = _table.DefaultEditorRowLimit;
         
         var lookupTableIds = _table.Lookups
             .Select(l => l.LookupTableId)

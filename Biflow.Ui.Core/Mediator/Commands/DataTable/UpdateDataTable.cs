@@ -12,6 +12,7 @@ public record UpdateDataTableCommand(
     bool AllowDelete,
     bool AllowUpdate,
     bool AllowImport,
+    int DefaultEditorRowLimit,
     string[] LockedColumns,
     bool LockedColumnsExcludeMode,
     string[] HiddenColumns,
@@ -70,6 +71,7 @@ internal class UpdateDataTableCommandHandler(
         dataTable.AllowDelete = request.AllowDelete;
         dataTable.AllowUpdate = request.AllowUpdate;
         dataTable.AllowImport = request.AllowImport;
+        dataTable.DefaultEditorRowLimit = request.DefaultEditorRowLimit;
         dataTable.LockedColumnsExcludeMode = request.LockedColumnsExcludeMode;
 
         if (!dataTable.ColumnOrder.SequenceEqual(request.ColumnOrder))
