@@ -1,7 +1,3 @@
-@using Microsoft.AspNetCore.Components.Web
-@using Microsoft.JSInterop
-@using Biflow.Core.Entities
-
 @implements IAsyncDisposable
 
 @typeparam TTag
@@ -39,7 +35,7 @@
                        autocomplete="off"
                        value="@_inputValue"
                        @onfocusin="ShowSuggestionsAsync"
-                       @oninput="SearchValueChanged"
+                       @oninput="SearchValueChangedAsync"
                        @onkeydown="OnKeyDownAsync"
                        @onkeypress="OnKeyPressAsync"
                 @onkeypress:preventDefault>
@@ -57,19 +53,20 @@
     </div>
 
     <div @ref="_dropdownElement"
-         class="dropdown-menu position-absolute overflow-auto shadow-sm @(_suggestionsVisible ? "show" : null) @(_showUp ? "up" : null)"
+         class="dropdown-menu position-absolute overflow-auto shadow-sm
+                @(_suggestionsVisible ? "show" : null)
+                @(_showUp ? "up" : null)"
          style="max-height: 20rem; scrollbar-width: thin;">
         @{
-            var filteredItems = FilteredItems;
             var index = -1;
         }
-        @if (!filteredItems.Any() && EmptyTemplate is not null)
+        @if (!FilteredItems.Any() && EmptyTemplate is not null)
         {
-            <div class="dropdown-item">
+            <div class="dropdown-item disabled">
                 @EmptyTemplate
             </div>
         }
-        @foreach (var item in filteredItems)
+        @foreach (var item in FilteredItems)
         {
             index++;
             var text = TagTextSelector?.Invoke(item) ?? "";
@@ -151,10 +148,10 @@
         StateHasChanged();
     }
 
-    private void SearchValueChanged(ChangeEventArgs args)
+    private Task SearchValueChangedAsync(ChangeEventArgs args)
     {
         _inputValue = args.Value?.ToString() ?? "";
-        _suggestionsVisible = true;
+        return ShowSuggestionsAsync();
     }
 
     private async Task RemoveItemAsync(TTag item)
@@ -172,6 +169,7 @@
         _inputValue = "";
         SelectedItems.Add(item);
         await OnSelectedItemsChanged.InvokeAsync();
+        await ShowSuggestionsAsync();
     }
 
     private async Task ToggleSuggestionsAsync()
@@ -188,7 +186,11 @@
 
     private async Task ShowSuggestionsAsync()
     {
-        _suggestionsVisible = true;
+        _suggestionsVisible = FilteredItems.Any() || EmptyTemplate is not null;
+        if (!_suggestionsVisible)
+        {
+            return;
+        }
         _showUp = await (_jSObject?.InvokeAsync<bool>("calculateShowUp", _dropdownElement) ?? ValueTask.FromResult(false));
         await _inputElement.FocusAsync();
         await OnSuggestionsShown.InvokeAsync();
@@ -266,7 +268,7 @@
                 _inputValue = _inputValue[..^1];
                 break;
             case " ":
-                AddNewItem();
+                await AddNewItemAsync();
                 break;
         }
     }
@@ -282,7 +284,7 @@
         await ShowSuggestionsAsync();
     }
 
-    private async void AddNewItem()
+    private async Task AddNewItemAsync()
     {
         if (!_inputValue.Any() || !AllowCustomValues || NewItemFromText is null || TagTextSelector is null)
         {
