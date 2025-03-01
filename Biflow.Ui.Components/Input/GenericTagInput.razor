@@ -4,7 +4,7 @@
 
 @inject IJSRuntime Js
 
-<div @ref="_comboboxElement" @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
+<div @attributes="@InputAttributes" class="@CssClass taginput-wrapper position-relative">
     @if (Label is not null)
     {
         <label for="@($"{_id}_input")" class="form-label mb-0">@Label</label>
@@ -38,7 +38,7 @@
                        @oninput="SearchValueChangedAsync"
                        @onkeydown="OnKeyDownAsync"
                        @onkeypress="OnKeyPressAsync"
-                @onkeypress:preventDefault>
+                       @onkeypress:preventDefault>
             </div>
 
             <span class="m-1 @(_inputValue.Length > 0 ? null : "d-none")" @onclick="ClearInputValue" style="cursor: pointer;">
@@ -71,7 +71,7 @@
             index++;
             var text = TagTextSelector?.Invoke(item) ?? "";
             var color = TagColorSelector?.Invoke(item) ?? TagColor.DarkGray;
-            <div role="button" class="dropdown-item @(index == _focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
+            <div tabindex="-1" role="button" class="dropdown-item @(index == _focusIndex ? "focus" : null)" @onclick="async () => await SelectItemAsync(item)">
                 <Badge Text="@text" Color="color" />
             </div>
         }
@@ -118,7 +118,6 @@
 
     private readonly string _id = Guid.NewGuid().ToString();
     private ElementReference _inputElement;
-    private ElementReference _comboboxElement;
     private ElementReference _dropdownElement;
 
     private string _inputValue = "";
@@ -137,7 +136,7 @@
             _dotNetObject = DotNetObjectReference.Create(this);
             _jSObject = await Js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/TagInput.js");
             if (_dotNetObject is not null)
-                await _jSObject.InvokeVoidAsync("create", _comboboxElement, _dotNetObject);
+                await _jSObject.InvokeVoidAsync("create", _inputElement, _dotNetObject);
         }
     }
 
@@ -309,7 +308,7 @@
         {
             try
             {
-                await _jSObject.InvokeVoidAsync("dispose", _comboboxElement);
+                await _jSObject.InvokeVoidAsync("dispose", _inputElement);
                 await _jSObject.DisposeAsync();
             }
             catch (JSDisconnectedException) { }
