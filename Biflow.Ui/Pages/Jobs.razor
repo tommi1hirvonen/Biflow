@@ -251,7 +251,7 @@
                         </span>
                     </th>
                     <th>
-                        Status
+                        Recent executions
                     </th>
                     <th>
                         <span class="sortable" @onclick="UserState.Jobs.ToggleSortNextExec">
@@ -339,18 +339,32 @@
                                     }
                                 </td>
                                 <td class="align-middle">
-                                    @foreach (var execution in lastExecutions)
+                                    @foreach (var execution in Enumerable
+                                                  .Repeat(null as Execution, 5).Concat(lastExecutions).TakeLast(5))
                                     {
-                                        var content = GetStatusPopoverHtml(execution);
-                                        <HxPopover Trigger="PopoverTrigger.Focus"
-                                                   Placement="PopoverPlacement.Top"
-                                                   WrapperCssClass="cursor-pointer job-execution-status"
-                                                   Html
-                                                   Content="@content">
-                                            <a tabindex="0" title="@execution.ExecutionStatus">
-                                                <JobExecutionStatusIcon ExecutionStatus="execution.ExecutionStatus"/>
-                                            </a>
-                                        </HxPopover>
+                                        // Always show five icons. If execution is null, show placeholder icon.
+                                        if (execution is null)
+                                        {
+                                            <span class="job-execution-status text-muted">
+                                                <span class="d-inline-flex align-items-center"
+                                                      style="padding: 0.1rem 0.3rem;">
+                                                    <SvgIcon Icon="LucideIcon.Minus"/>
+                                                </span>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            var content = GetStatusPopoverHtml(execution);
+                                            <HxPopover Trigger="PopoverTrigger.Focus"
+                                                       Placement="PopoverPlacement.Top"
+                                                       WrapperCssClass="cursor-pointer job-execution-status"
+                                                       Html
+                                                       Content="@content">
+                                                <a tabindex="0" title="@execution.ExecutionStatus">
+                                                    <JobExecutionStatusIcon ExecutionStatus="execution.ExecutionStatus"/>
+                                                </a>
+                                            </HxPopover>
+                                        }
                                     }
                                 </td>
                                 <td class="align-middle @(!item.IsEnabled ? "text-body-tertiary" : null)">

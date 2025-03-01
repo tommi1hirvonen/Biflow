@@ -126,6 +126,7 @@ public partial class Jobs(
                     .Where(execution => execution.JobId == job.JobId)
                     .OrderByDescending(e => e.CreatedOn)
                     .Take(5)
+                    .OrderBy(e => e.CreatedOn)
                     .ToArray(),
                 IsRunning = context.Executions.Any(e => e.JobId == job.JobId && e.ExecutionStatus == ExecutionStatus.Running)
             })
