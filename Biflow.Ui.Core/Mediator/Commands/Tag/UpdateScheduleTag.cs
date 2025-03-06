@@ -4,7 +4,7 @@ public record UpdateScheduleTagCommand(Guid TagId, string TagName, TagColor Colo
     : IRequest<ScheduleTag>;
 
 [UsedImplicitly]
-internal class UpdateScheduleTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateScheduleTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateScheduleTagCommand, ScheduleTag>
 {
     public async Task<ScheduleTag> Handle(UpdateScheduleTagCommand request, CancellationToken cancellationToken)

@@ -3,7 +3,7 @@ namespace Biflow.Ui.Core;
 public record CreateScheduleTagCommand(string TagName, TagColor Color, int SortOrder) : IRequest<ScheduleTag>;
 
 [UsedImplicitly]
-internal class CreateScheduleTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class CreateScheduleTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<CreateScheduleTagCommand, ScheduleTag>
 {
     public async Task<ScheduleTag> Handle(CreateScheduleTagCommand request, CancellationToken cancellationToken)

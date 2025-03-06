@@ -3,7 +3,7 @@ namespace Biflow.Ui.Core;
 public record UpdateJobTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<JobTag>;
 
 [UsedImplicitly]
-internal class UpdateJobTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateJobTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateJobTagCommand, JobTag>
 {
     public async Task<JobTag> Handle(UpdateJobTagCommand request, CancellationToken cancellationToken)

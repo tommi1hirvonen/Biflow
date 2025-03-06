@@ -3,7 +3,7 @@ namespace Biflow.Ui.Core;
 public record UpdateStepTagCommand(Guid TagId, string TagName, TagColor Color, int SortOrder) : IRequest<StepTag>;
 
 [UsedImplicitly]
-internal class UpdateStepTagCommandHandler(IDbContextFactory<ServiceDbContext> dbContextFactory)
+internal class UpdateStepTagCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<UpdateStepTagCommand, StepTag>
 {
     public async Task<StepTag> Handle(UpdateStepTagCommand request, CancellationToken cancellationToken)

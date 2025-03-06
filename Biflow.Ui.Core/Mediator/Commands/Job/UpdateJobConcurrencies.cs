@@ -7,7 +7,7 @@ public record UpdateJobConcurrenciesCommand(
 
 [UsedImplicitly]
 internal class UpdateJobConcurrenciesCommandHandler(
-    IDbContextFactory<ServiceDbContext> dbContextFactory,
+    IDbContextFactory<AppDbContext> dbContextFactory,
     JobValidator jobValidator)
     : IRequestHandler<UpdateJobConcurrenciesCommand>
 {
