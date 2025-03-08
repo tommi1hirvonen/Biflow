@@ -160,7 +160,7 @@
                 </td>
                 <td colspan="2">
                     <HxButtonGroup Size="ButtonGroupSize.Small">
-                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObject" title="Add">
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-success" OnClick="SubmitNewObjectAsync" title="Add">
                             <SvgIcon Icon="LucideIcon.Check" />
                         </HxButton>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto text-danger" OnClick="() => _newObject = null" title="Discard">
@@ -185,7 +185,7 @@
                         <tbody>
                             @foreach (var obj in objects)
                             {
-                                <tr class="cursor-pointer" @onclick="() => { _newObject = obj; SubmitNewObject(); }">
+                                <tr class="cursor-pointer" @onclick="() => { _newObject = obj; return SubmitNewObjectAsync(); }">
                                     <td class="align-middle font-monospace">
                                         <HighlightableText Text="@obj.ObjectUri" PartToHighlight="@_newObject.ObjectUri" />
                                     </td>
@@ -244,15 +244,27 @@
     </HxDropdownMenu>
 </HxDropdownButtonGroup>
 
-<DbObjectExplorerOffcanvas @ref="_dbObjectExplorerOffcanvas" Connections="SqlConnections" OnDbObjectSelected="OnDbObjectSelected" />
+<DbObjectExplorerOffcanvas @ref="_dbObjectExplorerOffcanvas"
+                           Connections="SqlConnections"
+                           OnDbObjectSelected="OnDbObjectSelectedAsync"/>
 
-<DatasetSelectOffcanvas @ref="_datasetOffcanvas" AzureCredentials="AzureCredentials" AllowAzureCredentialChange OnDatasetSelected="OnDatasetSelected" />
+<DatasetSelectOffcanvas @ref="_datasetOffcanvas"
+                        AzureCredentials="AzureCredentials"
+                        AllowAzureCredentialChange
+                        OnDatasetSelected="OnDatasetSelected"/>
 
-<AppSelectOffcanvas @ref="_appOffcanvas" QlikClients="QlikClients" AllowClientChange OnAppSelected="OnAppSelected" />
+<AppSelectOffcanvas @ref="_appOffcanvas"
+                    QlikClients="QlikClients"
+                    AllowClientChange
+                    OnAppSelected="OnAppSelected"/>
 
-<BlobSelectOffcanvas @ref="_blobOffcanvas" OnBlobSelected="OnBlobSelected" />
+<BlobSelectOffcanvas @ref="_blobOffcanvas"
+                     OnBlobSelected="OnBlobSelected"/>
 
-<AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas" Connections="AsConnections" AllowAzureCredentialChange OnObjectSelected="OnTabularSelected" />
+<AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas"
+                                       Connections="AsConnections"
+                                       AllowAzureCredentialChange
+                                       OnObjectSelected="OnTabularSelected"/>
 
 @code {
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
@@ -308,14 +320,14 @@
     private async Task AddNewObjectAsync()
     {
         _allObjects ??= await LoadAllDataObjects();
-        _newObject = new();
+        _newObject = new DataObject();
     }
 
-    private void SubmitNewObject()
+    private async Task SubmitNewObjectAsync()
     {
         ArgumentNullException.ThrowIfNull(_newObject);
         ArgumentNullException.ThrowIfNull(_references);
-
+        
         if (_references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(_newObject)))
         {
             Toaster.AddWarning($"Duplicate {_listName} object");
@@ -327,8 +339,10 @@
             Toaster.AddWarning("Only ASCII characters allowed");
             return;
         }
+        
+        _allObjects ??= await LoadAllDataObjects();
 
-        var existing = _allObjects?.FirstOrDefault(o => o.UriEquals(_newObject))
+        var existing = _allObjects.FirstOrDefault(o => o.UriEquals(_newObject))
             ?? _references.Select(d => d.DataObject).FirstOrDefault(o => o.UriEquals(_newObject));
         if (existing is not null)
         {
@@ -461,41 +475,41 @@
         _references?.Add(reference);
     }
 
-    private void OnDbObjectSelected((string Server, string Database, string Schema, string Object) tuple, bool commit)
+    private async Task OnDbObjectSelectedAsync((string Server, string Database, string Schema, string Object) tuple, bool commit)
     {
-        _newObject ??= new();
+        _newObject ??= new DataObject();
         _newObject.ObjectUri = DataObject.CreateTableUri(tuple.Server, tuple.Database, tuple.Schema, tuple.Object);
         if (commit)
         {
-            SubmitNewObject();
+            await SubmitNewObjectAsync();
         }
         StateHasChanged();
     }
 
     private void OnDatasetSelected(Dataset dataset)
     {
-        _newObject ??= new();
+        _newObject ??= new DataObject();
         _newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
         StateHasChanged();
     }
 
     private void OnTabularSelected(AnalysisServicesObjectSelectedResponse tabular)
     {
-        _newObject ??= new();
+        _newObject ??= new DataObject();
         _newObject.ObjectUri = DataObject.CreateTabularUri(tabular.ServerName, tabular.ModelName, tabular.TableName, tabular.PartitionName);
         StateHasChanged();
     }
 
     private void OnAppSelected(QlikApp app)
     {
-        _newObject ??= new();
+        _newObject ??= new DataObject();
         _newObject.ObjectUri = DataObject.CreateQlikUri(app.Name);
         StateHasChanged();
     }
 
     private void OnBlobSelected(BlobSelectedResponse blob)
     {
-        _newObject ??= new();
+        _newObject ??= new DataObject();
         _newObject.ObjectUri = DataObject.CreateBlobUri(blob.AccountName, blob.ContainerName, blob.Path);
         StateHasChanged();
     }

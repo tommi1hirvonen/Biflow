@@ -6,7 +6,7 @@ public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : Compone
 {
     [Parameter] public IEnumerable<SqlConnectionBase> Connections { get; set; } = [];
 
-    [Parameter] public Action<(string, string, string, string), bool>? OnDbObjectSelected { get; set; }
+    [Parameter] public Func<(string, string, string, string), bool, Task>? OnDbObjectSelected { get; set; }
 
     private readonly ToasterService _toaster = toaster;
     private readonly SemaphoreSlim _semaphore = new(1, 1);
@@ -77,7 +77,10 @@ public partial class DbObjectExplorerOffcanvas(ToasterService toaster) : Compone
     private async Task SelectDbObjectAsync((string Server, string Database, string Schema, string Name) dbObject, bool commit)
     {
         await _offcanvas.LetAsync(x => x.HideAsync());
-        OnDbObjectSelected?.Invoke(dbObject, commit);
+        if (OnDbObjectSelected is not null)
+        {
+            await OnDbObjectSelected(dbObject, commit);
+        }
     }
 
     public async Task ShowAsync(Guid? connectionId)
