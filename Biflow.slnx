@@ -1,0 +1,23 @@
+<Solution>
+  <Project Path="Biflow.Aspire.AppHost/Biflow.Aspire.AppHost.csproj" />
+  <Project Path="Biflow.Aspire.ServiceDefaults/Biflow.Aspire.ServiceDefaults.csproj" />
+  <Project Path="Biflow.Core.Test/Biflow.Core.Test.csproj" />
+  <Project Path="Biflow.Core/Biflow.Core.csproj" />
+  <Project Path="Biflow.DataAccess.Test/Biflow.DataAccess.Test.csproj" />
+  <Project Path="Biflow.DataAccess/Biflow.DataAccess.csproj" />
+  <Project Path="Biflow.Executor.Core.Tests/Biflow.Executor.Core.Test.csproj" />
+  <Project Path="Biflow.Executor.Core/Biflow.Executor.Core.csproj" />
+  <Project Path="Biflow.Executor.WebApp/Biflow.Executor.WebApp.csproj" />
+  <Project Path="Biflow.Scheduler.Core/Biflow.Scheduler.Core.csproj" />
+  <Project Path="Biflow.Scheduler.WebApp.Test/Biflow.Scheduler.WebApp.Test.csproj" />
+  <Project Path="Biflow.Scheduler.WebApp/Biflow.Scheduler.WebApp.csproj" />
+  <Project Path="Biflow.Ui.Api/Biflow.Ui.Api.csproj" />
+  <Project Path="Biflow.Ui.Components.Sample/Biflow.Ui.Components.Sample.csproj" />
+  <Project Path="Biflow.Ui.Components/Biflow.Ui.Components.csproj" />
+  <Project Path="Biflow.Ui.Core/Biflow.Ui.Core.csproj" />
+  <Project Path="Biflow.Ui.Icons/Biflow.Ui.Icons.csproj" />
+  <Project Path="Biflow.Ui.SourceGeneration/Biflow.Ui.SourceGeneration.csproj" />
+  <Project Path="Biflow.Ui.SqlMetadataExtensions/Biflow.Ui.SqlMetadataExtensions.csproj" />
+  <Project Path="Biflow.Ui.TableEditor/Biflow.Ui.TableEditor.csproj" />
+  <Project Path="Biflow.Ui/Biflow.Ui.csproj" />
+</Solution>
