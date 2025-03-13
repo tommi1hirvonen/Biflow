@@ -142,7 +142,8 @@ internal class GlobalOrchestrator(
                 await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
             });
 
-    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
+    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepExecutionListener listener,
+        ExtendedCancellationTokenSource cts)
     {
         // Update the step's status to 'Queued'.
         try
@@ -152,28 +153,32 @@ internal class GlobalOrchestrator(
             {
                 attempt.ExecutionStatus = StepExecutionStatus.Queued;
                 await dbContext.StepExecutionAttempts
-                    .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                    .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                                x.StepId == attempt.StepId &&
+                                x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                     .ExecuteUpdateAsync(x => x
                         .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus), CancellationToken.None);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {step} Error updating step execution's status to Queued", stepExecution.ExecutionId, stepExecution);
+            _logger.LogError(ex, "{ExecutionId} {step} Error updating step execution's status to Queued",
+                stepExecution.ExecutionId, stepExecution);
         }
 
         var result = false;
         try
         {
             await listener.OnPreExecuteAsync(stepExecution, cts);
-            var stepExecutor = _stepExecutorProvider.GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
+            var stepExecutor = _stepExecutorProvider
+                .GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
             result = await stepExecutor.RunAsync(stepExecution, cts);
         }
         catch (OperationCanceledException)
         {
             // We should only arrive here if the step was canceled while it was Queued.
-            // If the step was canceled once its execution had started,
-            // then the step's executor should handle the cancellation and the result is returned normally from RunAsync().
+            // If the step was canceled once its execution had started, then the step's executor
+            // should handle the cancellation and the result is returned normally from RunAsync().
             try
             {
                 await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
@@ -234,7 +239,9 @@ internal class GlobalOrchestrator(
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
             await context.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
                     .SetProperty(p => p.StartedOn, attempt.StartedOn)
@@ -261,7 +268,9 @@ internal class GlobalOrchestrator(
         // Place the error message first on the list.
         attempt.AddError(ex, $"Unhandled error caught in global orchestrator:\n\n{ex.Message}", insertFirst: true);
         await context.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
                     .SetProperty(p => p.StartedOn, attempt.StartedOn)
@@ -281,7 +290,9 @@ internal class GlobalOrchestrator(
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddError(errorMessage);
             await context.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
                     .SetProperty(p => p.StartedOn, attempt.StartedOn)
@@ -298,7 +309,12 @@ internal class GlobalOrchestrator(
         {
             await using var context = await _dbContextFactory.CreateDbContextAsync();
             var distinct = monitors
-                .DistinctBy(t => (t.ExecutionId, t.StepId, t.MonitoredExecutionId, t.MonitoredStepId, TrackingReason: t.MonitoringReason));
+                .DistinctBy(t =>
+                    (t.ExecutionId,
+                        t.StepId,
+                        t.MonitoredExecutionId,
+                        t.MonitoredStepId,
+                        TrackingReason: t.MonitoringReason));
             context.StepExecutionMonitors.AddRange(distinct);
             await context.SaveChangesAsync();
         }
