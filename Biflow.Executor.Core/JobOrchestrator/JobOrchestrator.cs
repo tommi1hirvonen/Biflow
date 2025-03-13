@@ -46,35 +46,12 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         var observers = _execution.StepExecutions
             .Select(step =>
             {
-                var duplicateTracker = new DuplicateExecutionTracker(step);
-                var targetTracker = new TargetTracker(step); // Handles target data object synchronization across job executions.
-
-                // The order in which trackers are enumerated in OrchestrationObserver matters.
-                // 1. Check for duplicate executions of the step
-                // 2. Check execution phases or dependencies or both, depending on the execution mode.
-                // 3. Check whether potential target data objects are already being written to or that their concurrency allows more steps to be executed.
-                IOrchestrationTracker[] trackers = step.Execution.ExecutionMode switch
-                {
-                    ExecutionMode.ExecutionPhase => [duplicateTracker, new ExecutionPhaseTracker(step), targetTracker],
-                    ExecutionMode.Dependency => [duplicateTracker, new DependencyTracker(step), targetTracker],
-                    ExecutionMode.Hybrid => [duplicateTracker, new ExecutionPhaseTracker(step), new DependencyTracker(step), targetTracker],
-                    _ => throw new ArgumentException($"Unsupported execution mode {step.Execution.ExecutionMode} for execution id {step.ExecutionId}")
-                };
-
-                trackers = step switch
-                {
-                    FunctionStepExecution function => [.. trackers, new FunctionAppTracker(function)],
-                    SqlStepExecution or PackageStepExecution => [.. trackers, new SqlConnectionTracker(step)],
-                    PipelineStepExecution pipeline => [.. trackers, new PipelineClientTracker(pipeline)],
-                    _ => trackers
-                };
-
+                var trackers = GenerateOrchestrationTrackers(step).ToArray();
                 var observer = new OrchestrationObserver(
                     logger: _logger,
                     stepExecution: step,
                     orchestrationTrackers: trackers,
                     cancellationTokenSource: _cancellationTokenSources[step]);
-
                 return observer;
             })
             .ToArray();
@@ -163,5 +140,45 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
 
         _logger.LogInformation("{ExecutionId} {step} Finished step execution", _execution.ExecutionId, stepExecution);
         return Task.CompletedTask;
+    }
+
+    private static IEnumerable<IOrchestrationTracker> GenerateOrchestrationTrackers(StepExecution step)
+    {
+        // The order in which trackers are enumerated in OrchestrationObserver matters.
+        // 1. Check for duplicate executions of the step
+        // 2. Check execution phases or dependencies or both, depending on the execution mode.
+        // 3. Check whether potential target data objects are already being written to or
+        // that their concurrency allows more steps to be executed.
+        // 4. Check integration specific concurrencies.
+        yield return new DuplicateExecutionTracker(step);
+        switch (step.Execution.ExecutionMode)
+        {
+            case ExecutionMode.ExecutionPhase:
+                yield return new ExecutionPhaseTracker(step);
+                break;
+            case ExecutionMode.Dependency:
+                yield return new DependencyTracker(step);
+                break;
+            case ExecutionMode.Hybrid:
+                yield return new ExecutionPhaseTracker(step);
+                yield return new DependencyTracker(step);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(
+                    $"Unsupported execution mode {step.Execution.ExecutionMode} for execution id {step.ExecutionId}");
+        }
+        yield return new TargetTracker(step); // Handles target data object synchronization across job executions.
+        switch (step)
+        {
+            case FunctionStepExecution function:
+                yield return new FunctionAppTracker(function);
+                break;
+            case SqlStepExecution or PackageStepExecution:
+                yield return new SqlConnectionTracker(step);
+                break;
+            case PipelineStepExecution pipeline:
+                yield return new PipelineClientTracker(pipeline);
+                break;
+        }
     }
 }
