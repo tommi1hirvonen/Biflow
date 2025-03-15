@@ -31,14 +31,19 @@ internal class GlobalOrchestrator(
             {
                 // If this is a synchronized child execution, add it to the parent execution's list.
                 // The parent is the top level parent execution.
+                List<Guid>? childExecutions;
                 if (context is { ParentExecutionId: { } parentExecutionId, SynchronizedExecution: true })
                 {
-                    if (!_childExecutions.TryGetValue(parentExecutionId, out var value))
+                    if (!_childExecutions.TryGetValue(parentExecutionId, out childExecutions))
                     {
-                        value = [];
-                        _childExecutions[parentExecutionId] = value;
+                        childExecutions = [];
+                        _childExecutions[parentExecutionId] = childExecutions;
                     }
-                    value.Add(context.ExecutionId);
+                    childExecutions.Add(context.ExecutionId);
+                }
+                else
+                {
+                    childExecutions = [];
                 }
                 
                 // Update the orchestration statuses with all new observers.
@@ -59,10 +64,20 @@ internal class GlobalOrchestrator(
                 // register initial updates and capture the generated monitors.
                 foreach (var observer in observers.OrderBy(o => o.Priority))
                 {
-                    // Recollect statuses as new steps can be started during iteration.
                     var statuses = _stepStatuses
+                        .Where(item =>
+                        {
+                            var (stepExecution, status) = item;
+                            // Include all status updates for parent-child executions. This way updates for step
+                            // dependency tracking purposes are propagated throughout child executions.
+                            // Otherwise, only include steps that haven't been started yet or that are running.
+                            // This way, long-lived executions do not interfere with other executions outside
+                            // their parent-child scope. 
+                            return childExecutions.Contains(stepExecution.ExecutionId)
+                                || status is OrchestrationStatus.NotStarted or OrchestrationStatus.Running;
+                        })
                         .Select(s => new OrchestrationUpdate(s.Key, s.Value))
-                        .ToArray();
+                        .ToArray(); // Collect statuses as new steps can be started during iteration.
 
                     // New observers will report back any monitors added because of
                     // both previously registered step executions and because of step executions
