@@ -27,7 +27,11 @@ internal class DbtStepExecutor(
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    protected override async Task<Result> ExecuteAsync(DbtStepExecution step, DbtStepExecutionAttempt attempt, ExtendedCancellationTokenSource cts)
+    protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
+        DbtStepExecution step,
+        DbtStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -60,9 +64,9 @@ internal class DbtStepExecutor(
         // Update run id for the step execution attempt.
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.DbtJobRunId = run.Id;
-            await context.Set<DbtStepExecutionAttempt>()
+            await dbContext.Set<DbtStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.DbtJobRunId, attempt.DbtJobRunId), CancellationToken.None);

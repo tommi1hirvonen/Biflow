@@ -28,6 +28,12 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         {
             return null;
         }
+        
+        // The step is not being tracked, and it has already completed.
+        if (!_writers.ContainsKey(otherStep) && status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed)
+        {
+            return null;
+        }
 
         // The other step has no common targets.
         if (!otherStep.DataObjects.Any(o =>
@@ -37,7 +43,7 @@ internal class TargetTracker(StepExecution stepExecution) : IOrchestrationTracke
         }
         
         _writers[otherStep] = status;
-        return new()
+        return new StepExecutionMonitor
         {
             ExecutionId = stepExecution.ExecutionId,
             StepId = stepExecution.StepId,

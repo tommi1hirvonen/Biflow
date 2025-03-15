@@ -16,7 +16,7 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
 
         var (otherStep, status) = value;
         
-        // The step is different or it is the same execution.
+        // The step is different, or it is the same execution.
         if (otherStep.StepId != stepExecution.StepId || otherStep.ExecutionId == stepExecution.ExecutionId)
         {
             return null;
@@ -24,7 +24,7 @@ internal class DuplicateExecutionTracker(StepExecution stepExecution) : IOrchest
         
         // Keep track of the same step being possibly executed in a different execution.
         _duplicates[otherStep] = status;
-        return new()
+        return new StepExecutionMonitor
         {
             ExecutionId = stepExecution.ExecutionId,
             StepId = stepExecution.StepId,

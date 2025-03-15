@@ -16,6 +16,7 @@ internal class SqlStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     protected override Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         SqlStepExecution step,
         SqlStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

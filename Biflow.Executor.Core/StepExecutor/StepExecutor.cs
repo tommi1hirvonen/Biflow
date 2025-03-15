@@ -11,7 +11,8 @@ internal abstract class StepExecutor<TStep, TAttempt>(
     private readonly ILogger<StepExecutor<TStep, TAttempt>> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
-    public async Task<bool> RunAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cts)
+    public async Task<bool> RunAsync(OrchestrationContext context, StepExecution stepExecution,
+        ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
 
@@ -30,12 +31,12 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         {
             try
             {
-                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 // Update the historized ExecutionParameterValue with the ExecutionParameter's value.
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.InheritFromExecutionParameter is not null))
                 {
                     param.ExecutionParameterValue = param.InheritFromExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
-                    await context.Set<StepExecutionParameterBase>()
+                    await dbContext.Set<StepExecutionParameterBase>()
                         .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                         .ExecuteUpdateAsync(x => x
                             .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue), CancellationToken.None);
@@ -44,7 +45,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                 foreach (var param in hasParameters.StepExecutionParameters.Where(p => p.UseExpression))
                 {
                     param.ParameterValue = new(await param.EvaluateAsync());
-                    await context.Set<StepExecutionParameterBase>()
+                    await dbContext.Set<StepExecutionParameterBase>()
                         .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                         .ExecuteUpdateAsync(x => x
                             .SetProperty(p => p.ParameterValue, param.ParameterValue), CancellationToken.None);
@@ -62,11 +63,11 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         // Update current values of job parameters to execution condition parameters.
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             foreach (var param in stepExecution.ExecutionConditionParameters.Where(p => p.ExecutionParameter is not null))
             {
                 param.ExecutionParameterValue = param.ExecutionParameter?.ParameterValue ?? param.ExecutionParameterValue;
-                await context.Set<StepExecutionConditionParameter>()
+                await dbContext.Set<StepExecutionConditionParameter>()
                     .Where(x => x.ExecutionId == param.ExecutionId && x.ParameterId == param.ParameterId)
                     .ExecuteUpdateAsync(x => x
                         .SetProperty(p => p.ExecutionParameterValue, param.ExecutionParameterValue), CancellationToken.None);
@@ -100,7 +101,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
 
         if (stepExecution is TStep step && executionAttempt is TAttempt attempt)
         {
-            return await ExecuteRecursivelyWithRetriesAsync(step, attempt, cts);
+            return await ExecuteRecursivelyWithRetriesAsync(context, step, attempt, cts);
         }
 
         throw new InvalidOperationException(
@@ -108,9 +109,11 @@ internal abstract class StepExecutor<TStep, TAttempt>(
             $"do not match the types of the executor ({typeof(TStep).Name}, {typeof(TAttempt).Name})");
     }
 
-    protected abstract Task<Result> ExecuteAsync(TStep step, TAttempt attempt, ExtendedCancellationTokenSource cts);
+    protected abstract Task<Result> ExecuteAsync(OrchestrationContext context, TStep step, TAttempt attempt,
+        ExtendedCancellationTokenSource cts);
 
     private async Task<bool> ExecuteRecursivelyWithRetriesAsync(
+        OrchestrationContext context,
         TStep stepExecution,
         TAttempt executionAttempt,
         ExtendedCancellationTokenSource cts)
@@ -120,7 +123,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
         Result result;
         try
         {
-            result = await ExecuteAsync(stepExecution, executionAttempt, cts);
+            result = await ExecuteAsync(context, stepExecution, executionAttempt, cts);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
         {
@@ -180,7 +183,7 @@ internal abstract class StepExecutor<TStep, TAttempt>(
                     return false;
                 }
 
-                return await ExecuteRecursivelyWithRetriesAsync(stepExecution, nextExecution, cts);
+                return await ExecuteRecursivelyWithRetriesAsync(context, stepExecution, nextExecution, cts);
             });
     }
     

@@ -14,6 +14,7 @@ internal class EmailStepExecutor(
     private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         EmailStepExecution step,
         EmailStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

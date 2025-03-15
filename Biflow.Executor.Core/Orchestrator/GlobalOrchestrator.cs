@@ -15,8 +15,10 @@ internal class GlobalOrchestrator(
     private readonly IStepExecutorProvider _stepExecutorProvider = stepExecutorProvider;
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
+    private readonly Dictionary<Guid, List<Guid>> _childExecutions = [];
 
     public async Task RegisterStepsAndObserversAsync(
+        OrchestrationContext context,
         ICollection<IOrchestrationObserver> observers,
         IStepExecutionListener stepExecutionListener)
     {
@@ -27,6 +29,18 @@ internal class GlobalOrchestrator(
             // Acquire lock for editing the step statuses and until all observers have subscribed.
             lock (_lock)
             {
+                // If this is a synchronized child execution, add it to the parent execution's list.
+                // The parent is the top level parent execution.
+                if (context is { ParentExecutionId: { } parentExecutionId, SynchronizedExecution: true })
+                {
+                    if (!_childExecutions.TryGetValue(parentExecutionId, out var value))
+                    {
+                        value = [];
+                        _childExecutions[parentExecutionId] = value;
+                    }
+                    value.Add(context.ExecutionId);
+                }
+                
                 // Update the orchestration statuses with all new observers.
                 foreach (var observer in observers)
                 {
@@ -60,7 +74,7 @@ internal class GlobalOrchestrator(
                             // In case the observer immediately requests for execution,
                             // update the status for observers that have already subscribed and start the execution.
                             UpdateStatus(observer.StepExecution, OrchestrationStatus.Running);
-                            var task = ExecuteStepAsync(observer.StepExecution, stepExecutionListener, cts);
+                            var task = ExecuteStepAsync(context, observer.StepExecution, stepExecutionListener, cts);
                             tasks.Add(task);
                         });
 
@@ -75,7 +89,8 @@ internal class GlobalOrchestrator(
                     // If the step was not started by the execute callback when registering initial updates,
                     // create a task to wait until the observer requests processing.
                     var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cts) =>
-                        OnStepReadyForProcessingAsync(observer.StepExecution, stepAction, stepExecutionListener, cts));
+                        OnStepReadyForProcessingAsync(
+                            context, observer.StepExecution, stepAction, stepExecutionListener, cts));
                     tasks.Add(waitTask);
                 }
 
@@ -93,16 +108,35 @@ internal class GlobalOrchestrator(
         {
             lock (_lock)
             {
-                // Clean up any remaining step execution statuses and observers.
-                // In normal operation there should be none remaining after orchestration.
+                // Remove step execution statuses and observers.
                 foreach (var observer in observers)
                 {
-                    if (_stepStatuses.ContainsKey(observer.StepExecution))
+                    // If this execution is not a child execution or synchronized execution was disabled,
+                    // clean up statuses.
+                    // Otherwise, this is a synchronized child execution, so do not remove statuses.
+                    // In that case, status cleanup is handled by the top level parent.
+                    if (context.ParentExecutionId is null || !context.SynchronizedExecution)
                     {
-                        UpdateStatus(observer.StepExecution, OrchestrationStatus.Failed);
-                        _stepStatuses.Remove(observer.StepExecution);
+                        _ = _stepStatuses.Remove(observer.StepExecution);
                     }
-                    _observers.Remove(observer);
+                    
+                    // In normal operation, the observer should already have been removed by unsubscribing.
+                    _ = _observers.Remove(observer);
+                }
+
+                // If this is a parent execution, check for potential child executions and clear their statuses too.
+                if (_childExecutions.TryGetValue(context.ExecutionId, out var childExecutionIds))
+                {
+                    var keysToRemove = childExecutionIds
+                        .Select(id => _stepStatuses.Keys.Where(x => x.ExecutionId == id))
+                        .SelectMany(keys => keys)
+                        .Distinct()
+                        .ToArray();
+                    foreach (var key in keysToRemove)
+                    {
+                        _stepStatuses.Remove(key);
+                    }
+                    _childExecutions.Remove(context.ExecutionId);
                 }
             }
         }
@@ -121,6 +155,7 @@ internal class GlobalOrchestrator(
     }
 
     private Task OnStepReadyForProcessingAsync(
+        OrchestrationContext context,
         StepExecution stepExecution,
         OrchestratorAction stepAction,
         IStepExecutionListener listener,
@@ -129,7 +164,7 @@ internal class GlobalOrchestrator(
             async (ExecuteAction _) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Running);
-                await ExecuteStepAsync(stepExecution, listener, cts);
+                await ExecuteStepAsync(context, stepExecution, listener, cts);
             },
             async (CancelAction _) =>
             {
@@ -142,8 +177,8 @@ internal class GlobalOrchestrator(
                 await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
             });
 
-    private async Task ExecuteStepAsync(StepExecution stepExecution, IStepExecutionListener listener,
-        ExtendedCancellationTokenSource cts)
+    private async Task ExecuteStepAsync(OrchestrationContext context, StepExecution stepExecution,
+        IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
     {
         // Update the step's status to 'Queued'.
         try
@@ -172,7 +207,7 @@ internal class GlobalOrchestrator(
             await listener.OnPreExecuteAsync(stepExecution, cts);
             var stepExecutor = _stepExecutorProvider
                 .GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
-            result = await stepExecutor.RunAsync(stepExecution, cts);
+            result = await stepExecutor.RunAsync(context, stepExecution, cts);
         }
         catch (OperationCanceledException)
         {
@@ -212,19 +247,12 @@ internal class GlobalOrchestrator(
     {
         lock (_lock)
         {
-            if (status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed)
-            {
-                _stepStatuses.Remove(step);
-            }
-            else
-            {
-                _stepStatuses[step] = status;
-            }
+            _stepStatuses[step] = status;
 
             // Make a copy of the list as observers might unsubscribe during enumeration.
             foreach (var observer in _observers.ToArray())
             {
-                observer.OnUpdate(new(step, status));
+                observer.OnUpdate(new OrchestrationUpdate(step, status));
             }
         }
     }

@@ -21,6 +21,7 @@ internal class PipelineStepExecutor(
     private const int MaxRefreshRetries = 3;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         PipelineStepExecution step,
         PipelineStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
@@ -67,9 +68,9 @@ internal class PipelineStepExecutor(
 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.PipelineRunId = runId;
-            await context.Set<PipelineStepExecutionAttempt>()
+            await dbContext.Set<PipelineStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.PipelineRunId, attempt.PipelineRunId), CancellationToken.None);

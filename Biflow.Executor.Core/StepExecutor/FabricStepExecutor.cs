@@ -24,7 +24,10 @@ internal class FabricStepExecutor(
     private const int MaxRefreshRetries = 3;
     
     protected override async Task<Result> ExecuteAsync(
-        FabricStepExecution step, FabricStepExecutionAttempt attempt, ExtendedCancellationTokenSource cancellationTokenSource)
+        OrchestrationContext context,
+        FabricStepExecution step,
+        FabricStepExecutionAttempt attempt,
+        ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
         cancellationToken.ThrowIfCancellationRequested();
@@ -74,9 +77,9 @@ internal class FabricStepExecutor(
         
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobInstanceId = instanceId;
-            await context.Set<FabricStepExecutionAttempt>()
+            await dbContext.Set<FabricStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
                             x.RetryAttemptIndex == attempt.RetryAttemptIndex)

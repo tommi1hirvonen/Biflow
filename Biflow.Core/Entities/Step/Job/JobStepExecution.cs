@@ -32,6 +32,11 @@ public class JobStepExecution : StepExecution,
 
     public Guid JobToExecuteId { get; private set; }
 
+    /// <summary>
+    /// In order for cross-job dependencies to work reliably across parent-child job executions,
+    /// synchronized execution should be enabled. This ensures the parent executions are kept in orchestration scope
+    /// until all child executions have also completed.
+    /// </summary>
     public bool JobExecuteSynchronized { get; private set; }
 
     public IEnumerable<JobStepExecutionParameter> StepExecutionParameters { get; } = new List<JobStepExecutionParameter>();

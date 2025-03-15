@@ -33,9 +33,15 @@ internal class FunctionAppTracker(FunctionStepExecution stepExecution) : IOrches
         {
             return null;
         }
+
+        // The step is not being tracked, and it has already completed.
+        if (!_others.ContainsKey(functionStep) && status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed)
+        {
+            return null;
+        }
         
         _others[functionStep] = status;
-        return new()
+        return new StepExecutionMonitor
         {
             ExecutionId = stepExecution.ExecutionId,
             StepId = stepExecution.StepId,

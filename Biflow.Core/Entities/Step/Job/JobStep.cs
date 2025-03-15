@@ -29,6 +29,11 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
     [NotEmptyGuid]
     public Guid JobToExecuteId { get; set; }
 
+    /// <summary>
+    /// In order for cross-job dependencies to work reliably across parent-child job executions,
+    /// synchronized execution should be enabled. This ensures the parent executions are kept in orchestration scope
+    /// until all child executions have also completed.
+    /// </summary>
     [Required]
     public bool JobExecuteSynchronized { get; set; }
 

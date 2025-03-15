@@ -10,7 +10,13 @@ public interface IExecutionManager : IHostedService
 
     public bool IsExecutionRunning(Guid executionId);
 
-    public Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default);
+    public Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
+    {
+        var context = new OrchestrationContext(executionId, parentExecutionId: null, synchronizedExecution: false);
+        return StartExecutionAsync(context, cancellationToken);
+    }
+    
+    internal Task StartExecutionAsync(OrchestrationContext context, CancellationToken cancellationToken = default);
 
     public Task WaitForTaskCompleted(Guid executionId, CancellationToken cancellationToken);
 

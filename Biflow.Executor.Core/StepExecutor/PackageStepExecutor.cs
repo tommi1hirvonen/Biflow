@@ -16,6 +16,7 @@ internal class PackageStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         PackageStepExecution step,
         PackageStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

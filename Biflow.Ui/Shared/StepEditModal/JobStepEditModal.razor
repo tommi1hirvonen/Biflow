@@ -52,7 +52,9 @@
                 <label class="form-check-label mb-lg-0" for="new_step_job_synchronized">
                     Synchronized
                     &nbsp;
-                    <HxPopover Trigger="PopoverTrigger.Hover" Content="By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.">
+                    <HxPopover Trigger="PopoverTrigger.Hover"
+                               Html
+                               Content="<p>By default child job executions are launched asynchronously (fire and forget). If synchronized execution is enabled, the step completes only after the child job's execution is completed.</p>In order for cross-job dependencies to work reliably across parent-child job executions, synchronized execution should be enabled. This ensures the parent executions are kept in orchestration scope until all child executions have also completed.">
                         <SvgIcon Icon="LucideIcon.Info" />
                     </HxPopover>
                 </label>

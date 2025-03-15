@@ -26,7 +26,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
         }
     }
 
-    public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
+    public async Task StartExecutionAsync(OrchestrationContext context, CancellationToken cancellationToken = default)
     {
         // Check for shutdown and duplicate key before proceeding
         // to creating the job executor which is a heavy operation.
@@ -35,6 +35,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             throw new ApplicationException("Cannot start new executions when service shutdown is requested.");
         }
 
+        var executionId = context.ExecutionId;
         lock (_lock)
         {
             if (_jobExecutors.ContainsKey(executionId))
@@ -58,7 +59,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
                 throw new DuplicateExecutionException(executionId);
             }
 
-            var task = jobExecutor.RunAsync(_shutdownCts.Token);
+            var task = jobExecutor.RunAsync(context, _shutdownCts.Token);
             _executionTasks[executionId] = task;
             _ = MonitorExecutionTaskAsync(task, executionId);
         }

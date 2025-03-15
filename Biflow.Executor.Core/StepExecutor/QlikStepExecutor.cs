@@ -18,6 +18,7 @@ internal class QlikStepExecutor(
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         QlikStepExecution step,
         QlikStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

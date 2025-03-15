@@ -21,7 +21,7 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
         if (stepExecution.ExecutionDependencies.Any(d => d.DependantOnStepId == otherStep.StepId))
         {
             _dependencies[otherStep] = status;
-            return new()
+            return new StepExecutionMonitor
             {
                 ExecutionId = stepExecution.ExecutionId,
                 StepId = stepExecution.StepId,
@@ -39,7 +39,7 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
         
         // Keep track of steps that depend on this step.
         _dependsOnThis[otherStep] = status;
-        return new()
+        return new StepExecutionMonitor
         {
             ExecutionId = stepExecution.ExecutionId,
             StepId = stepExecution.StepId,

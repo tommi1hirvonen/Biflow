@@ -22,7 +22,7 @@ internal class JobExecutor(
 
     public Execution Execution { get; } = execution;
 
-    public async Task RunAsync(CancellationToken cancellationToken)
+    public async Task RunAsync(OrchestrationContext context, CancellationToken cancellationToken)
     {
         // CancellationToken is triggered when the executor service is being shut down
         cancellationToken.ThrowIfCancellationRequested();
@@ -30,12 +30,12 @@ internal class JobExecutor(
         try
         {
             var process = Process.GetCurrentProcess();
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            context.Attach(Execution);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            dbContext.Attach(Execution);
             Execution.ExecutorProcessId = process.Id;
             Execution.ExecutionStatus = ExecutionStatus.Running;
             Execution.StartedOn = DateTimeOffset.Now;
-            await context.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -60,13 +60,13 @@ internal class JobExecutor(
         // Update execution parameter values for parameters that use expressions.
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             foreach (var parameter in Execution.ExecutionParameters.Where(p => p.UseExpression))
             {
-                context.Attach(parameter);
+                dbContext.Attach(parameter);
                 parameter.ParameterValue = new(await parameter.EvaluateAsync());
             }
-            await context.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
         }
         catch (Exception ex)
         {
@@ -84,7 +84,7 @@ internal class JobExecutor(
                 ? Task.Delay(TimeSpan.FromMinutes(Execution.OvertimeNotificationLimitMinutes), notificationCts.Token)
                 : Task.Delay(-1, notificationCts.Token); // infinite timeout
 
-            var orchestrationTask = _jobOrchestrator.RunAsync(cancellationToken);
+            var orchestrationTask = _jobOrchestrator.RunAsync(context, cancellationToken);
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
@@ -104,11 +104,11 @@ internal class JobExecutor(
         // Update job execution status.
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
-            context.Attach(Execution);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            dbContext.Attach(Execution);
             Execution.ExecutionStatus = Execution.GetCalculatedStatus();
             Execution.EndedOn = DateTimeOffset.Now;
-            await context.SaveChangesAsync(CancellationToken.None);
+            await dbContext.SaveChangesAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {

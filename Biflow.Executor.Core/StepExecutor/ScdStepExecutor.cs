@@ -20,6 +20,7 @@ internal class ScdStepExecutor(
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         ScdStepExecution step,
         ScdStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

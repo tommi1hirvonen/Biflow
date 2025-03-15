@@ -23,6 +23,7 @@ internal class DataflowStepExecutor(
     private const int MaxRefreshRetries = 3;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         DataflowStepExecution step,
         DataflowStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

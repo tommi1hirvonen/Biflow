@@ -23,6 +23,7 @@ internal class AgentJobStepExecutor(
     };
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         AgentJobStepExecution step,
         AgentJobStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

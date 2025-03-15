@@ -15,6 +15,7 @@ internal class ExeStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         ExeStepExecution step,
         ExeStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
@@ -82,9 +83,9 @@ internal class ExeStepExecutor(
 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ExeProcessId = process.Id;
-            await context.Set<ExeStepExecutionAttempt>()
+            await dbContext.Set<ExeStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.ExeProcessId, attempt.ExeProcessId), CancellationToken.None);

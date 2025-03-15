@@ -17,6 +17,7 @@ internal class DatasetStepExecutor(
     private readonly ITokenService _tokenService = tokenService;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         DatasetStepExecution step,
         DatasetStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

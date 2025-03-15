@@ -55,8 +55,14 @@ internal class SqlConnectionTracker(StepExecution stepExecution) : IOrchestratio
             return null;
         }
         
+        // The step is not being tracked, and it has already completed.
+        if (!_others.ContainsKey(otherStep) && status is OrchestrationStatus.Succeeded or OrchestrationStatus.Failed)
+        {
+            return null;
+        }
+        
         _others[otherStep] = status;
-        return new()
+        return new StepExecutionMonitor
         {
             ExecutionId = stepExecution.ExecutionId,
             StepId = stepExecution.StepId,

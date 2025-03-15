@@ -11,6 +11,7 @@ internal class TabularStepExecutor(
     : StepExecutor<TabularStepExecution, TabularStepExecutionAttempt>(logger, dbContextFactory)
 {
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         TabularStepExecution step,
         TabularStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)

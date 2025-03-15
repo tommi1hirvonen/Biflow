@@ -21,6 +21,7 @@ internal class DatabricksStepExecutor(
     private const int MaxRefreshRetries = 3;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         DatabricksStepExecution step,
         DatabricksStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
@@ -141,9 +142,9 @@ internal class DatabricksStepExecutor(
 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobRunId = runId;
-            await context.Set<DatabricksStepExecutionAttempt>()
+            await dbContext.Set<DatabricksStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.JobRunId, attempt.JobRunId), CancellationToken.None);

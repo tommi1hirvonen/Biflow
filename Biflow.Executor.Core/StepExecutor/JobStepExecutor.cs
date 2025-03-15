@@ -17,6 +17,7 @@ internal class JobStepExecutor(
     private readonly IExecutionManager _executionManager = executionManager;
 
     protected override async Task<Result> ExecuteAsync(
+        OrchestrationContext context,
         JobStepExecution step,
         JobStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
@@ -88,9 +89,9 @@ internal class JobStepExecutor(
 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ChildJobExecutionId = jobExecutionId;
-            await context.Set<JobStepExecutionAttempt>()
+            await dbContext.Set<JobStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.ChildJobExecutionId, attempt.ChildJobExecutionId), CancellationToken.None);
@@ -103,7 +104,12 @@ internal class JobStepExecutor(
             
         try
         {
-            await _executionManager.StartExecutionAsync(jobExecutionId, CancellationToken.None);
+            // Create a new orchestration context. Use the previous parent execution id if available.
+            var nextContext = new OrchestrationContext(
+                executionId: jobExecutionId,
+                parentExecutionId: context.ParentExecutionId ?? step.ExecutionId,
+                synchronizedExecution: step.JobExecuteSynchronized);
+            await _executionManager.StartExecutionAsync(nextContext, CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -130,8 +136,8 @@ internal class JobStepExecutor(
 
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
-            var status = await context.Executions
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            var status = await dbContext.Executions
                 .Where(e => e.ExecutionId == jobExecutionId)
                 .Select(e => e.ExecutionStatus)
                 .FirstAsync(CancellationToken.None);
