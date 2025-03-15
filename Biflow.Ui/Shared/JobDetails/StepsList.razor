@@ -489,6 +489,13 @@
                                     Copy...
                                 </DropdownMenuItem>
                             </AuthorizeView>
+                            @if (item is JobStep jobStep)
+                            {
+                                <a class="dropdown-item" role="button" href="@($"jobs/{jobStep.JobToExecuteId}/steps")">
+                                    <SvgIcon Icon="LucideIcon.MoveRight" />
+                                    Go to job
+                                </a>
+                            }
                             <DropdownMenuItem @onclick="() => _stepHistoryOffcanvas.LetAsync(x => x.ShowAsync(item.StepId))">
                                 <SvgIcon Icon="LucideIcon.Activity" />
                                 History
