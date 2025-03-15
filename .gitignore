@@ -361,9 +361,9 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
-/Biflow.Ui/CurrentCommit.txt
-/Biflow.Executor.ConsoleApp/CurrentCommit.txt
-/Biflow.Ui.Nc/CurrentCommit.txt
+
+/Biflow.Executor.WebApp/appsettings.Development.json
+/Biflow.Scheduler.WebApp/appsettings.Development.json
 /Biflow.Ui/appsettings.Development.json
 /Biflow.Ui.Api/appsettings.Development.json
 /Biflow.Ui.Api/SampleRequests/http-client.private.env.json
