@@ -73,13 +73,18 @@ internal class DependencyTracker(StepExecution stepExecution) : IOrchestrationTr
 
         var dependencyStatuses = _dependencies.Select(d => new { d.Key.StepId, Status = d.Value });
 
-        // If there are any on-success dependencies, which have been marked as failed
-        // OR
-        // if there are any on-failed dependencies, which have been marked as succeeded, skip this step.
-        if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1))
-            || onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
+        // If there are any on-success dependencies, which have been marked as failed,
+        // skip this step with DependenciesFailed status.
+        if (onSucceeded.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Failed && d2.StepId == d1)))
         {
             return Actions.Fail(StepExecutionStatus.DependenciesFailed);
+        }
+        
+        // If there are any on-failed dependencies, which have been marked as succeeded,
+        // skip this step with Skipped status.
+        if (onFailed.Any(d1 => dependencyStatuses.Any(d2 => d2.Status == OrchestrationStatus.Succeeded && d2.StepId == d1)))
+        {
+            return Actions.Fail(StepExecutionStatus.Skipped);
         }
         
         // No reason to skip this step.
