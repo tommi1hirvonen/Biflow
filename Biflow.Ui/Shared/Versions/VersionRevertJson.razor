@@ -152,12 +152,14 @@
                                             @foreach (var integration in _result.NewIntegrations
                                                           .OrderBy(x => x.Type.Name).ThenBy(x => x.Name))
                                             {
-                                                <td>
-                                                    @integration.Type.Name 
-                                                </td>
-                                                <td>
-                                                    @integration.Name
-                                                </td>
+                                                <tr>
+                                                    <td>
+                                                        @integration.Type.Name 
+                                                    </td>
+                                                    <td>
+                                                        @integration.Name
+                                                    </td>
+                                                </tr>
                                             }
                                         </tbody>
                                     </table>
