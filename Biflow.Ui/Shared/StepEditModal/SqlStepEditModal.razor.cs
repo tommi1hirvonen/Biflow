@@ -24,17 +24,21 @@ public partial class SqlStepEditModal(
     private StoredProcedureSelectOffcanvas? _storedProcedureSelectModal;
     private CodeEditor? _editor;
     
-    private SqlConnectionBase? Connection
+    private SqlConnectionBase Connection
     {
         get
         {
-            if (field is null || field.ConnectionId != Step?.ConnectionId)
+            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
             {
-                field = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) ?? SqlConnections.First();
+                _connection = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                              ?? SqlConnections.First();
             }
-            return field;
+            return _connection;
         }
     }
+
+    // TODO Replace with field keyword in .NET 10
+    private SqlConnectionBase? _connection = null;
 
     protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps

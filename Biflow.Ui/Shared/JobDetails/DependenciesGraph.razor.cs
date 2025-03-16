@@ -55,15 +55,21 @@ public partial class DependenciesGraph(
 
     private int FilterDepthBackwards
     {
-        get;
-        set => field = value >= 0 ? value : field;
+        get => _filterDepthBackwards;
+        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
     }
+
+    // TODO Replace with field keyword in .NET 10
+    private int _filterDepthBackwards;
 
     private int FilterDepthForwards
     {
-        get;
-        set => field = value >= 0 ? value : field;
+        get => _filterDepthForwards;
+        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
     }
+
+    // TODO Replace with field keyword in .NET 10
+    private int _filterDepthForwards;
 
     private IEnumerable<StepTag> Tags => Steps?
          .SelectMany(step => step.Tags)

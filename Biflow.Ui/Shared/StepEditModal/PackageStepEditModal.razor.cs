@@ -13,19 +13,21 @@ public partial class PackageStepEditModal(
 
     private PackageSelectOffcanvas? _packageSelectOffcanvas;
     
-    private MsSqlConnection? Connection
+    private MsSqlConnection Connection
     {
         get
         {
-            if (field is null || field.ConnectionId != Step?.ConnectionId)
+            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
             {
-                field = MsSqlConnections
-                            .FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                        ?? MsSqlConnections.First();
+                _connection = MsSqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) 
+                              ?? MsSqlConnections.First();
             }
-            return field;
+            return _connection;
         }
     }
+
+    // TODO Replace with field keyword in .NET 10
+    private MsSqlConnection? _connection = null;
 
     protected override PackageStep CreateNewStep(Job job) =>
         new()

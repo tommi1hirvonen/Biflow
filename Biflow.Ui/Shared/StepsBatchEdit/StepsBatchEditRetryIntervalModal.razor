@@ -38,9 +38,18 @@
 
     private int? RetryInterval
     {
-        get;
-        set => field = value is null or >= 0 ? value : field;
+        get => _retryInterval;
+        set
+        {
+            if (value is null or >= 0)
+            {
+                _retryInterval = value;
+            }
+        }
     }
+
+    // TODO Replace with field keyword in .NET 10
+    private int? _retryInterval;
 
     public async Task ShowAsync()
     {

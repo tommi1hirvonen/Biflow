@@ -38,9 +38,12 @@ public partial class DataTableEditor(
 
     private int TopRows
     {
-        get;
-        set => field = value > 0 ? value : field;
-    } = 100;
+        get => _topRows;
+        set => _topRows = value > 0 ? value : _topRows;
+    }
+
+    // TODO Replace with field keyword in .NET 10
+    private int _topRows = 100;
 
     private bool IsColumnSelected(string column) =>
         _columnSelections.Count == 0 || _columnSelections.Contains(column);
