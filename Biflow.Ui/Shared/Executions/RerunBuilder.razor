@@ -306,8 +306,7 @@ else if (_builder is null)
 
             var stepIds = Execution.StepExecutions
                 .Select(e => e.StepId)
-                .ToList(); // Use List<> instead of array, because for some reason
-            // EF cannot translate the stepIds.Contains() predicate below using arrays.
+                .ToArray();
             _builder = await BuilderFactory.CreateAsync(
                 Execution.JobId,
                 username,
