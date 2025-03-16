@@ -351,7 +351,8 @@
                                     }
 
                                     @if (item.ExecutionConditionParameters.Any(p => p.JobParameterId is not null)
-                                         || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
+                                         || item is IHasStepParameters hasParams && hasParams.StepParameters.Any(p => p.InheritFromJobParameterId is not null
+                                                                                                                      || p.ExpressionParameters.Any(ep => ep.InheritFromJobParameter is not null))
                                          || item is SqlStep { ResultCaptureJobParameterId: not null })
                                     {
                                         <div title="Step uses job parameters" class="text-body ms-3">
@@ -399,7 +400,8 @@
                                     </div>
                                 </div>
                             }
-                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.SqlStatement)) && item is SqlStep sqlStep)
+                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.SqlStatement))
+                                 && item is SqlStep sqlStep)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -407,9 +409,11 @@
                                     </div>
                                 </div>
                             }
-                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageFolder)
-                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageProject)
-                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageName)) && item is PackageStep package)
+                            @if ((_showDetails
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageFolder)
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageProject)
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PackageName))
+                                 && item is PackageStep package)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -423,7 +427,9 @@
                                     </div>
                                 </div>
                             }
-                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PipelineName)) && item is PipelineStep pipeline)
+                            @if ((_showDetails
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.PipelineName))
+                                 && item is PipelineStep pipeline)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -441,8 +447,10 @@
                                     </div>
                                 </div>
                             }
-                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeFilePath)
-                           || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeArguments)) && item is ExeStep exe)
+                            @if ((_showDetails
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeFilePath)
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.ExeArguments))
+                                 && item is ExeStep exe)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -453,7 +461,9 @@
                                     </div>
                                 </div>
                             }
-                            @if ((_showDetails || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.FunctionUrl)) && item is FunctionStep function)
+                            @if ((_showDetails
+                                  || !string.IsNullOrEmpty(_advancedFiltersOffcanvas?.FunctionUrl))
+                                 && item is FunctionStep function)
                             {
                                 <div class="row">
                                     <div class="col text-truncate">
@@ -470,6 +480,79 @@
                                 <div class="row">
                                     <div class="col text-truncate">
                                         <small class="text-secondary">@tabular.TabularModelName@tableText@partitionText</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is DatabricksStep databricks)
+                            {
+                                var text = databricks.DatabricksStepSettings switch
+                                {
+                                    DbNotebookStepSettings nb => $"Notebook: {nb.NotebookPath}",
+                                    DbPythonFileStepSettings file => $"File: {file.FilePath}",
+                                    DbJobStepSettings job => $"Job: {job.JobName}",
+                                    DbPipelineStepSettings pipe => $"Pipeline: {pipe.PipelineName}",
+                                    _ => ""
+                                };
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@text</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is DataflowStep dataflow)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@dataflow.WorkspaceName / @dataflow.DataflowName</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is DatasetStep dataset)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@dataset.WorkspaceName / @dataset.DatasetName</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is DbtStep dbt)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">
+                                            @dbt.DbtJob.ProjectName / @dbt.DbtJob.EnvironmentName / @dbt.DbtJob.Name
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is FabricStep fabric)
+                            {
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@fabric.ItemType: @fabric.WorkspaceName / @fabric.ItemName</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is JobStep jobStep)
+                            {
+                                var jobName = Jobs?.FirstOrDefault(j => j.JobId == jobStep.JobToExecuteId)?.JobName ?? "";
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@jobName</small>
+                                    </div>
+                                </div>
+                            }
+                            @if (_showDetails && item is QlikStep qlik)
+                            {
+                                var text = qlik.QlikStepSettings switch
+                                {
+                                    QlikAppReloadSettings app => $"App: {app.AppName}",
+                                    QlikAutomationRunSettings automation => $"Automation: {automation.AutomationName}",
+                                    _ => ""
+                                };
+                                <div class="row">
+                                    <div class="col text-truncate">
+                                        <small class="text-secondary">@text</small>
                                     </div>
                                 </div>
                             }
