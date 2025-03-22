@@ -267,6 +267,7 @@
                 _inputValue = _inputValue[..^1];
                 break;
             case " ":
+            case "Tab" when _inputValue.Any():
                 await AddNewItemAsync();
                 break;
         }
