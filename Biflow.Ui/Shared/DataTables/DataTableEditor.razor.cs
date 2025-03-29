@@ -112,12 +112,24 @@ public partial class DataTableEditor(
                               _columns.TryGetValue(f.Key, out var column) && 
                               f.Value.Contains(LookupValueOrValue(r, column))))
             .OrderBy(r => !r.StickToTop);
+        // Use a custom comparer, because .NET might otherwise accidentally use String.Compare() under the hood
+        // to compare string values to non-string values, causing runtime exceptions.
+        var rowValueComparer = Comparer<object?>.Create((x, y) =>
+        {
+            return (x, y) switch
+            {
+                (string xs, string ys) => string.Compare(xs, ys, StringComparison.OrdinalIgnoreCase),
+                (string, _) => -1,
+                (_, string) => 1,
+                _ => Comparer<object?>.Default.Compare(x, y)
+            };
+        });
         foreach (var orderBy in _orderBy)
         {
             var column = _tableData.Columns.First(c => c.Name == orderBy.Column);
             rows = orderBy.Descending
-                ? rows.ThenByDescending(row => LookupValueOrValue(row, column))
-                : rows.ThenBy(row => LookupValueOrValue(row, column));
+                ? rows.ThenByDescending(row => LookupValueOrValue(row, column), rowValueComparer)
+                : rows.ThenBy(row => LookupValueOrValue(row, column), rowValueComparer);
         }
         return [.. rows];
     }
