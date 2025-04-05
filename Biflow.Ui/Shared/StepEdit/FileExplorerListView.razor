@@ -1,0 +1,158 @@
+@using Biflow.Executor.Core.FilesExplorer
+
+@inject IExecutorService ExecutorService
+@inject ToasterService Toaster
+
+<div class="row">
+    <div class="col">
+        <span class="cursor-pointer text-primary text-decoration-underline small"
+              @onclick="OnRootSelected">
+            root
+        </span>
+        <span class="small">
+            &nbsp;/&nbsp;
+        </span>
+        @foreach (var item in _breadCrumbs.Reverse())
+        {
+            <span class="cursor-pointer text-primary text-decoration-underline small"
+                  @onclick="() => OnBreadcrumbSelectedAsync(item)">
+                @item.Name
+            </span>
+            <span class="small">
+                &nbsp;/&nbsp;
+            </span>
+        }
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col">
+        <div class="input-group input-group-sm">
+            <div class="input-group-text">
+                <SvgIcon Icon="LucideIcon.Search" />
+            </div>
+            <input type="search" class="form-control"
+                   @bind-value="_filterText"
+                   @bind-value:event="oninput"
+                   placeholder="Search" autocomplete="off"
+                   style="max-width: 20rem;" />
+        </div>
+    </div>
+</div>
+
+<div class="list-group mt-3" style="height: calc(100vh - 300px); overflow-y: scroll;">
+    @if (_currentFolder is null)
+    {
+        if (RootNodes is null)
+        {
+            <div class="list-group-item text-center">
+                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small"/>
+            </div>
+        }
+        else
+        {
+            var nodes = RootNodes.Where(x => string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText));
+            foreach (var node in nodes)
+            {
+                <FileExplorerListViewItem Item="node"
+                                          SelectedFile="SelectedFile"
+                                          OnFileSelected="OnFileSelected"
+                                          OnFolderSelected="OnFolderSelectedAsync"
+                                          FilterText="@_filterText" />
+            }
+        }
+    }
+    else
+    {
+        if (_currentItems is null)
+        {
+            <div class="list-group-item text-center">
+                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small"/>
+            </div>
+        }
+        else
+        {
+            var nodes = _currentItems.Where(x => string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText));
+            foreach (var node in nodes)
+            {
+                <FileExplorerListViewItem Item="node"
+                                          SelectedFile="SelectedFile"
+                                          OnFileSelected="OnFileSelected"
+                                          OnFolderSelected="OnFolderSelectedAsync"
+                                          FilterText="@_filterText" />
+            }
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<DirectoryItem>? RootNodes { get; set; }
+    
+    [Parameter] public DirectoryItem? SelectedFile { get; set; }
+    
+    [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+
+    private readonly Stack<DirectoryItem> _breadCrumbs = [];
+    private DirectoryItem? _currentFolder;
+    private IReadOnlyList<DirectoryItem>? _currentItems;
+    private string _filterText = "";
+
+    private void OnRootSelected()
+    {
+        _breadCrumbs.Clear();
+        _currentFolder = null;
+        _currentItems = null;
+        _filterText = "";
+    }
+
+    private async Task OnBreadcrumbSelectedAsync(DirectoryItem folder)
+    {
+        if (folder.Type == DirectoryItemType.File)
+        {
+            return;
+        }
+
+        while (_breadCrumbs.Count > 0 && _breadCrumbs.Peek() != folder)
+        {
+            _breadCrumbs.Pop();
+        }
+
+        _currentItems = null;
+        _filterText = "";
+        StateHasChanged();
+        try
+        {
+            _currentItems = await ExecutorService.GetDirectoryItemsAsync(folder.FullName);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _currentItems = [];
+            Toaster.AddError("Error reading items", ex.Message);
+        }
+    }
+
+    private async Task OnFolderSelectedAsync(DirectoryItem folder)
+    {
+        if (folder.Type == DirectoryItemType.File)
+        {
+            return;
+        }
+
+        _currentFolder = folder;
+        _breadCrumbs.Push(folder);
+        _currentItems = null;
+        _filterText = "";
+        StateHasChanged();
+        try
+        {
+            _currentItems = await ExecutorService.GetDirectoryItemsAsync(folder.FullName);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _currentItems = [];
+            Toaster.AddError("Error reading items", ex.Message);
+        }
+    }
+}

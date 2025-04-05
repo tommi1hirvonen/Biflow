@@ -6,13 +6,42 @@
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select file">
 
     <BodyTemplate>
-        <div class="row" style="height: calc(100vh - 170px); overflow-y: scroll;">
+        <div class="row">
             <div class="col">
-                <div class="list-group">
-                    <FileExplorerTreeView RootNodes="_rootNodes"
+                <HxButtonToolbar>
+                    <HxButtonGroup>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                  @onclick="() => _viewType = ViewType.List"
+                                  Spinner="false"
+                                  CssClass="@(_viewType == ViewType.List ? "active" : null)">
+                            <SvgIcon Icon="LucideIcon.List" />
+                            List
+                        </HxButton>
+                        <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
+                                  @onclick="() => _viewType = ViewType.Tree"
+                                  Spinner="false"
+                                  CssClass="@(_viewType == ViewType.Tree ? "active" : null)">
+                            <SvgIcon Icon="LucideIcon.ListTree" />
+                            Tree
+                        </HxButton>
+                    </HxButtonGroup>
+                </HxButtonToolbar>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                @if (_viewType == ViewType.List)
+                {
+                    <FileExplorerListView RootNodes="_rootNodes"
                                           SelectedFile="_selectedFile"
                                           OnFileSelected="ToggleFile" />
-                </div>
+                }
+                else if (_viewType == ViewType.Tree)
+                {
+                    <FileExplorerTreeView RootNodes="_rootNodes"
+                                          SelectedFile="_selectedFile"
+                                          OnFileSelected="ToggleFile"/>
+                }
             </div>
         </div>
     </BodyTemplate>
@@ -34,6 +63,9 @@
     private HxOffcanvas? _offcanvas;
     private IReadOnlyList<DirectoryItem>? _rootNodes;
     private DirectoryItem? _selectedFile;
+    private ViewType _viewType = ViewType.List;
+    
+    private enum ViewType { List, Tree }
 
     private async Task SelectFileAsync()
     {

@@ -1,0 +1,41 @@
+@using Biflow.Executor.Core.FilesExplorer
+
+@switch (Item?.Type)
+{
+    case DirectoryItemType.Drive or DirectoryItemType.Directory:
+        <div class="list-group-item list-group-item-action cursor-pointer"
+             @onclick="() => OnFolderSelected.InvokeAsync(Item)">
+            <div class="row">
+                <div class="col d-flex align-items-center small">
+                    <SvgIcon Icon="LucideIcon.Folder" />
+                    &nbsp;
+                    <HighlightableText Text="@Item.Name" PartToHighlight="@FilterText" />
+                </div>
+            </div>
+        </div>
+        break;
+    case DirectoryItemType.File:
+        <div class="list-group-item list-group-item-action cursor-pointer @(Item == SelectedFile ? "bg-body" : null)"
+             @onclick="() => OnFileSelected.InvokeAsync(Item)">
+            <div class="row">
+                <div class="col d-flex align-items-center small @(Item == SelectedFile ? "fw-bold" : null)">
+                    <SvgIcon Icon="LucideIcon.File" />
+                    &nbsp;
+                    <HighlightableText Text="@Item.Name" PartToHighlight="@FilterText" />
+                </div>
+            </div>
+        </div>
+        break;
+}
+
+@code {
+    [Parameter] public DirectoryItem? Item { get; set; }
+    
+    [Parameter] public DirectoryItem? SelectedFile { get; set; }
+    
+    [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+    
+    [Parameter] public EventCallback<DirectoryItem> OnFolderSelected { get; set; }
+
+    [Parameter] public string FilterText { get; set; } = "";
+}
