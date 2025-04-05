@@ -1,0 +1,28 @@
+@using Biflow.Executor.Core.FilesExplorer
+
+<div class="list-group">
+    @if (RootNodes is null)
+    {
+        <div class="list-group-item text-center">
+            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+        </div>
+    }
+    else
+    {
+        foreach (var node in RootNodes)
+        {
+            <FileExplorerFolderListGroupItem Folder="node"
+                                             SelectedFile="SelectedFile"
+                                             OnFileSelected="OnFileSelected"
+                                             ParentDepth="0" />
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<DirectoryItem>? RootNodes { get; set; }
+    
+    [Parameter] public DirectoryItem? SelectedFile { get; set; }
+    
+    [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+}
