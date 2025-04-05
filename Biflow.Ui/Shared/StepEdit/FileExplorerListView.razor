@@ -2,6 +2,7 @@
 
 @inject IExecutorService ExecutorService
 @inject ToasterService Toaster
+@inject IJSRuntime Js
 
 <div class="row">
     <div class="col">
@@ -25,7 +26,7 @@
     </div>
 </div>
 
-<div class="row mt-3">
+<div class="row justify-content-between mt-3">
     <div class="col">
         <div class="input-group input-group-sm">
             <div class="input-group-text">
@@ -37,6 +38,24 @@
                    placeholder="Search" autocomplete="off"
                    style="max-width: 20rem;" />
         </div>
+    </div>
+    <div class="col-auto">
+        @if (SelectedFile is { } file)
+        {
+            <span class="cursor-pointer text-secondary text-decoration-underline small"
+                  @onclick="() => CopyToClipboard(file.FullName)">
+                <SvgIcon Icon="LucideIcon.ClipboardCopy" />
+                Copy file path to clipboard
+            </span>
+        }
+        else if (_currentFolder is { } folder)
+        {
+            <span class="cursor-pointer text-secondary text-decoration-underline small"
+                  @onclick="() => CopyToClipboard(folder.FullName)">
+                <SvgIcon Icon="LucideIcon.ClipboardCopy" />
+                Copy folder path to clipboard
+            </span>
+        }
     </div>
 </div>
 
@@ -153,6 +172,19 @@
         {
             _currentItems = [];
             Toaster.AddError("Error reading items", ex.Message);
+        }
+    }
+    
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            Toaster.AddInformation("Value copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error copying to clipboard", ex.Message);
         }
     }
 }
