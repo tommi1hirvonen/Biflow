@@ -1,11 +1,20 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using System.Net.Http.Json;
+using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using System.Web;
+using Biflow.Executor.Core;
+using Biflow.Executor.Core.FilesExplorer;
 
 namespace Biflow.Ui.Core;
 
 public class WebAppExecutorService : IExecutorService
 {
     private readonly HttpClient _httpClient;
+    
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
@@ -63,5 +72,19 @@ public class WebAppExecutorService : IExecutorService
         var url = $"/tokencache/clear/{azureCredentialId}";
         var response = await _httpClient.GetAsync(url, cancellationToken);
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task<IReadOnlyList<DirectoryItem>> GetDirectoryItemsAsync(string? path,
+        CancellationToken cancellationToken = default)
+    {
+        var request = new FileExplorerSearchRequest(path);
+        var response = await _httpClient.PostAsJsonAsync("/fileexplorer/search", request, cancellationToken);
+        response.EnsureSuccessStatusCode();
+        // var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        // var result = JsonSerializer.Deserialize<FileExplorerSearchResponse>(content);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var result = await JsonSerializer.DeserializeAsync<FileExplorerSearchResponse>(
+            stream, JsonSerializerOptions, cancellationToken);
+        return result?.Items ?? [];
     }
 }

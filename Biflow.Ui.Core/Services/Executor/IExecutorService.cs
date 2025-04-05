@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.Core;
+﻿using Biflow.Executor.Core.FilesExplorer;
+
+namespace Biflow.Ui.Core;
 
 public interface IExecutorService
 {
@@ -9,4 +11,7 @@ public interface IExecutorService
     public Task StopExecutionAsync(Guid executionId, string username);
     
     public Task ClearTokenCacheAsync(Guid azureCredentialId, CancellationToken cancellationToken = default);
+    
+    public Task<IReadOnlyList<DirectoryItem>> GetDirectoryItemsAsync(string? path,
+        CancellationToken cancellationToken = default);
 }

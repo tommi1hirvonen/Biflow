@@ -17,6 +17,18 @@
                 <span class="form-text">0 = indefinite</span>
             </div>
         </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+            </div>
+            <div class="col-md-6">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
+                          OnClick="OpenFileSelectOffcanvas">
+                    <SvgIcon Icon="LucideIcon.Ellipsis" />
+                    Browse files
+                </HxButton>
+            </div>
+        </div>
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
@@ -97,6 +109,8 @@
                 </div>
             </div>
         </div>
+        
+        <FileExplorerOffcanvas @ref="_fileExplorerOffcanvas" OnFileSelected="OnFileSelected" />
 
         <StepParametersEditor Step="Step"
                               NewParameterDelegate="() => new() { Step = Step }"

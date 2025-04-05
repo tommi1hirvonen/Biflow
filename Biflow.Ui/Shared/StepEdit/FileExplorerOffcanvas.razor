@@ -1,0 +1,125 @@
+@using Biflow.Executor.Core.FilesExplorer
+
+@inject ToasterService Toaster
+@inject IExecutorService ExecutorService
+
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select file">
+
+    <BodyTemplate>
+        <div class="row justify-content-end">
+            <div class="col-auto">
+                <HxButton Color="ThemeColor.Primary" Size="ButtonSize.Small" OnClick="LoadItemsAsync">
+                    <SvgIcon Icon="LucideIcon.RefreshCw" />
+                    Refresh
+                </HxButton>
+            </div>
+        </div>
+        <div class="row mt-3" style="height: calc(100vh - 210px); overflow-y: scroll;">
+            <div class="col">
+                <div class="list-group">
+                    @if (_rootNodes is null)
+                    {
+                        <div class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                        </div>
+                    }
+                    else
+                    {
+                        foreach (var node in _rootNodes)
+                        {
+                            <FileExplorerFolderListGroupItem Folder="node"
+                                                             SelectedFile="_selectedFile"
+                                                             OnFileSelected="ToggleFile"
+                                                             ParentDepth="0" />
+                        }
+                    }
+                </div>
+            </div>
+
+        </div>
+    </BodyTemplate>
+
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Primary" CssClass="me-3" @onclick="SelectFileAsync"
+                  Enabled="_selectedFile is not null">
+            Select
+        </HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    [CascadingParameter] public UserState UserState { get; set; } = new();
+
+    [Parameter] public EventCallback<string> OnFileSelected { get; set; }
+
+    private readonly Dictionary<DirectoryItem, bool> _folderExpandedStates = [];
+
+    private HxOffcanvas? _offcanvas;
+    private IReadOnlyList<DirectoryItem>? _rootNodes;
+    private DirectoryItem? _selectedFile;
+
+    private async Task SelectFileAsync()
+    {
+        if (_selectedFile is not null)
+        {
+            await OnFileSelected.InvokeAsync(_selectedFile.FullName);
+            await _offcanvas.LetAsync(x => x.HideAsync());
+        }
+    }
+
+    public async Task ShowAsync()
+    {
+        _folderExpandedStates.Clear();
+        _rootNodes = null;
+        _selectedFile = null;
+
+        await _offcanvas.LetAsync(x => x.ShowAsync());
+
+        try
+        {
+            _rootNodes = await ExecutorService.GetDirectoryItemsAsync(null);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _rootNodes = [];
+            Toaster.AddError("Error reading items", ex.Message);
+        }
+    }
+    
+    private async Task LoadItemsAsync()
+    {
+        _folderExpandedStates.Clear();
+        _rootNodes = null;
+        _selectedFile = null;
+        
+        StateHasChanged();
+        
+        try
+        {
+            _rootNodes = await ExecutorService.GetDirectoryItemsAsync(null);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            _rootNodes = [];
+            Toaster.AddError("Error reading items", ex.Message);
+        }
+    }
+
+    private void ToggleFile(DirectoryItem file)
+    {
+        if (file.Type != DirectoryItemType.File)
+        {
+            return;
+        }
+        
+        if (_selectedFile == file)
+        {
+            _selectedFile = null;
+            return;
+        }
+        _selectedFile = file;
+    }
+}

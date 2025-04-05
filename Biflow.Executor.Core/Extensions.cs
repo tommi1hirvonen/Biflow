@@ -2,6 +2,7 @@
 using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.ExecutionValidation;
+using Biflow.Executor.Core.FilesExplorer;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.JobOrchestrator;
 using Biflow.Executor.Core.Notification;
@@ -197,6 +198,15 @@ public static class Extensions
         })
         .WithName("TestEmail")
         .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
+        
+        app.MapPost("/fileexplorer/search", (FileExplorerSearchRequest request) =>
+        {
+            var items = FileExplorer.GetDirectoryItems(request.Path);
+            var response = new FileExplorerSearchResponse(items);
+            return Results.Ok(response);
+        })
+        .WithName("FileExplorerSearch")
+        .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
         return app;
     }
@@ -251,3 +261,8 @@ file record ExecutionCreateRequest(Guid JobId, Guid[]? StepIds, bool? StartExecu
 
 [PublicAPI]
 file record ExecutionCreateResponse(Guid ExecutionId);
+
+[PublicAPI]
+public record FileExplorerSearchRequest(string? Path);
+
+public record FileExplorerSearchResponse(DirectoryItem[] Items);

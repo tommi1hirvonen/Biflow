@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.Shared.StepEditModal;
+﻿using Biflow.Ui.Shared.StepEdit;
+
+namespace Biflow.Ui.Shared.StepEditModal;
 
 public partial class ExeStepEditModal(
     IMediator mediator,
@@ -17,6 +19,8 @@ public partial class ExeStepEditModal(
             </p>
         </div>
         """;
+    
+    private FileExplorerOffcanvas? _fileExplorerOffcanvas;
 
     protected override ExeStep CreateNewStep(Job job) =>
         new()
@@ -155,5 +159,16 @@ public partial class ExeStepEditModal(
             Parameters = parameters
         };
         return await Mediator.SendAsync(command);
+    }
+    
+    private Task OpenFileSelectOffcanvas()
+    {
+        return _fileExplorerOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+    
+    private void OnFileSelected(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(Step);
+        Step.ExeFileName = filePath;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using Biflow.Executor.Core;
+using Biflow.Executor.Core.FilesExplorer;
 
 namespace Biflow.Ui.Core;
 
@@ -24,4 +25,11 @@ public class SelfHostedExecutorService(
     
     public Task ClearTokenCacheAsync(Guid azureCredentialId, CancellationToken cancellationToken = default) =>
         tokenService.ClearAsync(azureCredentialId, cancellationToken);
+
+    public Task<IReadOnlyList<DirectoryItem>> GetDirectoryItemsAsync(string? path,
+        CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<DirectoryItem> items = FileExplorer.GetDirectoryItems(path);
+        return Task.FromResult(items);
+    }
 }

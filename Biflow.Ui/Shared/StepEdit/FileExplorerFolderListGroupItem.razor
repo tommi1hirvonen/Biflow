@@ -1,0 +1,131 @@
+@using Biflow.Executor.Core.FilesExplorer
+@using System.Globalization
+
+@inject IExecutorService ExecutorService
+@inject ToasterService Toaster
+
+@if (Folder is not null)
+{
+    var folderPadding = Depth > 0
+        ? $"{(Depth - 0.7).ToString("F2", CultureInfo.InvariantCulture)}rem;"
+        : "0;";
+    <div class="list-group-item list-group-item-action cursor-pointer"
+         @onclick="ToggleExpandedAsync">
+        <div class="row">
+            <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
+                @if (_expanded)
+                {
+                    <SvgIcon Icon="LucideIcon.ChevronDown" />
+                }
+                else
+                {
+                    <SvgIcon Icon="LucideIcon.ChevronRight" />
+                }
+                &nbsp;
+                <SvgIcon Icon="LucideIcon.Folder" />
+                &nbsp;
+                <HighlightableText Text="@Folder.Name" PartToHighlight="@FilterText" />
+                @* <span class="ms-auto badge rounded-pill @(files.Length > 0 ? "bg-primary" : "bg-secondary")"> *@
+                @*     @files.Length *@
+                @* </span> *@
+            </div>
+        </div>
+    </div>
+    if (_expanded)
+    {
+        if (_items is null)
+        {
+            <div class="list-group-item text-center">
+                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+            </div>
+        }
+        else
+        {
+            var folders = _items
+                .Where(x => x.Type == DirectoryItemType.Directory 
+                            && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
+            var files = _items
+                .Where(x => x.Type == DirectoryItemType.File 
+                            && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
+            var searchPadding = $"{(Depth - 0.2).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+            
+            <div class="list-group-item">
+                <div class="row">
+                    <div class="col">
+                        <div class="input-group input-group-sm" style="padding-left: @(searchPadding)">
+                            <div class="input-group-text">
+                                <SvgIcon Icon="LucideIcon.Search" />
+                            </div>
+                            <input type="search" class="form-control"
+                                   @bind-value="_filterText"
+                                   @bind-value:event="oninput"
+                                   placeholder="Search" autocomplete="off" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            @foreach (var folder in folders)
+            {
+                <FileExplorerFolderListGroupItem Folder="folder"
+                                                 SelectedFile="SelectedFile"
+                                                 OnFileSelected="OnFileSelected"
+                                                 FilterText="@_filterText"
+                                                 ParentDepth="Depth" />   
+            }
+            @foreach (var file in files)
+            {
+                var filePadding = $"{(Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
+                <div class="list-group-item list-group-item-action small cursor-pointer @(file == SelectedFile ? "bg-body" : null)"
+                     @onclick="() => OnFileSelected.InvokeAsync(file)">
+                    <div class="row">
+                        <div class="col d-flex align-items-center @(file == SelectedFile ? "fw-bold" : null)"
+                             style="padding-left: @(filePadding)">
+                            <SvgIcon Icon="LucideIcon.File" />
+                            &nbsp;
+                            <HighlightableText Text="@file.Name" PartToHighlight="@_filterText" />
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    }
+}
+
+@code {
+    [Parameter] public DirectoryItem? Folder { get; set; }
+    
+    [Parameter] public DirectoryItem? SelectedFile { get; set; }
+
+    [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+
+    [Parameter] public string FilterText { get; set; } = "";
+    
+    [Parameter] public int ParentDepth { get; set; }
+    
+    private IReadOnlyList<DirectoryItem>? _items;
+    private Dictionary<DirectoryItem, bool> _expandStatuses = [];
+    private bool _expanded;
+    private string _filterText = "";
+
+    private int Depth => ParentDepth + 1;
+
+    private async Task ToggleExpandedAsync()
+    {
+        ArgumentNullException.ThrowIfNull(Folder);
+        _expanded = !_expanded;
+        if (_expanded && _items is null)
+        {
+            try
+            {
+                _items = await ExecutorService.GetDirectoryItemsAsync(Folder.FullName);
+                StateHasChanged();
+            }
+            catch (Exception ex)
+            {
+                _items = [];
+                Toaster.AddError("Error reading items", ex.Message);
+            }
+        }
+    }
+}
