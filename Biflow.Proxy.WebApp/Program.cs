@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Routing.Constraints;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
+builder.WebHost.UseKestrelHttpsConfiguration();
 builder.AddServiceDefaults();
 
 builder.Services.AddEndpointsApiExplorer()
