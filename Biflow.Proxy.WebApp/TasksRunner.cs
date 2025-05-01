@@ -6,8 +6,11 @@ namespace Biflow.Proxy.WebApp;
 
 internal class TasksRunner<T> : IDisposable
 {
+    private const int TaskCleanupIntervalMinutes = 5;
+    private const int TaskCleanupThresholdMinutes = 60;
+    
     private readonly ILogger<TasksRunner<T>> _logger;
-    private readonly System.Timers.Timer _timer = new(TimeSpan.FromMinutes(5));
+    private readonly System.Timers.Timer _timer = new(TimeSpan.FromMinutes(TaskCleanupIntervalMinutes));
     private readonly ConcurrentDictionary<Guid, TaskWrapper<T>> _tasks = [];
 
     public TasksRunner(ILogger<TasksRunner<T>> logger)
@@ -27,6 +30,7 @@ internal class TasksRunner<T> : IDisposable
     public Guid Run(Func<CancellationToken, Task<T>> taskDelegate)
     {
         var id = Guid.NewGuid();
+        _logger.LogInformation("Starting task with id {id}", id);
         var cts = new CancellationTokenSource();
         var task = taskDelegate(cts.Token);
         var wrapper = new TaskWrapper<T>(task, cts, null);
@@ -69,7 +73,8 @@ internal class TasksRunner<T> : IDisposable
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))
             return false;
-        
+     
+        _logger.LogInformation("Cancelling task with id {id}", id);
         taskWrapper.CancellationTokenSource.Cancel();
         return true;
     }
@@ -79,6 +84,7 @@ internal class TasksRunner<T> : IDisposable
         try
         {
             await taskWrapper.Task;
+            _logger.LogInformation("Task with id {id} completed successfully", id);
         }
         catch (Exception e)
         {
@@ -96,13 +102,14 @@ internal class TasksRunner<T> : IDisposable
         {
             var completedTasks = _tasks
                 .Where(x => x.Value.CompletedAt is { } completed
-                            && DateTime.Now - completed > TimeSpan.FromMinutes(60))
+                            && DateTime.Now - completed > TimeSpan.FromMinutes(TaskCleanupThresholdMinutes))
                 .Select(x => x.Key)
                 .ToArray();
             foreach (var completedTask in completedTasks)
             {
                 _tasks.TryRemove(completedTask, out _);
             }
+            _logger.LogInformation("Removed {count} completed tasks", completedTasks.Length);
         }
         catch (Exception e)
         {
