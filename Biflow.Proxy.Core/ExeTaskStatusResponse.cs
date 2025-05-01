@@ -6,6 +6,7 @@ namespace Biflow.Proxy.Core;
 [JsonDerivedType(typeof(ExeTaskRunningStatusResponse), "Running")]
 [JsonDerivedType(typeof(ExeTaskSucceededStatusResponse), "Succeeded")]
 [JsonDerivedType(typeof(ExeTaskFailedStatusResponse), "Failed")]
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "status")]
 public abstract class ExeTaskStatusResponse;
 
 public class ExeTaskRunningStatusResponse : ExeTaskStatusResponse;
