@@ -6,8 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <!-- Allow NuGet warnings to remain as warnings -->
-        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+        <!-- Allow NuGet and AOT warnings (Swashbuckle) to remain as warnings -->
+        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;IL2104;IL3053</WarningsNotAsErrors>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyVersion>$(VersionName)</AssemblyVersion>
         <FileVersion>$(AssemblyVersion)</FileVersion>
@@ -17,8 +17,9 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
-      <ProjectReference Include="..\Biflow.Executor.Core\Biflow.Executor.Core.csproj" />
       <ProjectReference Include="..\Biflow.Proxy.Core\Biflow.Proxy.Core.csproj" />
+      <PackageReference Include="OneOf" />
+      <PackageReference Include="OneOf.SourceGenerator" />
       <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
 
