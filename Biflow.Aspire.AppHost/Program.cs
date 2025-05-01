@@ -1,5 +1,7 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
+builder.AddProject<Projects.Biflow_Proxy_WebApp>("proxyapi");
+
 var executorApi = builder.AddProject<Projects.Biflow_Executor_WebApp>("executorapi");
 
 var schedulerApi = builder.AddProject<Projects.Biflow_Scheduler_WebApp>("schedulerapi")
