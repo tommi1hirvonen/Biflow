@@ -5,19 +5,31 @@ using Biflow.Proxy.WebApp;
 using Biflow.Proxy.WebApp.Endpoints;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateSlimBuilder(args);
+
+Serilog.Debugging.SelfLog.Enable(Console.Error);
 
 builder.WebHost.UseKestrelHttpsConfiguration();
 builder.AddServiceDefaults();
 
-if (builder.Configuration.GetSection("Serilog").Exists())
+if (builder.Configuration.GetValue<string?>("LogFilePath") is { } logFilePath)
 {
-    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    var logger = new LoggerConfiguration()
+        .MinimumLevel.Information()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+        .MinimumLevel.Override("System", LogEventLevel.Warning)
+        .WriteTo.File(logFilePath,
+            rollingInterval: RollingInterval.Day,
+            outputTemplate: "{Timestamp:HH:mm:ss.fff zzz} [{Level:w3}] {Message:lj}{NewLine}{Exception}")
+        .CreateLogger();
     builder.Logging.AddSerilog(logger, dispose: true);
 }
 
-builder.Services.AddEndpointsApiExplorer()
+builder.Services.AddWindowsService()
+    .AddSystemd()
+    .AddEndpointsApiExplorer()
     .AddSwagger()
     .AddSingleton<TasksRunner<ExeProxyRunResult>>()
     .ConfigureHttpJsonOptions(options =>

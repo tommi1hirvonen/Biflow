@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <!-- Allow NuGet and AOT warnings (Swashbuckle) to remain as warnings -->
+        <!-- Allow NuGet and AOT warnings (Swashbuckle and Serilog) to remain as warnings -->
         <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;IL2104;IL3053</WarningsNotAsErrors>
         <ImplicitUsings>enable</ImplicitUsings>
         <AssemblyVersion>$(VersionName)</AssemblyVersion>
@@ -18,6 +18,8 @@
     <ItemGroup>
       <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
       <ProjectReference Include="..\Biflow.Proxy.Core\Biflow.Proxy.Core.csproj" />
+      <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
+      <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
       <PackageReference Include="OneOf" />
       <PackageReference Include="OneOf.SourceGenerator" />
       <PackageReference Include="Serilog.AspNetCore" />
