@@ -11,47 +11,68 @@ public static class ExeEndpointsExtensions
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
     public static void MapExeEndpoints(this RouteGroupBuilder builder)
     {
-        builder.MapPost("/exe", (ExeProxyRunRequest request, TasksRunner<ExeProxyRunResult> runner) => 
+        builder.MapPost("/exe",
+            (ExeProxyRunRequest request,
+                TasksRunner<ExeProxyRunResult> runner,
+                LinkGenerator linker,
+                HttpContext context) => 
             {
                 var taskDelegate = ProxyTask.Create(request);
                 var id = runner.Run(taskDelegate);
-                return new TaskStartedResponse(id);
+                var response = new TaskStartedResponse(id);
+                var url = linker.GetUriByName(context, "GetExeStatus", new { id });
+                return Results.Created(url, response);
             })
-            .Produces<TaskStartedResponse>()
+            .Produces<TaskStartedResponse>(StatusCodes.Status201Created)
+            .WithSummary("Run an executable")
             .WithDescription("Run an executable")
             .WithName("RunExe");
         
-        builder.MapGet("/exe/{id:guid}", (Guid id, TasksRunner<ExeProxyRunResult> runner) => 
+        builder.MapGet("/exe/{id:guid}", 
+            (Guid id,
+                TasksRunner<ExeProxyRunResult> runner,
+                LinkGenerator linker,
+                HttpContext context) => 
             {
                 var status = runner.GetStatus(id);
-                var response = status.Match<ExeTaskStatusResponse>(
-                    (Result<ExeProxyRunResult> result) => new ExeTaskSucceededStatusResponse
+                var result = status.Match(
+                    (Result<ExeProxyRunResult> result) => Results.Ok(new ExeTaskSucceededStatusResponse
                     {
                         Result = result.Value
-                    },
-                    (Error<Exception> error) => new ExeTaskFailedStatusResponse
+                    } as ExeTaskStatusResponse),
+                    (Error<Exception> error) => Results.Ok(new ExeTaskFailedStatusResponse
                     {
                         ErrorMessage = error.Value.ToString()
-                    },
-                    (Running running) => new ExeTaskRunningStatusResponse(),
+                    } as ExeTaskStatusResponse),
+                    (Running running) => Results.Accepted(
+                        linker.GetUriByName(context, "GetExeStatus", new { id }),
+                        new ExeTaskRunningStatusResponse() as ExeTaskStatusResponse),
                     (NotFound notfound) => throw new TaskNotFoundException(id));
-                return response;
+                return result;
             })
             .Produces<ExeTaskStatusResponse>()
+            .Produces<ExeTaskRunningStatusResponse>(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .WithDescription("Get the status of a running executable")
+            .WithSummary("Get exe task status")
+            .WithDescription("Get the status of an executable task")
             .WithName("GetExeStatus");
 
-        builder.MapPost("/exe/{id:guid}/cancel", (Guid id, TasksRunner<ExeProxyRunResult> runner) =>
+        builder.MapPost("/exe/{id:guid}/cancel",
+            (Guid id,
+                TasksRunner<ExeProxyRunResult> runner,
+                LinkGenerator linker,
+                HttpContext context) =>
             {
-                if (runner.Cancel(id))
-                    return Results.Ok();
-        
-                throw new TaskNotFoundException(id);
+                if (!runner.Cancel(id))
+                    throw new TaskNotFoundException(id);
+                
+                var url = linker.GetUriByName(context, "GetExeStatus", new { id });
+                return Results.Accepted(url);
             })
-            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status404NotFound)
-            .WithDescription("Cancel a running executable")
+            .WithDescription("Cancel a running executable task")
+            .WithSummary("Cancel an executable task")
             .WithName("CancelExe");
     }
 }
