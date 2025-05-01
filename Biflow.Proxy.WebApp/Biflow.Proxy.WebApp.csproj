@@ -12,6 +12,7 @@
         <AssemblyVersion>$(VersionName)</AssemblyVersion>
         <FileVersion>$(AssemblyVersion)</FileVersion>
         <Version>$(AssemblyVersion)</Version>
+        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>

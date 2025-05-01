@@ -1,15 +1,21 @@
+using System.Text.Json.Serialization;
 using Biflow.Executor.Core.Authentication;
 using Biflow.Proxy.Core;
 using Biflow.Proxy.WebApp;
 using Biflow.Proxy.WebApp.Endpoints;
+using Microsoft.AspNetCore.Routing.Constraints;
 
-var builder = WebApplication.CreateBuilder(args);
+var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.AddServiceDefaults();
 
 builder.Services.AddEndpointsApiExplorer()
     .AddSwagger()
-    .AddSingleton<TasksRunner<ExeProxyRunResult>>();
+    .AddSingleton<TasksRunner<ExeProxyRunResult>>()
+    .ConfigureHttpJsonOptions(options =>
+        options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default))
+    .Configure<RouteOptions>(options =>
+        options.SetParameterPolicy<RegexInlineRouteConstraint>("regex"));
 
 var app = builder.Build();
 
@@ -28,3 +34,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.Run();
+
+[JsonSerializable(typeof(ExeProxyRunResult))]
+[JsonSerializable(typeof(ExeProxyRunRequest))]
+[JsonSerializable(typeof(ExeTaskStatusResponse))]
+[JsonSerializable(typeof(TaskStartedResponse))]
+internal partial class AppJsonSerializerContext : JsonSerializerContext;

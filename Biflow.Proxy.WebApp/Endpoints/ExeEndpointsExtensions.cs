@@ -20,7 +20,7 @@ public static class ExeEndpointsExtensions
                 var taskDelegate = ProxyTask.Create(request);
                 var id = runner.Run(taskDelegate);
                 var response = new TaskStartedResponse(id);
-                var url = linker.GetUriByName(context, "GetExeStatus", new { id });
+                var url = linker.GetUriByName(context, "GetExeStatus", new RouteValueDictionary { { "id", id } });
                 return Results.Created(url, response);
             })
             .Produces<TaskStartedResponse>(StatusCodes.Status201Created)
@@ -45,7 +45,7 @@ public static class ExeEndpointsExtensions
                         ErrorMessage = error.Value.ToString()
                     } as ExeTaskStatusResponse),
                     (Running running) => Results.Accepted(
-                        linker.GetUriByName(context, "GetExeStatus", new { id }),
+                        linker.GetUriByName(context, "GetExeStatus", new RouteValueDictionary { { "id", id } }),
                         new ExeTaskRunningStatusResponse() as ExeTaskStatusResponse),
                     (NotFound notfound) => throw new TaskNotFoundException(id));
                 return result;
@@ -65,8 +65,9 @@ public static class ExeEndpointsExtensions
             {
                 if (!runner.Cancel(id))
                     throw new TaskNotFoundException(id);
-                
-                var url = linker.GetUriByName(context, "GetExeStatus", new { id });
+
+                var routeValues = new RouteValueDictionary { { "id", id } };
+                var url = linker.GetUriByName(context, "GetExeStatus", routeValues);
                 return Results.Accepted(url);
             })
             .Produces(StatusCodes.Status202Accepted)
