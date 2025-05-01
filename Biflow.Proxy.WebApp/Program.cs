@@ -4,11 +4,18 @@ using Biflow.Proxy.Core.Authentication;
 using Biflow.Proxy.WebApp;
 using Biflow.Proxy.WebApp.Endpoints;
 using Microsoft.AspNetCore.Routing.Constraints;
+using Serilog;
 
 var builder = WebApplication.CreateSlimBuilder(args);
 
 builder.WebHost.UseKestrelHttpsConfiguration();
 builder.AddServiceDefaults();
+
+if (builder.Configuration.GetSection("Serilog").Exists())
+{
+    var logger = new LoggerConfiguration().ReadFrom.Configuration(builder.Configuration).CreateLogger();
+    builder.Logging.AddSerilog(logger, dispose: true);
+}
 
 builder.Services.AddEndpointsApiExplorer()
     .AddSwagger()

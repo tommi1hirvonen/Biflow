@@ -20,6 +20,7 @@
       <ProjectReference Include="..\Biflow.Proxy.Core\Biflow.Proxy.Core.csproj" />
       <PackageReference Include="OneOf" />
       <PackageReference Include="OneOf.SourceGenerator" />
+      <PackageReference Include="Serilog.AspNetCore" />
       <PackageReference Include="Swashbuckle.AspNetCore" />
     </ItemGroup>
 
