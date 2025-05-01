@@ -11,7 +11,12 @@
         <AssemblyVersion>$(VersionName)</AssemblyVersion>
         <FileVersion>$(AssemblyVersion)</FileVersion>
         <Version>$(AssemblyVersion)</Version>
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
     
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" />
