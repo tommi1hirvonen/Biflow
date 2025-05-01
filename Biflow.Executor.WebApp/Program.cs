@@ -19,6 +19,7 @@ builder.Services.AddApplicationInsightsTelemetry();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(s =>
 {
+    s.SwaggerDoc("v1", new OpenApiInfo { Title = "Biflow Executor API", Version = "v1" });
     s.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
     {
         Description = "The API to authenticate with the API",

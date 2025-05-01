@@ -12,6 +12,7 @@ internal static class Extensions
         services.AddSwaggerGen(s =>
         {
             s.UseOneOfForPolymorphism();
+            s.SwaggerDoc("v1", new OpenApiInfo { Title = "Biflow Proxy API", Version = "v1" });
             s.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
             {
                 Description = "The API to authenticate with the API",
