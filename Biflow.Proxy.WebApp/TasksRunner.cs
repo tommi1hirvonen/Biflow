@@ -15,7 +15,15 @@ internal class TasksRunner<T> : IDisposable
         _logger = logger;
         _timer.Elapsed += RemoveCompletedTasks;
     }
-    
+
+    /// Initiates the execution of a long-running task using the provided task delegate and returns
+    /// a unique identifier for tracking the task.
+    /// <param name="taskDelegate">A function that represents the asynchronous task to be executed.
+    /// It takes a CancellationToken as input and returns a Task of the specified type T.</param>
+    /// <returns>
+    /// A Guid representing the unique identifier of the newly started task.
+    /// This identifier can be used to retrieve the task's status or perform operations like cancellation.
+    /// </returns>
     public Guid Run(Func<CancellationToken, Task<T>> taskDelegate)
     {
         var id = Guid.NewGuid();
@@ -27,6 +35,15 @@ internal class TasksRunner<T> : IDisposable
         return id;
     }
 
+    /// Retrieves the status of a task identified by the given unique identifier.
+    /// <param name="id">The unique identifier of the task whose status is to be retrieved.</param>
+    /// <returns>
+    /// A TaskStatus object representing the current state of the task:
+    /// - Result if the task completed successfully.
+    /// - Error if the task failed with an exception.
+    /// - Running if the task is still in progress.
+    /// - NotFound if no task with the specified identifier exists.
+    /// </returns>
     public TaskStatus<T> GetStatus(Guid id)
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))
@@ -43,6 +60,11 @@ internal class TasksRunner<T> : IDisposable
         return new Running();
     }
 
+    /// Cancels a running task identified by the provided unique identifier.
+    /// <param name="id">The unique identifier of the task to cancel.</param>
+    /// <returns>
+    /// True if the task was successfully canceled; false if no running task with the specified identifier exists.
+    /// </returns>
     public bool Cancel(Guid id)
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))
