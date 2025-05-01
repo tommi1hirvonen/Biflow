@@ -6,6 +6,16 @@ namespace Biflow.Proxy.WebApp.ProxyTasks;
 
 public static class ProxyTask
 {
+    /// <summary>
+    /// Creates a delegate function that executes a proxy-based executable task.
+    /// </summary>
+    /// <param name="request">
+    /// The request specifying the executable path and optional arguments and working directory for the task.
+    /// </param>
+    /// <returns>
+    /// A delegate function that accepts a <see cref="CancellationToken"/> and returns a <see cref="Task"/>
+    /// with the result of type <see cref="ExeProxyRunResult"/>.
+    /// </returns>
     public static Func<CancellationToken, Task<ExeProxyRunResult>> Create(ExeProxyRunRequest request) =>
         async cancellationToken =>
         {
