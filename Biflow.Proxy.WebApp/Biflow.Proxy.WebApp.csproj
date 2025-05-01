@@ -5,6 +5,13 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <InvariantGlobalization>true</InvariantGlobalization>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!-- Allow NuGet warnings to remain as warnings -->
+        <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <AssemblyVersion>$(VersionName)</AssemblyVersion>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
+        <Version>$(AssemblyVersion)</Version>
     </PropertyGroup>
 
     <ItemGroup>

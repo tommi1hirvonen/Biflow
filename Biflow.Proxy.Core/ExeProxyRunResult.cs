@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 namespace Biflow.Proxy.Core;
 
 [PublicAPI]
-public record RunProxyExeResponse
+public record ExeProxyRunResult
 {
     public required int ExitCode { get; init; }
     

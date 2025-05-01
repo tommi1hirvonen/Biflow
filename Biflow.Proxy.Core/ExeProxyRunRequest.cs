@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 namespace Biflow.Proxy.Core;
 
 [PublicAPI]
-public record RunProxyExeRequest
+public record ExeProxyRunRequest
 {
     public required string ExePath { get; init; } = "";
     
