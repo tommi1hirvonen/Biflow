@@ -1,5 +1,4 @@
-﻿using Biflow.Executor.Core.Authentication;
-using Biflow.Executor.Core.ConnectionTest;
+﻿using Biflow.Executor.Core.ConnectionTest;
 using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.FilesExplorer;
@@ -9,6 +8,7 @@ using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Biflow.Executor.Core.Projections;
 using Biflow.Executor.Core.StepExecutor;
+using Biflow.ExecutorProxy.Core.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;

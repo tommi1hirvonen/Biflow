@@ -1,4 +1,4 @@
-﻿using Biflow.Executor.Core.Authentication;
+﻿using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.Scheduler.Core;
 
 namespace Biflow.Scheduler.WebApp;
