@@ -1,8 +1,8 @@
 using System.Diagnostics;
 using System.Text;
-using Biflow.Proxy.Core;
+using Biflow.ExecutorProxy.Core;
 
-namespace Biflow.Proxy.WebApp.ProxyTasks;
+namespace Biflow.ExecutorProxy.WebApp.ProxyTasks;
 
 internal class ExeProxyTask(ExeProxyRunRequest request) : IProxyTask<ExeTaskRunningResponse, ExeTaskCompletedResponse>
 {

@@ -1,6 +1,6 @@
 using JetBrains.Annotations;
 
-namespace Biflow.Proxy.Core;
+namespace Biflow.ExecutorProxy.Core;
 
 [PublicAPI]
 public record TaskStartedResponse(Guid TaskId);

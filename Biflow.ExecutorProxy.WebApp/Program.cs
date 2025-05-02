@@ -1,8 +1,8 @@
 using System.Text.Json.Serialization;
-using Biflow.Proxy.Core;
-using Biflow.Proxy.Core.Authentication;
-using Biflow.Proxy.WebApp;
-using Biflow.Proxy.WebApp.Endpoints;
+using Biflow.ExecutorProxy.Core;
+using Biflow.ExecutorProxy.Core.Authentication;
+using Biflow.ExecutorProxy.WebApp;
+using Biflow.ExecutorProxy.WebApp.Endpoints;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Serilog;
 using Serilog.Events;

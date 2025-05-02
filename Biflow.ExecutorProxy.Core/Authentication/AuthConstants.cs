@@ -1,4 +1,4 @@
-﻿namespace Biflow.Proxy.Core.Authentication;
+﻿namespace Biflow.ExecutorProxy.Core.Authentication;
 
 public static class AuthConstants
 {

@@ -1,6 +1,6 @@
-using Biflow.Proxy.WebApp.ProxyTasks;
+using Biflow.ExecutorProxy.WebApp.ProxyTasks;
 
-namespace Biflow.Proxy.WebApp;
+namespace Biflow.ExecutorProxy.WebApp;
 
 internal record TaskWrapper<TResult, TStatus>(
     IProxyTask<TStatus, TResult> ProxyTask,

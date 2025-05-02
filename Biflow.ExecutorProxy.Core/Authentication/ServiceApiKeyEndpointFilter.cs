@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 
-namespace Biflow.Proxy.Core.Authentication;
+namespace Biflow.ExecutorProxy.Core.Authentication;
 
 public class ServiceApiKeyEndpointFilter(IConfiguration configuration) : IEndpointFilter
 {

@@ -1,6 +1,6 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var proxyApi = builder.AddProject<Projects.Biflow_Proxy_WebApp>("proxyapi");
+var proxyApi = builder.AddProject<Projects.Biflow_ExecutorProxy_WebApp>("proxyapi");
 proxyApi.WithUrl($"{proxyApi.GetEndpoint("http")}/swagger", "Swagger");
 
 var executorApi = builder.AddProject<Projects.Biflow_Executor_WebApp>("executorapi");

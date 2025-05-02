@@ -1,4 +1,4 @@
-namespace Biflow.Proxy.WebApp.ProxyTasks;
+namespace Biflow.ExecutorProxy.WebApp.ProxyTasks;
 
 internal interface IProxyTask<out TStatus, TResult>
 {

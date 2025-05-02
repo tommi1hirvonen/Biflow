@@ -8,9 +8,9 @@
   <Project Path="Biflow.Executor.Core.Tests/Biflow.Executor.Core.Test.csproj" />
   <Project Path="Biflow.Executor.Core/Biflow.Executor.Core.csproj" />
   <Project Path="Biflow.Executor.WebApp/Biflow.Executor.WebApp.csproj" />
-  <Project Path="Biflow.Proxy.Core.Test\Biflow.Proxy.Core.Test.csproj" Type="Classic C#" />
-  <Project Path="Biflow.Proxy.Core\Biflow.Proxy.Core.csproj" Type="Classic C#" />
-  <Project Path="Biflow.Proxy.WebApp\Biflow.Proxy.WebApp.csproj" Type="Classic C#" />
+  <Project Path="Biflow.ExecutorProxy.Core.Test\Biflow.ExecutorProxy.Core.Test.csproj" Type="Classic C#" />
+  <Project Path="Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" Type="Classic C#" />
+  <Project Path="Biflow.ExecutorProxy.WebApp\Biflow.ExecutorProxy.WebApp.csproj" Type="Classic C#" />
   <Project Path="Biflow.Scheduler.Core/Biflow.Scheduler.Core.csproj" />
   <Project Path="Biflow.Scheduler.WebApp.Test/Biflow.Scheduler.WebApp.Test.csproj" />
   <Project Path="Biflow.Scheduler.WebApp/Biflow.Scheduler.WebApp.csproj" />

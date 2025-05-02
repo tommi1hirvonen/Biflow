@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.OpenApi.Models;
 
-namespace Biflow.Proxy.WebApp;
+namespace Biflow.ExecutorProxy.WebApp;
 
 internal static class Extensions
 {

@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 
-namespace Biflow.Proxy.Core;
+namespace Biflow.ExecutorProxy.Core;
 
 [JsonDerivedType(typeof(ExeTaskRunningResponse), "Running")]
 [JsonDerivedType(typeof(ExeTaskCompletedResponse), "Completed")]

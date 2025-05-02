@@ -17,7 +17,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
-      <ProjectReference Include="..\Biflow.Proxy.Core\Biflow.Proxy.Core.csproj" />
+      <ProjectReference Include="..\Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" />
       <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" />
       <PackageReference Include="OneOf" />

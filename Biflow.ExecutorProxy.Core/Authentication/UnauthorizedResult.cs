@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace Biflow.Proxy.Core.Authentication;
+namespace Biflow.ExecutorProxy.Core.Authentication;
 
 internal class UnauthorizedResult(string body) : IResult, IStatusCodeHttpResult
 {

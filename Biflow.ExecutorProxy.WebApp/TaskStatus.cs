@@ -1,7 +1,7 @@
 using OneOf;
 using OneOf.Types;
 
-namespace Biflow.Proxy.WebApp;
+namespace Biflow.ExecutorProxy.WebApp;
 
 [GenerateOneOf]
 internal partial class TaskStatus<TResult, TStatus>

@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
-using Biflow.Proxy.Core;
-using Biflow.Proxy.WebApp.ProxyTasks;
+using Biflow.ExecutorProxy.Core;
+using Biflow.ExecutorProxy.WebApp.ProxyTasks;
 using OneOf.Types;
 
-namespace Biflow.Proxy.WebApp.Endpoints;
+namespace Biflow.ExecutorProxy.WebApp.Endpoints;
 
 internal static class ExeEndpointsExtensions
 {

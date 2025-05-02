@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Xunit;
 
-namespace Biflow.Proxy.Core.Test;
+namespace Biflow.ExecutorProxy.Core.Test;
 
 public class ExeTaskStatusResponseTests
 {

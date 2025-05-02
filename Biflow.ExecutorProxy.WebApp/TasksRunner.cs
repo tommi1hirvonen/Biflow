@@ -1,9 +1,9 @@
 using System.Collections.Concurrent;
 using System.Timers;
-using Biflow.Proxy.WebApp.ProxyTasks;
+using Biflow.ExecutorProxy.WebApp.ProxyTasks;
 using OneOf.Types;
 
-namespace Biflow.Proxy.WebApp;
+namespace Biflow.ExecutorProxy.WebApp;
 
 internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
     where TTask : IProxyTask<TStatus, TResult>
