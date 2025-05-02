@@ -1,0 +1,192 @@
+@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+@inject ThemeService ThemeService
+
+<PageTitle>Proxies | Biflow</PageTitle>
+
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+                    Nullam eget sapien euismod, tincidunt elit sed, efficitur augue.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => ShowEditModal(null)"
+                  Enabled="_proxies is not null">
+            Add proxy
+        </HxButton>        
+    </div>
+</div>
+
+<div class="card pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th></th>
+            <th>Url</th>
+            <th></th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (_proxies is null)
+        {
+            <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+        }
+        else if (_proxies.Count == 0)
+        {
+            <tr><td colspan="4">No proxies</td></tr>
+        }
+        else
+        {
+            @foreach (var proxy in _proxies.OrderBy(x => x.ProxyName))
+            {
+                var steps = proxy.ExeSteps.Count();
+                <tr>
+                    <td class="align-middle">
+                        @proxy.ProxyName
+                    </td>
+                    <td class="align-middle">
+                        @proxy.ProxyUrl
+                    </td>
+                    <td class="align-middle">
+                        <span class="hover-text-decoration-underline cursor-pointer"
+                              @onclick="() => { _stepsProxy = proxy; _stepsModal.LetAsync(x => x.ShowAsync()); }">
+                            @(steps > 0 ? $"{steps} step(s)" : null)
+                        </span>
+                    </td>
+                    <td class="align-middle">
+                        <HxButtonGroup Size="ButtonGroupSize.Small">
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => ShowEditModal(proxy)">
+                                <SvgIcon Icon="LucideIcon.Pen" />
+                            </HxButton>
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                    <SvgIcon Icon="LucideIcon.Trash2" />
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                    <HxDropdownItem @onclick="() => DeleteProxyAsync(proxy)">Confirm</HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+
+<ProxyEditModal @ref="_editModal" OnProxySubmit="OnProxySubmitAsync" />
+
+<HxModal @ref="_stepsModal" Size="ModalSize.Large" Scrollable="true" Title="@($"Steps using {_stepsProxy?.ProxyName}")">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <table class="table table-sm table-hover">
+                    <thead>
+                    <tr>
+                        <th>Job</th>
+                        <th>Step</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var step in _stepsProxy?.ExeSteps
+                                  .OrderBy(s => s.Job.JobName)
+                                  .ThenBy(s => s.StepName)
+                                  .AsEnumerable() ?? [])
+                    {
+                        <tr>
+                            <td>
+                                @step.Job.JobName
+                            </td>
+                            <td>
+                                <StepTypeIcon StepType="step.StepType" />
+                                &nbsp;
+                                @step.StepName
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <button class="btn btn-secondary" @onclick="async () => await _stepsModal.LetAsync(x => x.HideAsync())">Close</button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<Proxy>? _proxies;
+    private ProxyEditModal? _editModal;
+    private Proxy? _stepsProxy;
+    private HxModal? _stepsModal;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _proxies = await context.Proxies
+            .AsNoTrackingWithIdentityResolution()
+            .Include(x => x.ExeSteps).ThenInclude(x => x.Job)
+            .OrderBy(x => x.ProxyName)
+            .ToListAsync();
+    }
+    
+    private async Task OnProxySubmitAsync(Proxy proxy)
+    {
+        if (proxy.ProxyId == Guid.Empty)
+        {
+            var command = new CreateProxyCommand(
+                proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
+            var response = await Mediator.SendAsync(command);
+            _proxies?.Add(response);
+        }
+        else
+        {
+            var command = new UpdateProxyCommand(
+                proxy.ProxyId, proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
+            _ = await Mediator.SendAsync(command);
+            _proxies?.RemoveAll(x => x.ProxyId == proxy.ProxyId);
+            _proxies?.Add(proxy);
+        }
+        StateHasChanged();
+    }
+    
+    private async Task DeleteProxyAsync(Proxy proxy)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeleteProxyCommand(proxy.ProxyId));
+            _proxies?.Remove(proxy);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting proxy", message);
+        }
+    }
+    
+    private Task ShowEditModal(Proxy? proxy) => _editModal.LetAsync(x => x.ShowAsync(proxy?.ProxyId ?? Guid.Empty));
+}
