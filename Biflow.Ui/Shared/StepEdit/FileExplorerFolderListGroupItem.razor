@@ -1,7 +1,6 @@
 @using Biflow.ExecutorProxy.Core.FilesExplorer
 @using System.Globalization
 
-@inject IExecutorService ExecutorService
 @inject ToasterService Toaster
 
 @if (Folder is not null)
@@ -66,6 +65,7 @@
             {
                 <FileExplorerFolderListGroupItem Folder="folder"
                                                  SelectedFile="SelectedFile"
+                                                 FileExplorerDelegate="FileExplorerDelegate"
                                                  OnFileSelected="OnFileSelected"
                                                  FilterText="@_filterText"
                                                  ParentDepth="Depth" />   
@@ -90,6 +90,9 @@
 }
 
 @code {
+    [Parameter] public FileExplorerDelegate FileExplorerDelegate { get; set; } =
+        (_, _) => Task.FromResult<IReadOnlyList<DirectoryItem>>([]);
+    
     [Parameter] public DirectoryItem? Folder { get; set; }
     
     [Parameter] public DirectoryItem? SelectedFile { get; set; }
@@ -114,7 +117,7 @@
         {
             try
             {
-                _items = await ExecutorService.GetDirectoryItemsAsync(Folder.FullName);
+                _items = await FileExplorerDelegate(Folder.FullName);
                 StateHasChanged();
             }
             catch (Exception ex)

@@ -13,6 +13,7 @@
         {
             <FileExplorerFolderListGroupItem Folder="node"
                                              SelectedFile="SelectedFile"
+                                             FileExplorerDelegate="FileExplorerDelegate"
                                              OnFileSelected="OnFileSelected"
                                              ParentDepth="0" />
         }
@@ -20,6 +21,9 @@
 </div>
 
 @code {
+    [Parameter] public FileExplorerDelegate FileExplorerDelegate { get; set; } =
+        (_, _) => Task.FromResult<IReadOnlyList<DirectoryItem>>([]);
+    
     [Parameter] public IReadOnlyList<DirectoryItem>? RootNodes { get; set; }
     
     [Parameter] public DirectoryItem? SelectedFile { get; set; }

@@ -5,6 +5,8 @@ namespace Biflow.Ui.Shared.StepEditModal;
 public partial class ExeStepEditModal(
     IMediator mediator,
     ToasterService toaster,
+    IExecutorService executorService,
+    ProxyClientFactory proxyClientFactory,
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<ExeStep>(mediator, toaster, dbContextFactory)
 {
@@ -168,7 +170,19 @@ public partial class ExeStepEditModal(
     
     private Task OpenFileSelectOffcanvas()
     {
-        return _fileExplorerOffcanvas.LetAsync(x => x.ShowAsync());
+        ArgumentNullException.ThrowIfNull(Step);
+        FileExplorerDelegate fileExplorerDelegate;
+        if (Step.ProxyId is { } id)
+        {
+            var proxy = Proxies.First(x => x.ProxyId == id);
+            var client = proxyClientFactory.Create(proxy);
+            fileExplorerDelegate = client.GetDirectoryItemsAsync;
+        }
+        else
+        {
+            fileExplorerDelegate = executorService.GetDirectoryItemsAsync;
+        }
+        return _fileExplorerOffcanvas.LetAsync(x => x.ShowAsync(fileExplorerDelegate));
     }
     
     private void OnFileSelected(string filePath)

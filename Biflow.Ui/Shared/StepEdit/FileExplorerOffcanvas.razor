@@ -1,7 +1,6 @@
 @using Biflow.ExecutorProxy.Core.FilesExplorer
 
 @inject ToasterService Toaster
-@inject IExecutorService ExecutorService
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select file">
 
@@ -33,12 +32,14 @@
                 @if (_viewType == ViewType.List)
                 {
                     <FileExplorerListView RootNodes="_rootNodes"
+                                          FileExplorerDelegate="_fileExplorerDelegate"
                                           SelectedFile="_selectedFile"
                                           OnFileSelected="ToggleFile" />
                 }
                 else if (_viewType == ViewType.Tree)
                 {
                     <FileExplorerTreeView RootNodes="_rootNodes"
+                                          FileExplorerDelegate="_fileExplorerDelegate"
                                           SelectedFile="_selectedFile"
                                           OnFileSelected="ToggleFile"/>
                 }
@@ -64,6 +65,8 @@
     private IReadOnlyList<DirectoryItem>? _rootNodes;
     private DirectoryItem? _selectedFile;
     private ViewType _viewType = ViewType.List;
+    private FileExplorerDelegate _fileExplorerDelegate =
+        (_, _) => Task.FromResult<IReadOnlyList<DirectoryItem>>([]);
     
     private enum ViewType { List, Tree }
 
@@ -76,16 +79,17 @@
         }
     }
 
-    public async Task ShowAsync()
+    public async Task ShowAsync(FileExplorerDelegate fileExplorerDelegate)
     {
         _rootNodes = null;
         _selectedFile = null;
+        _fileExplorerDelegate = fileExplorerDelegate;
 
         await _offcanvas.LetAsync(x => x.ShowAsync());
 
         try
         {
-            _rootNodes = await ExecutorService.GetDirectoryItemsAsync(null);
+            _rootNodes = await _fileExplorerDelegate(null);
             StateHasChanged();
         }
         catch (Exception ex)
