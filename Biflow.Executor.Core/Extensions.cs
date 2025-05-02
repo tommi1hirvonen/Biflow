@@ -261,8 +261,3 @@ file record ExecutionCreateRequest(Guid JobId, Guid[]? StepIds, bool? StartExecu
 
 [PublicAPI]
 file record ExecutionCreateResponse(Guid ExecutionId);
-
-[PublicAPI]
-public record FileExplorerSearchRequest(string? Path);
-
-public record FileExplorerSearchResponse(DirectoryItem[] Items);

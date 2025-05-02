@@ -1,0 +1,12 @@
+@API_KEY = 256155ff-f7f8-4da8-b449-0f147bb76c2b
+@BASE_URL = http://localhost:6543/
+
+### Start proxy task
+
+POST {{BASE_URL}}/fileexplorer/search
+x-api-key: {{API_KEY}}
+Content-Type: application/json
+
+{
+  "path": "C:\\Users\\Tommi Hirvonen\\Desktop"
+}

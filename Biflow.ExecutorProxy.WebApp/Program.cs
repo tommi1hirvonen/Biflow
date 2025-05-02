@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using Biflow.ExecutorProxy.Core;
 using Biflow.ExecutorProxy.Core.Authentication;
+using Biflow.ExecutorProxy.Core.FilesExplorer;
 using Biflow.ExecutorProxy.WebApp;
 using Biflow.ExecutorProxy.WebApp.Endpoints;
 using Microsoft.AspNetCore.Routing.Constraints;
@@ -48,6 +49,7 @@ app.UseExceptionHandler();
 var baseGroup = app.MapGroup("").AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 baseGroup.MapExeEndpoints();
+baseGroup.MapFileExplorerEndpoints();
 
 app.MapDefaultEndpoints();
 
@@ -59,7 +61,13 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 
+
+// JsonSerializable attributes together with JsonSerializerContext enable
+// source generation for JSON serialization.
+
 [JsonSerializable(typeof(ExeProxyRunRequest))]
 [JsonSerializable(typeof(ExeTaskStatusResponse))]
 [JsonSerializable(typeof(TaskStartedResponse))]
+[JsonSerializable(typeof(FileExplorerSearchRequest))]
+[JsonSerializable(typeof(FileExplorerSearchResponse))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext;
