@@ -9,7 +9,11 @@ namespace Biflow.Proxy.Core;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "status")]
 public abstract class ExeTaskStatusResponse;
 
-public class ExeTaskRunningStatusResponse : ExeTaskStatusResponse;
+[PublicAPI]
+public class ExeTaskRunningStatusResponse : ExeTaskStatusResponse
+{
+    public required int ProcessId { get; init; }
+}
 
 [PublicAPI]
 public class ExeTaskSucceededStatusResponse : ExeTaskStatusResponse

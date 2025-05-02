@@ -1,7 +1,10 @@
+using Biflow.Proxy.WebApp.ProxyTasks;
+
 namespace Biflow.Proxy.WebApp;
 
-internal record TaskWrapper<T>(
-    Task<T> Task,
+internal record TaskWrapper<TResult, TStatus>(
+    ProxyTask<TStatus, TResult> ProxyTask,
+    Task<TResult> Task,
     CancellationTokenSource CancellationTokenSource,
     DateTime? CompletedAt) : IDisposable
 {

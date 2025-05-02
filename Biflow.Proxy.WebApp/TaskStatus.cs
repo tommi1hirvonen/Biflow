@@ -4,6 +4,10 @@ using OneOf.Types;
 namespace Biflow.Proxy.WebApp;
 
 [GenerateOneOf]
-public partial class TaskStatus<T> : OneOfBase<Result<T>, Error<Exception>, Running, NotFound>;
+public partial class TaskStatus<TResult, TStatus>
+    : OneOfBase<Result<TResult>, Error<Exception>, Running<TStatus>, NotFound>;
 
-public readonly struct Running;
+public readonly struct Running<T>(T value)
+{
+    public T Value { get; } = value;
+}

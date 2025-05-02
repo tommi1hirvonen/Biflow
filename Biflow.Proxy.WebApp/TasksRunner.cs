@@ -1,34 +1,28 @@
 using System.Collections.Concurrent;
 using System.Timers;
+using Biflow.Proxy.WebApp.ProxyTasks;
 using OneOf.Types;
 
 namespace Biflow.Proxy.WebApp;
 
-internal class TasksRunner<T> : BackgroundService
+internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
+    where TTask : ProxyTask<TStatus, TResult>
 {
     private const int TaskCleanupIntervalMinutes = 5;
     private const int TaskCleanupThresholdMinutes = 60;
     
-    private readonly ILogger<TasksRunner<T>> _logger;
+    private readonly ILogger<TasksRunner<TTask, TStatus, TResult>> _logger;
     private readonly System.Timers.Timer _timer = new(TimeSpan.FromMinutes(TaskCleanupIntervalMinutes));
-    private readonly ConcurrentDictionary<Guid, TaskWrapper<T>> _tasks = [];
+    private readonly ConcurrentDictionary<Guid, TaskWrapper<TResult, TStatus>> _tasks = [];
     private readonly CancellationTokenSource _shutdownCts = new();
 
-    public TasksRunner(ILogger<TasksRunner<T>> logger)
+    public TasksRunner(ILogger<TasksRunner<TTask, TStatus, TResult>> logger)
     {
         _logger = logger;
         _timer.Elapsed += RemoveCompletedTasks;
     }
-
-    /// Initiates the execution of a long-running task using the provided task delegate and returns
-    /// a unique identifier for tracking the task.
-    /// <param name="taskDelegate">A function that represents the asynchronous task to be executed.
-    /// It takes a CancellationToken as input and returns a Task of the specified type T.</param>
-    /// <returns>
-    /// A Guid representing the unique identifier of the newly started task.
-    /// This identifier can be used to retrieve the task's status or perform operations like cancellation.
-    /// </returns>
-    public Guid Run(Func<CancellationToken, Task<T>> taskDelegate)
+    
+    public Guid Run(TTask proxyTask)
     {
         if (_shutdownCts.IsCancellationRequested)
             throw new ApplicationException("Cannot start new tasks when service shutdown is requested.");
@@ -36,8 +30,8 @@ internal class TasksRunner<T> : BackgroundService
         var id = Guid.NewGuid();
         _logger.LogInformation("Starting task with id {id}", id);
         var cts = CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
-        var task = taskDelegate(cts.Token);
-        var wrapper = new TaskWrapper<T>(task, cts, null);
+        var task = proxyTask.RunAsync(cts.Token);
+        var wrapper = new TaskWrapper<TResult, TStatus>(proxyTask, task, cts, null);
         _tasks[id] = wrapper;
         _ = WaitAndMarkCompletedAsync(id, wrapper);
         return id;
@@ -52,20 +46,23 @@ internal class TasksRunner<T> : BackgroundService
     /// - Running if the task is still in progress.
     /// - NotFound if no task with the specified identifier exists.
     /// </returns>
-    public TaskStatus<T> GetStatus(Guid id)
+    public TaskStatus<TResult, TStatus> GetStatus(Guid id)
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))
             return new NotFound();
         
         var task = taskWrapper.Task;
-        
+
         if (task.IsCompletedSuccessfully)
-            return new Result<T>(task.Result);
+        {
+            TaskStatus<TResult, TStatus> result = new Result<TResult>(task.Result);
+            return result;
+        }
         
         if (task.IsFaulted)
             return new Error<Exception>(task.Exception);
         
-        return new Running();
+        return new Running<TStatus>(taskWrapper.ProxyTask.Status);
     }
 
     /// Cancels a running task identified by the provided unique identifier.
@@ -100,7 +97,7 @@ internal class TasksRunner<T> : BackgroundService
         }
     }
 
-    private async Task WaitAndMarkCompletedAsync(Guid id, TaskWrapper<T> taskWrapper)
+    private async Task WaitAndMarkCompletedAsync(Guid id, TaskWrapper<TResult, TStatus> taskWrapper)
     {
         try
         {

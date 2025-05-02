@@ -12,10 +12,11 @@ public class ExeTaskStatusResponseTests
     {
         const string expected = """
                                 {
-                                  "status": "Running"
+                                  "status": "Running",
+                                  "ProcessId": 0
                                 }
                                 """;
-        ExeTaskStatusResponse status = new ExeTaskRunningStatusResponse();
+        ExeTaskStatusResponse status = new ExeTaskRunningStatusResponse { ProcessId = 0 };
         var json = JsonSerializer.Serialize(status, Options);
         Assert.Equal(expected, json);
     }

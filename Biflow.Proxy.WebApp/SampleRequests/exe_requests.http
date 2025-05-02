@@ -15,10 +15,10 @@ Content-Type: application/json
 
 ### Get proxy task status
 
-GET {{BASE_URL}}/exe/d718f6dd-ab37-44e4-808e-dd4cc2ee5973
+GET {{BASE_URL}}/exe/cd8edcf3-1810-42b9-8f96-c648d0a397d3
 x-api-key: {{API_KEY}}
 
 ### Cancel proxy task
 
-POST {{BASE_URL}}/exe/d718f6dd-ab37-44e4-808e-dd4cc2ee5973/cancel
+POST {{BASE_URL}}/exe/cd8edcf3-1810-42b9-8f96-c648d0a397d3/cancel
 x-api-key: {{API_KEY}}

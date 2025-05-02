@@ -13,12 +13,12 @@ public static class ExeEndpointsExtensions
     {
         builder.MapPost("/exe",
             (ExeProxyRunRequest request,
-                TasksRunner<ExeProxyRunResult> runner,
+                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
                 LinkGenerator linker,
                 HttpContext context) => 
             {
-                var taskDelegate = ProxyTask.Create(request);
-                var id = runner.Run(taskDelegate);
+                var proxyTask = new ExeProxyTask(request);
+                var id = runner.Run(proxyTask);
                 var response = new TaskStartedResponse(id);
                 var url = linker.GetUriByName(context, "GetExeStatus", new RouteValueDictionary { { "id", id } });
                 return Results.Created(url, response);
@@ -30,23 +30,38 @@ public static class ExeEndpointsExtensions
         
         builder.MapGet("/exe/{id:guid}", 
             (Guid id,
-                TasksRunner<ExeProxyRunResult> runner,
+                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
                 LinkGenerator linker,
                 HttpContext context) => 
             {
                 var status = runner.GetStatus(id);
                 var result = status.Match(
-                    (Result<ExeProxyRunResult> result) => Results.Ok(new ExeTaskSucceededStatusResponse
+                    (Result<ExeProxyRunResult> result) =>
                     {
-                        Result = result.Value
-                    } as ExeTaskStatusResponse),
-                    (Error<Exception> error) => Results.Ok(new ExeTaskFailedStatusResponse
+                        ExeTaskStatusResponse response = new ExeTaskSucceededStatusResponse
+                        {
+                            Result = result.Value
+                        };
+                        return Results.Ok(response);
+                    },
+                    (Error<Exception> error) =>
                     {
-                        ErrorMessage = error.Value.ToString()
-                    } as ExeTaskStatusResponse),
-                    (Running running) => Results.Accepted(
-                        linker.GetUriByName(context, "GetExeStatus", new RouteValueDictionary { { "id", id } }),
-                        new ExeTaskRunningStatusResponse() as ExeTaskStatusResponse),
+                        ExeTaskStatusResponse response = new ExeTaskFailedStatusResponse
+                        {
+                            ErrorMessage = error.Value.ToString()
+                        };
+                        return Results.Ok(response);
+                    },
+                    (Running<ExeTaskRunningStatusResponse> running) =>
+                    {
+                        ExeTaskStatusResponse response = new ExeTaskRunningStatusResponse
+                        {
+                            ProcessId = running.Value.ProcessId
+                        };
+                        var uri = linker.GetUriByName(context, "GetExeStatus",
+                            new RouteValueDictionary { { "id", id } });
+                        return Results.Accepted(uri, response);
+                    },
                     (NotFound notfound) => throw new TaskNotFoundException(id));
                 return result;
             })
@@ -59,7 +74,7 @@ public static class ExeEndpointsExtensions
 
         builder.MapPost("/exe/{id:guid}/cancel",
             (Guid id,
-                TasksRunner<ExeProxyRunResult> runner,
+                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
                 LinkGenerator linker,
                 HttpContext context) =>
             {
