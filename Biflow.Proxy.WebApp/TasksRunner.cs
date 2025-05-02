@@ -107,17 +107,17 @@ internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
             var completedTasks = _tasks
                 .Where(x => x.Value.CompletedAt is { } completed
                             && DateTime.Now - completed > TimeSpan.FromMinutes(TaskCleanupThresholdMinutes))
-                .Select(x => (x.Key, x.Value.CancellationTokenSource))
+                .Select(x => (x.Key, x.Value))
                 .ToArray();
-            foreach (var (task, cts) in completedTasks)
+            foreach (var (task, wrapper) in completedTasks)
             {
                 try
                 {
-                    cts.Dispose();
+                    wrapper.Dispose();
                 }
                 catch (Exception e)
                 {
-                    _logger.LogError(e, "Error while disposing a completed task's CancellationTokenSource");
+                    _logger.LogError(e, "Error while disposing a completed TaskWrapper");
                 }
                 _tasks.TryRemove(task, out _);
             }
