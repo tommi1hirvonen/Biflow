@@ -32,10 +32,13 @@ builder.Services.AddWindowsService()
     .AddEndpointsApiExplorer()
     .AddSwagger()
     .AddSingleton<TasksRunner<ExeProxyRunResult>>()
+    .AddHostedService(s => s.GetRequiredService<TasksRunner<ExeProxyRunResult>>())
     .ConfigureHttpJsonOptions(options =>
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default))
     .Configure<RouteOptions>(options =>
-        options.SetParameterPolicy<RegexInlineRouteConstraint>("regex"));
+        options.SetParameterPolicy<RegexInlineRouteConstraint>("regex"))
+    // Timeout for hosted services to shut down gracefully when StopAsync() is called.
+    .Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
 
 var app = builder.Build();
 

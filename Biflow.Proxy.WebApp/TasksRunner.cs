@@ -4,7 +4,7 @@ using OneOf.Types;
 
 namespace Biflow.Proxy.WebApp;
 
-internal class TasksRunner<T> : IDisposable
+internal class TasksRunner<T> : BackgroundService
 {
     private const int TaskCleanupIntervalMinutes = 5;
     private const int TaskCleanupThresholdMinutes = 60;
@@ -12,6 +12,7 @@ internal class TasksRunner<T> : IDisposable
     private readonly ILogger<TasksRunner<T>> _logger;
     private readonly System.Timers.Timer _timer = new(TimeSpan.FromMinutes(TaskCleanupIntervalMinutes));
     private readonly ConcurrentDictionary<Guid, TaskWrapper<T>> _tasks = [];
+    private readonly CancellationTokenSource _shutdownCts = new();
 
     public TasksRunner(ILogger<TasksRunner<T>> logger)
     {
@@ -29,9 +30,12 @@ internal class TasksRunner<T> : IDisposable
     /// </returns>
     public Guid Run(Func<CancellationToken, Task<T>> taskDelegate)
     {
+        if (_shutdownCts.IsCancellationRequested)
+            throw new ApplicationException("Cannot start new tasks when service shutdown is requested.");
+        
         var id = Guid.NewGuid();
         _logger.LogInformation("Starting task with id {id}", id);
-        var cts = new CancellationTokenSource();
+        var cts = CancellationTokenSource.CreateLinkedTokenSource(_shutdownCts.Token);
         var task = taskDelegate(cts.Token);
         var wrapper = new TaskWrapper<T>(task, cts, null);
         _tasks[id] = wrapper;
@@ -79,6 +83,23 @@ internal class TasksRunner<T> : IDisposable
         return true;
     }
 
+    protected override async Task ExecuteAsync(CancellationToken shutdownToken)
+    {
+        _timer.Start();
+        try
+        {
+            await Task.Delay(-1, shutdownToken);
+        }
+        finally
+        {
+            // Canceling _shutdownCts will cause all tasks to be canceled because their
+            // task-specific CancellationTokenSources are linked to it.
+            await _shutdownCts.CancelAsync();
+            var tasks = _tasks.Values.Select(x => x.Task).ToArray();
+            await Task.WhenAll(tasks);
+        }
+    }
+
     private async Task WaitAndMarkCompletedAsync(Guid id, TaskWrapper<T> taskWrapper)
     {
         try
@@ -103,11 +124,19 @@ internal class TasksRunner<T> : IDisposable
             var completedTasks = _tasks
                 .Where(x => x.Value.CompletedAt is { } completed
                             && DateTime.Now - completed > TimeSpan.FromMinutes(TaskCleanupThresholdMinutes))
-                .Select(x => x.Key)
+                .Select(x => (x.Key, x.Value.CancellationTokenSource))
                 .ToArray();
-            foreach (var completedTask in completedTasks)
+            foreach (var (task, cts) in completedTasks)
             {
-                _tasks.TryRemove(completedTask, out _);
+                try
+                {
+                    cts.Dispose();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, "Error while disposing a completed task's CancellationTokenSource");
+                }
+                _tasks.TryRemove(task, out _);
             }
             _logger.LogInformation("Removed {count} completed tasks", completedTasks.Length);
         }
@@ -117,8 +146,9 @@ internal class TasksRunner<T> : IDisposable
         }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
+        base.Dispose();
         _timer.Stop();
         _timer.Dispose();
     }
