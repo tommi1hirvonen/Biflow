@@ -15,11 +15,7 @@ public class FunctionApp
 
     [MaxLength(1000)]
     [JsonSensitive]
-    public string? FunctionAppKey
-    {
-        get;
-        set => field = string.IsNullOrEmpty(value) ? null : value;
-    }
+    public string? FunctionAppKey { get; set; }
 
     [Required]
     [MaxLength(36)]

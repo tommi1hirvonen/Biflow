@@ -10,7 +10,7 @@
 /// <param name="ResourceName"></param>
 /// <param name="AzureCredentialId"></param>
 /// <param name="MaxConcurrentFunctionSteps"></param>
-/// <param name="FunctionAppKey">Pass null to retain the previous FunctionAppKey value</param>
+/// <param name="FunctionAppKey">Pass null to retain the previous FunctionAppKey value, pass empty string to reset</param>
 public record UpdateFunctionAppCommand(
     Guid FunctionAppId,
     string FunctionAppName,
@@ -44,7 +44,11 @@ internal class UpdateFunctionAppCommandHandler(IDbContextFactory<AppDbContext> d
         functionApp.ResourceName = request.ResourceName;
         functionApp.AzureCredentialId = request.AzureCredentialId;
         functionApp.MaxConcurrentFunctionSteps = request.MaxConcurrentFunctionSteps;
-        if (request.FunctionAppKey is not null)
+        if (request.FunctionAppKey is { Length: 0 })
+        {
+            functionApp.FunctionAppKey = null; // Reset FunctionAppKey to null to reset the value in the database.
+        }
+        else if (request.FunctionAppKey is not null)
         {
             functionApp.FunctionAppKey = request.FunctionAppKey;
         }
