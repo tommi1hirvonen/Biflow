@@ -1,5 +1,6 @@
 @inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject ProxyClientFactory ProxyClientFactory
 
 <HxModal @ref="_modal"
          Size="ModalSize.Large"
@@ -123,8 +124,8 @@
         _testingConnection = true;
         try
         {
-            // TODO Implement actual connection testing with proxy API health check endpoint.
-            await Task.CompletedTask;
+            var client = ProxyClientFactory.Create(_proxy);
+            await client.TestConnectionAsync();
             _connectionTestSuccess = true;
         }
         catch (Exception ex)

@@ -89,6 +89,7 @@ public static class Extensions
         }
 
         services.AddSingleton(new ExecutorModeResolver(executorMode));
+        services.AddSingleton<ProxyClientFactory>();
         services.AddScoped<EnvironmentSnapshotBuilder>();
         services.AddDuplicatorServices();
 

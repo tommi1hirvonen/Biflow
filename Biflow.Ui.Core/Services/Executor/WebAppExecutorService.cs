@@ -2,7 +2,6 @@
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using System.Web;
-using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.FilesExplorer;
 
 namespace Biflow.Ui.Core;
@@ -80,8 +79,6 @@ public class WebAppExecutorService : IExecutorService
         var request = new FileExplorerSearchRequest(path);
         var response = await _httpClient.PostAsJsonAsync("/fileexplorer/search", request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        // var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        // var result = JsonSerializer.Deserialize<FileExplorerSearchResponse>(content);
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var result = await JsonSerializer.DeserializeAsync<FileExplorerSearchResponse>(
             stream, JsonSerializerOptions, cancellationToken);
