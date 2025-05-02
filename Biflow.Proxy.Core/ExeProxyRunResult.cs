@@ -5,6 +5,8 @@ namespace Biflow.Proxy.Core;
 [PublicAPI]
 public record ExeProxyRunResult
 {
+    public required int ProcessId { get; init; }
+    
     public required int ExitCode { get; init; }
     
     public required string? Output { get; init; }

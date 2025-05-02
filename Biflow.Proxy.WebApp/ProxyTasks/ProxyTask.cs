@@ -32,6 +32,7 @@ public static class ProxyTask
             };
             var outputBuilder = new StringBuilder();
             var errorBuilder = new StringBuilder();
+            var internalErrorBuilder = new StringBuilder();
 
             using var process = new Process();
             process.StartInfo = startInfo;
@@ -42,8 +43,18 @@ public static class ProxyTask
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
 
+            int processId;
+            try
+            {
+                processId = process.Id;
+            }
+            catch (Exception e)
+            {
+                processId = -1;
+                internalErrorBuilder.AppendLine($"Failed to get process ID\n{e}");
+            }
+
             ExeProxyRunResult result;
-            string? internalError = null;
             try
             {
                 await process.WaitForExitAsync(cancellationToken);
@@ -53,16 +64,16 @@ public static class ProxyTask
                 try
                 {
                     process.Kill(entireProcessTree: true);
-                    internalError = e.ToString();
+                    internalErrorBuilder.AppendLine(e.ToString());
                 }
                 catch (Exception ex)
                 {
-                    internalError = ex.ToString();
+                    internalErrorBuilder.AppendLine(ex.ToString());
                 }
             }
             catch (Exception e)
             {
-                internalError = e.ToString();
+                internalErrorBuilder.AppendLine(e.ToString());
             }
             finally
             {
@@ -80,12 +91,13 @@ public static class ProxyTask
                 };
                 result = new ExeProxyRunResult
                 {
+                    ProcessId = processId,
                     ExitCode = process.ExitCode,
                     Output = output,
                     OutputIsTruncated = outputTruncated,
                     ErrorOutput = error,
                     ErrorOutputIsTruncated = errorTruncated,
-                    InternalError = internalError
+                    InternalError = internalErrorBuilder.ToString(),
                 };
             }
             

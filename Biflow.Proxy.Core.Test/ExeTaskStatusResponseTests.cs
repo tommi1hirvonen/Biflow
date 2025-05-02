@@ -12,7 +12,7 @@ public class ExeTaskStatusResponseTests
     {
         const string expected = """
                                 {
-                                  "$type": "Running"
+                                  "status": "Running"
                                 }
                                 """;
         ExeTaskStatusResponse status = new ExeTaskRunningStatusResponse();
@@ -25,7 +25,7 @@ public class ExeTaskStatusResponseTests
     {
         const string expected = """
                                 {
-                                  "$type": "Failed",
+                                  "status": "Failed",
                                   "ErrorMessage": "Test"
                                 }
                                 """;
@@ -39,8 +39,9 @@ public class ExeTaskStatusResponseTests
     {
         const string expected = """
                                 {
-                                  "$type": "Succeeded",
-                                  "Response": {
+                                  "status": "Succeeded",
+                                  "Result": {
+                                    "ProcessId": 0,
                                     "ExitCode": 0,
                                     "Output": "Test",
                                     "OutputIsTruncated": false,
@@ -54,6 +55,7 @@ public class ExeTaskStatusResponseTests
         {
             Result = new ExeProxyRunResult
             {
+                ProcessId = 0,
                 ExitCode = 0,
                 Output = "Test",
                 OutputIsTruncated = false,
