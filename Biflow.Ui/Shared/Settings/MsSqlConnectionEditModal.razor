@@ -209,9 +209,9 @@
 
     private MsSqlConnection? _connection;
     private HxModal? _modal;
-    private bool? _connectionTestSuccess = null;
-    private bool _testingConnection = false;
-    private bool _showScdDefaults = false;
+    private bool? _connectionTestSuccess;
+    private bool _testingConnection;
+    private bool _showScdDefaults;
 
     private async Task SubmitConnection()
     {

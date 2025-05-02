@@ -86,12 +86,13 @@
 
     private HxModal? _modal;
     private DatabricksWorkspace? _workspace;
-    private bool? _connectionTestSuccess = null;
-    private bool _testingConnection = false;
+    private bool? _connectionTestSuccess;
+    private bool _testingConnection;
 
     public async Task ShowAsync(Guid workspaceId)
     {
         _workspace = null;
+        _connectionTestSuccess = null;
         await _modal.LetAsync(x => x.ShowAsync());
         if (workspaceId != Guid.Empty)
         {

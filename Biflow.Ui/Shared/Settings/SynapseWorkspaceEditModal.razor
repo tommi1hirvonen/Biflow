@@ -119,12 +119,6 @@
         _testingConnection = false;
     }
 
-    private void OnOpenChanged(bool isOpen)
-    {
-        if (!isOpen)
-            _connectionTestSuccess = null;
-    }
-
     public async Task ShowAsync(Guid pipelineClientId)
     {
         ArgumentNullException.ThrowIfNull(AzureCredentials);

@@ -101,6 +101,7 @@
     public async Task ShowAsync(Guid proxyId)
     {
         _proxy = null;
+        _connectionTestSuccess = null;
         await _modal.LetAsync(x => x.ShowAsync());
         if (proxyId != Guid.Empty)
         {
