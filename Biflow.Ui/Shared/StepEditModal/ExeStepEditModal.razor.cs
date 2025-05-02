@@ -8,6 +8,9 @@ public partial class ExeStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<ExeStep>(mediator, toaster, dbContextFactory)
 {
+    
+    [Parameter] public IEnumerable<Proxy> Proxies { get; set; } = [];
+    
     internal override string FormId => "exe_step_edit_form";
 
     private const string ParametersInfoContent = """

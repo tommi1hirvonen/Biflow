@@ -36,6 +36,8 @@ public partial class DependenciesGraph(
     [Parameter] public List<ScdTable>? ScdTables { get; set; }
 
     [Parameter] public List<Credential>? Credentials { get; set; }
+    
+    [Parameter] public List<Proxy>? Proxies { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 

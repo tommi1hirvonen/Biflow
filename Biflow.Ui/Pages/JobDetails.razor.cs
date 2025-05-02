@@ -44,6 +44,7 @@ public partial class JobDetails(
     private List<DbtAccount>? _dbtAccounts;
     private List<ScdTable>? _scdTables;
     private List<Credential>? _credentials;
+    private List<Proxy>? _proxies;
     private bool _descriptionOpen;
     private Guid _previousJobId;
 
@@ -120,6 +121,10 @@ public partial class JobDetails(
             .AsNoTracking()
             .OrderBy(c => c.Domain)
             .ThenBy(c => c.Username)
+            .ToListAsync(_cts.Token);
+        _proxies = await context.Proxies
+            .AsNoTracking()
+            .OrderBy(p => p.ProxyName)
             .ToListAsync(_cts.Token);
         _job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()

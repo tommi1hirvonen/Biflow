@@ -89,6 +89,26 @@
                 <div class="form-text">Blank if not applicable</div>
             </div>
         </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Run on proxy</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Waypoints" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ProxyId">
+                        <option value="">Executor host (no proxy)</option>
+                        @foreach (var proxy in Proxies)
+                        {
+                            <option value="@proxy.ProxyId">@proxy.ProxyName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
@@ -100,7 +120,7 @@
                         <SvgIcon Icon="LucideIcon.User" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.RunAsCredentialId">
-                        <option value="">Executor service user</option>
+                        <option value="">Executor/proxy service user (no impersonation)</option>
                         @foreach (var cred in Credentials)
                         {
                             <option value="@cred.CredentialId">@cred.DisplayName</option>
