@@ -1,4 +1,4 @@
-namespace Biflow.Executor.Core.FilesExplorer;
+namespace Biflow.ExecutorProxy.Core.FilesExplorer;
 
 public static class FileExplorer
 {

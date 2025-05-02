@@ -3,7 +3,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using System.Web;
 using Biflow.Executor.Core;
-using Biflow.Executor.Core.FilesExplorer;
+using Biflow.ExecutorProxy.Core.FilesExplorer;
 
 namespace Biflow.Ui.Core;
 

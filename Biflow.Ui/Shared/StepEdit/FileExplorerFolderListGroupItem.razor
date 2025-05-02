@@ -1,4 +1,4 @@
-@using Biflow.Executor.Core.FilesExplorer
+@using Biflow.ExecutorProxy.Core.FilesExplorer
 @using System.Globalization
 
 @inject IExecutorService ExecutorService
@@ -101,7 +101,6 @@
     [Parameter] public int ParentDepth { get; set; }
     
     private IReadOnlyList<DirectoryItem>? _items;
-    private Dictionary<DirectoryItem, bool> _expandStatuses = [];
     private bool _expanded;
     private string _filterText = "";
 
