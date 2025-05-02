@@ -31,6 +31,7 @@ internal class UpdateCredentialCommandHandler(IDbContextFactory<AppDbContext> db
                 ? null 
                 : request.Password;
         }
+        credential.EnsureDataAnnotationsValidated();
         await dbContext.SaveChangesAsync(cancellationToken);
         return credential;
     }
