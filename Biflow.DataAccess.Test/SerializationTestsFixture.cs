@@ -13,6 +13,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     public SqlConnectionBase[] SqlConnections { get; private set; } = [];
     public AnalysisServicesConnection[] AnalysisServicesConnections { get; private set; } = [];
     public Credential[] Credentials { get; private set; } = [];
+    public Proxy[] Proxies { get; private set; } = [];
     public AzureCredential[] AzureCredentials { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];
@@ -48,6 +49,10 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
         Credentials = await context.Credentials
             .AsNoTracking()
             .OrderBy(c => c.Username)
+            .ToArrayAsync();
+        Proxies = await context.Proxies
+            .AsNoTracking()
+            .OrderBy(p => p.ProxyId)
             .ToArrayAsync();
         AzureCredentials = await context.AzureCredentials
             .AsNoTracking()

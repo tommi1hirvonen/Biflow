@@ -43,12 +43,15 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
         set => field = string.IsNullOrEmpty(value) ? null : value;
     }
 
-
     public int? ExeSuccessExitCode { get; set; }
 
     public Guid? RunAsCredentialId { get; set; }
 
     public Credential? RunAsCredential { get; set; }
+    
+    public Guid? ProxyId { get; set; }
+    
+    public Proxy? Proxy { get; set; }
 
     [ValidateComplexType]
     [JsonInclude]

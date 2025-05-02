@@ -176,6 +176,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             SqlConnections = fixture.SqlConnections,
             AnalysisServicesConnections = fixture.AnalysisServicesConnections,
             Credentials = fixture.Credentials,
+            Proxies = fixture.Proxies,
             AzureCredentials = fixture.AzureCredentials,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,

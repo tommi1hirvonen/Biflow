@@ -45,6 +45,8 @@ public class ExeStepExecution : StepExecution,
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public Guid? RunAsCredentialId { get; [UsedImplicitly] private set; }
+    
+    public Guid? ProxyId { get; [UsedImplicitly] private set; }
 
     public string? RunAsUsername { get; private set; }
 
@@ -87,4 +89,16 @@ public class ExeStepExecution : StepExecution,
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
     private Credential? _runAsCredential;
+
+    public Proxy? GetProxy() => _proxy;
+
+    public void SetProxy(Proxy? proxy)
+    {
+        if (proxy?.ProxyId == ProxyId)
+        {
+            _proxy = proxy;
+        }
+    }
+    
+    private Proxy? _proxy;
 }

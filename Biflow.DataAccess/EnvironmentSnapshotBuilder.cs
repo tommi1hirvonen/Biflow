@@ -17,6 +17,9 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
         var credentials = await context.Credentials
             .OrderBy(c => c.Username)
             .ToArrayAsync();
+        var proxies = await context.Proxies
+            .OrderBy(p => p.ProxyId)
+            .ToArrayAsync();
         var azureCredentials = await context.AzureCredentials
             .OrderBy(a => a.AzureCredentialId)
             .ToArrayAsync();
@@ -90,6 +93,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             SqlConnections = sqlConnections,
             AnalysisServicesConnections = asConnections,
             Credentials = credentials,
+            Proxies = proxies,
             AzureCredentials = azureCredentials,
             PipelineClients = pipelineClients,
             FunctionApps = functionApps,

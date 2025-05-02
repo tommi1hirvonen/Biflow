@@ -184,6 +184,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)exe.CredentialId : false }
                 into exe_
             from exe in exe_.DefaultIfEmpty()
+            join exeProxy in context.Proxies
+                on new { Id = includeEndpoint ? (object?)((ExeStepExecution)stepExec).ProxyId : true }
+                equals new { Id = includeEndpoint ? (object?)exeProxy.ProxyId : false }
+                into exeProxy_
+            from exeProxy in exeProxy_.DefaultIfEmpty()
             join step in context.Steps
                 on new { Id = includeStep ? (object?)stepExec.StepId : true }
                 equals new { Id = includeStep ? (object?)step.StepId : false }
@@ -205,6 +210,7 @@ public static class Extensions
                 dbt,
                 scd,
                 exe,
+                exeProxy,
                 step);
 
         var stepExecutions = await query2.ToArrayAsync();
@@ -256,6 +262,7 @@ public static class Extensions
                     break;
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.ExeStepCredential);
+                    exe.SetProxy(step.ExeStepProxy);
                     break;
             }
         }
@@ -280,4 +287,5 @@ file record StepExecutionProjection(
     DbtAccount? DbtAccount,
     ScdTable? ScdTable,
     Credential? ExeStepCredential,
+    Proxy? ExeStepProxy,
     Step? Step);
