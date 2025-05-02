@@ -220,6 +220,34 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             .WithDescription("Get pipeline client by id.")
             .WithName("GetPipelineClient");
         
+        group.MapGet("/proxies", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+            await dbContext.Proxies
+                .AsNoTracking()
+                .OrderBy(x => x.ProxyName)
+                .ToArrayAsync(cancellationToken))
+            .Produces<Proxy[]>()
+            .WithSummary("Get all proxies")
+            .WithDescription("Get all proxies. Sensitive API tokens will be replaced with an empty value.")
+            .WithName("GetProxies");
+        
+        group.MapGet("/proxies/{proxyId:guid}",
+            async (ServiceDbContext dbContext, Guid proxyId, CancellationToken cancellationToken) =>
+            {
+                var proxy = await dbContext.Proxies
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(x => x.ProxyId == proxyId, cancellationToken);
+                if (proxy is null)
+                {
+                    throw new NotFoundException<Proxy>(proxyId);
+                }
+                return Results.Ok(proxy);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<Proxy>()
+            .WithSummary("Get proxy by id")
+            .WithDescription("Get proxy by id. Sensitive API token will be replaced with an empty value.")
+            .WithName("GetProxy");
+        
         group.MapGet("/qlikcloudenvironments", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
                 await dbContext.QlikCloudEnvironments
                     .AsNoTracking()

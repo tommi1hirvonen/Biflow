@@ -87,3 +87,13 @@ x-api-key: {{apiKey}}
 
 GET {{baseUrl}}/integrations/credentials/bd020872-8f60-4c2b-95d7-08dd4d173b3b
 x-api-key: {{apiKey}}
+
+### Get all proxies
+
+GET {{baseUrl}}/integrations/proxies
+x-api-key: {{apiKey}}
+
+### Get proxy by id
+
+GET {{baseUrl}}/integrations/proxies/ad0060af-d50f-4d0e-3943-08dd8974f669
+x-api-key: {{apiKey}}

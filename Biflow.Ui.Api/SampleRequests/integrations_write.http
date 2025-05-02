@@ -409,3 +409,31 @@ Content-Type: application/json
 
 DELETE {{baseUrl}}/integrations/sqlconnections/f6e94d21-010e-4516-b593-08dd46db3fb5
 x-api-key: {{apiKey}}
+
+### Create Proxy
+
+POST {{baseUrl}}/integrations/proxies
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "proxyName": "Development Proxy",
+  "proxyUrl": "http://localhost:6543",
+  "apiKey": "256155ff-f7f8-4da8-b449-0f147bb76c2b"
+}
+
+### Update Proxy
+
+PUT {{baseUrl}}/integrations/proxies/ad0060af-d50f-4d0e-3943-08dd8974f669
+Content-Type: application/json
+x-api-key: {{apiKey}}
+
+{
+  "proxyName": "Updated Proxy Name",
+  "proxyUrl": "http://localhost:6543"
+}
+
+### Delete Proxy
+
+DELETE {{baseUrl}}/integrations/proxies/ad0060af-d50f-4d0e-3943-08dd8974f669
+x-api-key: {{apiKey}}

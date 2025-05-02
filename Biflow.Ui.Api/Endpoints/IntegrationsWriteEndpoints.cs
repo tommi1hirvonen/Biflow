@@ -1,4 +1,3 @@
-using Biflow.Ui.Api.Mediator.Commands;
 using Biflow.Ui.Api.Models.Integrations;
 
 namespace Biflow.Ui.Api.Endpoints;
@@ -532,6 +531,58 @@ public class IntegrationsWriteEndpoints : IEndpoints
             .WithSummary("Delete pipeline client")
             .WithDescription("Delete pipeline client")
             .WithName("DeletePipelineClient");
+        
+        #endregion
+        
+        #region Proxies
+        
+        group.MapPost("/proxies",
+            async (CreateProxy dto, IMediator mediator, LinkGenerator linker, HttpContext ctx,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new CreateProxyCommand(
+                    dto.ProxyName, dto.ProxyUrl, dto.ApiKey);
+                var proxy = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetProxy",
+                    new { proxyId = proxy.ProxyId });
+                return Results.Created(url, proxy);
+            })
+            .ProducesValidationProblem()
+            .Produces<Proxy>()
+            .WithSummary("Create Proxy")
+            .WithDescription("Create a new Proxy")
+            .WithName("CreateProxy");
+        
+        group.MapPut("/proxies/{proxyId:guid}",
+            async (Guid proxyId, UpdateProxy dto,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateProxyCommand(
+                    proxyId, dto.ProxyName, dto.ProxyUrl, dto.ApiKey);
+                var proxy = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(proxy);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<Proxy>()
+            .WithSummary("Update Proxy")
+            .WithDescription("Update an existing Proxy. " +
+                             "Pass null as ApiKey in the request body JSON model to retain the previous " +
+                             "API key value.")
+            .WithName("UpdateProxy");
+        
+        group.MapDelete("/proxies/{proxyId:guid}",
+            async (Guid proxyId, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeleteProxyCommand(proxyId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete Proxy")
+            .WithDescription("Delete Proxy")
+            .WithName("DeleteProxy");
         
         #endregion
         
