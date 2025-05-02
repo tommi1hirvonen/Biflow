@@ -368,6 +368,7 @@ public abstract class StepsUpdateEndpoints : IEndpoints
                     WorkingDirectory = stepDto.WorkingDirectory,
                     SuccessExitCode = stepDto.SuccessExitCode,
                     RunAsCredentialId = stepDto.RunAsCredentialId,
+                    ProxyId = stepDto.ProxyId,
                     Parameters = parameters,
                     Dependencies = dependencies,
                     ExecutionConditionParameters = executionConditionParameters,

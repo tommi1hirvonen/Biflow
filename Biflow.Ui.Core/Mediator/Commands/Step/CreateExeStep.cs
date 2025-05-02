@@ -8,6 +8,7 @@ public class CreateExeStepCommand : CreateStepCommand<ExeStep>
     public required string? WorkingDirectory { get; init; }
     public required int? SuccessExitCode { get; init; }
     public required Guid? RunAsCredentialId { get; init; }
+    public required Guid? ProxyId { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }
 }
 
@@ -44,7 +45,8 @@ internal class CreateExeStepCommandHandler(
             ExeArguments = request.Arguments,
             ExeWorkingDirectory = request.WorkingDirectory,
             ExeSuccessExitCode = request.SuccessExitCode,
-            RunAsCredentialId = request.RunAsCredentialId
+            RunAsCredentialId = request.RunAsCredentialId,
+            ProxyId = request.ProxyId
         };
         
         foreach (var createParameter in request.Parameters)

@@ -8,6 +8,7 @@ public class UpdateExeStepCommand : UpdateStepCommand<ExeStep>
     public required string? WorkingDirectory { get; init; }
     public required int? SuccessExitCode { get; init; }
     public required Guid? RunAsCredentialId { get; init; }
+    public required Guid? ProxyId { get; init; }
     public required UpdateStepParameter[] Parameters { get; init; }
 }
 
@@ -49,6 +50,7 @@ internal class UpdateExeStepCommandHandler(
         step.ExeWorkingDirectory = request.WorkingDirectory;
         step.ExeSuccessExitCode = request.SuccessExitCode;
         step.RunAsCredentialId = request.RunAsCredentialId;
+        step.ProxyId = request.ProxyId;
         
         await SynchronizeParametersAsync<ExeStepParameter, UpdateStepParameter>(
             step,

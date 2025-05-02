@@ -86,6 +86,7 @@ public partial class ExeStepEditModal(
             WorkingDirectory = step.ExeWorkingDirectory,
             SuccessExitCode = step.ExeSuccessExitCode,
             RunAsCredentialId = step.RunAsCredentialId,
+            ProxyId = step.ProxyId,
             Dependencies = dependencies,
             ExecutionConditionParameters = executionConditionParameters,
             Sources = step.DataObjects
@@ -146,6 +147,7 @@ public partial class ExeStepEditModal(
             WorkingDirectory = step.ExeWorkingDirectory,
             SuccessExitCode = step.ExeSuccessExitCode,
             RunAsCredentialId = step.RunAsCredentialId,
+            ProxyId = step.ProxyId,
             Dependencies = dependencies,
             ExecutionConditionParameters = executionConditionParameters,
             Sources = step.DataObjects
