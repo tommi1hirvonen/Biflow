@@ -1,5 +1,12 @@
 namespace Biflow.Ui.Core;
 
+/// <summary>
+/// 
+/// </summary>
+/// <param name="ProxyId"></param>
+/// <param name="ProxyName"></param>
+/// <param name="ProxyUrl"></param>
+/// <param name="ApiKey">pass null to retain the previous ApiKey value, pass empty string to clear ApiKey value</param>
 public record UpdateProxyCommand(Guid ProxyId, string ProxyName, string ProxyUrl, string? ApiKey) : IRequest<Proxy>;
 
 [UsedImplicitly]
@@ -15,7 +22,11 @@ internal class UpdateProxyCommandHandler(IDbContextFactory<AppDbContext> dbConte
             
         proxy.ProxyName = request.ProxyName;
         proxy.ProxyUrl = request.ProxyUrl;
-        if (request.ApiKey is not null)
+        if (request.ApiKey is { Length: 0 })
+        {
+            proxy.ApiKey = null;
+        }
+        else if (request.ApiKey is not null)
         {
             proxy.ApiKey = request.ApiKey;
         }

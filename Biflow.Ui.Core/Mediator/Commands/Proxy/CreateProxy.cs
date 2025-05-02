@@ -1,6 +1,6 @@
 namespace Biflow.Ui.Core;
 
-public record CreateProxyCommand(string ProxyName, string ProxyUrl, string ApiKey) : IRequest<Proxy>;
+public record CreateProxyCommand(string ProxyName, string ProxyUrl, string? ApiKey) : IRequest<Proxy>;
 
 [UsedImplicitly]
 internal class CreateProxyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)

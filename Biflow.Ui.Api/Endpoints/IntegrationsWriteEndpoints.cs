@@ -537,7 +537,7 @@ public class IntegrationsWriteEndpoints : IEndpoints
         #region Proxies
         
         group.MapPost("/proxies",
-            async (CreateProxy dto, IMediator mediator, LinkGenerator linker, HttpContext ctx,
+            async (ProxyDto dto, IMediator mediator, LinkGenerator linker, HttpContext ctx,
                 CancellationToken cancellationToken) =>
             {
                 var command = new CreateProxyCommand(
@@ -554,7 +554,7 @@ public class IntegrationsWriteEndpoints : IEndpoints
             .WithName("CreateProxy");
         
         group.MapPut("/proxies/{proxyId:guid}",
-            async (Guid proxyId, UpdateProxy dto,
+            async (Guid proxyId, ProxyDto dto,
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new UpdateProxyCommand(
