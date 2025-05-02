@@ -3,7 +3,6 @@ using Biflow.Proxy.Core;
 using Biflow.Proxy.Core.Authentication;
 using Biflow.Proxy.WebApp;
 using Biflow.Proxy.WebApp.Endpoints;
-using Biflow.Proxy.WebApp.ProxyTasks;
 using Microsoft.AspNetCore.Routing.Constraints;
 using Serilog;
 using Serilog.Events;
@@ -32,9 +31,9 @@ builder.Services.AddWindowsService()
     .AddSystemd()
     .AddEndpointsApiExplorer()
     .AddSwagger()
-    .AddSingleton<TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult>>()
+    .AddSingleton<ExeTasksRunner>()
     .AddHostedService(s =>
-        s.GetRequiredService<TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult>>())
+        s.GetRequiredService<ExeTasksRunner>())
     .ConfigureHttpJsonOptions(options =>
         options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default))
     .Configure<RouteOptions>(options =>
@@ -60,7 +59,6 @@ if (app.Environment.IsDevelopment())
 
 app.Run();
 
-[JsonSerializable(typeof(ExeProxyRunResult))]
 [JsonSerializable(typeof(ExeProxyRunRequest))]
 [JsonSerializable(typeof(ExeTaskStatusResponse))]
 [JsonSerializable(typeof(TaskStartedResponse))]

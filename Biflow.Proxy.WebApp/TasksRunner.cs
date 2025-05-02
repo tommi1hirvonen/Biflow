@@ -6,7 +6,7 @@ using OneOf.Types;
 namespace Biflow.Proxy.WebApp;
 
 internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
-    where TTask : ProxyTask<TStatus, TResult>
+    where TTask : IProxyTask<TStatus, TResult>
 {
     private const int TaskCleanupIntervalMinutes = 5;
     private const int TaskCleanupThresholdMinutes = 60;
@@ -36,16 +36,7 @@ internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
         _ = WaitAndMarkCompletedAsync(id, wrapper);
         return id;
     }
-
-    /// Retrieves the status of a task identified by the given unique identifier.
-    /// <param name="id">The unique identifier of the task whose status is to be retrieved.</param>
-    /// <returns>
-    /// A TaskStatus object representing the current state of the task:
-    /// - Result if the task completed successfully.
-    /// - Error if the task failed with an exception.
-    /// - Running if the task is still in progress.
-    /// - NotFound if no task with the specified identifier exists.
-    /// </returns>
+    
     public TaskStatus<TResult, TStatus> GetStatus(Guid id)
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))
@@ -64,12 +55,7 @@ internal class TasksRunner<TTask, TStatus, TResult> : BackgroundService
         
         return new Running<TStatus>(taskWrapper.ProxyTask.Status);
     }
-
-    /// Cancels a running task identified by the provided unique identifier.
-    /// <param name="id">The unique identifier of the task to cancel.</param>
-    /// <returns>
-    /// True if the task was successfully canceled; false if no running task with the specified identifier exists.
-    /// </returns>
+    
     public bool Cancel(Guid id)
     {
         if (!_tasks.TryGetValue(id, out var taskWrapper))

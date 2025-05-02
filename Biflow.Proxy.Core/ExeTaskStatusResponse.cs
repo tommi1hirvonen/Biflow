@@ -3,26 +3,38 @@ using JetBrains.Annotations;
 
 namespace Biflow.Proxy.Core;
 
-[JsonDerivedType(typeof(ExeTaskRunningStatusResponse), "Running")]
-[JsonDerivedType(typeof(ExeTaskSucceededStatusResponse), "Succeeded")]
-[JsonDerivedType(typeof(ExeTaskFailedStatusResponse), "Failed")]
+[JsonDerivedType(typeof(ExeTaskRunningResponse), "Running")]
+[JsonDerivedType(typeof(ExeTaskCompletedResponse), "Completed")]
+[JsonDerivedType(typeof(ExeTaskFailedResponse), "Failed")]
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "status")]
 public abstract class ExeTaskStatusResponse;
 
 [PublicAPI]
-public class ExeTaskRunningStatusResponse : ExeTaskStatusResponse
+public class ExeTaskRunningResponse : ExeTaskStatusResponse
 {
     public required int ProcessId { get; init; }
 }
 
 [PublicAPI]
-public class ExeTaskSucceededStatusResponse : ExeTaskStatusResponse
+public class ExeTaskCompletedResponse : ExeTaskStatusResponse
 {
-    public required ExeProxyRunResult Result { get; init; }
+    public required int ProcessId { get; init; }
+    
+    public required int ExitCode { get; init; }
+    
+    public required string? Output { get; init; }
+    
+    public required bool OutputIsTruncated { get; init; }
+    
+    public required string? ErrorOutput { get; init; }
+    
+    public required bool ErrorOutputIsTruncated { get; init; }
+    
+    public required string? InternalError { get; init; }
 }
 
 [PublicAPI]
-public class ExeTaskFailedStatusResponse : ExeTaskStatusResponse
+public class ExeTaskFailedResponse : ExeTaskStatusResponse
 {
     public required string ErrorMessage { get; init; }
 }

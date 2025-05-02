@@ -5,7 +5,7 @@ using OneOf.Types;
 
 namespace Biflow.Proxy.WebApp.Endpoints;
 
-public static class ExeEndpointsExtensions
+internal static class ExeEndpointsExtensions
 {
     [SuppressMessage("ReSharper", "RedundantLambdaParameterType")]
     [SuppressMessage("ReSharper", "UnusedParameter.Local")]
@@ -13,7 +13,7 @@ public static class ExeEndpointsExtensions
     {
         builder.MapPost("/exe",
             (ExeProxyRunRequest request,
-                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
+                ExeTasksRunner runner,
                 LinkGenerator linker,
                 HttpContext context) => 
             {
@@ -30,31 +30,37 @@ public static class ExeEndpointsExtensions
         
         builder.MapGet("/exe/{id:guid}", 
             (Guid id,
-                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
+                ExeTasksRunner runner,
                 LinkGenerator linker,
                 HttpContext context) => 
             {
                 var status = runner.GetStatus(id);
                 var result = status.Match(
-                    (Result<ExeProxyRunResult> result) =>
+                    (Result<ExeTaskCompletedResponse> result) =>
                     {
-                        ExeTaskStatusResponse response = new ExeTaskSucceededStatusResponse
+                        ExeTaskStatusResponse response = new ExeTaskCompletedResponse
                         {
-                            Result = result.Value
+                            ProcessId = result.Value.ProcessId,
+                            ExitCode = result.Value.ExitCode,
+                            Output = result.Value.Output,
+                            OutputIsTruncated = result.Value.OutputIsTruncated,
+                            ErrorOutput = result.Value.ErrorOutput,
+                            ErrorOutputIsTruncated = result.Value.ErrorOutputIsTruncated,
+                            InternalError = result.Value.InternalError
                         };
                         return Results.Ok(response);
                     },
                     (Error<Exception> error) =>
                     {
-                        ExeTaskStatusResponse response = new ExeTaskFailedStatusResponse
+                        ExeTaskStatusResponse response = new ExeTaskFailedResponse
                         {
                             ErrorMessage = error.Value.ToString()
                         };
                         return Results.Ok(response);
                     },
-                    (Running<ExeTaskRunningStatusResponse> running) =>
+                    (Running<ExeTaskRunningResponse> running) =>
                     {
-                        ExeTaskStatusResponse response = new ExeTaskRunningStatusResponse
+                        ExeTaskStatusResponse response = new ExeTaskRunningResponse
                         {
                             ProcessId = running.Value.ProcessId
                         };
@@ -66,7 +72,7 @@ public static class ExeEndpointsExtensions
                 return result;
             })
             .Produces<ExeTaskStatusResponse>()
-            .Produces<ExeTaskRunningStatusResponse>(StatusCodes.Status202Accepted)
+            .Produces<ExeTaskRunningResponse>(StatusCodes.Status202Accepted)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .WithSummary("Get exe task status")
             .WithDescription("Get the status of an executable task")
@@ -74,7 +80,7 @@ public static class ExeEndpointsExtensions
 
         builder.MapPost("/exe/{id:guid}/cancel",
             (Guid id,
-                TasksRunner<ExeProxyTask, ExeTaskRunningStatusResponse, ExeProxyRunResult> runner,
+                ExeTasksRunner runner,
                 LinkGenerator linker,
                 HttpContext context) =>
             {

@@ -16,7 +16,7 @@ public class ExeTaskStatusResponseTests
                                   "ProcessId": 0
                                 }
                                 """;
-        ExeTaskStatusResponse status = new ExeTaskRunningStatusResponse { ProcessId = 0 };
+        ExeTaskStatusResponse status = new ExeTaskRunningResponse { ProcessId = 0 };
         var json = JsonSerializer.Serialize(status, Options);
         Assert.Equal(expected, json);
     }
@@ -30,7 +30,7 @@ public class ExeTaskStatusResponseTests
                                   "ErrorMessage": "Test"
                                 }
                                 """;
-        ExeTaskStatusResponse status = new ExeTaskFailedStatusResponse { ErrorMessage = "Test" };
+        ExeTaskStatusResponse status = new ExeTaskFailedResponse { ErrorMessage = "Test" };
         var json = JsonSerializer.Serialize(status, Options);
         Assert.Equal(expected, json);
     }
@@ -40,30 +40,25 @@ public class ExeTaskStatusResponseTests
     {
         const string expected = """
                                 {
-                                  "status": "Succeeded",
-                                  "Result": {
-                                    "ProcessId": 0,
-                                    "ExitCode": 0,
-                                    "Output": "Test",
-                                    "OutputIsTruncated": false,
-                                    "ErrorOutput": "Test",
-                                    "ErrorOutputIsTruncated": false,
-                                    "InternalError": null
-                                  }
+                                  "status": "Completed",
+                                  "ProcessId": 0,
+                                  "ExitCode": 0,
+                                  "Output": "Test",
+                                  "OutputIsTruncated": false,
+                                  "ErrorOutput": "Test",
+                                  "ErrorOutputIsTruncated": false,
+                                  "InternalError": null
                                 }
                                 """;
-        ExeTaskStatusResponse status = new ExeTaskSucceededStatusResponse
+        ExeTaskStatusResponse status = new ExeTaskCompletedResponse
         {
-            Result = new ExeProxyRunResult
-            {
-                ProcessId = 0,
-                ExitCode = 0,
-                Output = "Test",
-                OutputIsTruncated = false,
-                ErrorOutput = "Test",
-                ErrorOutputIsTruncated = false,
-                InternalError = null
-            }
+            ProcessId = 0,
+            ExitCode = 0,
+            Output = "Test",
+            OutputIsTruncated = false,
+            ErrorOutput = "Test",
+            ErrorOutputIsTruncated = false,
+            InternalError = null
         };
         var json = JsonSerializer.Serialize(status, Options);
         Assert.Equal(expected, json);

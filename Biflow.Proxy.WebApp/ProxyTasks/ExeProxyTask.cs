@@ -4,16 +4,16 @@ using Biflow.Proxy.Core;
 
 namespace Biflow.Proxy.WebApp.ProxyTasks;
 
-internal class ExeProxyTask(ExeProxyRunRequest request) : ProxyTask<ExeTaskRunningStatusResponse, ExeProxyRunResult>
+internal class ExeProxyTask(ExeProxyRunRequest request) : IProxyTask<ExeTaskRunningResponse, ExeTaskCompletedResponse>
 {
     private int _processId;
     
-    public override ExeTaskRunningStatusResponse Status => new()
+    public ExeTaskRunningResponse Status => new()
     {
         ProcessId = _processId
     };
 
-    public override async Task<ExeProxyRunResult> RunAsync(CancellationToken cancellationToken)
+    public async Task<ExeTaskCompletedResponse> RunAsync(CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -49,7 +49,7 @@ internal class ExeProxyTask(ExeProxyRunRequest request) : ProxyTask<ExeTaskRunni
             internalErrorBuilder.AppendLine($"Failed to get process ID\n{e}");
         }
 
-        ExeProxyRunResult result;
+        ExeTaskCompletedResponse result;
         try
         {
             await process.WaitForExitAsync(cancellationToken);
@@ -84,7 +84,7 @@ internal class ExeProxyTask(ExeProxyRunRequest request) : ProxyTask<ExeTaskRunni
                 { Length: > 0 } s2 => (s2, false),
                 _ => (null, false)
             };
-            result = new ExeProxyRunResult
+            result = new ExeTaskCompletedResponse
             {
                 ProcessId = _processId,
                 ExitCode = process.ExitCode,
@@ -92,7 +92,7 @@ internal class ExeProxyTask(ExeProxyRunRequest request) : ProxyTask<ExeTaskRunni
                 OutputIsTruncated = outputTruncated,
                 ErrorOutput = error,
                 ErrorOutputIsTruncated = errorTruncated,
-                InternalError = internalErrorBuilder.ToString(),
+                InternalError = internalErrorBuilder.ToString() is { Length: > 0 } s ? s : null
             };
         }
         
