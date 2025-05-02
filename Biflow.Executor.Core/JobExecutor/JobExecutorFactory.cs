@@ -60,8 +60,10 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
             from dbt in dbt_.DefaultIfEmpty()
             join scd in context.ScdTables.Include(t => t.Connection).ThenInclude(c => (c as MsSqlConnection)!.Credential) on ((ScdStepExecution)step).ScdTableId equals scd.ScdTableId into scd_
             from scd in scd_.DefaultIfEmpty()
-            join exe in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exe.CredentialId into exe_
-            from exe in exe_.DefaultIfEmpty()
+            join exeCredential in context.Credentials on ((ExeStepExecution)step).RunAsCredentialId equals exeCredential.CredentialId into exeCredential_
+            from exeCredential in exeCredential_.DefaultIfEmpty()
+            join exeProxy in context.Proxies on ((ExeStepExecution)step).ProxyId equals exeProxy.ProxyId into exeProxy_
+            from exeProxy in exeProxy_.DefaultIfEmpty()
             select new
             {
                 step,
@@ -78,7 +80,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                 db,
                 dbt,
                 scd,
-                exe
+                exeCredential,
+                exeProxy
             };
 
         var stepExecutions = await query2.ToArrayAsync(cancellationToken);
@@ -128,7 +131,8 @@ internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFa
                     scd.SetScdTable(step.scd);
                     break;
                 case ExeStepExecution exe:
-                    exe.SetRunAsCredential(step.exe);
+                    exe.SetRunAsCredential(step.exeCredential);
+                    exe.SetProxy(step.exeProxy);
                     break;
             }
         }
