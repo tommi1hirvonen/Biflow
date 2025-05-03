@@ -25,6 +25,7 @@ public class ExeStepExecution : StepExecution,
         TimeoutMinutes = step.TimeoutMinutes;
         RunAsCredentialId = step.RunAsCredentialId;
         RunAsUsername = step.RunAsCredential?.DisplayName;
+        ProxyId = step.ProxyId;
 
         StepExecutionParameters = step.StepParameters
             .Select(p => new ExeStepExecutionParameter(p, this))
