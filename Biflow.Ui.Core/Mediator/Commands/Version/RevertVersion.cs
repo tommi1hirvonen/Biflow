@@ -170,6 +170,11 @@ internal class RevertVersionCommandHandler(
                 .AsNoTracking()
                 .Select(c => new { c.ConnectionId, c.ConnectionString, c.CredentialId, c.ExecutePackagesAsLogin })
                 .ToArrayAsync(cancellationToken);
+
+            var capturedProxies = await context.Proxies
+                .AsNoTracking()
+                .Select(p => new { p.ProxyId, p.ProxyUrl, p.ApiKey })
+                .ToArrayAsync(cancellationToken);
             
             var capturedSnowflakeConnections = await context.SnowflakeConnections
                 .AsNoTracking()
@@ -285,6 +290,30 @@ internal class RevertVersionCommandHandler(
                 else if (string.IsNullOrEmpty(connection.ConnectionString))
                 {
                     connection.ConnectionString = match.ConnectionString;
+                }
+            }
+            
+            foreach (var proxy in snapshot.Proxies)
+            {
+                var match = capturedProxies.FirstOrDefault(p => p.ProxyId == proxy.ProxyId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match => make sure the proxy URL is reset.
+                        proxy.ProxyUrl = "";
+                    }
+                    newIntegrations.Add((proxy.GetType(), proxy.ProxyName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    proxy.ProxyUrl = match.ProxyUrl;
+                    proxy.ApiKey = match.ApiKey;   
+                }
+                else if (string.IsNullOrEmpty(proxy.ApiKey))
+                {
+                    proxy.ApiKey = match.ApiKey;
                 }
             }
             
