@@ -1,9 +1,22 @@
+@using System.Net
+
 @implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IMediator Mediator
 @inject ThemeService ThemeService
+@inject ProxyClientFactory ProxyClientFactory
+
+<style>
+    tr .hover-text-decoration-underline {
+        text-decoration: none;
+    }
+
+    tr:hover .hover-text-decoration-underline {
+        text-decoration: underline;
+    }
+</style>
 
 <PageTitle>Proxies | Biflow</PageTitle>
 
@@ -17,9 +30,9 @@
                     <SvgIcon Icon="LucideIcon.Info" />
                 </div>
                 <div class="col">
-                    Proxies can be installed on any system that is accessible networking-wise from the main Biflow application.
-                    Proxies can then be used for remote execution of certain step types (currently exe steps).
+                    Proxies can be used for remote execution of exe steps.
                     This allows running executables outside the main Biflow executor host while still orchestrating jobs and steps centrally.
+                    Proxies can be installed on any system that is accessible networking-wise from the main Biflow application.
                 </div>
             </div>
         </HxAlert>
@@ -41,21 +54,29 @@
             <th>Url</th>
             <th></th>
             <th></th>
+            <th></th>
         </tr>
         </thead>
         <tbody>
         @if (_proxies is null)
         {
-            <tr><td colspan="4" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            <tr><td colspan="5" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
         }
         else if (_proxies.Count == 0)
         {
-            <tr><td colspan="4">No proxies</td></tr>
+            <tr><td colspan="5">No proxies</td></tr>
         }
         else
         {
             @foreach (var proxy in _proxies.OrderBy(x => x.ProxyName))
             {
+                ConnectionTestState? state = _connectionTestStates.GetValueOrDefault(proxy.ProxyId);
+                var tagColor = state switch
+                {
+                    ConnectionTestState.Running => TagColor.Green,
+                    ConnectionTestState.Unauthorized or ConnectionTestState.Unavailable => TagColor.Red,
+                    _ => TagColor.DarkGray
+                };
                 var steps = proxy.ExeSteps.Count();
                 <tr>
                     <td class="align-middle">
@@ -63,6 +84,17 @@
                     </td>
                     <td class="align-middle">
                         @proxy.ProxyUrl
+                    </td>
+                    <td class="align-middle text-center">
+                        @switch (state)
+                        {
+                            case ConnectionTestState.Testing:
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                break;
+                            case { } s:
+                                <Badge Text="@s.ToString()" Color="@tagColor"  />
+                                break;
+                        }
                     </td>
                     <td class="align-middle">
                         <span class="hover-text-decoration-underline cursor-pointer"
@@ -134,10 +166,14 @@
 </HxModal>
 
 @code {
+    private readonly Dictionary<Guid, ConnectionTestState> _connectionTestStates = [];
+    
     private List<Proxy>? _proxies;
     private ProxyEditModal? _editModal;
     private Proxy? _stepsProxy;
     private HxModal? _stepsModal;
+    
+    private enum ConnectionTestState { Testing, Running, Unauthorized, Unavailable }
     
     public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
     
@@ -153,6 +189,13 @@
             .Include(x => x.ExeSteps).ThenInclude(x => x.Job)
             .OrderBy(x => x.ProxyName)
             .ToListAsync();
+        foreach (var proxy in _proxies)
+        {
+            _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Testing;
+        }
+        StateHasChanged();
+        var tasks = _proxies.Select(RunConnectionTestAsync).ToArray();
+        await Task.WhenAll(tasks);
     }
     
     private async Task OnProxySubmitAsync(Proxy proxy)
@@ -172,7 +215,10 @@
             _proxies?.RemoveAll(x => x.ProxyId == proxy.ProxyId);
             _proxies?.Add(proxy);
         }
+
+        _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Testing;
         StateHasChanged();
+        await RunConnectionTestAsync(proxy);
     }
     
     private async Task DeleteProxyAsync(Proxy proxy)
@@ -187,6 +233,25 @@
             var message = ex.InnerException?.Message ?? ex.Message;
             Toaster.AddError("Error deleting proxy", message);
         }
+    }
+
+    private async Task RunConnectionTestAsync(Proxy proxy)
+    {
+        try
+        {
+            var client = ProxyClientFactory.Create(proxy);
+            await client.TestConnectionAsync();
+            _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Running;
+        }
+        catch (HttpRequestException httpException) when (httpException.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Unauthorized;
+        }
+        catch (Exception)
+        {
+            _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Unavailable;
+        }
+        StateHasChanged();
     }
     
     private Task ShowEditModal(Proxy? proxy) => _editModal.LetAsync(x => x.ShowAsync(proxy?.ProxyId ?? Guid.Empty));
