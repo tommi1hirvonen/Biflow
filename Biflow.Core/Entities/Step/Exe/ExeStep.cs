@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Interfaces;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
@@ -47,10 +48,12 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
 
     public Guid? RunAsCredentialId { get; set; }
 
+    [JsonIgnore]
     public Credential? RunAsCredential { get; set; }
     
     public Guid? ProxyId { get; set; }
     
+    [JsonIgnore, UsedImplicitly]
     public Proxy? Proxy { get; set; }
 
     [ValidateComplexType]
