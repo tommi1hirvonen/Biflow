@@ -63,6 +63,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             v.Add(new DbtStepValidator());
             v.Add(new DatabricksStepValidator());
             v.Add(new FunctionStepValidator());
+            v.Add(new ExeStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
         {
@@ -91,6 +92,16 @@ public class StepValidator : AsyncAbstractValidator<Step>
             .Distinct()
             .Count();
         return a.Length == distinctCount;
+    }
+}
+
+file class ExeStepValidator : AbstractValidator<ExeStep>
+{
+    public ExeStepValidator()
+    {
+        RuleFor(step => step)
+            .Must(step => step.RunAsCredentialId is null || step.ProxyId is null)
+            .WithMessage("Impersonation is not supported when using proxies to run executables");
     }
 }
 
