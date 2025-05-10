@@ -99,7 +99,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Waypoints" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.ProxyId">
+                    <InputSelect class="form-select form-select-sm"
+                                 @bind-Value="Step.ProxyId"
+                                 @bind-Value:after="() => Step.RunAsCredentialId = null"
+                                 disabled=@(Step.RunAsCredentialId is not null)>
                         <option value="">Executor host (no proxy)</option>
                         @foreach (var proxy in Proxies)
                         {
@@ -107,6 +110,10 @@
                         }
                     </InputSelect>
                 </div>
+                @if (Step.RunAsCredentialId is not null)
+                {
+                    <div class="form-text">Proxies are not supported when impersonation is enabled</div>
+                }
             </div>
         </div>
 
@@ -119,7 +126,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.User" />
                     </div>
-                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.RunAsCredentialId">
+                    <InputSelect class="form-select form-select-sm"
+                                 @bind-Value="Step.RunAsCredentialId"
+                                 @bind-Value:after="() => Step.ProxyId = null"
+                                 disabled=@(Step.ProxyId is not null)>
                         <option value="">Executor/proxy service user (no impersonation)</option>
                         @foreach (var cred in Credentials)
                         {
@@ -127,6 +137,10 @@
                         }
                     </InputSelect>
                 </div>
+                @if (Step.ProxyId is not null)
+                {
+                    <div class="form-text">Impersonation is not supported when proxies are used</div>
+                }
             </div>
         </div>
         
