@@ -19,8 +19,8 @@ public partial class PackageStepEditModal(
         {
             if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
             {
-                _connection = MsSqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) 
-                              ?? MsSqlConnections.First();
+                _connection = Integrations.MsSqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId) 
+                              ?? Integrations.MsSqlConnections.First();
             }
             return _connection;
         }
@@ -36,7 +36,7 @@ public partial class PackageStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = MsSqlConnections.First().ConnectionId
+            ConnectionId = Integrations.MsSqlConnections.First().ConnectionId
         };
 
     protected override Task<PackageStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

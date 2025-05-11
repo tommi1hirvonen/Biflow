@@ -9,35 +9,13 @@ public partial class DependenciesGraph(
     IHxMessageBoxService confirmer,
     IMediator mediator) : ComponentBase
 {
+    [CascadingParameter] public IntegrationsContainer Integrations { get; set; } = IntegrationsContainer.Empty;
+    
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
 
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
-
-    [Parameter] public List<SqlConnectionBase>? SqlConnections { get; set; }
-
-    [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
-
-    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
-
-    [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
-
-    [Parameter] public List<AzureCredential>? AzureCredentials { get; set; }
-
-    [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
-
-    [Parameter] public List<QlikCloudEnvironment>? QlikCloudClients { get; set; }
-
-    [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
-
-    [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
-    
-    [Parameter] public List<ScdTable>? ScdTables { get; set; }
-
-    [Parameter] public List<Credential>? Credentials { get; set; }
-    
-    [Parameter] public List<Proxy>? Proxies { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 

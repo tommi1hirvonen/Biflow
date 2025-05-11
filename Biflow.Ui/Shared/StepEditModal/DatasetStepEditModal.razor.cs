@@ -21,7 +21,7 @@ public partial class DatasetStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = AzureCredentials.First().AzureCredentialId
+            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
         };
     
     protected override Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -129,7 +129,7 @@ public partial class DatasetStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var azureCredential = Integrations.AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
             var datasetClient = azureCredential.CreateDatasetClient(tokenService);
             (step.WorkspaceName, step.DatasetName) =
                 (await datasetClient.GetWorkspaceNameAsync(step.WorkspaceId),

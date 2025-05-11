@@ -26,7 +26,7 @@
                 <HxAutosuggest TItem="ScdTable"
                                TValue="Guid"
                                DataProvider="GetSuggestionsAsync"
-                               ItemFromValueResolver="tableId => Task.FromResult(ScdTables.FirstOrDefault(t => t.ScdTableId == tableId)!)"
+                               ItemFromValueResolver="tableId => Task.FromResult(Integrations.ScdTables.FirstOrDefault(t => t.ScdTableId == tableId)!)"
                                ValueSelector="table => table.ScdTableId"
                                TextSelector="table => table.ScdTableName"
                                @bind-Value="Step.ScdTableId"

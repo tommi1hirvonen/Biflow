@@ -8,8 +8,6 @@ public partial class FunctionStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<FunctionStep>(mediator, toaster, dbContextFactory)
 {
-    [Parameter] public IList<FunctionApp> FunctionApps { get; set; } = [];
-
     internal override string FormId => "function_step_edit_form";
 
     private const string ParametersInfoContent = """

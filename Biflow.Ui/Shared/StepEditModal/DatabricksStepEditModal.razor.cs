@@ -11,8 +11,6 @@ public partial class DatabricksStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<DatabricksStep>(mediator, toaster, dbContextFactory)
 {
-    [Parameter] public IEnumerable<DatabricksWorkspace> DatabricksWorkspaces { get; set; } = [];
-
     internal override string FormId => "databricks_step_edit_form";
 
     private DatabricksFileSelectOffcanvas? _fileSelectOffcanvas;
@@ -24,7 +22,7 @@ public partial class DatabricksStepEditModal(
     private Pipeline[]? _pipelines;
 
     private DatabricksWorkspace? CurrentWorkspace =>
-        DatabricksWorkspaces.FirstOrDefault(w => w.WorkspaceId == Step?.DatabricksWorkspaceId);
+        Integrations.DatabricksWorkspaces.FirstOrDefault(w => w.WorkspaceId == Step?.DatabricksWorkspaceId);
 
     private string ParametersTitle => Step?.DatabricksStepSettings switch
     {
@@ -58,7 +56,7 @@ public partial class DatabricksStepEditModal(
 
     protected override DatabricksStep CreateNewStep(Job job)
     {
-        var workspace = DatabricksWorkspaces.FirstOrDefault();
+        var workspace = Integrations.DatabricksWorkspaces.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(workspace);
         return new()
         {

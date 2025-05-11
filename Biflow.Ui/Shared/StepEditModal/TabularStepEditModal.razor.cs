@@ -19,7 +19,7 @@ public partial class TabularStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = AsConnections.First().ConnectionId
+            ConnectionId = Integrations.AnalysisServicesConnections.First().ConnectionId
         };
 
     protected override Task<TabularStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

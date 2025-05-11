@@ -8,14 +8,12 @@ public partial class DbtStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<DbtStep>(mediator, toaster, dbContextFactory)
 {
-    [Parameter] public IEnumerable<DbtAccount> DbtAccounts { get; set; } = [];
-
     internal override string FormId => "dbt_step_edit_form";
 
     private DbtJobSelectOffcanvas? _jobSelectOffcanvas;
 
     private DbtAccount? CurrentAccount =>
-        DbtAccounts.FirstOrDefault(a => a.DbtAccountId == Step?.DbtAccountId);
+        Integrations.DbtAccounts.FirstOrDefault(a => a.DbtAccountId == Step?.DbtAccountId);
 
     protected override async Task<DbtStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -32,7 +30,7 @@ public partial class DbtStepEditModal(
 
     protected override DbtStep CreateNewStep(Job job)
     {
-        var client = DbtAccounts.FirstOrDefault();
+        var client = Integrations.DbtAccounts.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
         return new()
         {

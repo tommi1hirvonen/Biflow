@@ -630,153 +630,35 @@
                                       SelectedSteps="_selectedSteps"
                                       OnStepsSubmit="OnStepsSubmit" />
 
-    <SqlStepEditModal @ref="_stepEditModals[StepType.Sql]"
-                      SqlConnections="SqlConnections"
-                      MsSqlConnections="MsSqlConnections"
-                      AsConnections="AsConnections"
-                      AzureCredentials="AzureCredentials"
-                      QlikClients="QlikCloudClients"
-                      Credentials="Credentials"
-                      OnStepSubmit="OnStepSubmit" />
-    <TabularStepEditModal @ref="_stepEditModals[StepType.Tabular]"
-                          SqlConnections="SqlConnections"
-                          MsSqlConnections="MsSqlConnections"
-                          AsConnections="AsConnections"
-                          AzureCredentials="AzureCredentials"
-                          QlikClients="QlikCloudClients"
-                          Credentials="Credentials"
-                          OnStepSubmit="OnStepSubmit" />
-    <EmailStepEditModal @ref="_stepEditModals[StepType.Email]"
-                        SqlConnections="SqlConnections"
-                        MsSqlConnections="MsSqlConnections"
-                        AsConnections="AsConnections"
-                        AzureCredentials="AzureCredentials"
-                        QlikClients="QlikCloudClients"
-                        Credentials="Credentials"
-                        OnStepSubmit="OnStepSubmit" />
-    <AgentJobStepEditModal @ref="_stepEditModals[StepType.AgentJob]"
-                           SqlConnections="SqlConnections"
-                           MsSqlConnections="MsSqlConnections"
-                           AsConnections="AsConnections"
-                           AzureCredentials="AzureCredentials"
-                           QlikClients="QlikCloudClients"
-                           Credentials="Credentials"
-                           OnStepSubmit="OnStepSubmit" />
-    <DatasetStepEditModal @ref="_stepEditModals[StepType.Dataset]"
-                          SqlConnections="SqlConnections"
-                          MsSqlConnections="MsSqlConnections"
-                          AsConnections="AsConnections"
-                          AzureCredentials="AzureCredentials"
-                          QlikClients="QlikCloudClients"
-                          Credentials="Credentials"
-                          OnStepSubmit="OnStepSubmit" />
-    <DataflowStepEditModal @ref="_stepEditModals[StepType.Dataflow]"
-                           SqlConnections="SqlConnections"
-                           MsSqlConnections="MsSqlConnections"
-                           AsConnections="AsConnections"
-                           AzureCredentials="AzureCredentials"
-                           QlikClients="QlikCloudClients"
-                           Credentials="Credentials"
-                           OnStepSubmit="OnStepSubmit" />
-    <FabricStepEditModal @ref="_stepEditModals[StepType.Fabric]"
-                         SqlConnections="SqlConnections"
-                         MsSqlConnections="MsSqlConnections"
-                         AsConnections="AsConnections"
-                         AzureCredentials="AzureCredentials"
-                         QlikClients="QlikCloudClients"
-                         Credentials="Credentials"
-                         OnStepSubmit="OnStepSubmit" />
-    <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]"
-                      SqlConnections="SqlConnections"
-                      MsSqlConnections="MsSqlConnections"
-                      AsConnections="AsConnections"
-                      AzureCredentials="AzureCredentials"
-                      QlikClients="QlikCloudClients"
-                      Credentials="Credentials"
-                      Proxies="Proxies"
-                      OnStepSubmit="OnStepSubmit" />
-    <JobStepEditModal @ref="_stepEditModals[StepType.Job]"
-                      SqlConnections="SqlConnections"
-                      MsSqlConnections="MsSqlConnections"
-                      AsConnections="AsConnections"
-                      AzureCredentials="AzureCredentials"
-                      QlikClients="QlikCloudClients"
-                      Credentials="Credentials"
-                      OnStepSubmit="OnStepSubmit" />
-    <FunctionStepEditModal @ref="_stepEditModals[StepType.Function]"
-                           SqlConnections="SqlConnections"
-                           MsSqlConnections="MsSqlConnections"
-                           AsConnections="AsConnections"
-                           FunctionApps="FunctionApps"
-                           AzureCredentials="AzureCredentials"
-                           QlikClients="QlikCloudClients"
-                           Credentials="Credentials"
-                           OnStepSubmit="OnStepSubmit" />
-    <PackageStepEditModal @ref="_stepEditModals[StepType.Package]"
-                          SqlConnections="SqlConnections"
-                          MsSqlConnections="MsSqlConnections"
-                          AsConnections="AsConnections"
-                          AzureCredentials="AzureCredentials"
-                          QlikClients="QlikCloudClients"
-                          Credentials="Credentials"
-                          OnStepSubmit="OnStepSubmit" />
-    <PipelineStepEditModal @ref="_stepEditModals[StepType.Pipeline]"
-                           SqlConnections="SqlConnections"
-                           MsSqlConnections="MsSqlConnections"
-                           AsConnections="AsConnections"
-                           AzureCredentials="AzureCredentials"
-                           QlikClients="QlikCloudClients"
-                           Credentials="Credentials"
-                           PipelineClients="PipelineClients"
-                           OnStepSubmit="OnStepSubmit" />
-    <QlikStepEditModal @ref="_stepEditModals[StepType.Qlik]"
-                       AzureCredentials="AzureCredentials"
-                       SqlConnections="SqlConnections"
-                       MsSqlConnections="MsSqlConnections"
-                       AsConnections="AsConnections"
-                       QlikClients="QlikCloudClients"
-                       Credentials="Credentials"
-                       OnStepSubmit="OnStepSubmit" />
-    <DatabricksStepEditModal @ref="_stepEditModals[StepType.Databricks]"
-                             SqlConnections="SqlConnections"
-                             MsSqlConnections="MsSqlConnections"
-                             AsConnections="AsConnections"
-                             AzureCredentials="AzureCredentials"
-                             QlikClients="QlikCloudClients"
-                             DatabricksWorkspaces="DatabricksWorkspaces"
-                             Credentials="Credentials"
-                             OnStepSubmit="OnStepSubmit" />
-    <DbtStepEditModal @ref="_stepEditModals[StepType.Dbt]"
-                      SqlConnections="SqlConnections"
-                      MsSqlConnections="MsSqlConnections"
-                      AsConnections="AsConnections"
-                      AzureCredentials="AzureCredentials"
-                      QlikClients="QlikCloudClients"
-                      DbtAccounts="DbtAccounts"
-                      Credentials="Credentials"
-                      OnStepSubmit="OnStepSubmit" />
-    <ScdStepEditModal @ref="_stepEditModals[StepType.Scd]"
-                      SqlConnections="SqlConnections"
-                      MsSqlConnections="MsSqlConnections"
-                      AsConnections="AsConnections"
-                      AzureCredentials="AzureCredentials"
-                      QlikClients="QlikCloudClients"
-                      ScdTables="ScdTables ?? []"
-                      Credentials="Credentials"
-                      OnStepSubmit="OnStepSubmit" />
+    <SqlStepEditModal @ref="_stepEditModals[StepType.Sql]" OnStepSubmit="OnStepSubmit" />
+    <TabularStepEditModal @ref="_stepEditModals[StepType.Tabular]" OnStepSubmit="OnStepSubmit" />
+    <EmailStepEditModal @ref="_stepEditModals[StepType.Email]" OnStepSubmit="OnStepSubmit" />
+    <AgentJobStepEditModal @ref="_stepEditModals[StepType.AgentJob]" OnStepSubmit="OnStepSubmit" />
+    <DatasetStepEditModal @ref="_stepEditModals[StepType.Dataset]" OnStepSubmit="OnStepSubmit" />
+    <DataflowStepEditModal @ref="_stepEditModals[StepType.Dataflow]" OnStepSubmit="OnStepSubmit" />
+    <FabricStepEditModal @ref="_stepEditModals[StepType.Fabric]" OnStepSubmit="OnStepSubmit" />
+    <ExeStepEditModal @ref="_stepEditModals[StepType.Exe]" OnStepSubmit="OnStepSubmit" />
+    <JobStepEditModal @ref="_stepEditModals[StepType.Job]" OnStepSubmit="OnStepSubmit" />
+    <FunctionStepEditModal @ref="_stepEditModals[StepType.Function]" OnStepSubmit="OnStepSubmit" />
+    <PackageStepEditModal @ref="_stepEditModals[StepType.Package]" OnStepSubmit="OnStepSubmit" />
+    <PipelineStepEditModal @ref="_stepEditModals[StepType.Pipeline]" OnStepSubmit="OnStepSubmit" />
+    <QlikStepEditModal @ref="_stepEditModals[StepType.Qlik]" OnStepSubmit="OnStepSubmit" />
+    <DatabricksStepEditModal @ref="_stepEditModals[StepType.Databricks]" OnStepSubmit="OnStepSubmit" />
+    <DbtStepEditModal @ref="_stepEditModals[StepType.Dbt]" OnStepSubmit="OnStepSubmit" />
+    <ScdStepEditModal @ref="_stepEditModals[StepType.Scd]" OnStepSubmit="OnStepSubmit" />
 </AuthorizeView>
 
 @{
-    var connections = SqlConnections
+    var connections = Integrations.SqlConnections
         ?.Where(c => Steps?.OfType<IHasSqlConnection>().Any(step => c.ConnectionId == step.ConnectionId) ?? false)
         .OrderBy(c => c.ConnectionName)
         .AsEnumerable() ?? [];
-    var pipelineClients = PipelineClients
-        ?.Where(c => Steps?.OfType<PipelineStep>().Any(step => c.PipelineClientId == step.PipelineClientId) ?? false)
-        ?? [];
-    var functionApps = FunctionApps
-        ?.Where(fa => Steps?.OfType<FunctionStep>().Any(step => fa.FunctionAppId == step.FunctionAppId) ?? false)
-        ?? [];
+    var pipelineClients = Integrations.PipelineClients
+                              ?.Where(c => Steps?.OfType<PipelineStep>().Any(step => c.PipelineClientId == step.PipelineClientId) ?? false)
+                          ?? [];
+    var functionApps = Integrations.FunctionApps
+                           ?.Where(fa => Steps?.OfType<FunctionStep>().Any(step => fa.FunctionAppId == step.FunctionAppId) ?? false)
+                       ?? [];
     var executionPhases = Steps?
         .Select(s => s.ExecutionPhase)
         .Distinct()

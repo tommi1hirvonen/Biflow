@@ -216,10 +216,6 @@
                                             ReferenceType="DataObjectReferenceType.Source"
                                             Step="Modal.Step"
                                             Connection="Connection"
-                                            SqlConnections="Modal.SqlConnections"
-                                            AsConnections="Modal.AsConnections"
-                                            AzureCredentials="Modal.AzureCredentials"
-                                            QlikClients="Modal.QlikClients"
                                             LoadAllDataObjects="Modal.GetDataObjectsAsync" />
                                     </div>
                                 </div>
@@ -233,10 +229,6 @@
                                             ReferenceType="DataObjectReferenceType.Target"
                                             Step="Modal.Step"
                                             Connection="Connection"
-                                            SqlConnections="Modal.SqlConnections"
-                                            AsConnections="Modal.AsConnections"
-                                            AzureCredentials="Modal.AzureCredentials"
-                                            QlikClients="Modal.QlikClients"
                                             LoadAllDataObjects="Modal.GetDataObjectsAsync" />
                                     </div>
                                 </div>
@@ -253,8 +245,10 @@
                     </EditForm>
                 </div>
             </div>
-            <SqlReferenceExplorerOffcanvas @ref="_sqlReferenceOffcanvas" Connections="Modal.MsSqlConnections" />
-            <SqlDefinitionExplorerOffcanvas @ref="_sqlDefinitionOffcanvas" Connections="Modal.SqlConnections" />
+            <SqlReferenceExplorerOffcanvas @ref="_sqlReferenceOffcanvas"
+                                           Connections="Modal.Integrations.MsSqlConnections" />
+            <SqlDefinitionExplorerOffcanvas @ref="_sqlDefinitionOffcanvas"
+                                            Connections="Modal.Integrations.SqlConnections" />
         }
         else
         {
@@ -324,7 +318,7 @@
 
     private SqlConnectionBase? Connection => Modal?.Step switch
     {
-        IHasSqlConnection conn => Modal.SqlConnections.FirstOrDefault(c => c.ConnectionId == conn.ConnectionId),
+        IHasSqlConnection conn => Modal.Integrations.SqlConnections.FirstOrDefault(c => c.ConnectionId == conn.ConnectionId),
         _ => null
     };
 

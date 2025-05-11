@@ -9,6 +9,8 @@ public partial class StepsList(
     IHxMessageBoxService confirmer,
     IMediator mediator) : ComponentBase
 {
+    [CascadingParameter] public IntegrationsContainer Integrations { get; set; } = IntegrationsContainer.Empty;
+    
     [CascadingParameter] public Job? Job { get; set; }
     
     [CascadingParameter(Name = "SortSteps")] public Action? SortSteps { get; set; }
@@ -16,30 +18,6 @@ public partial class StepsList(
     [CascadingParameter] public List<Step>? Steps { get; set; }
     
     [CascadingParameter] public List<Job>? Jobs { get; set; }
-    
-    [Parameter] public List<SqlConnectionBase>? SqlConnections { get; set; }
-
-    [Parameter] public List<MsSqlConnection>? MsSqlConnections { get; set; }
-
-    [Parameter] public List<AnalysisServicesConnection>? AsConnections { get; set; }
-    
-    [Parameter] public List<PipelineClient>? PipelineClients { get; set; }
-    
-    [Parameter] public List<AzureCredential>? AzureCredentials { get; set; }
-    
-    [Parameter] public List<FunctionApp>? FunctionApps { get; set; }
-
-    [Parameter] public List<QlikCloudEnvironment>? QlikCloudClients { get; set; }
-
-    [Parameter] public List<DatabricksWorkspace>? DatabricksWorkspaces { get; set; }
-
-    [Parameter] public List<DbtAccount>? DbtAccounts { get; set; }
-    
-    [Parameter] public List<ScdTable>? ScdTables { get; set; }
-
-    [Parameter] public List<Credential>? Credentials { get; set; }
-    
-    [Parameter] public List<Proxy>? Proxies { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
 
@@ -107,19 +85,19 @@ public partial class StepsList(
 
     private (bool, string) IsStepTypeDisabled(StepType type) => type switch
     {
-        StepType.Sql => ((SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
-        StepType.Package => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
-        StepType.Pipeline => ((PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
-        StepType.Dataset => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
-        StepType.Dataflow => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
-        StepType.Fabric => ((AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
+        StepType.Sql => ((Integrations.SqlConnections?.Count ?? 0) == 0, "No SQL connections defined"),
+        StepType.Package => ((Integrations.MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
+        StepType.Pipeline => ((Integrations.PipelineClients?.Count ?? 0) == 0, "No pipeline clients defined"),
+        StepType.Dataset => ((Integrations.AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
+        StepType.Dataflow => ((Integrations.AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
+        StepType.Fabric => ((Integrations.AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
         StepType.Job => (Jobs is null || Jobs.Count == 1, ""),
-        StepType.AgentJob => ((MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
-        StepType.Tabular => ((AsConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
-        StepType.Qlik => ((QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
-        StepType.Databricks => ((DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
-        StepType.Dbt => ((DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
-        StepType.Scd => ((ScdTables?.Count ?? 0) == 0, "No SCD tables defined"),
+        StepType.AgentJob => ((Integrations.MsSqlConnections?.Count ?? 0) == 0, "No MS SQL connections defined"),
+        StepType.Tabular => ((Integrations.AnalysisServicesConnections?.Count ?? 0) == 0, "No Analysis Services connections defined"),
+        StepType.Qlik => ((Integrations.QlikCloudClients?.Count ?? 0) == 0, "No Qlik Cloud clients defined"),
+        StepType.Databricks => ((Integrations.DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
+        StepType.Dbt => ((Integrations.DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
+        StepType.Scd => ((Integrations.ScdTables?.Count ?? 0) == 0, "No SCD tables defined"),
         _ => (false, "")
     };
 

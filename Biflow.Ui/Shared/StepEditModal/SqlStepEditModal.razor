@@ -31,7 +31,7 @@
                         </div>    
                     }
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId" @bind-Value:after="StateHasChanged">
-                        @foreach (var connection in SqlConnections)
+                        @foreach (var connection in Integrations.SqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }

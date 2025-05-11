@@ -23,7 +23,7 @@ public partial class FabricStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = AzureCredentials.First().AzureCredentialId
+            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
         };
 
     protected override Task<FabricStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -168,7 +168,8 @@ public partial class FabricStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var azureCredential = Integrations.AzureCredentials
+                .First(a => a.AzureCredentialId == step.AzureCredentialId);
             var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService);
             (step.WorkspaceName, step.ItemName) = 
                 (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 

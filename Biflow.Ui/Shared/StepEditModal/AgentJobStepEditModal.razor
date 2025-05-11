@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in MsSqlConnections)
+                        @foreach (var connection in Integrations.MsSqlConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }

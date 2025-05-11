@@ -9,8 +9,6 @@ public partial class PipelineStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<PipelineStep>(mediator, toaster, dbContextFactory)
 {
-    [Parameter] public IList<PipelineClient> PipelineClients { get; set; } = [];
-    
     internal override string FormId => "pipeline_step_edit_form";
 
     private PipelineSelectOffcanvas? _pipelineSelectOffcanvas;
@@ -22,7 +20,7 @@ public partial class PipelineStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            PipelineClientId = PipelineClients.First().PipelineClientId
+            PipelineClientId = Integrations.PipelineClients.First().PipelineClientId
         };
 
     protected override Task<PipelineStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>

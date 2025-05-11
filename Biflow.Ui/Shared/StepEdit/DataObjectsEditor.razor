@@ -245,16 +245,16 @@
 </HxDropdownButtonGroup>
 
 <DbObjectExplorerOffcanvas @ref="_dbObjectExplorerOffcanvas"
-                           Connections="SqlConnections"
+                           Connections="Integrations.SqlConnections"
                            OnDbObjectSelected="OnDbObjectSelectedAsync"/>
 
 <DatasetSelectOffcanvas @ref="_datasetOffcanvas"
-                        AzureCredentials="AzureCredentials"
+                        AzureCredentials="Integrations.AzureCredentials"
                         AllowAzureCredentialChange
                         OnDatasetSelected="OnDatasetSelected"/>
 
 <AppSelectOffcanvas @ref="_appOffcanvas"
-                    QlikClients="QlikClients"
+                    QlikClients="Integrations.QlikCloudClients"
                     AllowClientChange
                     OnAppSelected="OnAppSelected"/>
 
@@ -262,24 +262,18 @@
                      OnBlobSelected="OnBlobSelected"/>
 
 <AnalysisServicesObjectSelectOffcanvas @ref="_tabularOffcanvas"
-                                       Connections="AsConnections"
+                                       Connections="Integrations.AnalysisServicesConnections"
                                        AllowAzureCredentialChange
                                        OnObjectSelected="OnTabularSelected"/>
 
 @code {
+    [CascadingParameter] public IntegrationsContainer Integrations { get; set; } = IntegrationsContainer.Empty;
+    
     [Parameter] public DataObjectReferenceType ReferenceType { get; set; }
 
     [Parameter] public Step? Step { get; set; }
 
     [Parameter] public SqlConnectionBase? Connection { get; set; }
-
-    [Parameter] public IEnumerable<SqlConnectionBase>? SqlConnections { get; set; }
-
-    [Parameter] public IEnumerable<AnalysisServicesConnection>? AsConnections { get; set; }
-
-    [Parameter] public IEnumerable<AzureCredential>? AzureCredentials { get; set; }
-
-    [Parameter] public IEnumerable<QlikCloudEnvironment>? QlikClients { get; set; }
     
     [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 

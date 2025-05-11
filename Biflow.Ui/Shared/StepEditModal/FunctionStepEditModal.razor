@@ -29,7 +29,7 @@
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.FunctionAppId">
                         <option value="">No function app</option>
-                        @foreach (var app in FunctionApps)
+                        @foreach (var app in Integrations.FunctionApps)
                         {
                             <option value="@app.FunctionAppId">@app.FunctionAppName</option>
                         }
@@ -70,7 +70,7 @@
                     <InputText class="form-control form-control-sm" @bind-Value="Step.FunctionKey"></InputText>
                 </div>
                 @{
-                    var functionAppKey = FunctionApps
+                    var functionAppKey = Integrations.FunctionApps
                         .FirstOrDefault(app => app.FunctionAppId == Step.FunctionAppId)
                         ?.FunctionAppKey;
                 }

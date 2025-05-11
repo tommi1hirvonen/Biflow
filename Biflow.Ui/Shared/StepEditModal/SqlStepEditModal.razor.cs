@@ -30,8 +30,8 @@ public partial class SqlStepEditModal(
         {
             if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
             {
-                _connection = SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                              ?? SqlConnections.First();
+                _connection = Integrations.SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                              ?? Integrations.SqlConnections.First();
             }
             return _connection;
         }
@@ -62,7 +62,7 @@ public partial class SqlStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            ConnectionId = SqlConnections.First().ConnectionId
+            ConnectionId = Integrations.SqlConnections.First().ConnectionId
         };
     
     protected override async Task<SqlStep> OnSubmitCreateAsync(SqlStep step)

@@ -6,8 +6,6 @@ public partial class ScdStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<ScdStep>(mediator, toaster, dbContextFactory)
 {
-    [Parameter] public IEnumerable<ScdTable> ScdTables { get; set; } = [];
-    
     internal override string FormId => "scd_step_edit_form";
     
     protected override async Task<ScdStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
@@ -21,13 +19,13 @@ public partial class ScdStepEditModal(
             .Include(step => step.ExecutionConditionParameters)
             .FirstAsync(step => step.StepId == stepId);
         // Data object editor pane of the step edit modal takes advantage of the step's connection.
-        step.ConnectionId = ScdTables.FirstOrDefault(t => t.ScdTableId == step.ScdTableId)?.ConnectionId ?? Guid.Empty;
+        step.ConnectionId = Integrations.ScdTables.FirstOrDefault(t => t.ScdTableId == step.ScdTableId)?.ConnectionId ?? Guid.Empty;
         return step;
     }
     
     protected override ScdStep CreateNewStep(Job job)
     {
-        var table = ScdTables.FirstOrDefault();
+        var table = Integrations.ScdTables.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(table);
         return new()
         {
@@ -123,7 +121,7 @@ public partial class ScdStepEditModal(
     {
         ArgumentNullException.ThrowIfNull(Step);
         // Refresh the connection id.
-        Step.ConnectionId = ScdTables
+        Step.ConnectionId = Integrations.ScdTables
             .FirstOrDefault(t => t.ScdTableId == Step.ScdTableId)?.ConnectionId ?? Guid.Empty;
     }
     
@@ -131,7 +129,7 @@ public partial class ScdStepEditModal(
     {
         return Task.FromResult(new AutosuggestDataProviderResult<ScdTable>
         {
-            Data = ScdTables
+            Data = Integrations.ScdTables
                 .Where(t => t.ScdTableName.ContainsIgnoreCase(request.UserInput))
                 .OrderBy(t => t.ScdTableName)
         });

@@ -10,9 +10,6 @@ public partial class ExeStepEditModal(
     IDbContextFactory<AppDbContext> dbContextFactory)
     : StepEditModal<ExeStep>(mediator, toaster, dbContextFactory)
 {
-    
-    [Parameter] public IEnumerable<Proxy> Proxies { get; set; } = [];
-    
     internal override string FormId => "exe_step_edit_form";
 
     private const string ParametersInfoContent = """
@@ -174,7 +171,7 @@ public partial class ExeStepEditModal(
         FileExplorerDelegate fileExplorerDelegate;
         if (Step.ProxyId is { } id)
         {
-            var proxy = Proxies.First(x => x.ProxyId == id);
+            var proxy = Integrations.Proxies.First(x => x.ProxyId == id);
             var client = proxyClientFactory.Create(proxy);
             fileExplorerDelegate = client.GetDirectoryItemsAsync;
         }

@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.ScatterChart" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.QlikCloudEnvironmentId">
-                        @foreach (var client in QlikClients)
+                        @foreach (var client in Integrations.QlikCloudClients)
                         {
                             <option value="@client.QlikCloudEnvironmentId">@client.QlikCloudEnvironmentName</option>
                         }
@@ -124,6 +124,8 @@
             </div>
         }
 
-        <AppSelectOffcanvas @ref="_appSelectOffcanvas" OnAppSelected="OnAppSelected" QlikClients="QlikClients" />
+        <AppSelectOffcanvas @ref="_appSelectOffcanvas"
+                            OnAppSelected="OnAppSelected"
+                            QlikClients="Integrations.QlikCloudClients" />
     }
 </StepEditModalTemplate>

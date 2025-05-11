@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Database" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.ConnectionId">
-                        @foreach (var connection in AsConnections)
+                        @foreach (var connection in Integrations.AnalysisServicesConnections)
                         {
                             <option value="@connection.ConnectionId">@connection.ConnectionName</option>
                         }
@@ -88,6 +88,6 @@
 
         <AnalysisServicesObjectSelectOffcanvas @ref="_offcanvas"
                                                OnObjectSelected="OnAnalysisServicesObjectSelected"
-                                               Connections="AsConnections"/>
+                                               Connections="Integrations.AnalysisServicesConnections"/>
     }
 </StepEditModalTemplate>

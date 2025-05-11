@@ -30,21 +30,10 @@ public partial class JobDetails(
     private readonly IJSRuntime _js = js;
     private readonly CancellationTokenSource _cts = new();
 
+    private IntegrationsContainer _integrations = IntegrationsContainer.Empty;
     private Job? _job;
     private List<Job> _jobs = [];
     private List<Step> _steps = [];
-    private List<SqlConnectionBase>? _sqlConnections;
-    private List<MsSqlConnection>? _msSqlConnections;
-    private List<AnalysisServicesConnection>? _asConnections;
-    private List<PipelineClient>? _pipelineClients;
-    private List<AzureCredential>? _azureCredentials;
-    private List<FunctionApp>? _functionApps;
-    private List<QlikCloudEnvironment>? _qlikCloudClients;
-    private List<DatabricksWorkspace>? _databricksWorkspaces;
-    private List<DbtAccount>? _dbtAccounts;
-    private List<ScdTable>? _scdTables;
-    private List<Credential>? _credentials;
-    private List<Proxy>? _proxies;
     private bool _descriptionOpen;
     private Guid _previousJobId;
 
@@ -79,53 +68,68 @@ public partial class JobDetails(
     protected override async Task OnInitializedAsync()
     {
         await using var context = await _dbContextFactory.CreateDbContextAsync();
-        _sqlConnections = await context.SqlConnections
+        var sqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync(_cts.Token);
-        _msSqlConnections = _sqlConnections.OfType<MsSqlConnection>().ToList();
-        _asConnections = await context.AnalysisServicesConnections
+            .ToListAsync();
+        var msSqlConnections = sqlConnections.OfType<MsSqlConnection>().ToList();
+        var asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync(_cts.Token);
-        _pipelineClients = await context.PipelineClients
+            .ToListAsync();
+        var pipelineClients = await context.PipelineClients
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
-            .ToListAsync(_cts.Token);
-        _azureCredentials = await context.AzureCredentials
+            .ToListAsync();
+        var azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(app => app.AzureCredentialName)
-            .ToListAsync(_cts.Token);
-        _functionApps = await context.FunctionApps
+            .ToListAsync();
+        var functionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
-            .ToListAsync(_cts.Token);
-        _qlikCloudClients = await context.QlikCloudEnvironments
+            .ToListAsync();
+        var qlikCloudClients = await context.QlikCloudEnvironments
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudEnvironmentName)
-            .ToListAsync(_cts.Token);
-        _databricksWorkspaces = await context.DatabricksWorkspaces
+            .ToListAsync();
+        var databricksWorkspaces = await context.DatabricksWorkspaces
             .AsNoTracking()
             .OrderBy(w => w.WorkspaceName)
-            .ToListAsync(_cts.Token);
-        _dbtAccounts = await context.DbtAccounts
+            .ToListAsync();
+        var dbtAccounts = await context.DbtAccounts
             .AsNoTracking()
             .OrderBy(a => a.DbtAccountName)
-            .ToListAsync(_cts.Token);
-        _scdTables = await context.ScdTables
+            .ToListAsync();
+        var scdTables = await context.ScdTables
             .AsNoTracking()
             .Include(t => t.Connection) // used in data objects editor in step edit modal
             .OrderBy(t => t.ScdTableName)
-            .ToListAsync(_cts.Token);
-        _credentials = await context.Credentials
+            .ToListAsync();
+        var credentials = await context.Credentials
             .AsNoTracking()
             .OrderBy(c => c.Domain)
             .ThenBy(c => c.Username)
-            .ToListAsync(_cts.Token);
-        _proxies = await context.Proxies
+            .ToListAsync();
+        var proxies = await context.Proxies
             .AsNoTracking()
             .OrderBy(p => p.ProxyName)
-            .ToListAsync(_cts.Token);
+            .ToListAsync();
+        _integrations = new IntegrationsContainer
+        {
+            SqlConnections = sqlConnections,
+            MsSqlConnections = msSqlConnections,
+            AnalysisServicesConnections = asConnections,
+            PipelineClients = pipelineClients,
+            AzureCredentials = azureCredentials,
+            FunctionApps = functionApps,
+            QlikCloudClients = qlikCloudClients,
+            DatabricksWorkspaces = databricksWorkspaces,
+            DbtAccounts = dbtAccounts,
+            ScdTables = scdTables,
+            Credentials = credentials,
+            Proxies = proxies
+        };
         _job = await context.Jobs
             .AsNoTrackingWithIdentityResolution()
             .FirstAsync(j => j.JobId == Id, _cts.Token);

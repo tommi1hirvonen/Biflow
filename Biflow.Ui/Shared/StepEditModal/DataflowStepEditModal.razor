@@ -27,7 +27,7 @@
                         <SvgIcon Icon="LucideIcon.Globe" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.AzureCredentialId">
-                        @foreach (var credential in AzureCredentials)
+                        @foreach (var credential in Integrations.AzureCredentials)
                         {
                             <option value="@credential.AzureCredentialId">@credential.AzureCredentialName</option>
                         }

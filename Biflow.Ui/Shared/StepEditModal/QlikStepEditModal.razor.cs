@@ -17,7 +17,7 @@ public partial class QlikStepEditModal(
     private QlikAutomation[]? _automations;
 
     private QlikCloudEnvironment? CurrentEnvironment =>
-        QlikClients.FirstOrDefault(c => c.QlikCloudEnvironmentId == Step?.QlikCloudEnvironmentId);
+        Integrations.QlikCloudClients.FirstOrDefault(c => c.QlikCloudEnvironmentId == Step?.QlikCloudEnvironmentId);
 
     protected override async Task<QlikStep> GetExistingStepAsync(AppDbContext context, Guid stepId)
     {
@@ -34,7 +34,7 @@ public partial class QlikStepEditModal(
 
     protected override QlikStep CreateNewStep(Job job)
     {
-        var client = QlikClients.FirstOrDefault();
+        var client = Integrations.QlikCloudClients.FirstOrDefault();
         ArgumentNullException.ThrowIfNull(client);
         return new()
         {

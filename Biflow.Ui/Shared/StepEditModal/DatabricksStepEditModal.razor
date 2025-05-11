@@ -30,7 +30,7 @@
                         <SvgIcon Icon="LucideIcon.Layers" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.DatabricksWorkspaceId" @bind-Value:after="OnWorkspaceChanged">
-                        @foreach (var workspace in DatabricksWorkspaces)
+                        @foreach (var workspace in Integrations.DatabricksWorkspaces)
                         {
                             <option value="@workspace.WorkspaceId">@workspace.WorkspaceName</option>
                         }

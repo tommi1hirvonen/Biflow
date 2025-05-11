@@ -104,7 +104,7 @@
                                  @bind-Value:after="() => Step.RunAsCredentialId = null"
                                  disabled=@(Step.RunAsCredentialId is not null)>
                         <option value="">Executor host (no proxy)</option>
-                        @foreach (var proxy in Proxies)
+                        @foreach (var proxy in Integrations.Proxies)
                         {
                             <option value="@proxy.ProxyId">@proxy.ProxyName</option>
                         }
@@ -131,7 +131,7 @@
                                  @bind-Value:after="() => Step.ProxyId = null"
                                  disabled=@(Step.ProxyId is not null)>
                         <option value="">Executor/proxy service user (no impersonation)</option>
-                        @foreach (var cred in Credentials)
+                        @foreach (var cred in Integrations.Credentials)
                         {
                             <option value="@cred.CredentialId">@cred.DisplayName</option>
                         }

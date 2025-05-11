@@ -5,6 +5,8 @@ public abstract class StepEditModal<TStep>(
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase, IStepEditModal where TStep : Step
 {
+    [CascadingParameter] public IntegrationsContainer Integrations { get; set; } = IntegrationsContainer.Empty;
+    
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
@@ -12,18 +14,6 @@ public abstract class StepEditModal<TStep>(
     [Parameter] public Action? OnModalClosed { get; set; }
 
     [Parameter] public EventCallback<Step> OnStepSubmit { get; set; }
-    
-    [Parameter] public IEnumerable<SqlConnectionBase> SqlConnections { get; set; } = [];
-
-    [Parameter] public IEnumerable<MsSqlConnection> MsSqlConnections { get; set; } = [];
-
-    [Parameter] public IEnumerable<AnalysisServicesConnection> AsConnections { get; set; } = [];
-
-    [Parameter] public IEnumerable<AzureCredential> AzureCredentials { get; set; } = [];
-
-    [Parameter] public IEnumerable<QlikCloudEnvironment> QlikClients { get; set; } = [];
-
-    [Parameter] public IEnumerable<Credential> Credentials { get; set; } = [];
 
     internal abstract string FormId { get; }
 

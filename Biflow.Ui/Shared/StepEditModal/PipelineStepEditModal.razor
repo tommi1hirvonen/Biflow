@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Factory" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.PipelineClientId">
-                        @foreach (var client in PipelineClients)
+                        @foreach (var client in Integrations.PipelineClients)
                         {
                             <option value="@client.PipelineClientId">@client.PipelineClientName</option>
                         }

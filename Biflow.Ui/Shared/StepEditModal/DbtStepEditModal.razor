@@ -28,7 +28,7 @@
                         <SvgIcon Icon="LucideIcon.Blocks" />
                     </div>
                     <InputSelect class="form-select form-select-sm" @bind-Value="Step.DbtAccountId">
-                        @foreach (var account in DbtAccounts)
+                        @foreach (var account in Integrations.DbtAccounts)
                         {
                             <option value="@account.DbtAccountId">@account.DbtAccountName</option>
                         }

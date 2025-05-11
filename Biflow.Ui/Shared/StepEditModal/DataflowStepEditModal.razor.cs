@@ -22,7 +22,7 @@ public partial class DataflowStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = AzureCredentials.First().AzureCredentialId
+            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
         };
 
     protected override Task<DataflowStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -132,7 +132,8 @@ public partial class DataflowStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var azureCredential = Integrations.AzureCredentials
+                .First(a => a.AzureCredentialId == step.AzureCredentialId);
             var dataflowClient = azureCredential.CreateDataflowClient(tokenService, httpClientFactory);
             (step.WorkspaceName, step.DataflowName) =
                 (await dataflowClient.GetWorkspaceNameAsync(step.WorkspaceId),
