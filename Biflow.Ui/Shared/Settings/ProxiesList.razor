@@ -167,6 +167,7 @@
 
 @code {
     private readonly Dictionary<Guid, ConnectionTestState> _connectionTestStates = [];
+    private readonly CancellationTokenSource _cts = new();
     
     private List<Proxy>? _proxies;
     private ProxyEditModal? _editModal;
@@ -174,8 +175,13 @@
     private HxModal? _stepsModal;
     
     private enum ConnectionTestState { Testing, Running, Unauthorized, Unavailable }
-    
-    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= OnThemeChanged;   
+        _cts.Cancel();
+        _cts.Dispose();
+    }
     
     protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
 
@@ -188,7 +194,7 @@
             .AsNoTrackingWithIdentityResolution()
             .Include(x => x.ExeSteps).ThenInclude(x => x.Job)
             .OrderBy(x => x.ProxyName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         foreach (var proxy in _proxies)
         {
             _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Testing;
@@ -240,8 +246,12 @@
         try
         {
             var client = ProxyClientFactory.Create(proxy);
-            await client.TestConnectionAsync();
+            await client.TestConnectionAsync(_cts.Token);
             _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Running;
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
         catch (HttpRequestException httpException) when (httpException.StatusCode == HttpStatusCode.Unauthorized)
         {
