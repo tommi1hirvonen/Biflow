@@ -2,7 +2,10 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 
-<HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_account?.DbtAccountId == Guid.Empty ? "New dbt account" : "Edit " + _account?.DbtAccountName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         Title="@(_account?.DbtAccountId == Guid.Empty ? "New dbt account" : "Edit " + _account?.DbtAccountName)"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_account is not null)
         {
@@ -18,7 +21,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="LucideIcon.PenLine" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="_account.DbtAccountName"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_account.DbtAccountName"></InputText>
                             </div>
                         </div>
 
@@ -101,6 +104,7 @@
     [Parameter]
     public EventCallback<DbtAccount> OnAccountSubmit { get; set; }
 
+    private InputText? _nameInput;
     private HxModal? _modal;
     private DbtAccount? _account;
     private bool? _connectionTestSuccess;

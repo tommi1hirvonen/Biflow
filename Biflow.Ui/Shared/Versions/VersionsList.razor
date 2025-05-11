@@ -141,7 +141,9 @@
 
 </Paginator>
 
-<HxOffcanvas @ref="_detailsOffcanvas" Size="OffcanvasSize.Large" Title="@($"Version {_detailsVersion?.VersionId}")">
+<HxOffcanvas @ref="_detailsOffcanvas"
+             Size="OffcanvasSize.Large"
+             Title="@($"Version {_detailsVersion?.VersionId}")">
     <BodyTemplate>
         <div class="row justify-content-between">
             <div class="col-auto">
@@ -172,11 +174,15 @@
     </BodyTemplate>
 </HxOffcanvas>
 
-<HxModal @ref="_createModal" Title="Create new version snapshot" Size="ModalSize.Large" Scrollable="true">
+<HxModal @ref="_createModal"
+         Title="Create new version snapshot"
+         Size="ModalSize.Large"
+         Scrollable="true"
+         OnShown="() => _textInput.FocusAsync()">
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                <textarea class="form-control form-control-sm" @bind="_description" rows="5" placeholder="Version description"></textarea>
+                <textarea @ref="_textInput" class="form-control form-control-sm" @bind="_description" rows="5" placeholder="Version description"></textarea>
             </div>
         </div>
     </BodyTemplate>
@@ -195,6 +201,7 @@
 
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
 
+    private ElementReference _textInput;
     private Paginator<VersionProjection>? _paginator;
     private HxOffcanvas? _detailsOffcanvas;
     private EnvironmentVersion? _detailsVersion;

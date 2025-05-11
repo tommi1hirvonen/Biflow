@@ -2,7 +2,12 @@
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_connection?.ConnectionId == Guid.Empty ? "New SQL connection" : "Edit " + _connection?.ConnectionName)" Scrollable="true">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         Title="@(_connection?.ConnectionId == Guid.Empty ? "New SQL connection" : "Edit " + _connection?.ConnectionName)"
+         Scrollable="true"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_connection is not null)
         {
@@ -43,7 +48,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.Pen"/>
                                     </div>
-                                    <InputText class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
+                                    <InputText @ref="_nameInput" class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
                                 </div>
                             </div>
                             <div class="row mt-3">
@@ -207,6 +212,7 @@
     [Parameter]
     public EventCallback<MsSqlConnection> OnConnectionSubmit { get; set; }
 
+    private InputText? _nameInput;
     private MsSqlConnection? _connection;
     private HxModal? _modal;
     private bool? _connectionTestSuccess;

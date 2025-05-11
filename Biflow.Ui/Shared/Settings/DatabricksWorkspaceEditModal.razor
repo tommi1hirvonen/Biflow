@@ -1,7 +1,10 @@
 ﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 
-<HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_workspace?.WorkspaceId == Guid.Empty ? "New Databricks workspace" : "Edit " + _workspace?.WorkspaceName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         Title="@(_workspace?.WorkspaceId == Guid.Empty ? "New Databricks workspace" : "Edit " + _workspace?.WorkspaceName)"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_workspace is not null)
         {
@@ -17,7 +20,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="LucideIcon.PenLine" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="_workspace.WorkspaceName"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_workspace.WorkspaceName"></InputText>
                             </div>
 
                         </div>
@@ -84,6 +87,7 @@
     [Parameter]
     public EventCallback<DatabricksWorkspace> OnWorkspaceSubmit { get; set; }
 
+    private InputText? _nameInput;
     private HxModal? _modal;
     private DatabricksWorkspace? _workspace;
     private bool? _connectionTestSuccess;

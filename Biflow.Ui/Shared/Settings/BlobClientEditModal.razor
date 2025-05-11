@@ -3,7 +3,11 @@
 @inject ToasterService Toaster
 @inject ITokenService TokenService
 
-<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + _client?.BlobStorageClientName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_client?.BlobStorageClientId == Guid.Empty ? "New blob client" : "Edit " + _client?.BlobStorageClientName)">
     <BodyTemplate>
         @if (_client is not null)
         {
@@ -16,7 +20,7 @@
 
                         <div>
                             <label class="form-label">Blob storage client name</label>
-                            <InputText class="form-control" @bind-Value="_client.BlobStorageClientName"></InputText>
+                            <InputText @ref="_nameInput" class="form-control" @bind-Value="_client.BlobStorageClientName"></InputText>
                         </div>
 
                         <div class="row mt-3">
@@ -127,6 +131,7 @@
     [Parameter]
     public List<AzureCredential>? AzureCredentials { get; set; }
 
+    private InputText? _nameInput;
     private BlobStorageClient? _client;
     private HxModal? _modal;
     private bool? _connectionTestSuccess = null;

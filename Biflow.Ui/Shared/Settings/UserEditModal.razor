@@ -1,5 +1,9 @@
 ﻿
-<HxModal @ref="_modal" Title="@(IsNewUser ? "New user" : $"Edit {_currentUsername}")" Scrollable="true" Size="ModalSize.Large" OnClosed="OnClosed">
+<HxModal @ref="_modal"
+         Title="@(IsNewUser ? "New user" : $"Edit {_currentUsername}")" Scrollable="true"
+         Size="ModalSize.Large"
+         OnClosed="OnClosed"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_model is not null)
         {
@@ -16,7 +20,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="LucideIcon.User" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="_model.Username"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_model.Username"></InputText>
                             </div>
                         </div>
                         <div class="mt-3">

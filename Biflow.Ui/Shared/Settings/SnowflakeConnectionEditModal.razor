@@ -2,7 +2,11 @@
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_connection?.ConnectionId == Guid.Empty ? "New Snowflake connection" : "Edit " + _connection?.ConnectionName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_connection?.ConnectionId == Guid.Empty ? "New Snowflake connection" : "Edit " + _connection?.ConnectionName)">
     <BodyTemplate>
         @if (_connection is not null)
         {
@@ -43,7 +47,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.Pen"/>
                                     </div>
-                                    <InputText class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
+                                    <InputText @ref="_nameInput" class="form-control" @bind-Value="_connection.ConnectionName"></InputText>
                                 </div>
                             </div>
                             <div class="row mt-3">
@@ -142,6 +146,7 @@
     [Parameter]
     public EventCallback<SnowflakeConnection> OnConnectionSubmit { get; set; }
 
+    private InputText? _nameInput;
     private SnowflakeConnection? _connection;
     private HxModal? _modal;
     private bool? _connectionTestSuccess = null;

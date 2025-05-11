@@ -2,7 +2,11 @@
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + _synapseWorkspace?.PipelineClientName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_synapseWorkspace?.PipelineClientId == Guid.Empty ? "New Synapse workspace" : "Edit " + _synapseWorkspace?.PipelineClientName)">
     <BodyTemplate>
         @if (_synapseWorkspace is not null)
         {
@@ -16,7 +20,7 @@
                         <div class="row">
                             <div class="col">
                                 <label class="form-label">Synapse workspace name</label>
-                                <InputText class="form-control" @bind-Value="_synapseWorkspace.PipelineClientName"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_synapseWorkspace.PipelineClientName"></InputText>
                             </div>
                         </div>
 
@@ -89,6 +93,7 @@
     [Parameter]
     public List<AzureCredential>? AzureCredentials { get; set; }
 
+    private InputText? _nameInput;
     private SynapseWorkspace? _synapseWorkspace;
     private HxModal? _modal;
     private bool? _connectionTestSuccess = null;

@@ -2,7 +2,10 @@
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IHttpClientFactory HttpClientFactory
 
-<HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + _environment?.QlikCloudEnvironmentName)">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_environment?.QlikCloudEnvironmentId == Guid.Empty ? "New Qlik Cloud environment" : "Edit " + _environment?.QlikCloudEnvironmentName)">
     <BodyTemplate>
         @if (_environment is not null)
         {
@@ -18,7 +21,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="LucideIcon.PenLine" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="_environment.QlikCloudEnvironmentName"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_environment.QlikCloudEnvironmentName"></InputText>
                             </div>
                             
                         </div>
@@ -84,6 +87,7 @@
     [Parameter]
     public EventCallback<QlikCloudEnvironment> OnEnvironmentSubmit { get; set; }
 
+    private InputText? _nameInput;
     private HxModal? _modal;
     private QlikCloudEnvironment? _environment;
     private bool? _connectionTestSuccess;

@@ -6,14 +6,17 @@
     var title = _category.CategoryId == Guid.Empty ? "New category" : $"Edit {_category.CategoryName}";
 }
 
-<HxOffcanvas @ref="_modal" Title="@title" Size="OffcanvasSize.Regular">
+<HxOffcanvas @ref="_modal"
+             Title="@title"
+             Size="OffcanvasSize.Regular"
+             OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         <EditForm id="category_edit_form" Model="_category" OnValidSubmit="SubmitAsync">
             <DataAnnotationsValidator />
             <ValidationSummary />
             <div>
                 <label class="form-label">Category name</label>
-                <InputText class="form-control" @bind-Value="_category.CategoryName"></InputText>
+                <InputText @ref="_nameInput" class="form-control" @bind-Value="_category.CategoryName"></InputText>
             </div>
         </EditForm>
     </BodyTemplate>
@@ -32,6 +35,7 @@
 
     private HxOffcanvas? _modal;
     private MasterDataTableCategory _category = new();
+    private InputText? _nameInput;
 
     public async Task ShowAsync(MasterDataTableCategory? category = null)
     {

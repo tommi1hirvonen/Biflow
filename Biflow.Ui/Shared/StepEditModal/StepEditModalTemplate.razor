@@ -15,6 +15,7 @@
          Scrollable="true"
          BodyCssClass="pt-0"
          OnClosed="OnClosed"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
          Fullscreen="ModalFullscreen.ExtraLargeDown"
          Title="@(Modal.Step?.StepId == Guid.Empty ? "New step" : "Edit " + Modal.Step?.StepName)">
     <BodyTemplate>
@@ -114,7 +115,9 @@
                                             <div class="input-group-text">
                                                 <SvgIcon Icon="LucideIcon.PenLine" />
                                             </div>
-                                            <InputText class="form-control form-control-sm" @bind-Value="Modal.Step.StepName"></InputText>
+                                            <InputText @ref="_nameInput"
+                                                       class="form-control form-control-sm"
+                                                       @bind-Value="Modal.Step.StepName"></InputText>
                                         </div>
                                     </div>
                                 </div>
@@ -305,6 +308,7 @@
 
     [Parameter] public RenderFragment? ChildContent { get; set; }
 
+    private InputText? _nameInput;
     private FluentValidationValidator? _fluentStepValidator;
     private FluentValidationValidator? _fluentStepParametersValidator;
     private SqlReferenceExplorerOffcanvas? _sqlReferenceOffcanvas;

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace Biflow.Ui.Shared.DataTables;
 
@@ -22,6 +23,7 @@ public partial class DataTableEditModal(
     private readonly ConditionalWeakTable<MasterDataTableLookup, IEnumerable<string>> _lookupColumns = [];
 
     private HxModal? _modal;
+    private InputText? _nameInput;
     private DatabaseTableSelectOffcanvas? _offcanvas;
     private MasterDataTable? _editTable;
     private TableEditView _currentView = TableEditView.Settings;

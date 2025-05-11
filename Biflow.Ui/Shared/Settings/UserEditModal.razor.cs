@@ -1,4 +1,5 @@
 ﻿using Biflow.Ui.Core.Validation;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
@@ -19,6 +20,7 @@ public partial class UserEditModal(
     private readonly ToasterService _toaster = toaster;
     private readonly IJSRuntime _js = js;
 
+    private InputText? _nameInput;
     private List<Job>? _jobs;
     private List<MasterDataTable>? _dataTables;
     private HxModal? _modal;

@@ -6,7 +6,7 @@
     var title = _job.JobId == Guid.Empty ? "New job" : $"Edit {_job.JobName}";
 }
 
-<HxOffcanvas @ref="_offcanvas" Title="@title">
+<HxOffcanvas @ref="_offcanvas" Title="@title" OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         <EditForm Model="_job" OnValidSubmit="OnSubmit" id="job_edit_form">
             <DataAnnotationsValidator />
@@ -14,7 +14,7 @@
             <div class="row">
                 <div class="col">
                     <label class="form-label">Name</label>
-                    <InputText @bind-Value="_job.JobName" class="form-control" />
+                    <InputText @ref="_nameInput" @bind-Value="_job.JobName" class="form-control" />
                 </div>
             </div>
 
@@ -46,6 +46,7 @@
     private HxOffcanvas? _offcanvas;
     private Job _job = new();
     private List<JobTag> _allTags = [];
+    private InputText? _nameInput;
 
     private async Task OnSubmit()
     {

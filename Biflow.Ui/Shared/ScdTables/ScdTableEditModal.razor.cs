@@ -1,6 +1,7 @@
 ﻿using Biflow.Core.Entities.Scd;
 using Biflow.Ui.Core.Validation;
 using Biflow.Ui.SqlMetadataExtensions;
+using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.JSInterop;
 
@@ -19,6 +20,7 @@ public partial class ScdTableEditModal(
     public IEnumerable<SqlConnectionBase>? Connections { get; set; }
     
     private HxModal? _modal;
+    private InputText? _nameInput;
     private CodeEditor? _preLoadScriptEditor;
     private CodeEditor? _postLoadScriptEditor;
     private View _view = View.Settings;

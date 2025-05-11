@@ -1,6 +1,10 @@
 ﻿@using Biflow.Core.Entities.Scd
 
-<HxModal @ref="_modal" Size="ModalSize.Large" Title="@(_table?.ScdTableId == Guid.Empty ? "New SCD table" : "Edit " + _table?.ScdTableName)" Scrollable="true">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         Title="@(_table?.ScdTableId == Guid.Empty ? "New SCD table" : "Edit " + _table?.ScdTableName)"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Scrollable="true">
     <BodyTemplate>
         @if (_table is null || Connections is null)
         {
@@ -74,7 +78,9 @@
                                     <div class="col">
                                         <label class="form-label">SCD table name</label>
                                         <div class="input-group">
-                                            <InputText class="form-control form-control-sm" @bind-Value="_table.ScdTableName"></InputText>
+                                            <InputText @ref="_nameInput"
+                                                       class="form-control form-control-sm"
+                                                       @bind-Value="_table.ScdTableName"></InputText>
                                         </div>
                                     </div>
                                 </div>

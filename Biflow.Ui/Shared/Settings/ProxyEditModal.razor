@@ -4,6 +4,7 @@
 
 <HxModal @ref="_modal"
          Size="ModalSize.Large"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
          Title="@(_proxy?.ProxyId == Guid.Empty ? "New proxy" : "Edit " + _proxy?.ProxyName)">
     <BodyTemplate>
         @if (_proxy is not null)
@@ -20,7 +21,7 @@
                                 <div class="input-group-text">
                                     <SvgIcon Icon="LucideIcon.PenLine" />
                                 </div>
-                                <InputText class="form-control" @bind-Value="_proxy.ProxyName"></InputText>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_proxy.ProxyName"></InputText>
                             </div>
                         </div>
 
@@ -93,6 +94,7 @@
     [Parameter]
     public EventCallback<Proxy> OnProxySubmit { get; set; }
 
+    private InputText? _nameInput;
     private HxModal? _modal;
     private Proxy? _proxy;
     private bool? _connectionTestSuccess;

@@ -4,7 +4,12 @@
 @inject ITokenService TokenService
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Large" OnClosed="() => _connectionTestSuccess = null" Title="@(_functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + _functionApp?.FunctionAppName)" Scrollable="true">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_functionApp?.FunctionAppId == Guid.Empty ? "New Function App" : "Edit " + _functionApp?.FunctionAppName)"
+         Scrollable="true">
     
     <BodyTemplate>
         @if (_functionApp is not null)
@@ -18,7 +23,7 @@
 
                         <div>
                             <label class="form-label">Function App name</label>
-                            <InputText class="form-control" @bind-Value="_functionApp.FunctionAppName"></InputText>
+                            <InputText @ref="_nameInput" class="form-control" @bind-Value="_functionApp.FunctionAppName"></InputText>
                         </div>
 
                         <div class="row mt-3">
@@ -117,6 +122,7 @@
     [Parameter]
     public List<AzureCredential>? AzureCredentials { get; set; }
 
+    private InputText? _nameInput;
     private FunctionApp? _functionApp;
     private HxModal? _modal;
     private bool? _connectionTestSuccess = null;

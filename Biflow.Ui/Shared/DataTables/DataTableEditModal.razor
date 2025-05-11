@@ -6,7 +6,12 @@
     };
 }
 
-<HxModal @ref="_modal" Fullscreen="ModalFullscreen.XxlDown" Size="ModalSize.ExtraLarge" Title="@title" Scrollable="true">
+<HxModal @ref="_modal"
+         Fullscreen="ModalFullscreen.XxlDown"
+         Size="ModalSize.ExtraLarge"
+         Title="@title"
+         Scrollable="true"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_editTable is not null && _categories is not null)
         {
@@ -49,7 +54,11 @@
                             <label class="form-label mb-lg-0">Data table name</label>
                         </div>
                         <div class="col-md-6">
-                            <InputText form="" class="form-control form-control-sm" autocomplete="off" @bind-Value="_editTable.DataTableName" />
+                            <InputText form=""
+                                       @ref="_nameInput"
+                                       class="form-control form-control-sm"
+                                       autocomplete="off"
+                                       @bind-Value="_editTable.DataTableName" />
                         </div>
                     </div>
 

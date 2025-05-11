@@ -5,7 +5,10 @@
 @inject IMediator Mediator
 @inject IJSRuntime Js
 
-<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="@(_schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")">
+<HxOffcanvas @ref="_offcanvas"
+             Size="OffcanvasSize.Regular"
+             Title="@(_schedule.ScheduleId == Guid.Empty ? "New schedule" : "Edit schedule")"
+             OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
         <EditForm id="schedule_form" Model="_schedule" OnValidSubmit="SubmitSchedule">
@@ -42,7 +45,10 @@
                             <div class="input-group-text">
                                 <SvgIcon Icon="LucideIcon.PenLine" />
                             </div>
-                            <InputText DisplayName="Name" class="form-control" @bind-Value="_schedule.ScheduleName"></InputText>
+                            <InputText @ref="_nameInput"
+                                       DisplayName="Name"
+                                       class="form-control"
+                                       @bind-Value="_schedule.ScheduleName"></InputText>
                         </div>
                     </div>
                     <ValidationMessage For="() => _schedule.ScheduleName" />
@@ -138,6 +144,7 @@
     [Parameter] public EventCallback<Schedule> OnSubmit { get; set; }
 
     private Schedule _schedule = new(); // assign placeholder
+    private InputText? _nameInput;
     private HxOffcanvas? _offcanvas;
     private List<StepTag> _allStepTags = [];
     private List<ScheduleTag> _allScheduleTags = [];

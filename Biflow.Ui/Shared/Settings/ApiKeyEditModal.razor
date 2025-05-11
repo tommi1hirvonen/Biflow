@@ -2,7 +2,11 @@
 @inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxModal @ref="_modal" Size="ModalSize.Large" Scrollable="true" Title="@(_key?.Id == Guid.Empty ? "New API key" : "Edit API key")">
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         Scrollable="true"
+         Title="@(_key?.Id == Guid.Empty ? "New API key" : "Edit API key")"
+         OnShown="() => _nameInput?.Element?.FocusAsync()">
     <BodyTemplate>
         @if (_key is not null)
         {
@@ -21,7 +25,7 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.PenLine" />
                                     </div>
-                                    <InputText class="form-control form-control-sm" @bind-Value="_key.Name"></InputText>
+                                    <InputText @ref="_nameInput" class="form-control form-control-sm" @bind-Value="_key.Name"></InputText>
                                 </div>
                             </div>
                         </div>
@@ -153,6 +157,7 @@
 
     private readonly ApiKeyValidator _validator = new();
 
+    private InputText? _nameInput;
     private ApiKey? _key;
     private HxModal? _modal;
 
