@@ -5,7 +5,7 @@ internal class StepExecutionDataObjectEntityTypeConfiguration : IEntityTypeConfi
     public void Configure(EntityTypeBuilder<StepExecutionDataObject> builder)
     {
         builder.ToTable("ExecutionStepDataObject")
-            .HasKey(x => new { x.ExecutionId, x.StepId, x.ObjectId });
+            .HasKey(x => new { x.ExecutionId, x.StepId, x.ObjectId, x.ReferenceType });
 
         builder.HasOne(x => x.DataObject)
             .WithMany(x => x.StepExecutions)
