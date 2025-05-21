@@ -20,15 +20,18 @@
                     The following entity types are stored in the snapshot JSON object:
                     <ul>
                         <li>
-                            Settings
+                            Integrations
                             <ul>
                                 <li>Connections</li>
-                                <li>Credentials</li>
                                 <li>Azure credentials</li>
                                 <li>Pipeline clients</li>
                                 <li>Function apps</li>
+                                <li>Databricks workspaces</li>
+                                <li>dbt accounts</li>
                                 <li>Qlik Cloud clients</li>
                                 <li>Blob storage clients</li>
+                                <li>Proxies</li>
+                                <li>Credentials</li>
                             </ul>
                         </li>
                         <li>Jobs (incl. steps, parameters etc.)</li>
@@ -41,14 +44,17 @@
                 <p>
                     As the snapshot JSON can also be backed up in version control systems such as git, <strong>the following sensitive string values are not included in the snapshot</strong>:
                     <ul>
-                        <li>Azure credential client secrets</li>
+                        <li>Azure credential client secrets and passwords</li>
                         <li>Connection strings (when containing passwords)</li>
-                        <li>Credential passwords</li>
                         <li>Function app keys</li>
                         <li>Function step keys</li>
+                        <li>Databricks workspace API tokens</li>
+                        <li>dbt account API tokens</li>
                         <li>Qlik Cloud API tokens</li>
                         <li>Blob storage client connection strings</li>
-                        <li>Blob storage client account urls (when containining signatures)</li>
+                        <li>Blob storage client account urls (when containing signatures)</li>
+                        <li>Proxy API keys</li>
+                        <li>Credential passwords</li>
                     </ul>
                     When reverting to another version, <strong>sensitive values from the current version are carried over to the reverted version for matching objects</strong>. This makes it possible to at least in part retain some sensitive values across version reverts.
                 </p>
