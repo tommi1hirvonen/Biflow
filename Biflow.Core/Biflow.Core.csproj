@@ -32,8 +32,6 @@
     <PackageReference Include="Quartz" />
     <PackageReference Include="Snowflake.Data" />
     <PackageReference Include="System.Linq.Async" />
-	<PackageReference Include="System.Text.Json" />
-    <PackageReference Include="System.Private.Uri" />
 	<PackageReference Include="System.Runtime.Caching" />
   </ItemGroup>
 

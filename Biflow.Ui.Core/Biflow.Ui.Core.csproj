@@ -20,7 +20,6 @@
     <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="CronExpressionDescriptor" />
     <PackageReference Include="FluentValidation" />
-    <PackageReference Include="Microsoft.Extensions.Http" />
     <PackageReference Include="Scrutor" />
     <PackageReference Include="System.Linq.Async" />
   </ItemGroup>
