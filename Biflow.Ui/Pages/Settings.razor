@@ -11,26 +11,32 @@
     <AuthorizeView Roles="@(Roles.Admin)">
         <ul class="nav nav-underline" role="tablist">
             <li class="nav-item" role="presentation">
+                <NavLink class="nav-link" href="settings/status">
+                    <SvgIcon Icon="LucideIcon.HeartPulse" />
+                    Service status
+                </NavLink>
+            </li>
+            <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="settings/integrations">
-                    <SvgIcon Icon="LucideIcon.Unplug" />
+                    <SvgIcon Icon="LucideIcon.Unplug"/>
                     Integrations
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="settings/users" Match="NavLinkMatch.All">
-                    <SvgIcon Icon="LucideIcon.Users" />
+                    <SvgIcon Icon="LucideIcon.Users"/>
                     Users
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="settings/subscriptions">
-                    <SvgIcon Icon="LucideIcon.Mail" />
+                    <SvgIcon Icon="LucideIcon.Mail"/>
                     Subscriptions
                 </NavLink>
             </li>
             <li class="nav-item" role="presentation">
                 <NavLink class="nav-link" href="settings/apikeys">
-                    <SvgIcon Icon="LucideIcon.GlobeLock" />
+                    <SvgIcon Icon="LucideIcon.GlobeLock"/>
                     API keys
                 </NavLink>
             </li>
@@ -141,6 +147,16 @@
     <div class="col">
         @switch (Page)
         {
+            case "status":
+                <AuthorizeView Roles="@(Roles.Admin)">
+                    <Authorized>
+                        <ServiceStatus />
+                    </Authorized>
+                    <NotAuthorized>
+                        <Unauthorized />
+                    </NotAuthorized>
+                </AuthorizeView>
+                break;
             case "users":
                 <AuthorizeView Roles="@(Roles.Admin)">
                     <Authorized>
@@ -238,6 +254,6 @@
             return;
         }
 
-        NavigationManager.NavigateTo("settings/integrations/mssql");
+        NavigationManager.NavigateTo("settings/status");
     }
 }

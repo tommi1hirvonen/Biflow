@@ -1,0 +1,152 @@
+@using System.Net
+@using Microsoft.Extensions.Diagnostics.HealthChecks
+
+@implements IDisposable
+
+@inject ExecutorModeResolver ExecutorModeResolver
+@inject SchedulerModeResolver SchedulerModeResolver
+@inject IExecutorService ExecutorService
+@inject ISchedulerService SchedulerService
+@inject ToasterService Toaster
+
+<PageTitle>Status | Biflow</PageTitle>
+
+<div class="row mt-3 align-items-center">
+    <div class="col">
+        <ol class="list-group">
+            <li class="list-group-item list-group-header">
+                <div class="row align-items-center fw-bold">
+                    <div class="col">
+                        Service
+                    </div>
+                    <div class="col">
+                        Mode
+                    </div>
+                    <div class="col">
+                        Status
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col">
+                        Executor
+                    </div>
+                    <div class="col">
+                        @ExecutorModeResolver.ExecutorMode
+                    </div>
+                    <div class="col">
+                        @switch (_executorReport, _executorState)
+                        {
+                            case ({ } report, _):
+                                <Badge Text="@report.Status.ToString()" Color="GetTagColor(report)"  />
+                                break;
+                            case (_, HealthState.Testing):
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                break;
+                            case var (_, state):
+                                <Badge Text="@state.ToString()" Color="TagColor.Red"  />
+                                break;
+                        }
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col">
+                        Scheduler
+                    </div>
+                    <div class="col">
+                        @SchedulerModeResolver.SchedulerMode
+                    </div>
+                    <div class="col">
+                        @switch (_schedulerReport, _schedulerState)
+                        {
+                            case ({ } report, _):
+                                <Badge Text="@report.Status.ToString()" Color="GetTagColor(report)"  />
+                                break;
+                            case (_, HealthState.Testing):
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                break;
+                            case var (_, state):
+                                <Badge Text="@state.ToString()" Color="TagColor.Red"  />
+                                break;
+                        }
+                    </div>
+                </div>
+            </li>
+        </ol>
+    </div>
+</div>
+
+@code {
+    private readonly CancellationTokenSource _cts = new();
+    
+    private HealthReportDto? _executorReport;
+    private HealthState _executorState = HealthState.Testing;
+    private HealthReportDto? _schedulerReport;
+    private HealthState _schedulerState = HealthState.Testing;
+    
+    private enum HealthState { Testing, Unauthorized, Unavailable }
+    
+    private static TagColor GetTagColor(HealthReportDto? report) => report switch
+    {
+        { Status: HealthStatus.Healthy } => TagColor.Green,
+        { Status: HealthStatus.Degraded } => TagColor.Yellow,
+        { Status: HealthStatus.Unhealthy } => TagColor.Red,
+        _ => TagColor.DarkGray
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var schedulerTask = Task.Run(async () =>
+        {
+            try
+            {
+                _schedulerReport = await SchedulerService.GetHealthReportAsync(_cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (OperationCanceledException)
+            {
+                _schedulerState = HealthState.Unavailable;
+            }
+            catch (HttpRequestException httpException) when (httpException.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _schedulerState = HealthState.Unauthorized;
+            }
+            catch (Exception ex)
+            {
+                _schedulerState = HealthState.Unavailable;
+                Toaster.AddError("Error getting scheduler health", ex.Message);
+            }
+        });
+        var executorTask = Task.Run(async () =>
+        {
+            try
+            {
+                _executorReport = await ExecutorService.GetHealthReportAsync(_cts.Token);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (OperationCanceledException)
+            {
+                _executorState = HealthState.Unavailable;
+            }
+            catch (HttpRequestException httpException) when (httpException.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                _executorState = HealthState.Unauthorized;
+            }
+            catch (Exception ex)
+            {
+                _executorState = HealthState.Unavailable;
+                Toaster.AddError("Error getting executor health", ex.Message);
+            }
+        });
+        await Task.WhenAll(schedulerTask, executorTask);
+    }
+
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
+}
