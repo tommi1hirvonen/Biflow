@@ -33,7 +33,7 @@ public class SelfHostedSchedulerService(ISchedulesManager schedulesManager) : IS
     public async Task<SchedulerStatusResponse> GetStatusAsync()
     {
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        SchedulerStatusResponse response = _schedulesManager.DatabaseReadError
+        SchedulerStatusResponse response = _schedulesManager.DatabaseReadException is not null
             ? new SchedulerError()
             : new Success(await _schedulesManager.GetStatusAsync(cts.Token));
         return response;

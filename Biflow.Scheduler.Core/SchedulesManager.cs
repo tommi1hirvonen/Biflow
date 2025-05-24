@@ -28,7 +28,7 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
         _scheduler.ListenerManager.AddTriggerListener(listener);
     }
 
-    public bool DatabaseReadError { get; private set; }
+    public Exception? DatabaseReadException { get; private set; }
 
     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
     {
@@ -37,13 +37,15 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
             try
             {
                 await ReadAllSchedulesAsync(cancellationToken);
+                DatabaseReadException = null;
             }
             catch (Exception ex)
             {
+                DatabaseReadException = ex;
                 _logger.LogError(ex, "Error reading all schedules at startup");
             }
             await Task.Delay(TimeSpan.FromMinutes(15), cancellationToken);
-        } while (DatabaseReadError) ;
+        } while (DatabaseReadException is not null) ;
     }
 
     public async Task<IEnumerable<JobStatus>> GetStatusAsync(CancellationToken cancellationToken)
@@ -137,13 +139,13 @@ internal class SchedulesManager<TJob> : BackgroundService, ISchedulesManager
                 counter++;
             }
 
-            DatabaseReadError = false;
+            DatabaseReadException = null;
 
             _logger.LogInformation("{counter}/{Count} schedules loaded successfully", counter, schedules.Count);
         }
-        catch
+        catch (Exception ex)
         {
-            DatabaseReadError = true;
+            DatabaseReadException = ex;
             throw;
         }
         finally
