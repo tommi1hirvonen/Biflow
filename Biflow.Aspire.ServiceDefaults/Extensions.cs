@@ -1,5 +1,10 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
@@ -14,10 +19,11 @@ namespace Microsoft.Extensions.Hosting;
 // To learn more about using this project, see https://aka.ms/dotnet/aspire/service-defaults
 public static class Extensions
 {
-    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
+    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder,
+        bool addDbHealthCheck = false)
     {
         builder.ConfigureOpenTelemetry();
-        builder.AddDefaultHealthChecks();
+        builder.AddDefaultHealthChecks(addDbHealthCheck);
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
@@ -85,31 +91,53 @@ public static class Extensions
         return builder;
     }
 
-    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
+    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder,
+        bool addDbHealthCheck)
     {
-        builder.Services.AddHealthChecks()
-            // Add a default liveness check to ensure app is responsive
+        var healthChecks = builder.Services.AddHealthChecks();
+        
+        healthChecks
+            // Add a default liveness check to ensure the app is responsive
             .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+
+        if (!addDbHealthCheck)
+        {
+            return builder;
+        }
+        
+        // Add a default database health check to ensure the app database is accessible
+        var connectionString = builder.Configuration.GetConnectionString("AppDbContext");
+        ArgumentNullException.ThrowIfNull(connectionString);
+        healthChecks.AddTypeActivatedCheck<AppDbHealthCheck>("database", connectionString);
 
         return builder;
     }
 
-    public static WebApplication MapDefaultEndpoints(this WebApplication app)
+    public static IEndpointRouteBuilder MapDefaultEndpoints(this IEndpointRouteBuilder builder)
     {
-        // Adding health checks endpoints to applications in non-development environments has security implications.
-        // See https://aka.ms/dotnet/aspire/healthchecks for details before enabling these endpoints in non-development environments.
-        if (app.Environment.IsDevelopment())
+        // All health checks must pass for the app to be considered ready to accept traffic after starting
+        builder.MapHealthChecks("/health", new HealthCheckOptions
         {
-            // All health checks must pass for app to be considered ready to accept traffic after starting
-            app.MapHealthChecks("/health");
+            ResponseWriter = WriteHealthReportAsync
+        });
 
-            // Only health checks tagged with the "live" tag must pass for app to be considered alive
-            app.MapHealthChecks("/alive", new HealthCheckOptions
-            {
-                Predicate = r => r.Tags.Contains("live")
-            });
-        }
+        // Only health checks tagged with the "live" tag must pass for the app to be considered alive
+        builder.MapHealthChecks("/alive", new HealthCheckOptions
+        {
+            Predicate = r => r.Tags.Contains("live")
+        });
 
-        return app;
+        return builder;
+    }
+
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
+    {
+        WriteIndented = true,
+        Converters = { new JsonStringEnumConverter() }
+    };
+
+    private static Task WriteHealthReportAsync(HttpContext context, HealthReport report)
+    {
+        return context.Response.WriteAsJsonAsync(report, JsonSerializerOptions);
     }
 }

@@ -10,7 +10,7 @@ using Biflow.Ui.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+builder.AddServiceDefaults(addDbHealthCheck: true);
 
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
@@ -62,6 +62,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
+    app.MapDefaultEndpoints(); // Add health checks only in development.
 }
 else
 {
@@ -85,7 +86,5 @@ app.UseCookiePolicy();
 app.MapControllers(); // Needed for MicrosoftIdentityUI
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
-app.MapDefaultEndpoints();
 
 app.Run();

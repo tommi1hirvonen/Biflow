@@ -1,4 +1,5 @@
 using Biflow.Executor.Core;
+using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
 using Microsoft.OpenApi.Models;
@@ -6,7 +7,7 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+builder.AddServiceDefaults(addDbHealthCheck: true);
 
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
@@ -60,12 +61,17 @@ Biflow.DataAccess.Extensions.RegisterAzureKeyVaultColumnEncryptionKeyStoreProvid
 
 var app = builder.Build();
 
-app.MapDefaultEndpoints();
-
 if (app.Environment.IsDevelopment())
 {
+    app.MapDefaultEndpoints(); // Skip authentication for health checks in development.
     app.UseSwagger();
     app.UseSwaggerUI();
+}
+else
+{
+    app.MapGroup("")
+        .AddEndpointFilter<ServiceApiKeyEndpointFilter>()
+        .MapDefaultEndpoints();
 }
 
 if (executorType == "SelfHosted")

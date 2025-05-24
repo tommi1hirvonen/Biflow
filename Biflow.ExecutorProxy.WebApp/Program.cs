@@ -51,10 +51,9 @@ var baseGroup = app.MapGroup("").AddEndpointFilter<ServiceApiKeyEndpointFilter>(
 baseGroup.MapExeEndpoints();
 baseGroup.MapFileExplorerEndpoints();
 
-app.MapDefaultEndpoints();
-
 if (app.Environment.IsDevelopment())
 {
+    app.MapGet("/health", () => Results.Text("Healthy")); // Skip authentication for health checks in development.
     app.UseSwagger();
     app.UseSwaggerUI();
 }

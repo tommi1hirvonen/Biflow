@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -13,7 +12,7 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults();
+builder.AddServiceDefaults(addDbHealthCheck: true);
 
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();
@@ -138,8 +137,12 @@ app.UseExceptionHandler(errorAppBuilder =>
         }
         await Results.Problem(statusCode: StatusCodes.Status500InternalServerError).ExecuteAsync(httpContext);
     });
-});    
-app.MapDefaultEndpoints();
+});
+
+if (app.Environment.IsDevelopment())
+{
+    app.MapDefaultEndpoints();
+}
 app.UseSwagger();
 app.UseSwaggerUI(options => options.DocExpansion(DocExpansion.None));
 app.UseHttpsRedirection();
