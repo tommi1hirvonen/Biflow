@@ -138,6 +138,7 @@ public static class Extensions
 
     private static Task WriteHealthReportAsync(HttpContext context, HealthReport report)
     {
-        return context.Response.WriteAsJsonAsync(report, JsonSerializerOptions);
+        var dto = new HealthReportDto(report);
+        return context.Response.WriteAsJsonAsync(dto, JsonSerializerOptions);
     }
 }
