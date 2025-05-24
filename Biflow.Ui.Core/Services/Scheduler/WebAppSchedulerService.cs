@@ -1,14 +1,22 @@
-﻿using Biflow.Scheduler.Core;
+﻿using System.Net;
+using Biflow.Scheduler.Core;
 using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Ui.Core;
 
 public class WebAppSchedulerService : ISchedulerService
 {
     private readonly HttpClient _httpClient;
+    
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     public WebAppSchedulerService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
@@ -137,4 +145,19 @@ public class WebAppSchedulerService : ISchedulerService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default)
+    {
+        const string endpoint = "/health";
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        var response = await _httpClient.GetAsync(endpoint, linkedCts.Token);
+        if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable))
+        {
+            response.EnsureSuccessStatusCode();
+        }
+        var healthReport = await response.Content.ReadFromJsonAsync<HealthReportDto>(JsonSerializerOptions,
+            cancellationToken: linkedCts.Token);
+        ArgumentNullException.ThrowIfNull(healthReport);
+        return healthReport;
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using Biflow.ExecutorProxy.Core.FilesExplorer;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Ui.Core;
 
@@ -14,4 +15,6 @@ public interface IExecutorService
     
     public Task<IReadOnlyList<DirectoryItem>> GetDirectoryItemsAsync(string? path,
         CancellationToken cancellationToken = default);
+    
+    public Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default);
 }

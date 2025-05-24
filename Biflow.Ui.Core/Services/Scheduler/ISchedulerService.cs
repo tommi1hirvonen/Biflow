@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.Core;
+﻿using Microsoft.Extensions.Hosting;
+
+namespace Biflow.Ui.Core;
 
 public interface ISchedulerService
 {
@@ -15,4 +17,6 @@ public interface ISchedulerService
     public Task SynchronizeAsync();
 
     public Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled);
+    
+    public Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default);
 }

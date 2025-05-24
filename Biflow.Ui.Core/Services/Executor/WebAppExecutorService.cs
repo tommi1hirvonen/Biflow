@@ -1,8 +1,11 @@
-﻿using System.Net.Http.Json;
+﻿using System.Net;
+using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Configuration;
 using System.Web;
 using Biflow.ExecutorProxy.Core.FilesExplorer;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Ui.Core;
 
@@ -10,15 +13,19 @@ public class WebAppExecutorService : IExecutorService
 {
     private readonly HttpClient _httpClient;
     
-    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    private static readonly JsonSerializerOptions FileExplorerJsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    
+    private static readonly JsonSerializerOptions HealthReportJsonSerializerOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
     };
 
     public WebAppExecutorService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _httpClient = httpClientFactory.CreateClient();
-
         var section = configuration
             .GetSection("Executor")
             .GetSection("WebApp");
@@ -81,7 +88,23 @@ public class WebAppExecutorService : IExecutorService
         response.EnsureSuccessStatusCode();
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         var result = await JsonSerializer.DeserializeAsync<FileExplorerSearchResponse>(
-            stream, JsonSerializerOptions, cancellationToken);
+            stream, FileExplorerJsonSerializerOptions, cancellationToken);
         return result?.Items ?? [];
+    }
+    
+    public async Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default)
+    {
+        const string endpoint = "/health";
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        var response = await _httpClient.GetAsync(endpoint, linkedCts.Token);
+        if (response.StatusCode is not (HttpStatusCode.OK or HttpStatusCode.ServiceUnavailable))
+        {
+            response.EnsureSuccessStatusCode();
+        }
+        var healthReport = await response.Content.ReadFromJsonAsync<HealthReportDto>(HealthReportJsonSerializerOptions,
+            cancellationToken: linkedCts.Token);
+        ArgumentNullException.ThrowIfNull(healthReport);
+        return healthReport;
     }
 }

@@ -1,10 +1,14 @@
 ﻿using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.FilesExplorer;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Ui.Core;
 
 public class SelfHostedExecutorService(
-    IExecutionManager executionManager, ITokenService tokenService) : IExecutorService
+    IExecutionManager executionManager,
+    ITokenService tokenService,
+    HealthCheckService healthCheckService) : IExecutorService
 {
     public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
     {
@@ -31,5 +35,11 @@ public class SelfHostedExecutorService(
     {
         IReadOnlyList<DirectoryItem> items = FileExplorer.GetDirectoryItems(path);
         return Task.FromResult(items);
+    }
+    
+    public async Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default)
+    {
+        var healthReport = await healthCheckService.CheckHealthAsync(cancellationToken);
+        return new HealthReportDto(healthReport);
     }
 }
