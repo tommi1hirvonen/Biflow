@@ -75,20 +75,24 @@ public static class Extensions
         }
 
         var schedulerType = configuration.GetSection("Scheduler").GetValue<string>("Type");
+        SchedulerMode schedulerMode;
         switch (schedulerType)
         {
             case "WebApp":
                 services.AddSingleton<ISchedulerService, WebAppSchedulerService>();
+                schedulerMode = SchedulerMode.WebApp;
                 break;
             case "SelfHosted":
                 services.AddSchedulerServices<ExecutionJob>();
                 services.AddSingleton<ISchedulerService, SelfHostedSchedulerService>();
+                schedulerMode = SchedulerMode.SelfHosted;
                 break;
             default:
                 throw new ArgumentException($"Error registering scheduler service. Incorrect scheduler type: {schedulerType}. Check appsettings.json.");
         }
 
         services.AddSingleton(new ExecutorModeResolver(executorMode));
+        services.AddSingleton(new SchedulerModeResolver(schedulerMode));
         services.AddSingleton<ProxyClientFactory>();
         services.AddScoped<EnvironmentSnapshotBuilder>();
         services.AddDuplicatorServices();
