@@ -16,7 +16,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
       <ProjectReference Include="..\Biflow.Ui.Core\Biflow.Ui.Core.csproj" />
     </ItemGroup>
 

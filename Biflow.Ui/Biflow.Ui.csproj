@@ -41,13 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biflow.Aspire.ServiceDefaults\Biflow.Aspire.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\Biflow.DataAccess\Biflow.DataAccess.csproj" />
-    <ProjectReference Include="..\Biflow.Executor.Core\Biflow.Executor.Core.csproj" />
-    <ProjectReference Include="..\Biflow.Scheduler.Core\Biflow.Scheduler.Core.csproj" />
     <ProjectReference Include="..\Biflow.Ui.Components\Biflow.Ui.Components.csproj" />
     <ProjectReference Include="..\Biflow.Ui.Core\Biflow.Ui.Core.csproj" />
-    <ProjectReference Include="..\Biflow.Core\Biflow.Core.csproj" />
     <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
     <ProjectReference Include="..\Biflow.Ui.SqlMetadataExtensions\Biflow.Ui.SqlMetadataExtensions.csproj" />
     <ProjectReference Include="..\Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj" />
