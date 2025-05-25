@@ -8,7 +8,7 @@ internal class SchedulesReadCheck(ISchedulesManager schedulesManager) : IHealthC
         CancellationToken cancellationToken = default)
     {
         return Task.FromResult(schedulesManager.DatabaseReadException is { } ex
-            ? HealthCheckResult.Degraded(
+            ? HealthCheckResult.Unhealthy(
                 description: "Error reading schedules from app database",
                 exception: ex,
                 data: new Dictionary<string, object> { { "LastChecked", DateTimeOffset.UtcNow } })

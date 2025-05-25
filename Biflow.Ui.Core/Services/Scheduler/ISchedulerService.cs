@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Biflow.Scheduler.Core;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.Ui.Core;
 
@@ -6,7 +7,7 @@ public interface ISchedulerService
 {
     public Task DeleteJobAsync(Guid jobId);
 
-    public Task<SchedulerStatusResponse> GetStatusAsync();
+    public Task<IEnumerable<JobStatus>> GetStatusAsync();
 
     public Task AddScheduleAsync(Schedule schedule);
 

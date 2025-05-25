@@ -537,15 +537,23 @@
         await _statusOffcanvas.LetAsync(x => x.ShowAsync());
         try
         {
-            var status = await SchedulerService.GetStatusAsync();
-            _schedulerStatus = status.Match(
-                (Success success) => GenerateStatusJson(success.Jobs),
-                (AuthorizationError _) => "Authorization failed when getting scheduler service status. Check the scheduler service auth configuration.",
-                (SchedulerError _) => "Scheduler service reported internal error. Check the scheduler service log for details.",
-                (UndefinedError _) => "Undefined error getting scheduler service status. Make sure the service is configured and running correctly.");
+            var jobStatuses = await SchedulerService.GetStatusAsync();
+            _schedulerStatus = GenerateStatusJson(jobStatuses);
         }
         catch (Exception ex)
         {
+            var message = new ToastTemplateMessage
+            {
+                Title = "Error getting scheduler service status",
+                Color = ComponentColor.Danger,
+                RenderFragment =
+                    @<div class="row">
+                        <div class="col">
+                            <a href="@("settings/status")">Show service status</a>
+                        </div>
+                    </div>
+            };
+            Toaster.AddMessage(message);
             _schedulerStatus = $"Error getting scheduler service status. Make sure the service is configured and running correctly.\n\n{ex.Message}";
         }
     }

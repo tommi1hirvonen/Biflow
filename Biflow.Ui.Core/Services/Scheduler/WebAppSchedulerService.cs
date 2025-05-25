@@ -39,12 +39,6 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task DeleteJobAsync(Guid jobId)
     {
-        var status = await GetStatusAsync();
-        if (!status.TryPickT0(out Success _, out var _))
-        {
-            return;
-        }
-
         const string endpoint = "/schedules/removejob";
         var schedulerJob = new SchedulerJob(jobId);
         var json = JsonSerializer.Serialize(schedulerJob);
@@ -55,12 +49,6 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task AddScheduleAsync(Schedule schedule)
     {
-        var status = await GetStatusAsync();
-        if (!status.TryPickT0(out Success _, out var _))
-        {
-            return;
-        }
-
         const string endpoint = "/schedules/add";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
@@ -71,12 +59,6 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task RemoveScheduleAsync(Schedule schedule)
     {
-        var status = await GetStatusAsync();
-        if (!status.TryPickT0(out Success _, out var _))
-        {
-            return;
-        }
-
         const string endpoint = "/schedules/remove";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
@@ -87,12 +69,6 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task UpdateScheduleAsync(Schedule schedule)
     {
-        var status = await GetStatusAsync();
-        if (!status.TryPickT0(out Success _, out var _))
-        {
-            return;
-        }
-
         const string endpoint = "/schedules/update";
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
@@ -101,21 +77,13 @@ public class WebAppSchedulerService : ISchedulerService
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<SchedulerStatusResponse> GetStatusAsync()
+    public async Task<IEnumerable<JobStatus>> GetStatusAsync()
     {
         const string endpoint = "/schedules/status";
         var response = await _httpClient.GetAsync(endpoint);
-        if (!response.IsSuccessStatusCode)
-        {
-            return response.StatusCode switch
-            {
-                System.Net.HttpStatusCode.Forbidden => new AuthorizationError(),
-                System.Net.HttpStatusCode.InternalServerError => new SchedulerError(),
-                _ => new UndefinedError()
-            };
-        }
+        response.EnsureSuccessStatusCode();
         var jobs = await response.Content.ReadFromJsonAsync<IEnumerable<JobStatus>>();
-        return new Success(jobs ?? []);
+        return jobs ?? [];
     }
 
     public async Task SynchronizeAsync()
@@ -127,12 +95,6 @@ public class WebAppSchedulerService : ISchedulerService
 
     public async Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled)
     {
-        var status = await GetStatusAsync();
-        if (!status.TryPickT0(out _, out _))
-        {
-            return;
-        }
-
         var schedulerSchedule = SchedulerSchedule.From(schedule);
         var json = JsonSerializer.Serialize(schedulerSchedule);
         var content = new StringContent(json, Encoding.UTF8, "application/json");

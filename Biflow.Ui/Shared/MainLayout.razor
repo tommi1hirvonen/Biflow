@@ -24,7 +24,7 @@
             <HxMessageBoxHost />
         </div>
         <Toaster />
-        <SchedulerStatusResolver OnStatusMessageResolved="message => _schedulerServiceErrorMessage = message" />
+        <ServiceHealthResolver OnStatusMessageResolved="message => _serviceErrorMessage = message" />
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")" Context="auth2">
             <ExecuteMultipleModal @ref="_executeMultipleModal" />
         </AuthorizeView>
@@ -56,10 +56,10 @@
                             Self-hosted executor should only be used for development/testing.
                         </HxAlert>
                     }
-                    @if (_schedulerServiceErrorMessage is not null)
+                    @if (_serviceErrorMessage is not null)
                     {
                         <HxAlert Color="ThemeColor.Warning" Dismissible>
-                            @_schedulerServiceErrorMessage
+                            @_serviceErrorMessage
                         </HxAlert>
                     }
                     <CascadingValue Value="_userState">
@@ -125,7 +125,7 @@
 
     private string? _username;
     private bool _collapseSidebar = true;
-    private string? _schedulerServiceErrorMessage;
+    private RenderFragment? _serviceErrorMessage;
     private bool _redirecting;
     private ExecuteMultipleModal? _executeMultipleModal;
     private StepExecutionMonitorsOffcanvas? _stepExecutionMonitorsOffcanvas;

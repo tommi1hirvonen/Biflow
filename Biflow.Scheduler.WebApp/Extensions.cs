@@ -73,10 +73,11 @@ public static class Extensions
 
         schedules.MapGet("/status", async (ISchedulesManager schedulesManager, CancellationToken cancellationToken) =>
         {
-            return schedulesManager.DatabaseReadException is not null
-                ? throw new ApplicationException("Scheduler is running but has encountered a database read error.")
-                : Results.Ok(await schedulesManager.GetStatusAsync(cancellationToken));
-        }).WithName("Status");
+            var jobStatuses = await schedulesManager.GetStatusAsync(cancellationToken);
+            return Results.Ok(jobStatuses);
+        })
+        .Produces<IEnumerable<JobStatus>>()
+        .WithName("Status");
 
         return app;
     }

@@ -4,7 +4,7 @@ namespace Biflow.Scheduler.Core;
 
 public interface ISchedulesManager : IHostedService
 {
-    public Exception? DatabaseReadException { get; }
+    internal Exception? DatabaseReadException { get; }
 
     public Task AddScheduleAsync(SchedulerSchedule schedule, CancellationToken cancellationToken);
     

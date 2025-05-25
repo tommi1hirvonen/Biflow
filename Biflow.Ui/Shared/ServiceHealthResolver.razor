@@ -1,0 +1,56 @@
+﻿@using Microsoft.Extensions.Diagnostics.HealthChecks
+
+@inject IExecutorService ExecutorService
+@inject ISchedulerService SchedulerService
+@inject HealthCheckService HealthCheckService
+
+@code {
+    [Parameter] public EventCallback<RenderFragment?> OnStatusMessageResolved { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                // Fetch health reports in parallel.
+                var uiReportTask = HealthCheckService.CheckHealthAsync(
+                    registration => registration.Tags.Contains("common"));
+                var schedulerReportTask = SchedulerService.GetHealthReportAsync();
+                var executorReportTask = ExecutorService.GetHealthReportAsync();
+                var uiReport = await uiReportTask;
+                var uiReportDto = new HealthReportDto(uiReport);
+                var schedulerReportDto = await schedulerReportTask;
+                var executorReportDto = await executorReportTask;
+                HealthReportDto[] reports = [uiReportDto, schedulerReportDto, executorReportDto];
+                
+                if (reports.Any(r => r.Status == HealthStatus.Unhealthy))
+                {
+                    await OnStatusMessageResolved.InvokeAsync(
+                        @<span>
+                            One or more services reported Unhealthy status.
+                            Go to <a href="settings/status" class="alert-link">Service status</a> in settings to view details.
+                        </span>);
+                    return;
+                }
+
+                if (reports.Any(r => r.Status == HealthStatus.Degraded))
+                {
+                    await OnStatusMessageResolved.InvokeAsync(
+                        @<span>
+                            One or more services reported Degraded status.
+                            Go to <a href="settings/status" class="alert-link">Service status</a> in settings to view details.
+                        </span>);
+                }
+            }
+            catch
+            {
+                await OnStatusMessageResolved.InvokeAsync(
+                    @<span>
+                        Error getting health status for one or more services.
+                        Go to <a href="settings/status" class="alert-link">Service status</a> in settings to view details.
+                    </span>);
+            }
+        }
+    }
+}
