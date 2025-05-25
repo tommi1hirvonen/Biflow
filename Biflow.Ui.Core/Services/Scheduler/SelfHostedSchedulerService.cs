@@ -58,7 +58,11 @@ public class SelfHostedSchedulerService(
 
     public async Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default)
     {
-        var healthReport = await healthCheckService.CheckHealthAsync(cancellationToken);
+        // When running scheduler in self-hosted mode, only run health checks for the scheduler service
+        // (tag == "scheduler").
+        var healthReport = await healthCheckService.CheckHealthAsync(
+            registration => registration.Tags.Contains("scheduler"),
+            cancellationToken);
         return new HealthReportDto(healthReport);
     }
 }

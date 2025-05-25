@@ -8,6 +8,7 @@
 @inject IExecutorService ExecutorService
 @inject ISchedulerService SchedulerService
 @inject ToasterService Toaster
+@inject HealthCheckService HealthCheckService
 
 <PageTitle>Status | Biflow</PageTitle>
 
@@ -27,6 +28,44 @@
                     </div>
                     <div class="col">
                         
+                    </div>
+                </div>
+            </li>
+            <li class="list-group-item">
+                <div class="row align-items-center">
+                    <div class="col">
+                        User Interface
+                    </div>
+                    <div class="col">
+                        WebApp
+                    </div>
+                    <div class="col">
+                        @switch (_uiReport, _uiState)
+                        {
+                            case ({ } report, _):
+                                <Badge Text="@report.Status.ToString()" Color="GetTagColor(report)"  />
+                                break;
+                            case (_, HealthState.Testing):
+                                <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                                break;
+                            case var (_, state):
+                                <Badge Text="@state.ToString()" Color="TagColor.Red"  />
+                                break;
+                        }
+                    </div>
+                    <div class="col">
+                        @if (_uiReport is not null)
+                        {
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          title="Show health report"
+                                          @onclick="() => _offcanvas.LetAsync(x => x.ShowAsync(_uiReport))">
+                                    <SvgIcon Icon="LucideIcon.Search" />
+                                </HxButton>
+                            </HxButtonGroup>
+                        }
                     </div>
                 </div>
             </li>
@@ -114,7 +153,9 @@
 
 @code {
     private readonly CancellationTokenSource _cts = new();
-    
+
+    private HealthReportDto? _uiReport;
+    private HealthState _uiState = HealthState.Testing;
     private HealthReportDto? _executorReport;
     private HealthState _executorState = HealthState.Testing;
     private HealthReportDto? _schedulerReport;
@@ -133,6 +174,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        var uiTask = Task.Run(async () =>
+        {
+            try
+            {
+                var report = await HealthCheckService.CheckHealthAsync(
+                    registration => registration.Tags.Contains("common"),
+                    _cts.Token);
+                _uiReport = new HealthReportDto(report);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (Exception ex)
+            {
+                _uiState = HealthState.Unavailable;
+                Toaster.AddError("Error getting UI health", ex.Message);
+            }
+        });
         var schedulerTask = Task.Run(async () =>
         {
             try
@@ -175,7 +232,7 @@
                 Toaster.AddError("Error getting executor health", ex.Message);
             }
         });
-        await Task.WhenAll(schedulerTask, executorTask);
+        await Task.WhenAll(uiTask, schedulerTask, executorTask);
     }
 
     public void Dispose()

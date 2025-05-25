@@ -16,7 +16,7 @@ public static class Extensions
         services.AddExecutionBuilderFactory<SchedulerDbContext>();
         services.AddSingleton<ISchedulesManager, SchedulesManager<TExecutionJob>>();
         services.AddHostedService(s => s.GetRequiredService<ISchedulesManager>());
-        services.AddHealthChecks().AddCheck<SchedulesReadCheck>("read_schedules");
+        services.AddHealthChecks().AddCheck<SchedulesReadCheck>("read_schedules", tags: ["scheduler"]);
     }
 
     private class SchedulesReadCheck(ISchedulesManager schedulesManager) : IHealthCheck
@@ -25,8 +25,13 @@ public static class Extensions
             CancellationToken cancellationToken = default)
         {
             return Task.FromResult(schedulesManager.DatabaseReadException is { } ex
-                ? HealthCheckResult.Degraded("Error reading schedules from app database", ex)
-                : HealthCheckResult.Healthy());
+                ? HealthCheckResult.Degraded(
+                    description: "Error reading schedules from app database",
+                    exception: ex,
+                    data: new Dictionary<string, object> { { "LastChecked", DateTimeOffset.UtcNow } })
+                : HealthCheckResult.Healthy(
+                    description: "Schedules successfully read from app database",
+                    data: new Dictionary<string, object> { { "LastChecked", DateTimeOffset.UtcNow } }));
         }
     }
 }

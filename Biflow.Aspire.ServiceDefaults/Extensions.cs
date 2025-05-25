@@ -98,7 +98,7 @@ public static class Extensions
         
         healthChecks
             // Add a default liveness check to ensure the app is responsive
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live", "common"]);
 
         if (!addDbHealthCheck)
         {
@@ -108,7 +108,11 @@ public static class Extensions
         // Add a default database health check to ensure the app database is accessible
         var connectionString = builder.Configuration.GetConnectionString("AppDbContext");
         ArgumentNullException.ThrowIfNull(connectionString);
-        healthChecks.AddTypeActivatedCheck<AppDbHealthCheck>("database", connectionString);
+        healthChecks.AddTypeActivatedCheck<AppDbHealthCheck>(
+            name: "database",
+            failureStatus: null,
+            tags: ["common"],
+            args: connectionString);
 
         return builder;
     }

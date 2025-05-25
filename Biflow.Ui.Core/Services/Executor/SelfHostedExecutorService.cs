@@ -39,7 +39,11 @@ public class SelfHostedExecutorService(
     
     public async Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default)
     {
-        var healthReport = await healthCheckService.CheckHealthAsync(cancellationToken);
+        // When running executor in self-hosted mode, only run health checks for the executor service
+        // (tag == "executor").
+        var healthReport = await healthCheckService.CheckHealthAsync(
+            registration => registration.Tags.Contains("executor"),
+            cancellationToken);
         return new HealthReportDto(healthReport);
     }
 }
