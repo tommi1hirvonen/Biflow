@@ -91,6 +91,8 @@ app.MapPost("/health/clear", (IEnumerable<HealthService> healthServices) =>
         return Results.Ok();
     })
     .WithName("ClearHealth")
+    .WithSummary("Clear transient health errors")
+    .WithDescription("Clear transient health errors, such as failed attempts to start scheduled jobs.")
     .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 app.Run();
