@@ -9,7 +9,7 @@ namespace Biflow.Executor.Core.JobExecutor;
 
 internal class JobExecutor(
     ILogger<JobExecutor> logger,
-    [FromKeyedServices(ServiceKeys.JobExecutorHealthService)]
+    [FromKeyedServices(ExecutorServiceKeys.JobExecutorHealthService)]
     HealthService healthService,
     IEnumerable<IExecutionValidator> validators,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,

@@ -4,7 +4,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 namespace Biflow.Executor.Core.ServiceHealth;
 
 public class JobExecutorHealthCheck(
-    [FromKeyedServices(ServiceKeys.JobExecutorHealthService)] HealthService service) : IHealthCheck
+    [FromKeyedServices(ExecutorServiceKeys.JobExecutorHealthService)] HealthService service) : IHealthCheck
 {
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)

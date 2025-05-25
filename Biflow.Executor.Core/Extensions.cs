@@ -38,8 +38,8 @@ public static class Extensions
         services.AddSingleton<IExecutionValidator, CircularStepsValidator>();
         services.AddSingleton<IExecutionValidator, HybridModeValidator>();
 
-        services.AddKeyedSingleton<HealthService>(ServiceKeys.JobExecutorHealthService);
-        services.AddKeyedSingleton<HealthService>(ServiceKeys.NotificationHealthService);
+        services.AddKeyedSingleton<HealthService>(ExecutorServiceKeys.JobExecutorHealthService);
+        services.AddKeyedSingleton<HealthService>(ExecutorServiceKeys.NotificationHealthService);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();

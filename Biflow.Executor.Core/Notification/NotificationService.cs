@@ -5,7 +5,7 @@ namespace Biflow.Executor.Core.Notification;
 
 internal class NotificationService(
     ILogger<NotificationService> logger,
-    [FromKeyedServices(ServiceKeys.NotificationHealthService)] HealthService healthService,
+    [FromKeyedServices(ExecutorServiceKeys.NotificationHealthService)] HealthService healthService,
     IMessageDispatcher messageDispatcher,
     ISubscribersResolver subscribersResolver) : INotificationService
 {
