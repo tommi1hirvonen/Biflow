@@ -102,6 +102,13 @@
                                           @onclick="() => _offcanvas.LetAsync(x => x.ShowAsync(_executorReport))">
                                     <SvgIcon Icon="LucideIcon.Search" />
                                 </HxButton>
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          title="Clear transient errors"
+                                          @onclick="ClearExecutorTransientErrorsAsync">
+                                    <SvgIcon Icon="LucideIcon.X" />
+                                </HxButton>
                             </HxButtonGroup>
                         }
                     </div>
@@ -139,6 +146,13 @@
                                           title="Show health report"
                                           @onclick="() => _offcanvas.LetAsync(x => x.ShowAsync(_schedulerReport))">
                                     <SvgIcon Icon="LucideIcon.Search" />
+                                </HxButton>
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          title="Clear transient errors"
+                                          @onclick="ClearSchedulerTransientErrorsAsync">
+                                    <SvgIcon Icon="LucideIcon.X" />
                                 </HxButton>
                             </HxButtonGroup>
                         }
@@ -233,6 +247,32 @@
             }
         });
         await Task.WhenAll(uiTask, schedulerTask, executorTask);
+    }
+
+    private async Task ClearExecutorTransientErrorsAsync()
+    {
+        try
+        {
+            await ExecutorService.ClearTransientHealthErrorsAsync(_cts.Token);
+            Toaster.AddSuccess("Errors cleared");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error clearing errors", ex.Message);
+        }
+    }
+    
+    private async Task ClearSchedulerTransientErrorsAsync()
+    {
+        try
+        {
+            await SchedulerService.ClearTransientHealthErrorsAsync(_cts.Token);
+            Toaster.AddSuccess("Errors cleared");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error clearing errors", ex.Message);
+        }
     }
 
     public void Dispose()
