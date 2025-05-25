@@ -19,4 +19,6 @@ public interface ISchedulerService
     public Task ToggleScheduleEnabledAsync(Schedule schedule, bool enabled);
     
     public Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default);
+    
+    public Task ClearTransientHealthErrorsAsync(CancellationToken cancellationToken = default);
 }

@@ -1,5 +1,7 @@
-﻿using Biflow.Executor.Core;
+﻿using Biflow.Core;
+using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.FilesExplorer;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
@@ -8,6 +10,10 @@ namespace Biflow.Ui.Core;
 public class SelfHostedExecutorService(
     IExecutionManager executionManager,
     ITokenService tokenService,
+    [FromKeyedServices(ExecutorServiceKeys.JobExecutorHealthService)]
+    HealthService jobExecutorHealthService,
+    [FromKeyedServices(ExecutorServiceKeys.NotificationHealthService)]
+    HealthService notificationHealthService,
     HealthCheckService healthCheckService) : IExecutorService
 {
     public async Task StartExecutionAsync(Guid executionId, CancellationToken cancellationToken = default)
@@ -45,5 +51,12 @@ public class SelfHostedExecutorService(
             registration => registration.Tags.Contains("executor"),
             cancellationToken);
         return new HealthReportDto(healthReport);
+    }
+
+    public Task ClearTransientHealthErrorsAsync(CancellationToken cancellationToken = default)
+    {
+        jobExecutorHealthService.ClearErrors();
+        notificationHealthService.ClearErrors();
+        return Task.CompletedTask;
     }
 }

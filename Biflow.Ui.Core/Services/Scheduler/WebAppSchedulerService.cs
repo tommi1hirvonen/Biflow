@@ -160,4 +160,11 @@ public class WebAppSchedulerService : ISchedulerService
         ArgumentNullException.ThrowIfNull(healthReport);
         return healthReport;
     }
+    
+    public async Task ClearTransientHealthErrorsAsync(CancellationToken cancellationToken = default)
+    {
+        const string endpoint = "/health/clear";
+        var response = await _httpClient.PostAsync(endpoint, null, cancellationToken);
+        response.EnsureSuccessStatusCode();
+    }
 }

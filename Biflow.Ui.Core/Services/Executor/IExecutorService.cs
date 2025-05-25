@@ -17,4 +17,6 @@ public interface IExecutorService
         CancellationToken cancellationToken = default);
     
     public Task<HealthReportDto> GetHealthReportAsync(CancellationToken cancellationToken = default);
+
+    public Task ClearTransientHealthErrorsAsync(CancellationToken cancellationToken = default);
 }

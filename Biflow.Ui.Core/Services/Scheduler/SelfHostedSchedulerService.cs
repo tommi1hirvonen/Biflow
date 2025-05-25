@@ -1,4 +1,6 @@
-﻿using Biflow.Scheduler.Core;
+﻿using Biflow.Core;
+using Biflow.Scheduler.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Hosting;
 
@@ -6,6 +8,8 @@ namespace Biflow.Ui.Core;
 
 public class SelfHostedSchedulerService(
     ISchedulesManager schedulesManager,
+    [FromKeyedServices(SchedulerServiceKeys.JobStartFailuresHealthService)]
+    HealthService jobStartFailuresHealthService,
     HealthCheckService healthCheckService) : ISchedulerService
 {
     public async Task AddScheduleAsync(Schedule schedule)
@@ -64,5 +68,11 @@ public class SelfHostedSchedulerService(
             registration => registration.Tags.Contains("scheduler"),
             cancellationToken);
         return new HealthReportDto(healthReport);
+    }
+    
+    public Task ClearTransientHealthErrorsAsync(CancellationToken cancellationToken = default)
+    {
+        jobStartFailuresHealthService.ClearErrors();
+        return Task.CompletedTask;
     }
 }
