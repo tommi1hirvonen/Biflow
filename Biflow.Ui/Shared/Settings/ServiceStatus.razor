@@ -25,6 +25,9 @@
                     <div class="col">
                         Status
                     </div>
+                    <div class="col">
+                        
+                    </div>
                 </div>
             </li>
             <li class="list-group-item">
@@ -47,6 +50,20 @@
                             case var (_, state):
                                 <Badge Text="@state.ToString()" Color="TagColor.Red"  />
                                 break;
+                        }
+                    </div>
+                    <div class="col">
+                        @if (_executorReport is not null)
+                        {
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          title="Show health report"
+                                          @onclick="() => _offcanvas.LetAsync(x => x.ShowAsync(_executorReport))">
+                                    <SvgIcon Icon="LucideIcon.Search" />
+                                </HxButton>
+                            </HxButtonGroup>
                         }
                     </div>
                 </div>
@@ -73,11 +90,27 @@
                                 break;
                         }
                     </div>
+                    <div class="col">
+                        @if (_schedulerReport is not null)
+                        {
+                            <HxButtonGroup Size="ButtonGroupSize.Small">
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          title="Show health report"
+                                          @onclick="() => _offcanvas.LetAsync(x => x.ShowAsync(_schedulerReport))">
+                                    <SvgIcon Icon="LucideIcon.Search" />
+                                </HxButton>
+                            </HxButtonGroup>
+                        }
+                    </div>
                 </div>
             </li>
         </ol>
     </div>
 </div>
+
+<ServiceStatusOffcanvas @ref="_offcanvas" />
 
 @code {
     private readonly CancellationTokenSource _cts = new();
@@ -86,6 +119,7 @@
     private HealthState _executorState = HealthState.Testing;
     private HealthReportDto? _schedulerReport;
     private HealthState _schedulerState = HealthState.Testing;
+    private ServiceStatusOffcanvas? _offcanvas;
     
     private enum HealthState { Testing, Unauthorized, Unavailable }
     

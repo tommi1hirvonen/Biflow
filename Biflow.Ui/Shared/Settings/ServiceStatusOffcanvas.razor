@@ -1,0 +1,41 @@
+<HxOffcanvas @ref="_offcanvas"
+             Size="OffcanvasSize.Large"
+             Backdrop="OffcanvasBackdrop.False"
+             ScrollingEnabled="true"
+             Title="Service health report">
+    <BodyTemplate>
+        <CodeEditor @ref="_editor"
+                    Language="json"
+                    ReadOnly="true"
+                    InitialValueExpression="() => _reportJson"
+                    InitialHeight="calc(100vh - 170px)" />
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxButton Color="ThemeColor.Secondary"
+                  Spinner="false"
+                  @onclick="() => _offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private string? _reportJson;
+    private HxOffcanvas? _offcanvas;
+    private CodeEditor? _editor;
+
+    private static readonly JsonSerializerOptions Options = new()
+    {
+        WriteIndented = true,
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        Converters = { new JsonStringEnumConverter() }
+    };
+    
+    public async Task ShowAsync(HealthReportDto report)
+    {
+        await _editor.LetAsync(x => x.SetValueAsync(""));
+        _reportJson = JsonSerializer.Serialize(report, Options);
+        await _editor.LetAsync(x => x.SetValueAsync(_reportJson));
+        await _offcanvas.LetAsync(x => x.ShowAsync());
+    }
+}
