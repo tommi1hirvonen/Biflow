@@ -3,7 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
-internal class JobExecutorFactory(IServiceProvider serviceProvider, IDbContextFactory<ExecutorDbContext> dbContextFactory) : IJobExecutorFactory
+internal class JobExecutorFactory(
+    IServiceProvider serviceProvider,
+    IDbContextFactory<ExecutorDbContext> dbContextFactory) : IJobExecutorFactory
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;

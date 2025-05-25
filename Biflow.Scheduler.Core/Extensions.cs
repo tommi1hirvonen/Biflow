@@ -1,6 +1,7 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
+using Biflow.Scheduler.Core.ServiceHealth;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Quartz;
 
 namespace Biflow.Scheduler.Core;
@@ -16,22 +17,9 @@ public static class Extensions
         services.AddExecutionBuilderFactory<SchedulerDbContext>();
         services.AddSingleton<ISchedulesManager, SchedulesManager<TExecutionJob>>();
         services.AddHostedService(s => s.GetRequiredService<ISchedulesManager>());
-        services.AddHealthChecks().AddCheck<SchedulesReadCheck>("read_schedules", tags: ["scheduler"]);
-    }
-
-    private class SchedulesReadCheck(ISchedulesManager schedulesManager) : IHealthCheck
-    {
-        public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
-            CancellationToken cancellationToken = default)
-        {
-            return Task.FromResult(schedulesManager.DatabaseReadException is { } ex
-                ? HealthCheckResult.Degraded(
-                    description: "Error reading schedules from app database",
-                    exception: ex,
-                    data: new Dictionary<string, object> { { "LastChecked", DateTimeOffset.UtcNow } })
-                : HealthCheckResult.Healthy(
-                    description: "Schedules successfully read from app database",
-                    data: new Dictionary<string, object> { { "LastChecked", DateTimeOffset.UtcNow } }));
-        }
+        services.AddKeyedSingleton<HealthService>(SchedulerServiceKeys.JobStartFailuresHealthService);
+        services.AddHealthChecks()
+            .AddCheck<SchedulesReadCheck>("read_schedules", tags: ["scheduler"])
+            .AddCheck<JobStartFailuresHealthCheck>("job_start_failures", tags: ["scheduler"]);
     }
 }

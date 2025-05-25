@@ -1,13 +1,16 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Notification;
 
 internal class NotificationService(
     ILogger<NotificationService> logger,
+    [FromKeyedServices(ServiceKeys.NotificationHealthService)] HealthService healthService,
     IMessageDispatcher messageDispatcher,
     ISubscribersResolver subscribersResolver) : INotificationService
 {
     private readonly ILogger<NotificationService> _logger = logger;
+    private readonly HealthService _healthService = healthService;
     private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
     private readonly ISubscribersResolver _subscribersResolver = subscribersResolver;
 
@@ -25,6 +28,7 @@ internal class NotificationService(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(execution.ExecutionId, $"Error getting recipients for notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
             return;
         }
@@ -138,6 +142,7 @@ internal class NotificationService(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(execution.ExecutionId, $"Error building notification message body: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error building notification message body", execution.ExecutionId);
             // Do not return. The notification can be sent even without a body.
         }
@@ -150,6 +155,7 @@ internal class NotificationService(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(execution.ExecutionId, $"Error sending notification mail: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
         }
     }
@@ -168,6 +174,8 @@ internal class NotificationService(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(execution.ExecutionId,
+                $"Error getting recipients for long running execution notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
             return;
         }
@@ -187,6 +195,8 @@ internal class NotificationService(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(execution.ExecutionId,
+                $"Error sending long running execution notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
         }
     }

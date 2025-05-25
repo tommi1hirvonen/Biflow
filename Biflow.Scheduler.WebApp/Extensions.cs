@@ -5,7 +5,7 @@ namespace Biflow.Scheduler.WebApp;
 
 public static class Extensions
 {
-    public static WebApplication MapSchedulerEnpoints(this WebApplication app)
+    public static WebApplication MapSchedulerEndpoints(this WebApplication app)
     {
         var schedules = app
             .MapGroup("/schedules")

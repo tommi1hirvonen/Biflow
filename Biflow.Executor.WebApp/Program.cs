@@ -1,3 +1,4 @@
+using Biflow.Core;
 using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.Authentication;
 using Microsoft.OpenApi.Models;
@@ -63,5 +64,16 @@ else
 }
 
 app.MapExecutorEndpoints();
+
+app.MapPost("/health/clear", (IEnumerable<HealthService> healthServices) =>
+    {
+        foreach (var service in healthServices)
+        {
+            service.ClearErrors();
+        }
+        return Results.Ok();
+    })
+    .WithName("ClearHealth")
+    .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 app.Run();

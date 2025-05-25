@@ -3,11 +3,14 @@ using Biflow.Executor.Core.JobOrchestrator;
 using Biflow.Executor.Core.Notification;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.JobExecutor;
 
 internal class JobExecutor(
     ILogger<JobExecutor> logger,
+    [FromKeyedServices(ServiceKeys.JobExecutorHealthService)]
+    HealthService healthService,
     IEnumerable<IExecutionValidator> validators,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     INotificationService notificationService,
@@ -15,6 +18,7 @@ internal class JobExecutor(
     Execution execution) : IJobExecutor
 {
     private readonly ILogger<JobExecutor> _logger = logger;
+    private readonly HealthService _healthService = healthService;
     private readonly IEnumerable<IExecutionValidator> _validators = validators;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly INotificationService _notificationService = notificationService;
@@ -39,7 +43,9 @@ internal class JobExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating job execution status");
+            _healthService.AddError(Execution.ExecutionId,
+                $"Error updating job execution status to Running: {ex.Message}");
+            _logger.LogError(ex, "Error updating job execution status to Running");
             return;
         }
 
@@ -98,6 +104,8 @@ internal class JobExecutor(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(Execution.ExecutionId,
+                $"Error caught in job executor: {ex.Message}");
             _logger.LogError(ex, "Error during job execution");
         }
 
@@ -112,6 +120,8 @@ internal class JobExecutor(
         }
         catch (Exception ex)
         {
+            _healthService.AddError(Execution.ExecutionId,
+                $"Error updating job execution status to Running: {ex.Message}");
             _logger.LogError(ex, "Error updating execution status");
         }
 

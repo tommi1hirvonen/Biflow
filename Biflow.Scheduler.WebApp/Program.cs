@@ -1,3 +1,4 @@
+using Biflow.Core;
 using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.Scheduler.Core;
@@ -79,6 +80,17 @@ if (executorType == "SelfHosted")
     app.MapExecutorEndpoints();
 }
 
-app.MapSchedulerEnpoints();
+app.MapSchedulerEndpoints();
+
+app.MapPost("/health/clear", (IEnumerable<HealthService> healthServices) =>
+    {
+        foreach (var service in healthServices)
+        {
+            service.ClearErrors();
+        }
+        return Results.Ok();
+    })
+    .WithName("ClearHealth")
+    .AddEndpointFilter<ServiceApiKeyEndpointFilter>();
 
 app.Run();

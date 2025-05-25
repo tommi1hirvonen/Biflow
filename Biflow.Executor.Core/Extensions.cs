@@ -6,6 +6,7 @@ using Biflow.Executor.Core.JobOrchestrator;
 using Biflow.Executor.Core.Notification;
 using Biflow.Executor.Core.Orchestrator;
 using Biflow.Executor.Core.Projections;
+using Biflow.Executor.Core.ServiceHealth;
 using Biflow.Executor.Core.StepExecutor;
 using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.ExecutorProxy.Core.FilesExplorer;
@@ -37,6 +38,8 @@ public static class Extensions
         services.AddSingleton<IExecutionValidator, CircularStepsValidator>();
         services.AddSingleton<IExecutionValidator, HybridModeValidator>();
 
+        services.AddKeyedSingleton<HealthService>(ServiceKeys.JobExecutorHealthService);
+        services.AddKeyedSingleton<HealthService>(ServiceKeys.NotificationHealthService);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
         services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
@@ -63,6 +66,10 @@ public static class Extensions
             if (@interface is null) continue;
             services.AddSingleton(@interface, type);
         }
+        
+        services.AddHealthChecks()
+            .AddCheck<JobExecutorHealthCheck>("job_executor", tags: ["executor"])
+            .AddCheck<NotificationHealthCheck>("notification_service", tags: ["executor"]);
 
         return services;
     }

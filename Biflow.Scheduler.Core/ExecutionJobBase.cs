@@ -1,5 +1,7 @@
-﻿using Biflow.DataAccess;
+﻿using Biflow.Core;
+using Biflow.DataAccess;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Quartz;
 
@@ -7,10 +9,13 @@ namespace Biflow.Scheduler.Core;
 
 public abstract class ExecutionJobBase(
     ILogger logger,
+    [FromKeyedServices(SchedulerServiceKeys.JobStartFailuresHealthService)]
+    HealthService healthService,
     IDbContextFactory<SchedulerDbContext> dbContextFactory,
     IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory) : IJob
 {
     private readonly ILogger _logger = logger;
+    private readonly HealthService _healthService = healthService;
     private readonly IDbContextFactory<SchedulerDbContext> _dbContextFactory = dbContextFactory;
     private readonly IExecutionBuilderFactory<SchedulerDbContext> _executionBuilderFactory = executionBuilderFactory;
 
@@ -39,6 +44,8 @@ public abstract class ExecutionJobBase(
             }
             catch (Exception ex)
             {
+                _healthService.AddError(context.JobDetail.Key.Group,
+                    $"Error getting job IsEnabled status: {ex.Message}");
                 _logger.LogError(ex, "Error getting job IsEnabled status");
                 return;
             }
@@ -66,15 +73,32 @@ public abstract class ExecutionJobBase(
             }
             catch (Exception ex)
             {
+                _healthService.AddError(jobId, $"Error initializing execution: {ex.Message}");
                 _logger.LogError(ex, "Error initializing execution for job {jobId}", jobId);
                 return;
             }
 
-            await StartExecutorAsync(executionId);
+            try
+            {
+                await StartExecutorAsync(executionId);
+            }
+            catch (Exception ex)
+            {
+                _healthService.AddError(jobId, $"Error starting execution: {ex.Message}");
+                _logger.LogError(ex, "Error starting execution for job {jobId}", jobId);
+            }
 
             _logger.LogInformation("Started execution for job id {jobId}, schedule id {scheduleId}, execution id {executionId}", jobId, scheduleId, executionId);
 
-            await WaitForExecutionToFinish(executionId);
+            try
+            {
+                await WaitForExecutionToFinish(executionId);
+            }
+            catch (Exception ex)
+            {
+                _healthService.AddError(jobId, $"Error waiting for execution to finish: {ex.Message}");
+                _logger.LogError(ex, "Error waiting for execution to finish for job {jobId}", jobId);
+            }
         }
         catch (Exception ex)
         {

@@ -5,12 +5,14 @@ using Microsoft.EntityFrameworkCore;
 using Polly;
 using Polly.Retry;
 using System.Net;
+using Biflow.Core;
+using JetBrains.Annotations;
 
 namespace Biflow.Scheduler.WebApp;
 
+[UsedImplicitly]
 public class WebAppExecutionJob : ExecutionJobBase
 {
-    private readonly IConfiguration _configuration;
     private readonly HttpClient _httpClient;
     private readonly ILogger<WebAppExecutionJob> _logger;
 
@@ -19,15 +21,16 @@ public class WebAppExecutionJob : ExecutionJobBase
     public WebAppExecutionJob(
         IConfiguration configuration,
         ILogger<WebAppExecutionJob> logger,
+        [FromKeyedServices(SchedulerServiceKeys.JobStartFailuresHealthService)]
+        HealthService healthService,
         IDbContextFactory<SchedulerDbContext> dbContextFactory,
         IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
-        IHttpClientFactory httpClientFactory) : base(logger, dbContextFactory, executionBuilderFactory)
+        IHttpClientFactory httpClientFactory) : base(logger, healthService, dbContextFactory, executionBuilderFactory)
     {
-        _configuration = configuration;
         _logger = logger;
         _httpClient = httpClientFactory.CreateClient();
         
-        var apiKey = _configuration
+        var apiKey = configuration
             .GetSection("Executor")
             .GetSection("WebApp")
             .GetValue<string>("ApiKey");
@@ -36,7 +39,7 @@ public class WebAppExecutionJob : ExecutionJobBase
             _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
         }
 
-        var baseUrl = _configuration
+        var baseUrl = configuration
             .GetSection("Executor")
             .GetSection("WebApp")
             .GetValue<string>("Url");
