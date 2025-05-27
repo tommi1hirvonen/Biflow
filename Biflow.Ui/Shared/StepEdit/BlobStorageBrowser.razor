@@ -20,7 +20,7 @@
             </span>
             <span> / </span>
         }
-        @foreach (var (segment, index) in _prefix?.Split('/').SkipLast(1).Select((s, i) => (s, i)) ?? [])
+        @foreach (var (index, segment) in _prefix?.Split('/').SkipLast(1).Index() ?? [])
         {
             <span class="link-primary text-decoration-underline cursor-pointer" @onclick="() => BrowseAsync(index)">
                 @segment

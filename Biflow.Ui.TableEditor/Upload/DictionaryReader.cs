@@ -12,8 +12,8 @@ internal class DictionaryReader(IEnumerable<string> columns, ICollection<IDictio
 {
     private readonly IEnumerator<IDictionary<string, object?>> _enumerator = data.GetEnumerator();
     private readonly Dictionary<string, int> _nameToIndexMap = columns
-        .Select((c, i) => (c, i))
-        .ToDictionary(key => key.c, value => value.i);
+        .Index()
+        .ToDictionary(key => key.Item, value => value.Index);
     private bool _isOpen;
 
     public object this[string name] => _enumerator.Current[name] ?? DBNull.Value;
