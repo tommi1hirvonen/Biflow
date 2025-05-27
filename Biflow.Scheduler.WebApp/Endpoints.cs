@@ -3,7 +3,7 @@ using Biflow.Scheduler.Core;
 
 namespace Biflow.Scheduler.WebApp;
 
-public static class Extensions
+public static class Endpoints
 {
     public static WebApplication MapSchedulerEndpoints(this WebApplication app)
     {
