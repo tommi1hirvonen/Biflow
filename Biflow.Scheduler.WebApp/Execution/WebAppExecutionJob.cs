@@ -1,5 +1,4 @@
 ﻿using Biflow.DataAccess;
-using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using Microsoft.EntityFrameworkCore;
 using Polly;
@@ -8,44 +7,21 @@ using System.Net;
 using Biflow.Core;
 using JetBrains.Annotations;
 
-namespace Biflow.Scheduler.WebApp;
+namespace Biflow.Scheduler.WebApp.Execution;
 
 [UsedImplicitly]
-public class WebAppExecutionJob : ExecutionJobBase
+public class WebAppExecutionJob(
+    ILogger<WebAppExecutionJob> logger,
+    [FromKeyedServices(SchedulerServiceKeys.JobStartFailuresHealthService)]
+    HealthService healthService,
+    IDbContextFactory<SchedulerDbContext> dbContextFactory,
+    IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
+    IHttpClientFactory httpClientFactory)
+    : ExecutionJobBase(logger, healthService, dbContextFactory, executionBuilderFactory)
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILogger<WebAppExecutionJob> _logger;
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("executor");
 
     private const int PollingIntervalMs = 5000;
-
-    public WebAppExecutionJob(
-        IConfiguration configuration,
-        ILogger<WebAppExecutionJob> logger,
-        [FromKeyedServices(SchedulerServiceKeys.JobStartFailuresHealthService)]
-        HealthService healthService,
-        IDbContextFactory<SchedulerDbContext> dbContextFactory,
-        IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory,
-        IHttpClientFactory httpClientFactory) : base(logger, healthService, dbContextFactory, executionBuilderFactory)
-    {
-        _logger = logger;
-        _httpClient = httpClientFactory.CreateClient();
-        
-        var apiKey = configuration
-            .GetSection("Executor")
-            .GetSection("WebApp")
-            .GetValue<string>("ApiKey");
-        if (apiKey is not null)
-        {
-            _httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
-        }
-
-        var baseUrl = configuration
-            .GetSection("Executor")
-            .GetSection("WebApp")
-            .GetValue<string>("Url");
-        ArgumentNullException.ThrowIfNull(baseUrl);
-        _httpClient.BaseAddress = new Uri(baseUrl);
-    }
 
     private static readonly AsyncRetryPolicy<HttpResponseMessage> RetryPolicy = Policy
         // Executor status endpoint returns OK if the execution is running or NotFound if the execution is not running.
@@ -73,7 +49,7 @@ public class WebAppExecutionJob : ExecutionJobBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while monitoring status for execution {executionId}", executionId);
+            logger.LogError(ex, "Error while monitoring status for execution {executionId}", executionId);
         }
     }
 }

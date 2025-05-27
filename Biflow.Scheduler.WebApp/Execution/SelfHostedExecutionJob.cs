@@ -5,7 +5,7 @@ using Biflow.Scheduler.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace Biflow.Scheduler.WebApp;
+namespace Biflow.Scheduler.WebApp.Execution;
 
 [UsedImplicitly]
 public class SelfHostedExecutionJob(
@@ -17,15 +17,13 @@ public class SelfHostedExecutionJob(
     IExecutionBuilderFactory<SchedulerDbContext> executionBuilderFactory)
     : ExecutionJobBase(logger, healthService, dbContextFactory, executionBuilderFactory)
 {
-    private readonly IExecutionManager _executionManager = executionManager;
-
     protected override async Task StartExecutorAsync(Guid executionId)
     {
-        await _executionManager.StartExecutionAsync(executionId);
+        await executionManager.StartExecutionAsync(executionId);
     }
 
     protected override async Task WaitForExecutionToFinish(Guid executionId)
     {
-        await _executionManager.WaitForTaskCompleted(executionId, CancellationToken.None);
+        await executionManager.WaitForTaskCompleted(executionId, CancellationToken.None);
     }
 }

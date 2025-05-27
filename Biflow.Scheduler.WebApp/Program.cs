@@ -3,6 +3,7 @@ using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
+using Biflow.Scheduler.WebApp.Execution;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
@@ -44,17 +45,37 @@ builder.Services.AddSwaggerGen(s =>
     var requirement = new OpenApiSecurityRequirement { { scheme, [] } };
     s.AddSecurityRequirement(requirement);
 });
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("executor", (services, httpClient) =>
+{
+    var configuration = services.GetRequiredService<IConfiguration>();
+    var apiKey = configuration
+        .GetSection("Executor")
+        .GetSection("WebApp")
+        .GetValue<string>("ApiKey");
+    if (apiKey is not null)
+    {
+        httpClient.DefaultRequestHeaders.Add("x-api-key", apiKey);
+    }
+    var baseUrl = configuration
+        .GetSection("Executor")
+        .GetSection("WebApp")
+        .GetValue<string>("Url");
+    ArgumentNullException.ThrowIfNull(baseUrl);
+    httpClient.BaseAddress = new Uri(baseUrl);
+});
 
 var executorType = builder.Configuration.GetSection("Executor").GetValue<string>("Type");
-if (executorType == "WebApp")
+switch (executorType)
 {
-    builder.Services.AddSchedulerServices<WebAppExecutionJob>();
-}
-else if (executorType == "SelfHosted")
-{
-    builder.Services.AddExecutorServices(builder.Configuration.GetSection("Executor").GetSection("SelfHosted"));
-    builder.Services.AddSchedulerServices<SelfHostedExecutionJob>();
+    case "WebApp":
+        builder.Services.AddSchedulerServices<WebAppExecutionJob>();
+        builder.Services.AddHealthChecks()
+            .AddCheck<ExecutorConnectionHealthCheck>("executor_connection");
+        break;
+    case "SelfHosted":
+        builder.Services.AddExecutorServices(builder.Configuration.GetSection("Executor").GetSection("SelfHosted"));
+        builder.Services.AddSchedulerServices<SelfHostedExecutionJob>();
+        break;
 }
 
 // Register Azure Key Vault provider for Always Encrypted.
