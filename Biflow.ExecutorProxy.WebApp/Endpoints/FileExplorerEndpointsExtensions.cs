@@ -12,6 +12,9 @@ internal static class FileExplorerEndpointsExtensions
                 var response = new FileExplorerSearchResponse(items);
                 return Results.Ok(response);
             })
+            .Produces<FileExplorerSearchResponse>()
+            .WithSummary("Search for local files on the proxy service machine")
+            .WithDescription("Search for local files on the proxy service machine")
             .WithName("FileExplorerSearch");
     }
 }

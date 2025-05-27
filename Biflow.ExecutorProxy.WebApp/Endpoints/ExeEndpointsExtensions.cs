@@ -25,7 +25,9 @@ internal static class ExeEndpointsExtensions
             })
             .Produces<TaskStartedResponse>(StatusCodes.Status201Created)
             .WithSummary("Run an executable")
-            .WithDescription("Run an executable")
+            .WithDescription("Run an executable asynchronously. " +
+                             "The executable will be started immediately and its status can be queried using the returned id. " +
+                             "The id can also be used to cancel the executable task.")
             .WithName("RunExe");
         
         builder.MapGet("/exe/{id:guid}", 
