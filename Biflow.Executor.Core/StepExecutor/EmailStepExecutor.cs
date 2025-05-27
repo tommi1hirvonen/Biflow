@@ -1,5 +1,4 @@
-﻿using Biflow.Executor.Core.Common;
-using Biflow.Executor.Core.Notification;
+﻿using Biflow.Executor.Core.Notification;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;

@@ -1,5 +1,5 @@
-﻿using Biflow.Executor.Core.Common;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+
 namespace Biflow.Executor.Core.StepExecutor;
 
 internal abstract class StepExecutor<TStep, TAttempt>(

@@ -1,4 +1,4 @@
-﻿namespace Biflow.Executor.Core.Common;
+﻿namespace Biflow.Executor.Core;
 
 public class ExtendedCancellationTokenSource : CancellationTokenSource
 {

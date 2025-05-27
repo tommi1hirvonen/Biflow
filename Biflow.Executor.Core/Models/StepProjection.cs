@@ -1,3 +1,3 @@
-﻿namespace Biflow.Executor.Core.Projections;
+﻿namespace Biflow.Executor.Core.Models;
 
 internal record StepProjection(Guid StepId, string? StepName);

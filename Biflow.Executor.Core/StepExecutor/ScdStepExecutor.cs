@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Biflow.Core.Entities.Scd;
-using Biflow.Executor.Core.Common;
 using Dapper;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;

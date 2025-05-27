@@ -1,6 +1,4 @@
-﻿using Biflow.Executor.Core.Common;
-
-namespace Biflow.Executor.Core.StepExecutor;
+﻿namespace Biflow.Executor.Core.StepExecutor;
 
 [UsedImplicitly]
 internal interface IStepExecutor<TStep, TAttempt> : IStepExecutor

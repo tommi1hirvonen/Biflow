@@ -1,3 +1,3 @@
-﻿namespace Biflow.Executor.Core.Projections;
+﻿namespace Biflow.Executor.Core.Models;
 
 internal record JobProjection(Guid JobId, string JobName);

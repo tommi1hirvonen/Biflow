@@ -1,5 +1,4 @@
-﻿using Biflow.Executor.Core.Common;
-using Microsoft.AnalysisServices.Tabular;
+﻿using Microsoft.AnalysisServices.Tabular;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;

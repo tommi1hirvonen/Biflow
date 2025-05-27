@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Biflow.Executor.Core.Projections;
+namespace Biflow.Executor.Core.Models;
 
 [PublicAPI]
 public record StepExecutionAttemptProjection(
