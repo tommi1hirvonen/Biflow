@@ -1,5 +1,4 @@
-﻿using Biflow.Executor.Core.ConnectionTest;
-using Biflow.Executor.Core.ExecutionValidation;
+﻿using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.JobOrchestrator;
 using Biflow.Executor.Core.Notification;
@@ -42,7 +41,6 @@ public static class Extensions
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
         services.AddSingleton<IEmailTest, EmailTest>();
-        services.AddSingleton<IConnectionTest, ConnectionTest.ConnectionTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
         services.AddHostedService(s => s.GetRequiredService<IExecutionManager>());
