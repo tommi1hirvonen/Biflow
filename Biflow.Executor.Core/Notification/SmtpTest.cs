@@ -3,17 +3,15 @@ using System.Net.Mail;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class EmailTest(IOptions<EmailOptions> options) : IEmailTest
+internal class SmtpTest(IOptions<EmailOptions> options) : IEmailTest
 {
-    private readonly IOptions<EmailOptions> _options = options;
-
     public async Task RunAsync(string toAddress)
     {
-        var client = _options.Value.Client;
-        ArgumentException.ThrowIfNullOrEmpty(_options.Value.FromAddress);
+        var client = SmtpDispatcher.CreateClientFrom(options.Value);
+        ArgumentException.ThrowIfNullOrEmpty(options.Value.FromAddress);
         var mailMessage = new MailMessage
         {
-            From = new MailAddress(_options.Value.FromAddress),
+            From = new MailAddress(options.Value.FromAddress),
             Subject = "Biflow Test Mail",
             IsBodyHtml = true,
             Body = "This is a test email sent from Biflow."

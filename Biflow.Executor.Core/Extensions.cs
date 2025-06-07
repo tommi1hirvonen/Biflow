@@ -13,7 +13,8 @@ namespace Biflow.Executor.Core;
 
 public static class Extensions
 {
-    public static IServiceCollection AddExecutorServices(this IServiceCollection services, IConfiguration executorConfiguration)
+    public static IServiceCollection AddExecutorServices(this IServiceCollection services,
+        IConfiguration executorConfiguration)
     {
         services.AddDbContextFactory<ExecutorDbContext>();
         services.AddExecutionBuilderFactory<ExecutorDbContext>();
@@ -25,7 +26,7 @@ public static class Extensions
             .Bind(executorConfiguration)
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        services.Configure<EmailOptions>(executorConfiguration);
+        services.Configure<EmailOptions>(executorConfiguration.GetSection(EmailOptions.EmailSettings));
 
         services.AddSingleton<IExecutionValidator, CircularJobsValidator>();
         services.AddSingleton<IExecutionValidator, CircularStepsValidator>();
@@ -35,12 +36,20 @@ public static class Extensions
         services.AddKeyedSingleton<HealthService>(ExecutorServiceKeys.NotificationHealthService);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
-        services.AddSingleton<IMessageDispatcher, EmailDispatcher>();
+        if (executorConfiguration[$"{EmailOptions.EmailSettings}:ConnectionString"] is { Length: > 0 })
+        {
+            services.AddSingleton<IMessageDispatcher, AzureEmailDispatcher>();
+            services.AddSingleton<IEmailTest, AzureEmailTest>();
+        }
+        else
+        {
+            services.AddSingleton<IMessageDispatcher, SmtpDispatcher>();
+            services.AddSingleton<IEmailTest, SmtpTest>();
+        }
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IStepExecutorProvider, StepExecutorProvider>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
-        services.AddSingleton<IEmailTest, EmailTest>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
         services.AddHostedService(s => s.GetRequiredService<IExecutionManager>());

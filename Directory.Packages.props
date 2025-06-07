@@ -5,6 +5,7 @@
   <ItemGroup>
     <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.0" />
     <PackageVersion Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.20" />
+    <PackageVersion Include="Azure.Communication.Email" Version="1.0.1" />
     <PackageVersion Include="Azure.Identity" Version="1.13.1" />
     <PackageVersion Include="Azure.ResourceManager.DataFactory" Version="1.6.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.23.0" />
