@@ -120,7 +120,7 @@ internal class NotificationService(
                         </tbody>
                     </table>
                     <h4>Failed steps</h4>
-                    <table border="1">
+                    <table border="1" style="font-size: small;">
                         <thead>
                             <tr>
                                 <th>Step name</th>
@@ -151,7 +151,8 @@ internal class NotificationService(
         {
             var subject = $"{execution.JobName} completed with status {execution.ExecutionStatus} – Biflow notification";
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, true);
-            _logger.LogInformation("{ExecutionId} Notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
+            _logger.LogInformation("{ExecutionId} Notification email sent to: {recipients}",
+                execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
@@ -176,7 +177,8 @@ internal class NotificationService(
         {
             _healthService.AddError(execution.ExecutionId,
                 $"Error getting recipients for long running execution notification: ${ex.Message}");
-            _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification", execution.ExecutionId);
+            _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification",
+                execution.ExecutionId);
             return;
         }
 
@@ -191,7 +193,8 @@ internal class NotificationService(
             var messageBody = $"Execution of job \"{execution.JobName}\" started at {execution.StartedOn?.LocalDateTime}"
                 + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job.";
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, false);
-            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}", execution.ExecutionId, string.Join(", ", recipients));
+            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}",
+                execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
