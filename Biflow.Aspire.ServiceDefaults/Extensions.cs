@@ -19,11 +19,10 @@ namespace Microsoft.Extensions.Hosting;
 // To learn more about using this project, see https://aka.ms/dotnet/aspire/service-defaults
 public static class Extensions
 {
-    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder,
-        bool addDbHealthCheck = false)
+    public static IHostApplicationBuilder AddServiceDefaults(this IHostApplicationBuilder builder)
     {
         builder.ConfigureOpenTelemetry();
-        builder.AddDefaultHealthChecks(addDbHealthCheck);
+        builder.AddDefaultHealthChecks();
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
@@ -91,28 +90,11 @@ public static class Extensions
         return builder;
     }
 
-    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder,
-        bool addDbHealthCheck)
+    private static IHostApplicationBuilder AddDefaultHealthChecks(this IHostApplicationBuilder builder)
     {
-        var healthChecks = builder.Services.AddHealthChecks();
-        
-        healthChecks
-            // Add a default liveness check to ensure the app is responsive
-            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live", "common"]);
-
-        if (!addDbHealthCheck)
-        {
-            return builder;
-        }
-        
-        // Add a default database health check to ensure the app database is accessible
-        var connectionString = builder.Configuration.GetConnectionString("AppDbContext");
-        ArgumentNullException.ThrowIfNull(connectionString);
-        healthChecks.AddTypeActivatedCheck<AppDbHealthCheck>(
-            name: "database",
-            failureStatus: null,
-            tags: ["common"],
-            args: connectionString);
+        builder.Services.AddHealthChecks()
+            // Add a default liveness check to ensure app is responsive
+            .AddCheck("self", () => HealthCheckResult.Healthy(), ["live"]);
 
         return builder;
     }

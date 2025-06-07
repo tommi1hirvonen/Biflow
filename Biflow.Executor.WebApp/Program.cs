@@ -1,4 +1,5 @@
 using Biflow.Core;
+using Biflow.DataAccess;
 using Biflow.Executor.Core;
 using Biflow.ExecutorProxy.Core.Authentication;
 using Microsoft.OpenApi.Models;
@@ -6,7 +7,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults(addDbHealthCheck: true);
+builder.AddServiceDefaults()
+    .AddDatabaseHealthCheck();
 
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();

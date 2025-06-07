@@ -54,6 +54,7 @@ baseGroup.MapFileExplorerEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapGet("/health", () => Results.Text("Healthy")); // Skip authentication for health checks in development.
+    app.MapGet("/alive", () => Results.Text("Healthy"));
     app.UseSwagger();
     app.UseSwaggerUI();
 }
@@ -62,6 +63,7 @@ else
     // MapDefaultEndpoints() adds health check endpoint when running in development mode.
     // In production, add health check endpoint manually with auth enabled (baseGroup).
     baseGroup.MapGet("/health", () => Results.Text("Healthy"));
+    baseGroup.MapGet("/alive", () => Results.Text("Healthy"));
 }
 
 app.Run();
