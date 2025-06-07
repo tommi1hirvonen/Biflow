@@ -8,7 +8,6 @@
 	<!-- Allow NuGet warnings to remain as warnings -->
 	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
     <IsPackable>false</IsPackable>
-    <IsTestProject>true</IsTestProject>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Biflow.Executor.Core\Biflow.Executor.Core.csproj" />
+    <ProjectReference Include="..\..\src\Biflow.DataAccess\Biflow.DataAccess.csproj" />
   </ItemGroup>
 
 </Project>
