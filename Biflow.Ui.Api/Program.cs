@@ -12,7 +12,8 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddServiceDefaults(addDbHealthCheck: true);
+builder.AddServiceDefaults()
+    .AddDatabaseHealthCheck();
 
 builder.Services.AddWindowsService();
 builder.Services.AddSystemd();

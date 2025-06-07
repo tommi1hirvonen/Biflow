@@ -4,12 +4,27 @@ using Microsoft.Data.SqlClient;
 using Microsoft.Data.SqlClient.AlwaysEncrypted.AzureKeyVaultProvider;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace Biflow.DataAccess;
 
 public static class Extensions
 {
-    public static IServiceCollection AddExecutionBuilderFactory<TDbContext>(this IServiceCollection services, ServiceLifetime lifetime = default)
+    public static IHostApplicationBuilder AddDatabaseHealthCheck(this IHostApplicationBuilder builder)
+    {
+        // Add a default database health check to ensure the app database is accessible
+        var connectionString = builder.Configuration.GetConnectionString("AppDbContext");
+        ArgumentNullException.ThrowIfNull(connectionString);
+        builder.Services.AddHealthChecks().AddTypeActivatedCheck<AppDbHealthCheck>(
+            name: "database",
+            failureStatus: null,
+            tags: ["common"],
+            args: connectionString);
+        return builder;
+    }
+    
+    public static IServiceCollection AddExecutionBuilderFactory<TDbContext>(this IServiceCollection services,
+        ServiceLifetime lifetime = default)
         where TDbContext : AppDbContext
     {
         var service = ServiceDescriptor.Describe(
@@ -53,7 +68,9 @@ public static class Extensions
         }
 
         var keyVaultProvider = new SqlColumnEncryptionAzureKeyVaultProvider(credential);
-        var customProviders = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>(capacity: 1, comparer: StringComparer.OrdinalIgnoreCase)
+        var customProviders = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>(
+            capacity: 1,
+            comparer: StringComparer.OrdinalIgnoreCase) 
         {
             { SqlColumnEncryptionAzureKeyVaultProvider.ProviderName, keyVaultProvider }
         };

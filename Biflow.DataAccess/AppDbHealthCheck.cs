@@ -1,7 +1,7 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 
-namespace Microsoft.Extensions.Hosting;
+namespace Biflow.DataAccess;
 
 internal class AppDbHealthCheck(string connectionString) : IHealthCheck
 {
@@ -15,9 +15,9 @@ internal class AppDbHealthCheck(string connectionString) : IHealthCheck
                 ConnectionString = connectionString,
                 ConnectTimeout = 8 // Use a fixed connection timeout
             };
-            await using var connection = new SqlConnection(connStrBuilder.ConnectionString);;
+            await using var connection = new SqlConnection(connStrBuilder.ConnectionString);
             await connection.OpenAsync(cancellationToken);
-            var command = new SqlCommand("SELECT 1", connection);
+            await using var command = new SqlCommand("SELECT 1", connection);
             await command.ExecuteNonQueryAsync(cancellationToken);
             return HealthCheckResult.Healthy(
                 description: "App database connection test successful",
