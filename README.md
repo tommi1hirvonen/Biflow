@@ -28,7 +28,7 @@
 
 # 1. Introduction
 
-Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data related technologies such as
+Biflow is a powerful platform for easy business intelligence (BI) and data platform workflow orchestration built on top of the .NET stack. It includes an easy-to-use web user interface and integrates with several data-related technologies such as
 - Microsoft SQL Server (including SSIS and SSAS)
 - Microsoft Azure
   - Azure SQL
@@ -60,7 +60,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
     - Evaluate or assign parameter values during execution
 - *__Visualize__* workflows
     - Understand your workflow's dependencies more easily by analyzing dependency graphs
-    - Find bottlenecks and problematic steps in your executions by visualizing durations, statuses etc.
+    - Find bottlenecks and problematic steps in your executions by visualizing durations, statuses, etc.
 - Manage *__subscriptions__* to receive alerts when something goes wrong
     - Or temporarily bypass subscriptions when doing development and testing of workflows
 - Easily *__manage simple Master Data__* through the web user interface
@@ -70,7 +70,7 @@ The focus of Biflow is ease-of-use. When set up, it should be fairly easy even f
 
 Currently supported step types:
 - Sql
-    - Run arbitrary SQL commands (e.g. stored procedures) on SQL Server, Azure SQL, Fabric Data Warehouse and Snowflake.
+    - Run arbitrary SQL commands (e.g., stored procedures) on SQL Server, Azure SQL, Fabric Data Warehouse and Snowflake.
     - Return scalar values and assign them to workflow parameters/variables
 - Package
     - Execute SQL Server Integration Services (SSIS) packages deployed to the SSIS catalogue
@@ -82,7 +82,7 @@ Currently supported step types:
     - Execute pipelines created in Azure Data Factory and Synapse Analytics workspaces
 - Function
     - Invoke Azure Function App functions
-    - Wait for durable functions to complete before step is considered completed
+    - Wait for durable functions to complete before the step is considered completed
 - Databricks
     - Run an Azure Databricks job, pipeline (Delta Live Table), notebook or Python file
     - Use an existing cluster for notebooks and Python files or create a new cluster for each run.
@@ -97,7 +97,7 @@ Currently supported step types:
 - Qlik
     - Reload apps and run automations in Qlik Cloud&reg;
 - Exe
-    - Run locally stored executables (e.g. Python or PowerShell scripts)
+    - Run locally stored executables (e.g., Python or PowerShell scripts)
 - Mail
     - Send emails as part of your workflows
 - Job
@@ -112,54 +112,55 @@ Why should I use Biflow? Can't I already orchestrate my data platform using one 
 - Airflow
 - etc.
 
-Yes, you can, and we'll get to that shortly. First though, it should be clarified that Biflow *is not an ETL tool*. It focuses on data orchestration, part of which is orchestrating ETL processes. When it comes to implementing the ETL processes themselves, using tools such as SSIS, ADF, Azure Functions and others is obviously the way to go. But tying all these different technologies together and bridging the gaps to create a single orchestration job, that's where Biflow comes in.
+Yes, you can, and we'll get to that shortly. First, though, it should be clarified that Biflow *is not an ETL tool*. It focuses on data orchestration, part of which is orchestrating ETL processes. When it comes to implementing the ETL processes themselves, using tools such as SSIS, ADF, Azure Functions and others is obviously the way to go. But tying all these different technologies together and bridging the gaps to create a single orchestration job, that's where Biflow comes in.
 
 Let's look at some common and simple orchestration methods implemented using the previously listed tools.
 
 #### SQL Server Agent
 
-In on-premise SQL Server data platforms, SQL Server Agent is often used to at least schedule and sometimes even to orchestrate ETL processes. You can easily run SSIS packages as well as stored procedures and the scheduling capabilities are relatively powerful. It is also extremely reliable. Where SQL Server Agent falls (massively) short is the orchestration part, which is understandable as it was never meant to be one.
+In on-premise SQL Server data platforms, SQL Server Agent is often used to at least schedule and sometimes even to orchestrate ETL processes. You can easily run SSIS packages as well as stored procedures, and the scheduling capabilities are relatively powerful. It is also extremely reliable. Where SQL Server Agent falls (massively) short is the orchestration part, which is understandable as it was never meant to be one.
 
-All steps in a job are executed sequentially and defining dependencies is almost nonexistent. Your options are to go to the next step, go back to a previous step or exit the job. SQL Server Agent was primarily meant to target administrative tasks (backups, index rebuilds etc.), where orchestration of a large number of steps was rarely the issue.
+All steps in a job are executed sequentially and defining dependencies is almost nonexistent. Your options are to go to the next step, go back to a previous step or exit the job. SQL Server Agent was primarily meant to target administrative tasks (backups, index rebuilds, etc.), where orchestration of a large number of steps was rarely the issue.
 
 #### SSIS & ADF
 
-The orchestration capabilities in SSIS and ADF are very similar. With SSIS, you often use the scheduling capabilities of SQL Server Agent and the triggers in ADF are also quite powerful. The way in which you can define dependencies between tasks in SSIS and activities in ADF is also similar and has largely inspired and affected how it works in Biflow too.
+The orchestration capabilities in SSIS and ADF are very similar. With SSIS, you often use the scheduling capabilities of SQL Server Agent, and the triggers in ADF are also quite powerful. The way in which you can define dependencies between tasks in SSIS and activities in ADF is also similar and has largely inspired and affected how it works in Biflow too.
 
-The downside in both tools is the fact that dependency management between tasks *is not metadata based*, but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 80 (increased from 40 in 2024). This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
+The downside in both tools is the fact that dependency management between tasks *is not metadata-based*, but instead you define dependencies between tasks graphically. This works very well and is highly intuitive with simple jobs with a couple dozen tasks at most. However, when you need to manage dependencies across tens of tasks or even a hundred tasks, these tools are no longer optimal. In fact, in ADF, the maximum number of activities in a pipeline is currently 80 (increased from 40 in 2024). This significantly limits the dependency management between individual tasks when you need to split them in separate pipelines.
 
 #### Airflow
 
 Orchestration is one of the main purposes of Airflow. Shortcomings with the previous tools can be overcome by using Airflow, since you can integrate various technologies and build complex orchestration workflows or DAGs as they are called in Airflow. (Actually, jobs running in dependency mode in Biflow are DAGs too.) You define DAGs by writing Python, making the leveraging of metadata possible for managing dependencies between a large number of tasks. Extensibility is a major advantage of Airflow.
 
-But this flexibility with Airflow comes at a cost. Give a business-oriented user access to Airflow and ask them to author a new DAG to orchestrate some ADF pipelines and reports that they might be familiar with. Writing Python to define DAGs and working with Airflow in general requires technical and technological know-how, making it very hard for business users to do anything other than launch predefined DAGs and monitor their execution.
+But this flexibility with Airflow comes at a cost. Give a business-oriented user access to Airflow and ask them to author a new DAG to orchestrate some ADF pipelines and reports that they might be familiar with. Writing Python to define DAGs and working with Airflow in general requires technical and technological know-how, making it tough for business users to do anything other than launch predefined DAGs and monitor their execution.
 
 #### Conclusion
 
 Using metadata to define and manage dependencies between tasks makes it possible to author large and complex jobs so that all dependencies can be listed. There is no hard limit to the number of steps or dependencies you can have in a single job in Biflow. Having over a hundred steps in a single job is still very much manageable. This means that the execution of jobs can be optimized to a very high degree and steps towards the end of the job do not lose sight of what may have occurred in the earliest steps of the job. All steps can be executed immediately when they can or skipped if the dependency requirements are not met.
 
-You can approach defining and structuring your workflows in the way you prefer. On the one hand, you can consolidate as many related tasks in a single workflow as you wish. On the other hand, you can have hundreds of jobs running as often as you need. Biflow has been tested in both of these extreme cases, and of course there all the middle ground scenarios in between.
+You can approach defining and structuring your workflows in the way you prefer. On the one hand, you can consolidate as many related tasks in a single workflow as you wish. On the other hand, you can have hundreds of jobs running as often as you need. Biflow has been tested in both of these extreme cases, and of course, there are all the middle ground scenarios in between.
 
-Including an intuitive browser based graphical user interface makes it possible for even non-technical users to author orchestration jobs in Biflow. And even though dependencies are metadata based, they can be visualized to easily see and understand the dependencies of complex jobs. It is also easy to only include selected steps in a manual on-demand execution of jobs. Something that is significantly more involved in SSIS and ADF.
+Including an intuitive browser-based graphical user interface makes it possible for even non-technical users to author orchestration jobs in Biflow. And even though dependencies are metadata-based, they can be visualized to easily see and understand the dependencies of complex jobs. It is also easy to only include selected steps in a manual on-demand execution of jobs. Something that is significantly more involved in SSIS and ADF.
 
 The creation and development of Biflow has largely been inspired by my own experiences working with data platforms full-time since 2016. The methods and features in Biflow are informed by the real-life frustrations I've faced using some of the tools mentioned here. Biflow supports orchestrating data platforms in a way that I see being useful, smart and optimal. That also means tight integration with the ETL and data platform technologies I use most often (see supported step types).
 
 ## 1.2. Technical requirements
 
-Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure but some requirements are common.
+Some requirements apply depending on whether Biflow is configured to run either on-premise or in Azure, but some requirements are common.
 
 ### Common
 - SQL Server or Azure SQL Database to host the application database
     - SQL Server 2016 or newer
         - Edition: Express or above
     - Azure SQL Database or Managed Instance
-        - An S1 (or maybe even S0) tier Azure SQL Database is already sufficient for small scale production use.
+        - An S1 (or maybe even S0) tier Azure SQL Database is already enough for small-scale production use.
 - Email notifications
-    - An email account is needed to send email notifications from the application.
+    - When using SMTP, an email account is needed to send email notifications from the application.
+    - Alternatively, Azure Communication Service together with Azure Email Communication Service can be used to send email notifications without a dedicated mailbox.
 
 ### On-premise
 - Windows Server
-    - ASP.NET 8 Hosting Bundle installed
+    - ASP.NET 9 Hosting Bundle installed
 - Windows account
     - Biflow can operate using either Windows Authentication or SQL Server Authentication
     - SSIS compatibility can be achieved using either method, but Windows Authentication is simpler and recommended.
@@ -172,13 +173,13 @@ Some requirements apply depending on whether Biflow is configured to run either 
 - Azure App Service (Linux)
     - Minimum B2 or B3 level is recommended
 - Linux Virtual Machine
-    - Optional
+    - Optional but recommended for production use
 
 ## 1.3. Authentication providers
 
-Four methods of authentication are supported:
+Four methods of authentication are supported for logging into the user interface application:
 - Built-in
-  - User management and authentication is done using a built-in identity provider
+  - User management and authentication are done using a built-in identity provider
   - MFA is not supported
   - Supports remote access
 - Windows
@@ -186,9 +187,9 @@ Four methods of authentication are supported:
   - No login page is presented to the user to access the UI
   - Does not support remote access
 - LDAP
-  - An LDAP server (e.g. Active Directory) can be used as the identity provider to authenticate users
+  - An LDAP server (e.g., Active Directory) can be used as the identity provider to authenticate users
   - Supports remote access
-- Entra ID (formerly Azure Active Directory)
+- Entra ID
   - Users are authenticated using their Microsoft organizational accounts
   - Requires an app registration to be created in the host tenant's Entra ID
   - Requires internet access
@@ -202,7 +203,7 @@ There are three recommended ways to configure Biflow from an architecture point 
 
 ### On-premise
 
-The on-premise option takes advantage of OS level features such as Windows Services to host certain components of the app (the scheduler/executor services). Internet Information Services (IIS) can also be used to host e.g. the user interface app. This makes it easier to configure SSL certificates for accessing the user interface via HTTPS.
+The on-premise option takes advantage of OS level features such as Windows Services to host certain components of the app (the scheduler/executor services). Internet Information Services (IIS) can also be used to host e.g., the user interface app. This makes it easier to configure SSL certificates for accessing the user interface via HTTPS.
 
 ### Azure (monolithic)
 
@@ -212,7 +213,7 @@ The monolithic Azure architecture has all the necessary components and services 
 
 ### Azure (modular)
 
-The modular Azure approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note, that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup. You may also want to consider hosting the executor component in the Linux virtual machine. See the installation section for more information.
+The modular Azure approach closely resembles the on-premise architecture. From the two Azure architectures, this offers significantly more control over updates to different components of the application. All services deployed to Azure can still share the same Linux App Service for cost optimization. Note that a lightweight Linux virtual machine might also be required for deployment and configuration tasks depending on your Azure networking setup. You may also want to consider hosting the executor component in the Linux virtual machine for increased reliability. See the installation section for more information.
 
 # 2. Terminology and features
 
@@ -230,11 +231,11 @@ Steps are executed in order based on their execution phase. Steps in the same ex
 
 #### Dependency mode
 
-Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps are executed in order based on their dependencies. Steps that have no dependencies are started first and steps that have no dependencies between them can be executed in parallel at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria has been met. The execution phase attribute of steps denotes the execution priority of otherwise equal steps (lower value = higher priority).
+Jobs using dependency mode are essentially Directed Acyclic Graphs (DAGs). Steps are executed in order based on their dependencies. Steps that have no dependencies are started first, and steps that have no dependencies between them can be executed in parallel at the same time. Steps that have dependencies are executed when preceding steps have been completed and the dependency type criteria has been met. The execution phase attribute of steps denotes the execution priority of otherwise equal steps (lower value = higher priority).
 
 #### Hybrid mode
 
-Steps are executed in order based on their execution phase (same as execution phase mode). Additionally, step dependencies are also checked after execution phase conditions are met (dependency mode).
+Steps are executed in order based on their execution phase (the same as in execution phase mode). Additionally, step dependencies are also checked after execution phase conditions are met (dependency mode).
 
 ### Features
 
@@ -245,17 +246,17 @@ Steps can have any number of dependencies, even to steps in other jobs. There ar
 
 If the dependency conditions of a step are not met, the step will be skipped. The execution of a step can also be skipped if its **execution condition** evaluates to false. These are optional boolean expressions written in C# that are evaluated during execution to run additional dynamic checks (based on date and time, for example).
 
-Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions, or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the needed parameter values. This pattern is also called Inversion of Control.
+Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions, or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the necessary parameter values. This pattern is also called Inversion of Control.
 
-Steps can be categorized by using **tags** – simple labels that can be effective when filtering steps based on a data source, business function etc.
+Steps can be categorized by using **tags** – simple labels that can be effective when filtering steps based on a data source, business function, etc.
 
-Jobs can have any number of **schedules**, which are triggers that invoke an execution of the job on a given time. Schedules use Cron expressions to define when a schedule should fire. A single Cron expression can be used to create a complex schedule, such as "every 2 hours between 10 am and 5 pm on days 1 to 7 of every month". Schedules can also define **tag filters** to limit which steps are to be included in that specific schedule's execution. This way we can avoid creating copies of jobs just to have a subset of its steps on a different schedule.
+Jobs can have any number of **schedules**, which are triggers that invoke an execution of the job at a given time. Schedules use Cron expressions to define when a schedule should fire. A single Cron expression can be used to create a complex schedule, such as "every 2 hours between 10 am and 5 pm on days 1 to 7 of every month". Schedules can also define **tag filters** to limit which steps are to be included in that specific schedule's execution. This way we can avoid creating copies of jobs just to have a subset of its steps on a different schedule.
 
 Users can **subscribe** to email notifications of executions they are interested in. Subscriptions can be made on a job, step or tag or any combination of the three.
 
-Advanced features include defining the **sources** and **targets** for steps. These are **data objects** that the step either consumes or produces. They help to create a data lineage and are also useful when defining the dependencies of a step, since dependencies can be automatically inferred based on sources and targets. (A step producing a data object can be considered a dependency for a step consuming the same object.) Wide use of data objects can help manage the dependencies optimally even in a very large job.
+Advanced features include defining the **sources** and **targets** for steps. These are **data objects** that the step either consumes or produces. They help to create data lineage and are also useful when defining the dependencies of a step, since dependencies can be automatically inferred based on sources and targets. (A step producing a data object can be considered a dependency for a step consuming the same object.) Wide use of data objects can help manage the dependencies optimally even in a very large job.
 
-Outside of data orchestration, Biflow also supports **data tables**. These are simple control tables (or Master Data tables) that can be maintained via the web user interface by business users. Data tables point and write to SQL tables, allowing the use of primary keys, foreign keys, data types and various other constraints to ensure data quality directly on data input. Common use cases include maintaining some simple report specific data that would otherwise be read in from a flat file or Excel file. This also allows business users to maintain these Master Data in the same platform where they execute their data jobs. **Lookups** can be used to create foreign key references between data tables, making it possible for users to create and manage even hierarchical data.
+Outside of data orchestration, Biflow also supports **data tables**. These are simple control tables (or Master Data tables) that can be maintained via the web user interface by business users. Data tables point and write to SQL tables, allowing the use of primary keys, foreign keys, data types and various other constraints to ensure data quality directly on data input. Common use cases include maintaining some simple report-specific data that would otherwise be read in from a flat file or Excel file. This also allows business users to maintain these Master Data in the same platform where they execute their data jobs. **Lookups** can be used to create foreign key references between data tables, making it possible for users to create and manage even hierarchical data.
 
 # 3. Documentation
 
@@ -342,8 +343,8 @@ In addition to the same rights as the viewer role, operators can
 
 #### Editor
 In addition to the same rights as the operator role, editors can
-- manage (create, edit & delete) all jobs and steps
-- view stack traces of failed and cancelled steps (when available)
+- manage (create, edit and delete) all jobs and steps
+- view stack traces of failed and canceled steps (when available)
 
 #### Admin
 In addition to the same rights as the editor role, admins can
@@ -373,7 +374,7 @@ Secondary roles can be assigned to non-admin users to extend their user rights.
 
 Data saved and processed by Biflow is not encrypted by default on the database level. On Azure SQL Database, use the "Transparent data encryption" option to encrypt the application database at rest.
 
-To implement further encryption of sensitive data in such a way, that malicious high-privileged unauthorized users cannot view this data even if they can log in to the database, use the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
+To implement further encryption of sensitive data in such a way that malicious high-privileged unauthorized users cannot view this data even if they can log in to the database, use the Always Encrypted feature of SQL Server and Azure SQL Database. Azure Key Vault as a store for encryption keys is supported.
 
 More information about Always Encrypted can be found in <a href="https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/always-encrypted-database-engine?view=sql-server-ver15">Microsoft’s documentation.</a>
 
@@ -430,20 +431,21 @@ There are three different installation alternatives: on-premise, Azure (monolith
 2. Create a new empty database or choose an existing database for Biflow installation. It is recommended that the database use the instance level collation.
     - Execute the installation script (BiflowDatabaseScript.sql) in the database of your choosing.
     - The script will generate the necessary objects (schema, tables and stored procedures).
-3. Create a login that is used to connect to the installation database using **either** of these methods.
-    - Windows Authentication - Add the account created in step 1 to the `db_owner` role in the installation database
+3. Create a login used to connect to the installation database using **either** of these methods.
+    - Windows Authentication
+        - Add the account created in step 1 to the `db_owner` role in the installation database
     - SQL Server Authentication
         - Create a new SQL Server login or select an existing one to use to connect to the installation database
         - Add the login to the `db_owner` role in the installation database
 
-### ASP.NET 8 Hosting Bundle
+### ASP.NET 9 Hosting Bundle
 
-1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 8 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-8.0.0-windows-hosting-bundle-installer">.NET download page</a>.
+1. On machines where any of the application components (UI, executor, scheduler) are installed, also install the ASP.NET 9 Hosting Bundle. Follow the instructions on the <a href="https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-aspnetcore-9.0.5-windows-hosting-bundle-installer">.NET download page</a>.
     - NOTE! If the Hosting Bundle is installed before IIS, the bundle installation must be repaired. Run the Hosting Bundle installer again after installing IIS.
 
 ### Service account
 
-- It is recommended to use either a local or an AD account as the service account for all Biflow services. Make sure the service account has full control rights to the installation folders. Otherwise, you might experience unexpected behaviour, such as log files not being generated.
+- It is recommended to use either a local or an AD account as the service account for all Biflow services. Make sure the service account has full control rights to the installation folders. Otherwise, you might experience unexpected behavior, such as log files not being generated.
 
 ### Executor web application
 
@@ -461,7 +463,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowExecutor binpath= C:\Biflow\BiflowExecutor\BiflowExecutor.exe start= auto displayname= "Biflow Executor"`
-4. Open Windows Services, navigate to the service "Biflow Executor", right click and select Properties.
+4. Open Windows Services, navigate to the service "Biflow Executor", right-click and select Properties.
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
 5. Test the executor application by sending a GET request to the executor API to test the system database connection. This can be done with PowerShell using the following command. Replace the URL with the one used when configuring the app.
@@ -485,7 +487,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 3. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowScheduler binpath= C:\Biflow\BiflowScheduler\BiflowScheduler.exe start= delayed-auto displayname= "Biflow Scheduler"`
-4. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
+4. Open Windows Services, navigate to the service "Biflow Scheduler", right-click and select Properties.
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
 5. Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
@@ -496,9 +498,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 1. If Entra ID is used for authentication, an app registration needs to be created in the hosting tenant's Entra ID.
     - Navigate to the target tenant’s Azure portal in portal.azure.com.
-    - Go to Entra ID => App registration => New registration.
+    - Go to Entra ID ⇒ App registration ⇒ New registration.
     - Register the app and save the client id and client secret someplace. You will not be able to access the client secret after it has been created.
-    - Add a redirect URL for the app registration under Manage => Authentication => Add a platform
+    - Add a redirect URL for the app registration under Manage ⇒ Authentication ⇒ Add a platform
         - Select **Web**
         - **Redirect URI**: This should be the URL where the UI application can be reached appended with `/signin-oidc`. For example, if the application can be reached at `https://contoso.azurewebsites.net` then the redirect URI should be `https://contoso.azurewebsites.net/signin-oidc`
         - **Front-channel logout URL**: Similarly, the logout URL is the UI app's URL appended with `/signout-oidc`. With the base URL of the example above, the logout URL would be `https://contoso.azurewebsites.net/signout-oidc`
@@ -540,14 +542,14 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 4. Open the Windows command terminal in **administrator mode**.
     - Run the following command: `sc.exe create BiflowUi binpath= C:\Biflow\BiflowUi\BiflowUi.exe start= delayed-auto displayname= "Biflow User Interface"`
-5. Open Windows Services, navigate to the service "Biflow Scheduler", right click and select Properties.
+5. Open Windows Services, navigate to the service "Biflow Scheduler", right-click and select Properties.
     - Add the login information for the service account used to run the service and scheduled executions. If Windows Authentication is used to connect to the database, then this account’s credentials are used to connect.
     - Start the service.
     - Navigate to `C:\Biflow\BiflowScheduler\log` and open the log text file. There should be no error reports if the scheduler was able to connect to the database and load schedules into the service.
 6. Hosting the UI application as a Windows Service uses the Kestrel web server built into the ASP.NET Core runtime. To configure the HTTP and HTTPS endpoints for the UI, refer to these guides:
     - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-endpoints-in-appsettingsjson
     - https://learn.microsoft.com/en-us/aspnet/core/fundamentals/servers/kestrel/endpoints?view=aspnetcore-8.0#configure-https-in-appsettingsjson
-7. Alternatively you can host the UI application using IIS (Internet Information Services).
+7. Alternatively, you can host the UI application using IIS (Internet Information Services).
 
 ## 4.2. Azure (monolithic)
 
@@ -555,12 +557,12 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Recommended pricing tier B2 or B3
 - Create a new Web App and set the following settings
     - Publish: Code
-    - Runtime stack: .NET 8 (LTS)
+    - Runtime stack: .NET 9 (STS)
     - Operating System: Linux
     - Linux Plan: Previously created App Service Plan
 - When the Web App has been created, go to the resource and its Configuration settings.
-    - General Settings => Websocket => On
-    - General Settings => Always on => On
+    - General Settings ⇒ Websocket ⇒ On
+    - General Settings ⇒ Always on ⇒ On
 - Set the application settings in Configuration => Application settings.
     - __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead, double underscores are used.
     - Application settings
@@ -582,12 +584,12 @@ There are three different installation alternatives: on-premise, Azure (monolith
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and one for the executor service.
 - Make sure websockets are enabled for the UI application and that "Always on" is enabled for the scheduler and executor applications.
 - Create a virtual network resource.
-- Create a lightweight Linux virtual machine resource (B1s is sufficient).
+- Create a lightweight Linux virtual machine resource (B1s is enough).
     - This VM is used to configure and deploy the application files to the Web App resources.
     - Attach the virtual machine to the default subnet of the virtual network created in the previous step.
     - Allow SSH traffic from your desired IP addresses or networks to the virtual machine.
-- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks (e.g. company VPN or local network).
-- Create a new subnet in the virtual network (e.g. biflow-subnet).
+- Apply access restrictions to the UI app to allow inbound traffic only from trusted IP addresses or networks (e.g., company VPN or local network).
+- Create a new subnet in the virtual network (e.g., biflow-subnet).
     - If the default subnet has IPV4 range of 10.0.0.0/24, the new subnet may have a range of 10.0.1.0/24.
     - Delegated to: Microsoft.Web/serverFarms
     - Configure the UI, executor and scheduler applications' outbound traffic to route through the previously created virtual network subnet (biflow-subnet). This network can then be used to allow traffic to your Azure SQL Database hosting the application database.
@@ -599,9 +601,9 @@ There are three different installation alternatives: on-premise, Azure (monolith
     - Microsoft.Sql
     - Microsoft.Web
 
-These steps isolate the executor and scheduler application endpoints from the internet and only expose them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also traffic from the UI application is routed to the scheduler service using its respective private endpoint.
+These steps isolate the executor and scheduler application endpoints from the internet and only expose them to the UI application. Traffic from the UI and scheduler applications is routed through the virtual network and private endpoint to the executor service. Also, traffic from the UI application is routed to the scheduler service using its respective private endpoint.
 
-It is recommended to use a User Assigned Managed Identity, especially in the modular approach, to authenticate to the application database and possibly other Azure services too. Create a new managed identity and assign it to the executor, scheduler and UI applications. This way you can grant access to the application database to only one managed identity, which is shared among the orchestration related resources.
+It is recommended to use a User Assigned Managed Identity, especially in the modular approach, to authenticate to the application database and possibly other Azure services too. Create a new managed identity and assign it to the executor, scheduler and UI applications. This way you can grant access to the application database to only one managed identity, which is shared among the orchestration-related resources.
 
 Add application configurations for each app based on the table below. __Note that Linux Web Apps do not recognize colon as a configuration section separator.__ Instead, double underscores are used.
 
@@ -633,7 +635,7 @@ Add application configurations for each app based on the table below. __Note tha
 
 Deploying the application code can be done via the Linux virtual machine.
 - Copy the zip files for the three applications to the virtual machine (`Biflow.Ui`, `Biflow.Executor.WebApp` and `Biflow.Scheduler.WebApp`). Make sure to delete the configuration sections from the appsettings files except for the `Logging` section.
-- Connect remotely to the VM via SSH using e.g. PowerShell.
+- Connect remotely to the VM via SSH using e.g., PowerShell.
 - <a href="https://learn.microsoft.com/en-us/cli/azure/install-azure-cli-linux?pivots=apt">Install the Azure CLI</a> on the Linux VM.
 - Deploy the zip files to the respective Web Apps from the Linux VM.
 
@@ -681,13 +683,13 @@ admin@biflow-vm:~$ curl -u "$username:$password" https://<executor_web_app_name>
 
 Using Linux servers or virtual machines is also supported for hosting any of the three application components (executor, scheduler, user interface). The installation process follows the same pattern for all three.
 
-You may want to consider hosting the executor component on a Linux VM if you observe executions being unintentionally stopped because the underlying Web App is recycled or restarted. This can happen, when Azure push infrastructure updates in your selected region to the App Service platform. This will cause the executor web app to restart even if you have "Always on" enabled, which will cause any running executions to be stopped. Currently, there is no way of setting your own preference for a maintenance window for Web Apps. The workaround is to host the executor component on a lightweight VM. For small scale production use, sizes B1s, B1ms and B2s may already be sufficient. You can use the same Linux VM to manage resources and host the executor component.
+You may want to consider hosting the executor component on a Linux VM if you observe executions being unintentionally stopped because the underlying Web App is recycled or restarted. This can happen when Azure push infrastructure updates in your selected region to the App Service platform. This will cause the executor web app to restart even if you have "Always on" enabled, which will cause any running executions to be stopped. Currently, there is no way of setting your own preference for a maintenance window for Web Apps. The workaround is to host the executor component on a lightweight VM. For small scale production use, sizes B1s, B1ms and B2s may already be sufficient. You can use the same Linux VM to manage resources and host the executor component.
 
 Here, the executor application is installed as an example. `systemd` is used to host the executor service. You can also reference Microsoft's <a href="https://learn.microsoft.com/en-us/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-8.0&tabs=linux-ubuntu#create-the-service-file">documentation on hosting an ASP.NET Core web app on Linux</a>. Using Nginx as a reverse proxy is skipped, as the only users able to access the executor web app are the scheduler and UI services.
 
 #### Installation
 
-Place the application files to your desired installation directory. Here, the files are placed in the home directory of a user called `orchestrator_user`.
+Place the application files in your desired installation directory. Here, the files are placed in the home directory of a user called `orchestrator_user`.
 
 `/home/orchestrator_user/orchestrator_executor`
 
@@ -737,10 +739,10 @@ The `[Service]` section defines the service itself and is important.
 - `RestartSec` – the time between the service process exiting and restarting the service
 - `User` – the user for running the service
 
-The `[Install]` section defines the behaviour of the service.
+The `[Install]` section defines the behavior of the service.
 - `WantedBy` – specifies, how a unit should be enabled. `multi-user.target` roughly defines a system state, where all network services are started and the system accepts logins, but a GUI is not started.
 
-Note, that application settings, such as connection strings, can and should still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to in appsettings, remember to use the hosting server's IP address or DNS name. Otherwise, external requests will not be routed correctly.
+Note that application settings, such as connection strings, can and should still be configured in `appsettings.json`. **Note:** When configuring the HTTP URLs to listen to in appsettings, remember to use the hosting server's IP address or DNS name. Otherwise, external requests will not be routed correctly.
 
 Save the unit file, enable and start the service and check its status:
 
@@ -773,7 +775,7 @@ First, stop the service:
 sudo systemctl stop orchestrator_executor.service
 ```
 
-Check, that the service is not running (inactive (dead)):
+Check that the service is not running (inactive (dead)):
 
 ```
 sudo systemctl status orchestrator_executor.service
@@ -804,7 +806,7 @@ Some administrative tasks need to be done before the applications are ready for 
 
 ### Admin user
 
-In order to be able to log in via the UI, an initial admin user needs to be added to the database. This can be achieved using the `AdminUser` configuration section of the UI application's settings. Make sure that credentials are provided in the application settings before starting the UI application service. The admin user is added during app startup.
+To be able to log in via the UI, an initial admin user needs to be added to the database. This can be achieved using the `AdminUser` configuration section of the UI application's settings. Make sure that credentials are provided in the application settings before starting the UI application service. The admin user is added during app startup.
 
 #### Built-in authentication
 
@@ -841,7 +843,7 @@ Navigate to the Biflow UI website. You should be able to log in using the accoun
 
 ### Connections
 
-- In order to create SQL, SSIS package, Agent job and tabular model execution steps, connections need to be defined in the UI application's settings (Settings => Connections).
+- To create SQL, SSIS package, Agent job and tabular model execution steps, connections need to be defined in the UI application's settings (Settings ⇒ Connections).
     - SQL steps can reference MS SQL or Snowflake connections.
     - SSIS package, Agent job and tabular model steps can only reference MS SQL connections.
 
@@ -875,9 +877,9 @@ ACCOUNT=ACCOUNT_NAME;HOST=xxxxx-accountname.snowflakecomputing.com;ROLE=user_rol
 
 ### App registrations
 
-1. In order to add Data Factories, Function Apps or to create Power BI dataset refresh steps, Azure app registrations need to be created and added.
+1. To add Data Factories, Function Apps or to create Power BI dataset refresh steps, Azure app registrations need to be created and added.
 2. Navigate to the target tenant’s Azure portal in portal.azure.com.
-3. Go to Entra ID => App registration => New registration.
+3. Go to Entra ID ⇒ App registration ⇒ New registration.
 4. Register the app and save the client id and client secret someplace.
 5. Add a new app registration in Biflow using these key information.
 
@@ -899,13 +901,13 @@ ACCOUNT=ACCOUNT_NAME;HOST=xxxxx-accountname.snowflakecomputing.com;ROLE=user_rol
 ### Power BI Service setup
 
 1. Create a security group in Azure Active Directory and add the application (service principal) created in the App registrations section as a member to that security group.
-    - Azure Active Directory => Groups => New group
-    - Select the newly created group and go to Members => Add members
+    - Azure Active Directory ⇒ Groups ⇒ New group
+    - Select the newly created group and go to Members ⇒ Add members
 2. Go to the target Power BI Service Admin portal.
-    - Tenant settings => Developer settings => Allow service principals to use Power BI APIs
+    - Tenant settings ⇒ Developer settings ⇒ Allow service principals to use Power BI APIs
     - Enable this setting and add the security group created in the previous step to the list of specific security groups allowed to access Power BI APIs.
 3. Give the service principal created in the App registrations section at least contributor access to the target workspaces in Power BI Service.
-4. After these steps the Power BI connection can be tested on the App registration edit dialog.
+4. After these steps the Power BI connection can be tested on the App registration edit dialogue.
 
 ### Azure Function App setup
 
@@ -920,7 +922,7 @@ This section provides some useful information regarding normal operation and als
 ## 5.1. Executions
 
 When job executions are started (either scheduled or manual), the executor service first runs a series of validations on the execution. The executor checks for:
-1. Circular job dependencies caused by job step references (i.e. steps starting another job's execution)
+1. Circular job dependencies caused by job step references (i.e., steps starting another job's execution)
     - These can cause infinite execution loops, and they are considered a user error (incorrect job & step definitions).
 2. Circular step dependencies
     - These can cause infinite waits when step dependencies are being checked after the execution has started.
@@ -949,13 +951,13 @@ When shutting down services, the recommended order is reversed.
 
 The executor service does not run any major startup tasks. It does validate the executor settings (polling interval etc.) defined in `appsettings.json` or in app configurations in Azure. If the settings do not pass validation, the service will not start.
 
-When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually though 20 seconds should be enough for a graceful shutdown, if the polling interval is not too long.
+When the executor service is shut down, it will immediately send cancel commands to all steps currently being managed. If all steps are successfully canceled in 20 seconds, the service will shut down gracefully. After 20 seconds, the service will forcefully shut down and abandon any steps that may have been left running. This may leave some steps and execution logs in an undefined state. Usually, though, 20 seconds should be enough for a graceful shutdown if the polling interval is not too long.
 
 ### Scheduler service
 
 On startup, the scheduler service reads all schedules from the app database and adds them to the internal scheduler. Disabled schedules are added as paused. If reading the schedules fails, the service will reattempt every 15 minutes until schedules are read successfully. The app database should thus be available at least soon after the scheduler service is started.
 
-For various maintenance reasons (data platform service break, software updates etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can be achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
+For various maintenance reasons (data platform service break, software updates, etc.), all schedules may need to be disabled temporarily to prevent new executions from being started. This can be achieved easily, efficiently and securely by shutting down the scheduler service. This guarantees that no new executions are started when the scheduler service is not running while also allowing the executor service to complete running executions.
 
 ### User interface service
 
