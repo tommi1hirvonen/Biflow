@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" />
+      <ProjectReference Include="..\..\src\Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" />
     </ItemGroup>
 
 </Project>

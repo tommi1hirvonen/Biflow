@@ -318,7 +318,7 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 
 The flowchart below describes the lifecycle and statuses of a step execution in dependency mode. During the `NotStarted`, `Queued`, `Running` and `AwaitingRetry` states it is possible for a user to cancel/stop the execution of a step. If a stop request is received, the step execution is canceled and the final step execution status will be `Stopped`. Remaining retries will not be attempted after the execution has been stopped. Note however, that if the step is stopped during the `NotStarted` state, the step is stopped and its status updated only after it reaches the `Queued` state.
 
-![The lifecycle and states of a step execution](/Images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution in dependency mode*
+![The lifecycle and states of a step execution](./images/StepExecutionLifecycle.png)*The lifecycle and states of a step execution in dependency mode*
 
 ## 3.3. User roles
 
