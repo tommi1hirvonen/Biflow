@@ -55,11 +55,11 @@ internal class DataflowStepExecutor(
             ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
             : new CancellationTokenSource();
 
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        
         DataflowTransaction? transaction = null;
         try
         {
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-            
             // Wait for 5 seconds before first attempting to get the dataflow transaction status.
             await Task.Delay(5000, linkedCts.Token);
             
@@ -94,8 +94,16 @@ internal class DataflowStepExecutor(
                 attempt.AddError(ex, "Step execution timed out");
                 return Result.Failure;
             }
-            attempt.AddWarning(ex);
-            return Result.Cancel;
+            // If the linked token was canceled, report result as 'Cancel'.
+            if (linkedCts.Token.IsCancellationRequested)
+            {
+                attempt.AddWarning(ex);
+                return Result.Cancel;
+            }
+            // If not, report error. This means the step was not canceled, but instead the DataflowClient's
+            // underlying HttpClient might have timed out.
+            attempt.AddError(ex);
+            return Result.Failure;
         }
         catch (Exception ex)
         {

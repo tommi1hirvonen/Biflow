@@ -50,7 +50,8 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
+                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId,
+                    cancellationToken);
                 switch (status)
                 {
                     case DatasetRefreshStatus.Completed:
@@ -65,8 +66,16 @@ internal class DatasetStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                attempt.AddWarning(ex);
-                return Result.Cancel;
+                // If the token was canceled, report result as 'Cancel'.
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    attempt.AddWarning(ex);
+                    return Result.Cancel;
+                }
+                // If not, report error. This means the step was not canceled, but instead the DatasetClient's
+                // underlying HttpClient might have timed out.
+                attempt.AddError(ex);
+                return Result.Failure;
             }
             catch (Exception ex)
             {
