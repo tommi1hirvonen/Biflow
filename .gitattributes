@@ -1,1 +1,3 @@
-Biflow.Ui/wwwroot/lib/** linguist-vendored
+src/Biflow.Ui/wwwroot/lib/** linguist-vendored
+src/Biflow.Ui/wwwroot/css/bootstrap.custom.css linguist-vendored
+src/Biflow.Ui.Components.Sample/wwwroot/bootstrap/** linguist-vendored
