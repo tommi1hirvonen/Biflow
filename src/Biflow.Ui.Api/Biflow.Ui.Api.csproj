@@ -18,5 +18,9 @@
     <ItemGroup>
       <ProjectReference Include="..\Biflow.Ui.Core\Biflow.Ui.Core.csproj" />
     </ItemGroup>
+    
+    <ItemGroup>
+        <Content Update="SampleRequests\*" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    </ItemGroup>
 
 </Project>
