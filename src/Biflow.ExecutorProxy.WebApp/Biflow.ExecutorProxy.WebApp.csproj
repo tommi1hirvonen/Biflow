@@ -9,10 +9,10 @@
         <!-- Allow NuGet and AOT warnings (Swashbuckle and Serilog) to remain as warnings -->
         <WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;IL2104;IL3053</WarningsNotAsErrors>
         <ImplicitUsings>enable</ImplicitUsings>
+        <AssemblyName>BiflowProxy</AssemblyName>
         <AssemblyVersion>$(VersionName)</AssemblyVersion>
         <FileVersion>$(AssemblyVersion)</FileVersion>
         <Version>$(AssemblyVersion)</Version>
-        <PublishAot>true</PublishAot>
     </PropertyGroup>
 
     <ItemGroup>
