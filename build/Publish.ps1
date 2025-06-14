@@ -32,6 +32,12 @@ param(
     [switch]$Win = $false,
 
     [Parameter()]
+    [switch]$FrameworkDependent = $false,
+
+    [Parameter()]
+    [switch]$SelfContained = $false,
+
+    [Parameter()]
     [switch]$Zip = $false,
 
     [Parameter()]
@@ -55,13 +61,13 @@ function Get-OsShortName()
     return "$($osDesc)-$($osArchDesc)"
 }
 
-function Publish-WebApp([String]$ProjectPath, [String]$AppName, [String]$Runtime, [switch]$SelfContained, [String[]]$RemoveItems)
+function Publish-WebApp([String]$ProjectPath, [String]$AppName, [String]$Runtime, [switch]$PublishSelfContained, [String[]]$RemoveItems)
 {
     $appId = "$($AppName)-$($Runtime)$(If ($SelfContained) { '-self-contained' } Else { '' })"
     Write-Host "Publishing $($appId)"
     $publishPath = Join-Path $PublishBasePath $appid
     Remove-Item $publishPath -Recurse -Force -ErrorAction SilentlyContinue
-    if ($SelfContained)
+    if ($PublishSelfContained)
     {
         dotnet publish $ProjectPath `
             --configuration Release `
@@ -160,69 +166,101 @@ try
         if ($KeepAppsettings) { "appsettings.*.json", "*.pdb", "web.config" }
         else { "appsettings*.json", "*.pdb", "web.config" }
 
-    if ($Api -and $Linux)
+
+    # API
+    if ($Api -and $Linux -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "linux-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "linux-x64" -SelfContained -RemoveItems $removeItemsSelfContainedLinux
     }
-
-    if ($Api -and $Win)
+    if ($Api -and $Linux -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "linux-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedLinux
+    }
+    if ($Api -and $Win -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "win-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "win-x64" -SelfContained -RemoveItems $removeItemsSelfContainedWin
+    }
+    if ($Api -and $Win -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $apiProjectPath -AppName "api" -Runtime "win-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedWin
     }
 
-    if ($Executor -and $Linux)
+    # EXECUTOR
+    if ($Executor -and $Linux -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "linux-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "linux-x64" -SelfContained -RemoveItems $removeItemsSelfContainedLinux
     }
-
-    if ($Executor -and $Win)
+    if ($Executor -and $Linux -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "linux-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedLinux
+    }
+    if ($Executor -and $Win -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "win-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "win-x64" -SelfContained -RemoveItems $removeItemsSelfContainedWin
+    }
+    if ($Executor -and $Win -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $executorProjectPath -AppName "executor" -Runtime "win-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedWin
     }
 
+    # PROXY
+
+    # Always publish AOT proxy if the current and target OS's match.
     if ($Proxy -and (($Win -and $IsWindows) -or ($Linux -and $IsLinux)))
     {
         Publish-WebAppAot -ProjectPath $proxyProjectPath -AppName "proxy" -RemoveItems $removeItemsSelfContainedLinux
     }
-
-    if ($Proxy -and $Linux)
+    if ($Proxy -and $Linux -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "linux-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "linux-x64" -SelfContained -RemoveItems $removeItemsSelfContainedLinux
     }
-
-    if ($Proxy -and $Win)
+    if ($Proxy -and $Linux -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "linux-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedLinux
+    }
+    if ($Proxy -and $Win -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "win-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "win-x64" -SelfContained -RemoveItems $removeItemsSelfContainedWin
+    }
+    if ($Proxy -and $Win -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $proxyProjectPath -AppName "proxy" -Runtime "win-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedWin
     }
 
-    if ($Scheduler -and $Linux)
+    # SCHEDULER
+    if ($Scheduler -and $Linux -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "linux-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "linux-x64" -SelfContained -RemoveItems $removeItemsSelfContainedLinux
     }
-
-    if ($Scheduler -and $Win)
+    if ($Scheduler -and $Linux -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "linux-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedLinux
+    }
+    if ($Scheduler -and $Win -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "win-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "win-x64" -SelfContained -RemoveItems $removeItemsSelfContainedWin
+    }
+    if ($Scheduler -and $Win -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $schedulerProjectPath -AppName "scheduler" -Runtime "win-x64" -PublishSelfContained -RemoveItems $removeItemsSelfContainedWin
     }
 
-    if ($Ui -and $Linux)
+    # UI
+    if ($Ui -and $Linux -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "linux-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "linux-x64" -SelfContained -RemoveItems $removeItemsUiSelfContainedLinux
     }
-
-    if ($Ui -and $Win)
+    if ($Ui -and $Linux -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "linux-x64" -PublishSelfContained -RemoveItems $removeItemsUiSelfContainedLinux
+    }
+    if ($Ui -and $Win -and $FrameworkDependent)
     {
         Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "win-x64" -RemoveItems $removeItems
-        Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "win-x64" -SelfContained -RemoveItems $removeItemsUiSelfContainedWin
+    }
+    if ($Ui -and $Win -and $SelfContained)
+    {
+        Publish-WebApp -ProjectPath $uiProjectPath -AppName "ui" -Runtime "win-x64" -PublishSelfContained -RemoveItems $removeItemsUiSelfContainedWin
     }
 
     $timer.Stop()
