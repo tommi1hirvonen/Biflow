@@ -16,18 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Remove="compilerconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap.custom.css" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="compilerconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="BlazorMonaco" />
     <PackageReference Include="Havit.Blazor.Components.Web.Bootstrap" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" />
@@ -46,6 +34,15 @@
     <ProjectReference Include="..\Biflow.Ui.Icons\Biflow.Ui.Icons.csproj" />
     <ProjectReference Include="..\Biflow.Ui.SqlMetadataExtensions\Biflow.Ui.SqlMetadataExtensions.csproj" />
     <ProjectReference Include="..\Biflow.Ui.TableEditor\Biflow.Ui.TableEditor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap.custom.css" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="compilerconfig.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
+    <Content Update="libman.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
 </Project>
