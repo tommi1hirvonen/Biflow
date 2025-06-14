@@ -30,6 +30,7 @@
 
   <ItemGroup>
     <AdditionalFiles Include="wwwroot/icons/**" />
+    <Content Update="compilerconfig.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <ItemGroup>
