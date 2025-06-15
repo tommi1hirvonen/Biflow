@@ -19,6 +19,7 @@ public class HealthReportEntryDto
         Duration = entry.Duration;
         Error = entry.Exception?.Message;
         Tags = entry.Tags;
+        Data = entry.Data.ToDictionary(x => x.Key, x => x.Value);
     }
     
     public string? Description { get; init; }
@@ -30,4 +31,6 @@ public class HealthReportEntryDto
     public string? Error { get; init; }
 
     public IEnumerable<string> Tags { get; init; } = [];
+    
+    public Dictionary<string, object> Data { get; init; } = [];
 }
