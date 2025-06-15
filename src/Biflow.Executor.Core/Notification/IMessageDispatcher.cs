@@ -2,5 +2,6 @@
 
 public interface IMessageDispatcher
 {
-    public Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml, CancellationToken cancellationToken = default);
+    public Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml,
+        CancellationToken cancellationToken = default);
 }

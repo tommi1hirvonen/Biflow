@@ -1,12 +1,13 @@
 using Azure;
 using Azure.Communication.Email;
+using Biflow.Executor.Core.Notification.Options;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class AzureEmailDispatcher(IOptionsMonitor<EmailOptions> optionsMonitor) : IMessageDispatcher
+internal class AzureEmailDispatcher(IOptionsMonitor<AzureEmailOptions> optionsMonitor) : IMessageDispatcher
 {
-    public static EmailClient CreateClientFrom(EmailOptions options) => new(options.ConnectionString);
+    public static EmailClient CreateClientFrom(AzureEmailOptions options) => new(options.ConnectionString);
     
     public Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml,
         CancellationToken cancellationToken = default)

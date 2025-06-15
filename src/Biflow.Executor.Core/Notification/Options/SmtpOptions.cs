@@ -1,12 +1,10 @@
-﻿namespace Biflow.Executor.Core.Notification;
+namespace Biflow.Executor.Core.Notification.Options;
 
-internal class EmailOptions
+public class SmtpOptions
 {
-    public const string EmailSettings = "EmailSettings";
+    public const string Section = "Smtp";
     
-    public string? ConnectionString { get; init; }
-
-    public string? SmtpServer { get; init; }
+    public string? Server { get; init; }
 
     public bool EnableSsl { get; init; }
 

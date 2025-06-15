@@ -1,10 +1,11 @@
 using Azure;
 using Azure.Communication.Email;
+using Biflow.Executor.Core.Notification.Options;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class AzureEmailTest(IOptionsMonitor<EmailOptions> optionsMonitor) : IEmailTest
+internal class AzureEmailTest(IOptionsMonitor<AzureEmailOptions> optionsMonitor) : IEmailTest
 {
     public Task RunAsync(string toAddress)
     {
