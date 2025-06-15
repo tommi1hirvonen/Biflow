@@ -67,12 +67,14 @@ else
 
 app.MapExecutorEndpoints();
 
-app.MapPost("/health/clear", (IEnumerable<HealthService> healthServices) =>
+app.MapPost("/health/clear", (
+        [FromKeyedServices(ExecutorServiceKeys.NotificationHealthService)]
+        HealthService notificationHealthService,
+        [FromKeyedServices(ExecutorServiceKeys.JobExecutorHealthService)]
+        HealthService jobExecutorHealthService) =>
     {
-        foreach (var service in healthServices)
-        {
-            service.ClearErrors();
-        }
+        notificationHealthService.ClearErrors();
+        jobExecutorHealthService.ClearErrors();
         return Results.Ok();
     })
     .WithName("ClearHealth")
