@@ -2,6 +2,7 @@
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.JobOrchestrator;
 using Biflow.Executor.Core.Notification;
+using Biflow.Executor.Core.Notification.Options;
 using Biflow.Executor.Core.Orchestrator;
 using Biflow.Executor.Core.ServiceHealth;
 using Biflow.Executor.Core.StepExecutor;
@@ -26,7 +27,6 @@ public static class Extensions
             .Bind(executorConfiguration)
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        services.Configure<EmailOptions>(executorConfiguration.GetSection(EmailOptions.EmailSettings));
 
         services.AddSingleton<IExecutionValidator, CircularJobsValidator>();
         services.AddSingleton<IExecutionValidator, CircularStepsValidator>();
@@ -36,16 +36,31 @@ public static class Extensions
         services.AddKeyedSingleton<HealthService>(ExecutorServiceKeys.NotificationHealthService);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
-        if (executorConfiguration[$"{EmailOptions.EmailSettings}:ConnectionString"] is { Length: > 0 })
+
+        // Configure email options and services based on which section was configured in appsettings.
+        var emailSection = executorConfiguration.GetSection(EmailOptions.Section);
+        var smtpSection = emailSection.GetSection(SmtpOptions.Section);
+        var azureEmailSection = emailSection.GetSection(AzureEmailOptions.Section);
+        var graphEmailSection = emailSection.GetSection(GraphEmailOptions.Section);
+        if (smtpSection.Exists())
         {
-            services.AddSingleton<IMessageDispatcher, AzureEmailDispatcher>();
-            services.AddSingleton<IEmailTest, AzureEmailTest>();
-        }
-        else
-        {
+            services.Configure<SmtpOptions>(smtpSection);
             services.AddSingleton<IMessageDispatcher, SmtpDispatcher>();
             services.AddSingleton<IEmailTest, SmtpTest>();
         }
+        else if (azureEmailSection.Exists())
+        {
+            services.Configure<AzureEmailOptions>(azureEmailSection);
+            services.AddSingleton<IMessageDispatcher, AzureEmailDispatcher>();
+            services.AddSingleton<IEmailTest, AzureEmailTest>();
+        }
+        else if (graphEmailSection.Exists())
+        {
+            services.Configure<GraphEmailOptions>(graphEmailSection);
+            services.AddSingleton<IMessageDispatcher, GraphEmailDispatcher>();
+            services.AddSingleton<IEmailTest, GraphEmailTest>();
+        }
+
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IStepExecutorProvider, StepExecutorProvider>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();

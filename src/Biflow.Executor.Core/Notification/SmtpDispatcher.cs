@@ -2,20 +2,21 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
+using Biflow.Executor.Core.Notification.Options;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class SmtpDispatcher(ILogger<SmtpDispatcher> logger, IOptionsMonitor<EmailOptions> optionsMonitor)
+internal class SmtpDispatcher(ILogger<SmtpDispatcher> logger, IOptionsMonitor<SmtpOptions> optionsMonitor)
     : IMessageDispatcher
 {
-    public static SmtpClient CreateClientFrom(EmailOptions options)
+    public static SmtpClient CreateClientFrom(SmtpOptions options)
     {
         if (options.AnonymousAuthentication)
         {
-            return new SmtpClient(options.SmtpServer);
+            return new SmtpClient(options.Server);
         }
         
-        return new SmtpClient(options.SmtpServer)
+        return new SmtpClient(options.Server)
         {
             UseDefaultCredentials = false,
             Credentials = new NetworkCredential(options.Username, options.Password),
@@ -24,7 +25,7 @@ internal class SmtpDispatcher(ILogger<SmtpDispatcher> logger, IOptionsMonitor<Em
         };
     }
     
-    public async Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml,
+    public Task SendMessageAsync(IEnumerable<string> recipients, string subject, string body, bool isBodyHtml,
         CancellationToken cancellationToken = default)
     {
         var options = optionsMonitor.CurrentValue;
@@ -62,6 +63,6 @@ internal class SmtpDispatcher(ILogger<SmtpDispatcher> logger, IOptionsMonitor<Em
             mailMessage.Bcc.Add(recipient);
         }
 
-        await client.SendMailAsync(mailMessage, cancellationToken);
+        return client.SendMailAsync(mailMessage, cancellationToken);
     }
 }

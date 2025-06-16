@@ -1,11 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Net.Mail;
+using Biflow.Executor.Core.Notification.Options;
 
 namespace Biflow.Executor.Core.Notification;
 
-internal class SmtpTest(IOptions<EmailOptions> options) : IEmailTest
+internal class SmtpTest(IOptions<SmtpOptions> options) : IEmailTest
 {
-    public async Task RunAsync(string toAddress)
+    public Task RunAsync(string toAddress)
     {
         var client = SmtpDispatcher.CreateClientFrom(options.Value);
         ArgumentException.ThrowIfNullOrEmpty(options.Value.FromAddress);
@@ -17,6 +18,6 @@ internal class SmtpTest(IOptions<EmailOptions> options) : IEmailTest
             Body = "This is a test email sent from Biflow."
         };
         mailMessage.To.Add(toAddress);
-        await client.SendMailAsync(mailMessage);
+        return client.SendMailAsync(mailMessage);
     }
 }

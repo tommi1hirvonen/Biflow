@@ -6,12 +6,12 @@ namespace Biflow.Executor.Core.Notification;
 internal class NotificationService(
     ILogger<NotificationService> logger,
     [FromKeyedServices(ExecutorServiceKeys.NotificationHealthService)] HealthService healthService,
-    IMessageDispatcher messageDispatcher,
-    ISubscribersResolver subscribersResolver) : INotificationService
+    ISubscribersResolver subscribersResolver,
+    IMessageDispatcher? messageDispatcher = null) : INotificationService
 {
     private readonly ILogger<NotificationService> _logger = logger;
     private readonly HealthService _healthService = healthService;
-    private readonly IMessageDispatcher _messageDispatcher = messageDispatcher;
+    private readonly IMessageDispatcher? _messageDispatcher = messageDispatcher;
     private readonly ISubscribersResolver _subscribersResolver = subscribersResolver;
 
     public async Task SendCompletionNotificationAsync(Execution execution)
@@ -35,6 +35,17 @@ internal class NotificationService(
 
         if (!recipients.Any())
         { 
+            return;
+        }
+
+        if (_messageDispatcher is null)
+        {
+            _healthService.AddError(execution.ExecutionId,
+                "Error sending notification mail: no message dispatcher was configured in the application settings.");
+            _logger.LogError(
+                "{ExecutionId} Error sending notification email. " +
+                "No message dispatcher was configured in the application settings.",
+                execution.ExecutionId);
             return;
         }
 
@@ -186,6 +197,18 @@ internal class NotificationService(
         {
             return;
         }
+        
+        if (_messageDispatcher is null)
+        {
+            _healthService.AddError(execution.ExecutionId,
+                "Error sending long-running execution notification mail: " +
+                "no message dispatcher was configured in the application settings.");
+            _logger.LogError(
+                "{ExecutionId} Error sending long-running execution notification email. " +
+                "No message dispatcher was configured in the application settings.",
+                execution.ExecutionId);
+            return;
+        }
 
         try
         {
@@ -193,13 +216,13 @@ internal class NotificationService(
             var messageBody = $"Execution of job \"{execution.JobName}\" started at {execution.StartedOn?.LocalDateTime}"
                 + $" has exceeded the overtime limit of {execution.OvertimeNotificationLimitMinutes} minutes set for this job.";
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, false);
-            _logger.LogInformation("{ExecutionId} Long running execution notification email sent to: {recipients}",
+            _logger.LogInformation("{ExecutionId} Long-running execution notification email sent to: {recipients}",
                 execution.ExecutionId, string.Join(", ", recipients));
         }
         catch (Exception ex)
         {
             _healthService.AddError(execution.ExecutionId,
-                $"Error sending long running execution notification: ${ex.Message}");
+                $"Error sending long-running execution notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
         }
     }
