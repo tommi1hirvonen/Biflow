@@ -4,8 +4,8 @@ public static class PeriodPresetExtensions
 {
     public static string? GetPresetText(this PeriodPreset preset) => preset switch
     {
-        PeriodPreset.Week => "Last week",
-        PeriodPreset.Month => "Last month",
+        PeriodPreset.Week => "Last 7 days",
+        PeriodPreset.Month => "Last 30 days",
         PeriodPreset.ThreeMonths => "Last 3 months",
         PeriodPreset.SixMonths => "Last 6 months",
         PeriodPreset.TwelveMonths => "Last 12 months",

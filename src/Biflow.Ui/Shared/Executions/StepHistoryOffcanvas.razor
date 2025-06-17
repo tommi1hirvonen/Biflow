@@ -26,11 +26,11 @@
                     <HxDropdownMenu>
                         <HxDropdownItem CssClass="@(_preset == PeriodPreset.Week ? "active" : null)"
                                         @onclick="() => ApplyPresetAsync(PeriodPreset.Week)">
-                            Last week
+                            Last 7 days
                         </HxDropdownItem>
                         <HxDropdownItem CssClass="@(_preset == PeriodPreset.Month ? "active" : null)"
                                         @onclick="() => ApplyPresetAsync(PeriodPreset.Month)">
-                            Last month
+                            Last 30 days
                         </HxDropdownItem>
                         <HxDropdownItem CssClass="@(_preset == PeriodPreset.ThreeMonths ? "active" : null)"
                                         @onclick="() => ApplyPresetAsync(PeriodPreset.ThreeMonths)">
