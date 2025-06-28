@@ -36,8 +36,9 @@ public partial class ExecutionDetails(
     private readonly HashSet<(string StepName, StepType StepType)> _stepFilter = [];
     private FilterDropdownMode _tagFilterMode = FilterDropdownMode.Any;
     private Guid _prevExecutionId;
-    private Execution? _execution;
-    private IEnumerable<StepExecutionProjection>? _stepProjections;
+    private ExecutionDetailsProjection? _execution;
+    private StepExecutionDetailsProjection[]? _steps;
+    private ExecutionParameter[]? _executionParameters;
     private Job? _job;
     private Schedule? _schedule;
     private bool _loading;
@@ -70,9 +71,9 @@ public partial class ExecutionDetails(
 
     private bool Stopping => _stoppingExecutions.Any(id => id == ExecutionId);
 
-    private IEnumerable<StepExecutionProjection>? GetOrderedExecutions()
+    private IEnumerable<StepExecutionDetailsProjection>? GetOrderedExecutions()
     {
-        var filtered = _stepProjections
+        var filtered = _steps
             ?.Where(e =>
             (_tagFilterMode is FilterDropdownMode.Any && (_tagFilter.Count == 0 || _tagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
             || (_tagFilterMode is FilterDropdownMode.All && _tagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
@@ -150,35 +151,82 @@ public partial class ExecutionDetails(
             _timer.Stop();
             _loading = true;
             await InvokeAsync(StateHasChanged);
+            var graphTask = ShowReport == Report.Graph ? _dependenciesGraph?.LoadDataAndGraphAsync(_cts.Token) : null;
             await using var context = await _dbContextFactory.CreateDbContextAsync();
 
             try
             {
-                var stepExecutions = await (
-                from exec in context.StepExecutions
-                    .AsNoTrackingWithIdentityResolution()
-                    .Where(e => e.ExecutionId == ExecutionId)
-                    .Include(e => e.Execution).ThenInclude(e => e.ExecutionParameters)
-                    .Include(e => e.StepExecutionAttempts)
-                    .Include(e => e.ExecutionDependencies)
-                    .Include(e => e.MonitoredStepExecutions).ThenInclude(e => e.MonitoredStepExecution).ThenInclude(e => e.StepExecutionAttempts)
-                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.ExecutionConditionParameters).ThenInclude(p => p.ExecutionParameter)
-                join step in context.Steps.Include(s => s.Tags) on exec.StepId equals step.StepId into es
-                from step in es.DefaultIfEmpty()
-                select new { exec, step }
-                ).ToArrayAsync(_cts.Token);
-                foreach (var item in stepExecutions)
-                {
-                    item.exec.SetStep(item.step);
-                }
-                _execution = stepExecutions.FirstOrDefault()?.exec.Execution;
+                _execution = await (
+                    from e in context.Executions.AsNoTracking()
+                    join job in context.Jobs on e.JobId equals job.JobId into ej
+                    from job in ej.DefaultIfEmpty() // Translates to left join in SQL
+                    where e.ExecutionId == ExecutionId
+                    orderby e.CreatedOn descending, e.StartedOn descending
+                    select new ExecutionDetailsProjection(
+                        e.ExecutionId,
+                        e.JobId,
+                        job.JobName ?? e.JobName,
+                        e.ScheduleId,
+                        e.ScheduleName,
+                        e.CronExpression,
+                        e.CreatedBy,
+                        e.CreatedOn,
+                        e.StartedOn,
+                        e.EndedOn,
+                        e.ExecutionMode,
+                        e.ExecutionStatus,
+                        e.ExecutorProcessId,
+                        e.StopOnFirstError,
+                        e.MaxParallelSteps,
+                        e.TimeoutMinutes,
+                        e.OvertimeNotificationLimitMinutes,
+                        e.ParentExecution
+                    )).FirstOrDefaultAsync(_cts.Token);
+                
+                _steps = await (
+                    from e in context.StepExecutionAttempts.AsNoTracking()
+                    join step in context.Steps on e.StepId equals step.StepId into s
+                    from step in s.DefaultIfEmpty()
+                    where e.ExecutionId == ExecutionId
+                    orderby e.StepExecution.Execution.CreatedOn descending,
+                        e.StartedOn descending,
+                        e.StepExecution.ExecutionPhase descending
+                    select new StepExecutionDetailsProjection(
+                        e.ExecutionId,
+                        e.StepExecution.StepId,
+                        e.RetryAttemptIndex,
+                        step.StepName ?? e.StepExecution.StepName,
+                        e.StepType,
+                        e.StepExecution.ExecutionPhase,
+                        e.StartedOn,
+                        e.EndedOn,
+                        e.ExecutionStatus,
+                        e.StepExecution.Execution.ExecutionStatus,
+                        e.StepExecution.Execution.ExecutionMode,
+                        e.StepExecution.Execution.JobName,
+                        step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
+                        step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
+                    )).ToArrayAsync(_cts.Token);
+                
+                await InvokeAsync(StateHasChanged);
+                
+                // Load additional data after calling StateHasChanged().
+                // This could take some time, and with the data loaded until now,
+                // most of the UI elements can already be rendered.
+                _executionParameters = await context.Set<ExecutionParameter>()
+                    .Where(p => p.ExecutionId == ExecutionId)
+                    .OrderBy(p => p.ParameterName)
+                    .ToArrayAsync(_cts.Token);
+                
                 _job = _execution is not null
-                    ? await context.Jobs.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(j => j.JobId == _execution.JobId, _cts.Token)
+                    ? await context.Jobs
+                        .AsNoTrackingWithIdentityResolution()
+                        .FirstOrDefaultAsync(j => j.JobId == _execution.JobId, _cts.Token)
                     : null;
                 _schedule = _execution?.ScheduleId is not null
-                    ? await context.Schedules.AsNoTrackingWithIdentityResolution().FirstOrDefaultAsync(s => s.ScheduleId == _execution.ScheduleId, _cts.Token)
+                    ? await context.Schedules
+                        .AsNoTrackingWithIdentityResolution()
+                        .FirstOrDefaultAsync(s => s.ScheduleId == _execution.ScheduleId, _cts.Token)
                     : null;
             }
             catch (OperationCanceledException)
@@ -186,30 +234,10 @@ public partial class ExecutionDetails(
                 return;
             }
 
-            _stepProjections = _execution?.StepExecutions
-                .SelectMany(e => e.StepExecutionAttempts)
-                .Select(e => new StepExecutionProjection(
-                    e.StepExecution.ExecutionId,
-                    e.StepExecution.StepId,
-                    e.RetryAttemptIndex,
-                    e.StepExecution.GetStep()?.StepName ?? e.StepExecution.StepName,
-                    e.StepType,
-                    e.StepExecution.ExecutionPhase,
-                    e.StepExecution.Execution.CreatedOn,
-                    e.StartedOn,
-                    e.EndedOn,
-                    e.ExecutionStatus,
-                    e.StepExecution.Execution.ExecutionStatus,
-                    e.StepExecution.Execution.ExecutionMode,
-                    e.StepExecution.Execution.ScheduleId,
-                    e.StepExecution.Execution.ScheduleName,
-                    e.StepExecution.Execution.JobId,
-                    _job?.JobName ?? e.StepExecution.Execution.JobName,
-                    e.StepExecution.ExecutionDependencies.Select(d => d.DependantOnStepId).ToArray(),
-                    e.StepExecution.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray() ?? [],
-                    []))
-                .ToArray();
-
+            if (graphTask is not null)
+            {
+                await graphTask;
+            }
             _loading = false;
             if (AutoRefresh && _execution?.ExecutionStatus is ExecutionStatus.Running or ExecutionStatus.NotStarted)
             {
@@ -220,10 +248,6 @@ public partial class ExecutionDetails(
                 AutoRefresh = false;
             }
             await InvokeAsync(StateHasChanged);
-            if (ShowReport == Report.Graph && _dependenciesGraph is not null)
-            {
-                await InvokeAsync(_dependenciesGraph.LoadGraphAsync);
-            }
         }
     }
 
@@ -275,9 +299,12 @@ public partial class ExecutionDetails(
         {
             if (_execution is not null)
             {
-                _execution.ExecutionStatus = status;
-                _execution.StartedOn ??= DateTimeOffset.Now;
-                _execution.EndedOn ??= DateTimeOffset.Now;
+                _execution = _execution with
+                {
+                    ExecutionStatus = status,
+                    StartedOn = _execution.StartedOn ?? DateTimeOffset.Now,
+                    EndedOn = _execution.EndedOn ?? DateTimeOffset.Now
+                };
                 var command = new UpdateExecutionStatusCommand([_execution.ExecutionId], status);
                 await _mediator.SendAsync(command);
             }
@@ -305,6 +332,40 @@ public partial class ExecutionDetails(
         {
             _toaster.AddError("Error deleting execution", ex.Message);
         }
+    }
+    
+    private int GetProgressPercent()
+    {
+        if (_steps is null)
+        {
+            return 0;
+        }
+        var allCount = _steps.DistinctBy(s => s.StepId).Count();
+        var completedCount = _steps.Count(s =>
+            s.StepExecutionStatus is
+                StepExecutionStatus.Succeeded or
+                StepExecutionStatus.Warning or
+                StepExecutionStatus.Failed or
+                StepExecutionStatus.Stopped or
+                StepExecutionStatus.Skipped or
+                StepExecutionStatus.Duplicate);
+        return allCount > 0
+            ? (int)Math.Round(completedCount / (double)allCount * 100)
+            : 0;
+    }
+    
+    private decimal GetSuccessPercent()
+    {
+        if (_steps is null)
+        {
+            return 0;
+        }
+        var allCount = _steps.DistinctBy(s => s.StepId).Count();
+        var successCount = _steps.Count(s =>
+            s.StepExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Warning);
+        return allCount > 0
+            ? (decimal)successCount / allCount * 100
+            : 0;
     }
 
     public void Dispose()

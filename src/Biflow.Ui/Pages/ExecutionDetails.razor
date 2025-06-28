@@ -129,11 +129,11 @@
         <div class="col-lg mb-3">
             <div class="d-flex justify-content-between">
                 <span class="fw-bold">Progress</span>
-                <span class="small align-self-end">@($"{_execution?.GetProgressPercent() ?? 0}%")</span>
+                <span class="small align-self-end">@($"{GetProgressPercent()}%")</span>
                 <span><JobExecutionStatusBadge ExecutionStatus="@_execution?.ExecutionStatus" /></span>
             </div>
             <div class="progress mt-1 @_execution?.ExecutionStatus.ToString().ToLower()" style="height: 8px;">
-                <div class="progress-bar" style="width: @($"{_execution?.GetProgressPercent() ?? 0}%");"></div>
+                <div class="progress-bar" style="width: @($"{GetProgressPercent()}%");"></div>
             </div>
         </div>
     </div>
@@ -218,11 +218,11 @@
                     </tr>
                     <tr>
                         <td class="fw-bold">Number of steps</td>
-                        <td>@_execution.StepExecutions.Count</td>
+                        <td>@_steps?.DistinctBy(s => s.StepId).Count()</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Success percent</td>
-                        <td>@_execution.GetSuccessPercent().FormatPercentage(0)</td>
+                        <td>@GetSuccessPercent().FormatPercentage(0)</td>
                     </tr>
                     <tr>
                         <td class="fw-bold">Created by</td>
@@ -332,7 +332,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                @if (_execution is null)
+                @if (_executionParameters is null)
                 {
                     <tr>
                         <td colspan="5" class="text-center">
@@ -340,7 +340,8 @@
                         </td>
                     </tr>
                 }
-                else {if (!_execution.ExecutionParameters.Any())
+                else {
+                    if (!_executionParameters.Any())
                     {
                         <tr>
                             <td colspan="5">No parameters</td>
@@ -348,7 +349,7 @@
                     }
                     else
                     {
-                        foreach (var param in _execution.ExecutionParameters.OrderBy(p => p.ParameterName))
+                        foreach (var param in _executionParameters.OrderBy(p => p.ParameterName))
                         {
                             <tr>
                                 <td>@param.DisplayName</td>
@@ -356,7 +357,8 @@
                                 <td class="font-monospace">@param.DisplayValue</td>
                                 <td>@param.DisplayValueType</td>
                                 <td class="small">
-                                    <a class="link-body-emphasis cursor-pointer" @onclick="() => _parameterLineageOffcanvas.LetAsync(x => x.ShowAsync(param))">
+                                    <a class="link-body-emphasis cursor-pointer"
+                                       @onclick="() => _parameterLineageOffcanvas.LetAsync(x => x.ShowAsync(param))">
                                         Show lineage
                                     </a>
                                 </td>
@@ -380,10 +382,10 @@
                 <HxButtonGroup Size="ButtonGroupSize.Small">
                     <FilterDropdown TItem="(string StepName, StepType StepType)"
                                     FilterSet="_stepFilter"
-                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible steps based on tag filter
-                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible steps based on step status filter
+                                    Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible steps based on tag filter
+                                        .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible steps based on step status filter
                                         .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                        .Select(s => (s.GetStep()?.StepName ?? s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
+                                        .Select(s => (s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
                                         .Distinct().OrderBy(j => j).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged"
                                     IsSearchable="true">
@@ -398,8 +400,8 @@
                     </FilterDropdown>
                     <FilterDropdown TItem="StepType"
                                     FilterSet="_stepTypeFilter"
-                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step types based on tag filter
-                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible step types based on step status filter
+                                    Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible step types based on tag filter
+                                        .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible step types based on step status filter
                                         .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
                                         .Select(s => s.StepType).Distinct().OrderBy(j => j).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
@@ -414,10 +416,10 @@
                     </FilterDropdown>
                     <FilterDropdown TItem="StepExecutionStatus"
                                     FilterSet="_stepStatusFilter"
-                                    Items="_execution?.StepExecutions.Where(s => !_tagFilter.Any() || s.GetStep()?.Tags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId)) == true) // Limit visible step statuses based on tag filter
+                                    Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible step statuses based on tag filter
                                         .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
                                         .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
-                                        .SelectMany(s => s.StepExecutionAttempts).Select(e => e.ExecutionStatus).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
+                                        .Select(e => e.StepExecutionStatus).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
                             <SvgIcon Icon="LucideIcon.CircleAlert"/>
@@ -429,10 +431,10 @@
                     </FilterDropdown>
                     <FilterDropdown TItem="TagProjection"
                                     FilterSet="_tagFilter"
-                                    Items="_execution?.StepExecutions.Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
+                                    Items="_steps?.Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
                                         .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
-                                        .Where(s => !_stepStatusFilter.Any() || s.StepExecutionAttempts.Any(att => _stepStatusFilter.Contains(att.ExecutionStatus))) // Limit visible tags based on step status filter
-                                        .SelectMany(e => e.GetStep()?.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)) ?? []).Distinct().Order().AsEnumerable() ?? []"
+                                        .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible tags based on step status filter
+                                        .SelectMany(e => e.StepTags).Distinct().Order().AsEnumerable() ?? []"
                                     IdSelector="t => t.TagId.ToString()"
                                     TextSelector="t => t.TagName"
                                     @bind-Mode="_tagFilterMode"
@@ -457,13 +459,6 @@
         break;
 }
 
-@{
-    var detailStepProvider = (StepExecutionProjection e) =>
-        _execution?.StepExecutions
-            .SelectMany(s => s.StepExecutionAttempts)
-            .FirstOrDefault(x => x.ExecutionId == e.ExecutionId && x.StepId == e.StepId && x.RetryAttemptIndex == e.RetryAttemptIndex);
-}
-
 @switch (ShowReport)
 {
     case Report.List:
@@ -473,24 +468,26 @@
                 Executions="GetOrderedExecutions()"
                 SortMode="_sortMode"
                 OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }"
-                DetailStepProvider="detailStepProvider"
                 OnStepsUpdated="LoadData" />
         </div>
         break;
     case Report.Gantt:
         <div class="card mt-3 pt-3 mb-4">
             <StepExecutionsGraph Executions="GetOrderedExecutions()"
-                                 DetailStepProvider="detailStepProvider"
                                  SortMode="_sortMode"
                                  OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }" />
         </div>
         break;
     case Report.Graph when _execution is not null:
-        <ExecutionDependenciesGraph @ref="_dependenciesGraph" Execution="_execution" InitialStepId="InitialStepId" />
+        <ExecutionDependenciesGraph @ref="_dependenciesGraph"
+                                    ExecutionId="ExecutionId"
+                                    ExecMode="_execution.ExecutionMode"
+                                    InitialStepId="InitialStepId" />
         break;
     case Report.Rerun:
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}")">
-            <RerunBuilder Execution="_execution" />
+            <RerunBuilder StepExecutions="_steps"
+                          JobId="_execution?.JobId ?? Guid.Empty" />
         </AuthorizeView>
         break;
     case Report.History when _execution is not null:
@@ -500,9 +497,8 @@
         break;
     case Report.ExecutionDetails:
     case Report.Parameters:
-        break;
     default:
-        throw new ArgumentOutOfRangeException();
+        break;
 }
 
 <ExecutionParameterLineageOffcanvas @ref="_parameterLineageOffcanvas" />

@@ -1,12 +1,11 @@
-﻿using Biflow.Core;
-
-namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Projections;
 
 /// <summary>
 /// Convenience class inheriting <see cref="TopologicalComparer{TItem,TKey}"/>.
 /// Used to compare/sort steps based on their dependencies.
 /// </summary>
-public class TopologicalStepProjectionComparer(IEnumerable<StepProjection> steps) : TopologicalComparer<StepProjection, Guid>(
+public class TopologicalStepProjectionComparer(IEnumerable<StepProjection> steps)
+    : TopologicalComparer<StepProjection, Guid>(
         steps,
         step => step?.StepId ?? Guid.Empty,
         step => step.Dependencies.Select(d => d.DependentOnStepId));

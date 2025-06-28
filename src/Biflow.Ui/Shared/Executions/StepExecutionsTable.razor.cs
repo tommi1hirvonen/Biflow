@@ -15,11 +15,11 @@ public partial class StepExecutionsTable(
 
     [CascadingParameter] public StepExecutionMonitorsOffcanvas? StepExecutionMonitorsOffcanvas { get; set; }
 
-    [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
+    [Parameter] public IEnumerable<IStepExecutionProjection>? Executions { get; set; }
 
     [Parameter] public bool ShowDetailed { get; set; } = true;
 
-    [Parameter] public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
+    [Parameter] public Func<IStepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
     [Parameter] public EventCallback OnStepsUpdated { get; set; }
 
@@ -36,7 +36,7 @@ public partial class StepExecutionsTable(
     private readonly IJSRuntime _js = js;
     private readonly HashSet<StepExecutionId> _selectedSteps = [];
 
-    private StepExecutionProjection? _selectedStepExecution;
+    private IStepExecutionProjection? _selectedStepExecution;
     private StepHistoryOffcanvas? _stepHistoryOffcanvas;
     private StepExecutionAttempt? _detailStep;
 
@@ -97,7 +97,7 @@ public partial class StepExecutionsTable(
         OnSortingChanged.InvokeAsync(sortMode);
     }
 
-    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
+    private async Task ToggleSelectedStepExecutionAsync(IStepExecutionProjection execution)
     {
         // If the selected execution is the same that was previously selected, set to null
         // => hides step execution details component.
@@ -118,16 +118,22 @@ public partial class StepExecutionsTable(
             {
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 _detailStep = await context.StepExecutionAttempts
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                     .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Execution)
-                    .ThenInclude(e => e.ExecutionParameters)
-                    .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.ExecutionConditionParameters)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
+                                              e.StepId == execution.StepId &&
+                                              e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                // Request rendering for the data we already have.
+                StateHasChanged();
+                // The rest of the data is loaded in the background, as it may take some time.
+                // Use EF change tracking to populate the navigation properties of the previously loaded entity. 
+                _ = await context.StepExecutions
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
-                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                    .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
+                StateHasChanged();
                 if (_detailStep is not null)
                 {
                     var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);
@@ -164,7 +170,7 @@ public partial class StepExecutionsTable(
         }
     }
 
-    private void ToggleStepSelected(StepExecutionProjection step)
+    private void ToggleStepSelected(IStepExecutionProjection step)
     {
         var id = new StepExecutionId(step.ExecutionId, step.StepId, step.RetryAttemptIndex);
         if (!_selectedSteps.Remove(id))

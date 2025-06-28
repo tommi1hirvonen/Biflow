@@ -1,11 +1,15 @@
 ﻿namespace Biflow.Ui.Shared.Executions;
 
-public partial class ExecutionDependenciesGraph : ComponentBase
+public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> dbContextFactory) : ComponentBase
 {
-    [Parameter] public Execution? Execution { get; set; }
+    [Parameter, EditorRequired] public Guid? ExecutionId { get; set; }
+    
+    [Parameter, EditorRequired] public ExecutionMode? ExecMode { get; set; }
 
     [Parameter] public Guid? InitialStepId { get; set; }
-
+    
+    private StepExecution[]? _stepExecutions;
+    private bool _loading;
     private DependencyGraph<StepExecution>? _dependencyGraph;
     private StepExecution? _dependencyGraphStepFilter;
     private StepExecutionDetailsOffcanvas? _stepExecutionDetailsOffcanvas;
@@ -30,11 +34,13 @@ public partial class ExecutionDependenciesGraph : ComponentBase
     // TODO Replace with field keyword in .NET 10
     private int _filterDepthForwards;
 
-    private IEnumerable<StepExecution>? StepExecutions => Execution?.StepExecutions
-        .Concat(Execution.StepExecutions
-            .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
-            .Select(e => e.MonitoredStepExecution)
-            .Where(e => e.ExecutionId != Execution.ExecutionId));
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+        if (InitialStepId is not { } filterStepId) return;
+        _dependencyGraphStepFilter = _stepExecutions?.FirstOrDefault(s => s.StepId == filterStepId);
+        StateHasChanged();
+    }
 
     private StepExecution? ItemFromNodeId(string nodeId)
     {
@@ -43,17 +49,9 @@ public partial class ExecutionDependenciesGraph : ComponentBase
             [var item1, var item2] when
                 Guid.TryParse(item1, out var execId)
                 && Guid.TryParse(item2, out var stepId) =>
-                    StepExecutions?.FirstOrDefault(e => e.ExecutionId == execId && e.StepId == stepId),
+                    _stepExecutions?.FirstOrDefault(e => e.ExecutionId == execId && e.StepId == stepId),
             _ => null
         };
-    }
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (!firstRender) return;
-        if (InitialStepId is not { } filterStepId) return;
-        _dependencyGraphStepFilter = Execution?.StepExecutions.FirstOrDefault(s => s.StepId == filterStepId);
-        StateHasChanged();
     }
 
     private Task SetDirectionAsync(DependencyGraphDirection direction)
@@ -66,17 +64,51 @@ public partial class ExecutionDependenciesGraph : ComponentBase
         return LoadGraphAsync();
     }
 
-    public async Task LoadGraphAsync()
+    public async Task LoadDataAndGraphAsync(CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(_dependencyGraph);
-        ArgumentNullException.ThrowIfNull(Execution);
-        ArgumentNullException.ThrowIfNull(StepExecutions);
+        if (_loading)
+        {
+            return;
+        }
+        
+        _loading = true;
 
-        var allNodes = StepExecutions
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        var stepExecutions = await dbContext.StepExecutions
+            .Where(e => e.ExecutionId == ExecutionId)
+            .Include(e => e.ExecutionDependencies)
+            .Include(e => e.StepExecutionAttempts)
+            .Include(e => e.MonitoredStepExecutions)
+            .ThenInclude(e => e.MonitoredStepExecution)
+            .ThenInclude(e => e.StepExecutionAttempts)
+            .ToArrayAsync(cancellationToken);
+        _stepExecutions = stepExecutions
+            .Concat(stepExecutions
+                .SelectMany(e => e.MonitoredStepExecutions.Where(m =>
+                    m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
+                .Select(e => e.MonitoredStepExecution)
+                .Where(e => e.ExecutionId != ExecutionId))
+            .ToArray();
+        
+        _loading = false;
+        
+        await LoadGraphAsync();
+    }
+
+    private async Task LoadGraphAsync()
+    {
+        if (!ExecutionId.HasValue)
+        {
+            throw new ArgumentNullException(nameof(ExecutionId));
+        }
+        ArgumentNullException.ThrowIfNull(_stepExecutions);
+        ArgumentNullException.ThrowIfNull(_dependencyGraph);
+        
+        var allNodes = _stepExecutions
             .Select(step =>
             {
                 var status = step.ExecutionStatus.ToString() ?? "";
-                var @internal = step.ExecutionId == Execution.ExecutionId;
+                var @internal = step.ExecutionId == ExecutionId;
                 return new DependencyGraphNode(
                     Id: $"{step.ExecutionId}_{step.StepId}",
                     Name: step.StepName,
@@ -86,9 +118,9 @@ public partial class ExecutionDependenciesGraph : ComponentBase
                 );
             })
             .ToArray();
-        var crossExecutionEdgesUpstream = Execution.StepExecutions
+        var crossExecutionEdgesUpstream = _stepExecutions
                 .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.UpstreamDependency))
-                .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
+                .Where(m => m.MonitoredExecutionId != ExecutionId)
                 .Select(m =>
                 {
                     var dependencyType = m.StepExecution.ExecutionDependencies
@@ -100,16 +132,16 @@ public partial class ExecutionDependenciesGraph : ComponentBase
                         DependsOnId: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
                         CssClass: dependencyType.ToString().ToLower());
                 });
-        var crossExecutionEdgesDownstream = Execution.StepExecutions
+        var crossExecutionEdgesDownstream = _stepExecutions
             .SelectMany(e => e.MonitoredStepExecutions.Where(m => m.MonitoringReason == MonitoringReason.DownstreamDependency))
-            .Where(m => m.MonitoredExecutionId != Execution.ExecutionId)
+            .Where(m => m.MonitoredExecutionId != ExecutionId)
             .Select(m => new DependencyGraphEdge(
                 Id: $"{m.MonitoredExecutionId}_{m.MonitoredStepId}",
                 DependsOnId: $"{m.ExecutionId}_{m.StepId}",
-                CssClass: DependencyType.OnCompleted.ToString().ToLower()));
-        var allEdges = Execution.StepExecutions
+                CssClass: nameof(DependencyType.OnCompleted).ToLower()));
+        var allEdges = _stepExecutions
             .SelectMany(step => step.ExecutionDependencies)
-            .Where(dep => Execution.StepExecutions.Any(s => dep.DependantOnStepId == s.StepId))
+            .Where(dep => _stepExecutions.Any(s => dep.DependantOnStepId == s.StepId))
             .Select(dep => new DependencyGraphEdge(
                 Id: $"{dep.ExecutionId}_{dep.StepId}",
                 DependsOnId: $"{dep.ExecutionId}_{dep.DependantOnStepId}",
@@ -144,7 +176,7 @@ public partial class ExecutionDependenciesGraph : ComponentBase
             }
         }
         await _dependencyGraph.DrawAsync(nodes, edges, _direction);
-        StateHasChanged();
+        await InvokeAsync(StateHasChanged);
     }
 
     private List<DependencyGraphNode> RecurseDependenciesBackward(
@@ -215,19 +247,15 @@ public partial class ExecutionDependenciesGraph : ComponentBase
 
     private async Task ShowStepExecutionOffcanvas(StepExecution step)
     {
-        var attempt = step?.StepExecutionAttempts.OrderByDescending(s => s.StartedOn).First();
-        if (attempt is null)
-        {
-            return;
-        }
+        var attempt = step.StepExecutionAttempts.OrderByDescending(s => s.StartedOn).First();
         StateHasChanged();
         await _stepExecutionDetailsOffcanvas.LetAsync(x => x.ShowAsync(attempt));
     }
 
     private Task<AutosuggestDataProviderResult<StepExecution>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
-        ArgumentNullException.ThrowIfNull(StepExecutions);
-        var filtered = StepExecutions.Where(s => s.StepName.ContainsIgnoreCase(request.UserInput));
+        ArgumentNullException.ThrowIfNull(_stepExecutions);
+        var filtered = _stepExecutions.Where(s => s.StepName.ContainsIgnoreCase(request.UserInput));
         return Task.FromResult(new AutosuggestDataProviderResult<StepExecution>
         {
             Data = filtered
