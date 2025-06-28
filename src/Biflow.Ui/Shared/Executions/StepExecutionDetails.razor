@@ -15,7 +15,7 @@
         <dd class="col-sm-9">
             @if (StepExecutionAttempt.StepExecution.GetStep() is { } step)
             {
-                <a href="jobs/@StepExecutionAttempt.StepExecution.Execution.JobId/steps/@step.StepId">
+                <a href="jobs/@step.JobId/steps/@step.StepId">
                     @step.StepId
                 </a>
             }
@@ -116,8 +116,7 @@
                 </dt>
                 <dd class="col-sm-9">
                     @{
-                        var jobParam = sql.Execution.ExecutionParameters
-                            .FirstOrDefault(p => p.ParameterId == sql.ResultCaptureJobParameterId);
+                        var jobParam = sql.ResultCaptureJobParameter;
                     }
                     @(jobParam is not null ? $"{jobParam.ParameterName} ({jobParam.ParameterValue.ValueType})" : null)
                 </dd>
@@ -638,7 +637,7 @@
 }
 
 @code {
-    [Parameter]
+    [Parameter, EditorRequired]
     public StepExecutionAttempt? StepExecutionAttempt { get; set; }
 
     [Parameter]

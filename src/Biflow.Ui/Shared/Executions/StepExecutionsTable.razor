@@ -185,7 +185,7 @@
                                         <input type="checkbox" class="form-check-input" id="@checkBoxId"
                                                checked=@_selectedSteps.Contains(id)
                                                @onclick:stopPropagation="true"
-                                               @onchange="args => ToggleStepSelected(item)">
+                                               @onchange="_ => ToggleStepSelected(item)">
                                         <label class="form-check-label" for="@checkBoxId"></label>
                                     </div>
                                 </AuthorizeView>
@@ -200,7 +200,7 @@
                                         <input type="checkbox" class="form-check-input" id="@checkBoxId"
                                                checked=@_selectedSteps.Contains(id)
                                                @onclick:stopPropagation="true"
-                                               @onchange="args => ToggleStepSelected(item)">
+                                               @onchange="_ => ToggleStepSelected(item)">
                                         <label class="form-check-label" for="@checkBoxId"></label>
                                     </div>
                                 </AuthorizeView>

@@ -160,7 +160,8 @@ public partial class DependenciesGraph(
         await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
-    private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps,
+        List<StepProjection> processedSteps, int depth)
     {
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
@@ -190,7 +191,8 @@ public partial class DependenciesGraph(
         return processedSteps;
     }
 
-    private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps,
+        List<StepProjection> processedSteps, int depth)
     {
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {

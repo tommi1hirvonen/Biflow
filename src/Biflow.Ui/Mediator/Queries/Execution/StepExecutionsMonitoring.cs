@@ -63,7 +63,6 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
                 e.StepExecution.Execution.ExecutionMode,
                 e.StepExecution.Execution.ScheduleId,
                 e.StepExecution.Execution.ScheduleName,
-                e.StepExecution.Execution.JobId,
                 job.JobName ?? e.StepExecution.Execution.JobName,
                 step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
                 step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray(),

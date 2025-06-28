@@ -1,7 +1,6 @@
 ﻿@implements IDisposable
 
 @inject IDbContextFactory<AppDbContext> DbFactory
-@inject NavigationManager NavigationManager
 
 @if (!string.IsNullOrEmpty(JobName))
 {
@@ -208,7 +207,7 @@
     private readonly CancellationTokenSource _cts = new();
 
     private IEnumerable<ExecutionProjection>? _executions;
-    private bool _showChart = false;
+    private bool _showChart;
     private LineChartDataset? _dataset;
     private DateTime _fromDateTime = DateTime.Today.AddDays(-30);
     private DateTime _toDateTime = DateTime.Today.AddDays(1);

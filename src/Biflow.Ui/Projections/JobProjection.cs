@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Projections;
 
 /// <summary>
 /// Lightweight Job class replacement which can be used to only load specific columns from the database

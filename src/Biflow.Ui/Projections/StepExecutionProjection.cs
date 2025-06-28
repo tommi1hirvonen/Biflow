@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Projections;
 
 /// <summary>
 /// Lightweight StepExecutionAttempt class replacement which can be used to only load selected attributes from the database using projection
@@ -18,11 +18,10 @@ public record StepExecutionProjection(
     ExecutionMode ExecutionMode,
     Guid? ScheduleId,
     string? ScheduleName,
-    Guid? JobId,
     string JobName,
     Guid[] Dependencies,
     TagProjection[] StepTags,
-    TagProjection[] JobTags) : IExecutionProjection
+    TagProjection[] JobTags) : IExecutionProjection, IStepExecutionProjection
 {
     public virtual bool Equals(StepExecutionProjection? other) =>
         other is not null &&

@@ -139,10 +139,10 @@
 @if (Job is not null)
 {
     <DependencyGraph @ref="_dependencyGraph"
-    TItem="StepProjection"
-    ItemFromNodeIdSelector="nodeId => _stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
-    AfterRender="LoadGraphAsync"
-    CssClass="dependency-graph">
+                     TItem="StepProjection"
+                     ItemFromNodeIdSelector="nodeId => _stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+                     AfterRender="LoadGraphAsync"
+                     CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
             <li>
                 <h6 class="dropdown-header">

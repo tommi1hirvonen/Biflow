@@ -1,5 +1,4 @@
 ﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject NavigationManager NavigationManager
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="@_stepExecution?.StepName">
     <BodyTemplate>
@@ -74,11 +73,11 @@
 </HxOffcanvas>
 
 @code {
-    private StepExecutionProjection? _stepExecution;
+    private IStepExecutionProjection? _stepExecution;
     private StepExecutionMonitor[]? _monitors;
     private HxOffcanvas? _offcanvas;
 
-    public async Task ShowAsync(StepExecutionProjection step)
+    public async Task ShowAsync(IStepExecutionProjection step)
     {
         _monitors = null;
         _stepExecution = step;

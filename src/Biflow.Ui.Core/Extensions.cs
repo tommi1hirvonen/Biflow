@@ -221,42 +221,6 @@ public static class Extensions
     }
 
     /// <summary>
-    /// Calculate progress percentage based on the <see cref="Execution.StepExecutions"/> and <see cref="StepExecution.StepExecutionAttempts"/> list of steps and their statuses
-    /// </summary>
-    /// <returns>Success percentage between 0 and 100</returns>
-    public static decimal GetSuccessPercent(this Execution execution)
-    {
-        var successCount = execution.StepExecutions
-            .Count(step =>
-                step.StepExecutionAttempts.Any(attempt =>
-                    attempt.ExecutionStatus is StepExecutionStatus.Succeeded or StepExecutionStatus.Warning));
-        var allCount = execution.StepExecutions.Count;
-        return allCount > 0
-            ? (decimal)successCount / allCount * 100
-            : 0;
-    }
-
-    /// <summary>
-    /// Calculate progress percentage based on the <see cref="Execution.StepExecutions"/> and <see cref="StepExecution.StepExecutionAttempts"/> list of steps and their statuses
-    /// </summary>
-    /// <returns>Progress percentage between 0 and 100 rounded to the nearest integer</returns>
-    public static int GetProgressPercent(this Execution execution)
-    {
-        var allCount = execution.StepExecutions.Count;
-        var completedCount = execution.StepExecutions.Count(step =>
-            step.StepExecutionAttempts.Any(att =>
-                att.ExecutionStatus is StepExecutionStatus.Succeeded
-                    or StepExecutionStatus.Warning
-                    or StepExecutionStatus.Failed
-                    or StepExecutionStatus.Stopped
-                    or StepExecutionStatus.Skipped
-                    or StepExecutionStatus.Duplicate));
-        return allCount > 0
-            ? (int)Math.Round(completedCount / (double)allCount * 100)
-            : 0;
-    }
-
-    /// <summary>
     /// Get a string describing the schedule's underlying Cron expression
     /// </summary>
     /// <returns>Descriptive text if the Cron expression is valid. Otherwise, an error message string is returned.</returns>

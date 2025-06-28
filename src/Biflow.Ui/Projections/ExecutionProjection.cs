@@ -1,4 +1,4 @@
-﻿namespace Biflow.Ui.Core.Projection;
+﻿namespace Biflow.Ui.Projections;
 
 /// <summary>
 /// Lightweight Execution class replacement which can be used to only load selected attributes from the database using projection

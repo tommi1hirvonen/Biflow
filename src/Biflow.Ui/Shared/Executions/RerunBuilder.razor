@@ -1,10 +1,8 @@
 ﻿@implements IDisposable
 
-@inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ToasterService Toaster
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
-@inject NavigationManager NavigationManager
 
 @if (_loading)
 {
@@ -250,25 +248,27 @@ else if (_builder is null)
 @code {
     [CascadingParameter] public Task<AuthenticationState>? AuthenticationState { get; set; }
 
-    [Parameter] public Execution? Execution { get; set; }
+    [Parameter, EditorRequired] public IReadOnlyList<IStepExecutionProjection>? StepExecutions { get; set; }
+    
+    [Parameter, EditorRequired] public Guid JobId { get; set; }
 
     private readonly HashSet<StepType> _stepTypeFilter = [];
     private readonly HashSet<StepExecutionStatus> _statusFilter = [];
+    private readonly HashSet<ITag> _tagFilter = [];
 
     private ExecutionBuilder? _builder;
     private string _stepNameFilter = string.Empty;
-    private HashSet<ITag> _tagFilter = [];
     private bool _loading = true;
-    private bool _startingExecution = false;
+    private bool _startingExecution;
     private StateFilter _stateFilter = StateFilter.Enabled;
 
     private enum StateFilter { All, Enabled, Disabled }
 
-    private IEnumerable<StepExecutionStatus> Statuses => Execution?.StepExecutions
-        .Select(e => e.StepExecutionAttempts)
+    private IEnumerable<StepExecutionStatus> Statuses => StepExecutions
+        ?.GroupBy(e => e.StepId)
         .Select(e => e.MaxBy(a => a.RetryAttemptIndex))
-        .Where(e => e is not null)
-        .Select(e => e!.ExecutionStatus)
+        .Select(e => e?.StepExecutionStatus)
+        .OfType<StepExecutionStatus>()
         .Distinct()
         .Order()
         .AsEnumerable() ?? [];
@@ -294,7 +294,7 @@ else if (_builder is null)
 
     protected override async Task OnParametersSetAsync()
     {
-        if (Execution is null || _builder is not null)
+        if (StepExecutions is null || _builder is not null)
         {
             return;
         }
@@ -304,11 +304,12 @@ else if (_builder is null)
             var authState = await AuthenticationState;
             var username = authState.User.Identity?.Name;
 
-            var stepIds = Execution.StepExecutions
+            var stepIds = StepExecutions
                 .Select(e => e.StepId)
+                .Distinct()
                 .ToArray();
             _builder = await BuilderFactory.CreateAsync(
-                Execution.JobId,
+                JobId,
                 username,
                 [
                     _ => step => stepIds.Contains(step.StepId)
@@ -323,9 +324,10 @@ else if (_builder is null)
 
     private StepExecutionStatus? GetStepExecutionStatus(Guid stepId)
     {
-        var stepExecution = Execution?.StepExecutions.FirstOrDefault(e => e.StepId == stepId);
-        var attempt = stepExecution?.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex);
-        return attempt?.ExecutionStatus;
+        return StepExecutions
+            ?.Where(e => e.StepId == stepId)
+            .MaxBy(e => e.RetryAttemptIndex)
+            ?.StepExecutionStatus;
     }
 
     private async Task Execute()

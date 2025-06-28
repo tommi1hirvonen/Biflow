@@ -192,9 +192,9 @@
 
     [CascadingParameter] public StepExecutionMonitorsOffcanvas? StepExecutionMonitorsOffcanvas { get; set; }
 
-    [Parameter] public IEnumerable<StepExecutionProjection>? Executions { get; set; }
+    [Parameter] public IEnumerable<IStepExecutionProjection>? Executions { get; set; }
 
-    [Parameter] public Func<StepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
+    [Parameter] public Func<IStepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 
     [Parameter] public StepExecutionSortMode SortMode { get; set; }
 
@@ -202,7 +202,7 @@
 
     private const int Columns = 12;
 
-    private StepExecutionProjection? _selectedStepExecution;
+    private IStepExecutionProjection? _selectedStepExecution;
     private StepHistoryOffcanvas? _stepHistoryOffcanvas;
     private StepExecutionAttempt? _detailStep;
 
@@ -211,7 +211,7 @@
         OnSortingChanged.InvokeAsync(sort);
     }
 
-    private async Task ToggleSelectedStepExecutionAsync(StepExecutionProjection execution)
+    private async Task ToggleSelectedStepExecutionAsync(IStepExecutionProjection execution)
     {
         if (_selectedStepExecution == execution)
         {
@@ -230,17 +230,22 @@
             {
                 await using var context = await DbContextFactory.CreateDbContextAsync();
                 _detailStep = await context.StepExecutionAttempts
-                    .AsNoTrackingWithIdentityResolution()
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(StepExecutionAttempt.StepExecution)}.{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                     .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Execution)
-                    .ThenInclude(e => e.ExecutionParameters)
-                    .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.ExecutionConditionParameters)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
+                                              e.StepId == execution.StepId &&
+                                              e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                // Request rendering for the data we already have.
+                StateHasChanged();
+                // The rest of the data is loaded in the background, as it may take some time.
+                // Use EF change tracking to populate the navigation properties of the previously loaded entity. 
+                _ = await context.StepExecutions
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                    .Include(e => e.ExecutionConditionParameters)
                     .ThenInclude(e => e.ExecutionParameter)
-                    .Include(e => e.StepExecution)
-                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId && e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                    .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
+                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
+                StateHasChanged();
                 if (_detailStep is not null)
                 {
                     var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);

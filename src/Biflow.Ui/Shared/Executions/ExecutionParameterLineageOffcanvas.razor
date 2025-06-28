@@ -1,10 +1,11 @@
-﻿
+﻿@inject IDbContextFactory<AppDbContext> DbContextFactory
+
 <HxOffcanvas @ref="_offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@($"{_lineageParameter?.ParameterName} lineage")">
     <BodyTemplate>
-        @if (_lineageParameter is not null && _lineageItems is not null)
-        {
-            <div class="row">
-                <div class="col">
+        <div class="row">
+            <div class="col">
+                @if (_lineageParameter is not null && _lineageItems is not null)
+                {
                     <ul class="list-group">
                         <li class="list-group-item">
                             <div class="row">
@@ -23,7 +24,7 @@
                             <div class="list-group-item">
                                 <div class="row">
                                     <div class="col h6">
-                                        <StepTypeIcon StepType="item.Step.StepType" />
+                                        <StepTypeIcon StepType="item.Step.StepType"/>
                                         @item.Step.StepName
                                     </div>
                                 </div>
@@ -58,10 +59,17 @@
                             </div>
                         </li>
                     </ul>
-                </div>
+                }
+                else
+                {
+                    <ul class="list-group">
+                        <li class="list-group-item text-center">
+                            <HxSpinner Color="ThemeColor.Secondary" />
+                        </li>
+                    </ul>
+                }
             </div>
-
-        }
+        </div>
     </BodyTemplate>
     <FooterTemplate>
         <HxButton Color="ThemeColor.Secondary" OnClick="() => _offcanvas.LetAsync(x => x.HideAsync())">
@@ -79,33 +87,49 @@
     {
         _lineageItems = null;
         _lineageParameter = parameter;
-
+        
+        if (_offcanvas is not null)
+        {
+            await _offcanvas.ShowAsync();
+        }
+        
+        // Fetch all step executions.
+        // This is actually a more efficient way to gather the step execution parameters
+        // versus starting from the execution parameter because of indexes.
+        // Discard step executions which do not include parameters.
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+        var stepExecutions = await dbContext.StepExecutions
+            .AsNoTrackingWithIdentityResolution()
+            .Where(e => e.ExecutionId == parameter.ExecutionId)
+            .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+            .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+            .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
+            .Include(e => e.StepExecutionAttempts)
+            .ToArrayAsync();
+        
         List<LineageItem> items = [];
-        foreach (var step in _lineageParameter.Execution.StepExecutions)
+        foreach (var step in stepExecutions)
         {
             if (step is IHasStepExecutionParameters hasParams)
             {
-                var param = hasParams.StepExecutionParameters.FirstOrDefault(p => p.InheritFromExecutionParameterId == _lineageParameter.ParameterId);
+                var param = hasParams.StepExecutionParameters
+                    .FirstOrDefault(p => p.InheritFromExecutionParameterId == _lineageParameter.ParameterId);
                 if (param is not null)
                 {
                     var time = step.StepExecutionAttempts.MinBy(a => a.RetryAttemptIndex)?.StartedOn;
-                    items.Add(new(step, time, param.ParameterValue.Value, false));
+                    items.Add(new LineageItem(step, time, param.ParameterValue.Value, false));
                 }
             }
             if (step is SqlStepExecution sql && sql.ResultCaptureJobParameterId == _lineageParameter.ParameterId)
             {
                 var time = step.StepExecutionAttempts.MaxBy(a => a.RetryAttemptIndex)?.EndedOn;
-                items.Add(new(step, time, sql.ResultCaptureJobParameterValue.Value, true));
+                items.Add(new LineageItem(step, time, sql.ResultCaptureJobParameterValue.Value, true));
             }
         }
+        
         _lineageItems = items.OrderBy(i => i.Timestamp).ToArray();
 
         StateHasChanged();
-
-        if (_offcanvas is not null)
-        {
-            await _offcanvas.ShowAsync();
-        }
     }
 
     private record LineageItem(StepExecution Step, DateTimeOffset? Timestamp, object? Value, bool Capture);

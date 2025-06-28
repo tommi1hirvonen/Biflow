@@ -1,5 +1,5 @@
 ﻿
-@if (Execution?.ExecutionMode == ExecutionMode.ExecutionPhase)
+@if (ExecMode == ExecutionMode.ExecutionPhase)
 {
     <HxAlert Color="ThemeColor.Warning" CssClass="mt-3">
         Job executed in execution phase mode. Dependencies have no effect.
@@ -104,12 +104,12 @@
      </div>
  </div>
 
- @if (Execution is not null)
+ @if (ExecutionId is not null)
 {
     <DependencyGraph @ref="_dependencyGraph"
                      TItem="StepExecution"
                      ItemFromNodeIdSelector="ItemFromNodeId"
-                     AfterRender="LoadGraphAsync"
+                     AfterRender="() => LoadDataAndGraphAsync()"
                      CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
             <li>
@@ -124,7 +124,7 @@
                     Limit graph to this
                 </span>
             </li>
-            @if (step.ExecutionId == Execution.ExecutionId)
+            @if (step.ExecutionId == ExecutionId)
             {
                 <li>
                     <span class="dropdown-item" role="button" @onclick="() => ShowStepExecutionOffcanvas(step)">
