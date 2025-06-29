@@ -67,54 +67,82 @@ public partial class JobDetails(
 
     protected override async Task OnInitializedAsync()
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(_cts.Token);
+        var jobsTask = LoadJobsAsync();
+        var integrationsTask = LoadIntegrationsAsync();
+        _job = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .FirstAsync(j => j.JobId == Id, _cts.Token);
+        _steps = await BuildStepsQueryWithIncludes(context)
+            .Where(step => step.JobId == _job.JobId)
+            .AsNoTrackingWithIdentityResolution()
+            .ToListAsync(_cts.Token);
+        SortSteps();
+        StateHasChanged();
+        await jobsTask;
+        await integrationsTask;
+    }
+
+    private async Task LoadJobsAsync()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync(_cts.Token);
+        _jobs = await context.Jobs
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(j => j.JobName)
+            .ToListAsync(_cts.Token);
+        StateHasChanged();
+    }
+
+    private async Task LoadIntegrationsAsync()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync(_cts.Token);
         var sqlConnections = await context.SqlConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var msSqlConnections = sqlConnections.OfType<MsSqlConnection>().ToList();
         var asConnections = await context.AnalysisServicesConnections
             .AsNoTracking()
             .OrderBy(c => c.ConnectionName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var pipelineClients = await context.PipelineClients
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var azureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(app => app.AzureCredentialName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var functionApps = await context.FunctionApps
             .AsNoTracking()
             .OrderBy(app => app.FunctionAppName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var qlikCloudClients = await context.QlikCloudEnvironments
             .AsNoTracking()
             .OrderBy(c => c.QlikCloudEnvironmentName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var databricksWorkspaces = await context.DatabricksWorkspaces
             .AsNoTracking()
             .OrderBy(w => w.WorkspaceName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var dbtAccounts = await context.DbtAccounts
             .AsNoTracking()
             .OrderBy(a => a.DbtAccountName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var scdTables = await context.ScdTables
             .AsNoTracking()
             .Include(t => t.Connection) // used in data objects editor in step edit modal
             .OrderBy(t => t.ScdTableName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var credentials = await context.Credentials
             .AsNoTracking()
             .OrderBy(c => c.Domain)
             .ThenBy(c => c.Username)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         var proxies = await context.Proxies
             .AsNoTracking()
             .OrderBy(p => p.ProxyName)
-            .ToListAsync();
+            .ToListAsync(_cts.Token);
         _integrations = new IntegrationsContainer
         {
             SqlConnections = sqlConnections,
@@ -130,18 +158,6 @@ public partial class JobDetails(
             Credentials = credentials,
             Proxies = proxies
         };
-        _job = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .FirstAsync(j => j.JobId == Id, _cts.Token);
-        _steps = await BuildStepsQueryWithIncludes(context)
-            .Where(step => step.JobId == _job.JobId)
-            .AsNoTrackingWithIdentityResolution()
-            .ToListAsync(_cts.Token);
-        _jobs = await context.Jobs
-            .AsNoTrackingWithIdentityResolution()
-            .OrderBy(j => j.JobName)
-            .ToListAsync(_cts.Token);
-        SortSteps();
     }
 
     private void SortSteps()
