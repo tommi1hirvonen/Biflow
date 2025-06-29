@@ -5,6 +5,10 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
     [Parameter, EditorRequired] public Guid? ExecutionId { get; set; }
     
     [Parameter, EditorRequired] public ExecutionMode? ExecMode { get; set; }
+    
+    [Parameter, EditorRequired] public StepExecution[]? StepExecutions { get; set; }
+
+    [Parameter, EditorRequired] public Action<StepExecution[]> OnStepExecutionsUpdated { get; set; } = _ => { };
 
     [Parameter] public Guid? InitialStepId { get; set; }
     
@@ -64,7 +68,7 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
         return LoadGraphAsync();
     }
 
-    public async Task LoadDataAndGraphAsync(CancellationToken cancellationToken = default)
+    public async Task LoadDataAndGraphAsync(bool forceReload = false, CancellationToken cancellationToken = default)
     {
         if (_loading)
         {
@@ -73,22 +77,30 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
         
         _loading = true;
 
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var stepExecutions = await dbContext.StepExecutions
-            .Where(e => e.ExecutionId == ExecutionId)
-            .Include(e => e.ExecutionDependencies)
-            .Include(e => e.StepExecutionAttempts)
-            .Include(e => e.MonitoredStepExecutions)
-            .ThenInclude(e => e.MonitoredStepExecution)
-            .ThenInclude(e => e.StepExecutionAttempts)
-            .ToArrayAsync(cancellationToken);
-        _stepExecutions = stepExecutions
-            .Concat(stepExecutions
-                .SelectMany(e => e.MonitoredStepExecutions.Where(m =>
-                    m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
-                .Select(e => e.MonitoredStepExecution)
-                .Where(e => e.ExecutionId != ExecutionId))
-            .ToArray();
+        if (StepExecutions is null || forceReload)
+        {
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            var steps = await dbContext.StepExecutions
+                .Where(e => e.ExecutionId == ExecutionId)
+                .Include(e => e.ExecutionDependencies)
+                .Include(e => e.StepExecutionAttempts)
+                .Include(e => e.MonitoredStepExecutions)
+                .ThenInclude(e => e.MonitoredStepExecution)
+                .ThenInclude(e => e.StepExecutionAttempts)
+                .ToArrayAsync(cancellationToken);
+            _stepExecutions = steps
+                .Concat(steps
+                    .SelectMany(e => e.MonitoredStepExecutions.Where(m =>
+                        m.MonitoringReason is MonitoringReason.UpstreamDependency or MonitoringReason.DownstreamDependency))
+                    .Select(e => e.MonitoredStepExecution)
+                    .Where(e => e.ExecutionId != ExecutionId))
+                .ToArray();
+            OnStepExecutionsUpdated(_stepExecutions);
+        }
+        else
+        {
+            _stepExecutions = StepExecutions;
+        }
         
         _loading = false;
         

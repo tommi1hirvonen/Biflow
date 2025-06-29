@@ -482,6 +482,8 @@
         <ExecutionDependenciesGraph @ref="_dependenciesGraph"
                                     ExecutionId="ExecutionId"
                                     ExecMode="_execution.ExecutionMode"
+                                    StepExecutions="_dependenciesGraphStepExecutions"
+                                    OnStepExecutionsUpdated="steps => _dependenciesGraphStepExecutions = steps"
                                     InitialStepId="InitialStepId" />
         break;
     case Report.Rerun:
