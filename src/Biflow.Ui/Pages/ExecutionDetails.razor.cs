@@ -45,6 +45,9 @@ public partial class ExecutionDetails(
     private StepExecutionSortMode _sortMode = StepExecutionSortMode.StartedAsc;
     private ExecutionParameterLineageOffcanvas? _parameterLineageOffcanvas;
     private ExecutionDependenciesGraph? _dependenciesGraph;
+    // Cache dependency graph step executions here in the parent component.
+    // This means they don't have to be reloaded from the database every time the graph is shown.
+    private StepExecution[]? _dependenciesGraphStepExecutions;
 
     // Maintain a list of executions that are being stopped.
     // This same component instance can be used to switch between different job executions.
@@ -151,7 +154,25 @@ public partial class ExecutionDetails(
             _timer.Stop();
             _loading = true;
             await InvokeAsync(StateHasChanged);
-            var graphTask = ShowReport == Report.Graph ? _dependenciesGraph?.LoadDataAndGraphAsync(_cts.Token) : null;
+            
+            Task? graphTask;
+            if (ShowReport == Report.Graph)
+            {
+                // Graph is being shown, and data is being reloaded => force graph reload.
+                // This will also update the graph step executions array.
+                graphTask = _dependenciesGraph?.LoadDataAndGraphAsync(
+                    forceReload: true,
+                    cancellationToken: _cts.Token);
+            }
+            else
+            {
+                // Data is being reloaded, but the graph is not currently shown.
+                // Reset the graph step executions array so that the next time the graph is shown,
+                // the steps will be reloaded then.
+                _dependenciesGraphStepExecutions = null;
+                graphTask = null;
+            }
+            
             await using var context = await _dbContextFactory.CreateDbContextAsync();
 
             try
@@ -234,6 +255,7 @@ public partial class ExecutionDetails(
                 return;
             }
 
+            // Finally, await the dependency graph task if it was set (graph is being shown).
             if (graphTask is not null)
             {
                 await graphTask;
