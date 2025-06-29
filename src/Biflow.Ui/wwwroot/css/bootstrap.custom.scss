@@ -553,19 +553,19 @@ $dep-statuses: (
     fill: $danger;
 }
 
-// Lucide icons
-.lucide {
+// Lucide and Fabric icons
+.lucide, .fabric {
     width: 16px;
     height: 16px;
 }
 
-.lucide-sm .lucide {
+.lucide-sm .lucide, .fabric-sm .fabric {
     width: 14px;
     height: 14px;
 }
 
 .btn {
-    .lucide {
+    .lucide, .fabric {
         margin-top: 2.5px;
         margin-bottom: 1.75px;
         margin-left: 1px;

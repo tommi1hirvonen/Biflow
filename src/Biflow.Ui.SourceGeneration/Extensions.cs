@@ -8,7 +8,7 @@ internal static class Extensions
 {
     public static string GetPropertyNameFromIconName(this string iconName)
     {
-        var segments = iconName.Split('-');
+        var segments = iconName.Split('-', '_');
         var segmentsPascalCase = segments.Select(segment => segment.Substring(0, 1).ToUpper() + segment.Substring(1));
         var propertyName = string.Join("", segmentsPascalCase);
         if (!SyntaxFacts.IsValidIdentifier(propertyName))

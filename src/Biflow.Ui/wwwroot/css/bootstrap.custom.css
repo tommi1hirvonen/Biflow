@@ -12627,17 +12627,17 @@ form {
   fill: #e85875;
 }
 
-.lucide {
+.lucide, .fabric {
   width: 16px;
   height: 16px;
 }
 
-.lucide-sm .lucide {
+.lucide-sm .lucide, .fabric-sm .fabric {
   width: 14px;
   height: 14px;
 }
 
-.btn .lucide {
+.btn .lucide, .btn .fabric {
   margin-top: 2.5px;
   margin-bottom: 1.75px;
   margin-left: 1px;
