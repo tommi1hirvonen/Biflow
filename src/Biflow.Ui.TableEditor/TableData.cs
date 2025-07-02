@@ -1,4 +1,5 @@
 ﻿using ClosedXML.Excel;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 
 namespace Biflow.Ui.TableEditor;
@@ -132,48 +133,107 @@ public class TableData
             .Where(c => !c.IsHidden || c.IsPrimaryKey && MasterDataTable.AllowImport)
             .ToArray();
 
-        var index = 1;
+        var exportColumnNames = exportColumns.Select(c => c.Name).ToArray();
+
+        // Add column headers.
         // Only include columns that are not hidden.
         // If 'allow import' is enabled, include hidden columns if they are part of the primary key.
+        var allColumnNames = new List<string>();
         foreach (var col in exportColumns)
         {
-            sheet.Cell(1, index).SetValue(col.Name);
-            index++;
+            allColumnNames.Add(col.Name);
+            sheet.Cell(1, allColumnNames.Count).SetValue(col.Name);
+
+            if (!LookupColumnShouldBeAdded(col, out _))
+            {
+                continue;
+            }
+            
+            // If the column has a lookup where the display type is 'Description' or 'ValueAndDescription',
+            // also add the lookup value.
+            const string suffix = "Description";
+            var suffixInt = 2;
+            var columnName = $"{col.Name} {suffix}";
+            // Ensure generated column names are unique.
+            while (allColumnNames.Contains(columnName) || exportColumnNames.Contains(columnName))
+            {
+                columnName = $"{col.Name} {suffix}{suffixInt}";
+                suffixInt++;
+            }
+            allColumnNames.Add(columnName);
+            sheet.Cell(1, allColumnNames.Count).SetValue(columnName);
         }
+
+        // Add row data.
         var rowIndex = 2;
         foreach (var row in _rows)
         {
             var colIndex = 1;
             foreach (var column in exportColumns)
             {
-                var value = row.Values[column.Name] switch
+                var value = row.Values[column.Name];
+                // Excel does not handle DateOnly and TimeOnly types.
+                // Convert them to DateTime.
+                var cellValue = MakeExcelCompatibleValue(value);
+                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(cellValue);
+                colIndex++;
+                
+                // Check whether the lookup value should be added.
+                if (!LookupColumnShouldBeAdded(column, out var lookup))
                 {
-                    DateOnly date => date.ToDateTime(TimeOnly.MinValue),
-                    TimeOnly time => DateTime.MinValue.Add(time.ToTimeSpan()),
-                    { } obj => obj,
-                    null => null
-                };
-                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(value);
+                    continue;
+                }
+                
+                var lookupValueOrNull = lookup.Values.FirstOrDefault(v => v.Value?.Equals(value) == true);
+                var lookupValue = MakeExcelCompatibleValue(lookupValueOrNull?.DisplayValue ?? value);
+                sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(lookupValue);
                 colIndex++;
             }
             rowIndex++;
         }
         var firstCell = sheet.Cell(1, 1);
-        var lastCell = sheet.Cell(_rows.Count + 1, exportColumns.Length); // Add 1 to row count to account for header row
+        // Ensure columnCount > 0.
+        var columnCount = allColumnNames.Count == 0 ? 1 : allColumnNames.Count;
+        var lastCell = sheet.Cell(_rows.Count + 1, columnCount); // Add 1 to the row count to account for the header row
         var range = sheet.Range(firstCell, lastCell);
         range.CreateTable();
 
-        // Adjust column widths based on only the first 100 rows for much better performance.
-        // Do this only when running on Windows, as the required fonts may be missing on non-Windows systems.
+        // Adjust column widths only when running on Windows,
+        // as the required fonts may be missing on non-Windows systems.
         // https://github.com/ClosedXML/ClosedXML/wiki/Graphic-Engine/8ee9bf5415f5e590da01c676baa71e118e76f31c
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            sheet.Columns(1, exportColumns.Length).AdjustToContents(1, 100);
+            // Adjust column widths based on only the first 100 rows for much better performance.
+            sheet.Columns(1, columnCount).AdjustToContents(1, 100);
         }
         
         var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Position = 0;
         return stream;
+    }
+
+    private static object? MakeExcelCompatibleValue(object? value) => value switch
+    {
+        DateOnly date => date.ToDateTime(TimeOnly.MinValue),
+        TimeOnly time => DateTime.MinValue.Add(time.ToTimeSpan()),
+        not null => value,
+        null => null
+    };
+
+    private static bool LookupColumnShouldBeAdded(Column column, [MaybeNullWhen(false)] out Lookup lookup)
+    {
+        if (column.Lookup is 
+            {
+                DataTableLookup.LookupDisplayType:
+                LookupDisplayType.Description or LookupDisplayType.ValueAndDescription
+            })
+        {
+            lookup = column.Lookup;
+            return true;
+        }
+
+        lookup = null;
+        return false;
     }
 }
