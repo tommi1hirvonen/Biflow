@@ -375,12 +375,16 @@
 
                                                 else
                                                 {
-                                                    <text>@row.Values[column]</text>
+                                                    <span class="small">
+                                                        @LookupValueOrValue(row, columnInfo)
+                                                    </span>
                                                 }
                                             }
                                             else
                                             {
-                                                <text>@row.Values[column]</text>
+                                                <span class="small">
+                                                    @LookupValueOrValue(row, columnInfo)
+                                                </span>
                                             }
                                         </td>
                                     }
