@@ -133,13 +133,36 @@ public class TableData
             .Where(c => !c.IsHidden || c.IsPrimaryKey && MasterDataTable.AllowImport)
             .ToArray();
 
-        var exportColumnNames = exportColumns.Select(c => c.Name).ToArray();
+        var allColumnNames = AddColumnHeaders(sheet, exportColumns);
+        AddRowData(sheet, exportColumns, _rows);
+        
+        var firstCell = sheet.Cell(1, 1);
+        // Ensure columnCount > 0.
+        var columnCount = allColumnNames.Count == 0 ? 1 : allColumnNames.Count;
+        var lastCell = sheet.Cell(_rows.Count + 1, columnCount); // Add 1 to the row count to account for the header row
+        var range = sheet.Range(firstCell, lastCell);
+        range.CreateTable();
 
-        // Add column headers.
-        // Only include columns that are not hidden.
-        // If 'allow import' is enabled, include hidden columns if they are part of the primary key.
+        // Adjust column widths only when running on Windows,
+        // as the required fonts may be missing on non-Windows systems.
+        // https://github.com/ClosedXML/ClosedXML/wiki/Graphic-Engine/8ee9bf5415f5e590da01c676baa71e118e76f31c
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            // Adjust column widths based on only the first 100 rows for much better performance.
+            sheet.Columns(1, columnCount).AdjustToContents(1, 100);
+        }
+        
+        var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Position = 0;
+        return stream;
+    }
+
+    private static List<string> AddColumnHeaders(IXLWorksheet sheet, IReadOnlyList<Column> columns)
+    {
+        var columnNames = columns.Select(c => c.Name).ToArray();
         var allColumnNames = new List<string>();
-        foreach (var col in exportColumns)
+        foreach (var col in columns)
         {
             allColumnNames.Add(col.Name);
             sheet.Cell(1, allColumnNames.Count).SetValue(col.Name);
@@ -155,7 +178,7 @@ public class TableData
             var suffixInt = 2;
             var columnName = $"{col.Name} {suffix}";
             // Ensure generated column names are unique.
-            while (allColumnNames.Contains(columnName) || exportColumnNames.Contains(columnName))
+            while (allColumnNames.Contains(columnName) || columnNames.Contains(columnName))
             {
                 columnName = $"{col.Name} {suffix}{suffixInt}";
                 suffixInt++;
@@ -163,13 +186,16 @@ public class TableData
             allColumnNames.Add(columnName);
             sheet.Cell(1, allColumnNames.Count).SetValue(columnName);
         }
+        return allColumnNames;
+    }
 
-        // Add row data.
+    private static void AddRowData(IXLWorksheet sheet, IReadOnlyList<Column> columns, IEnumerable<Row> rows)
+    {
         var rowIndex = 2;
-        foreach (var row in _rows)
+        foreach (var row in rows)
         {
             var colIndex = 1;
-            foreach (var column in exportColumns)
+            foreach (var column in columns)
             {
                 var value = row.Values[column.Name];
                 // Excel does not handle DateOnly and TimeOnly types.
@@ -191,26 +217,6 @@ public class TableData
             }
             rowIndex++;
         }
-        var firstCell = sheet.Cell(1, 1);
-        // Ensure columnCount > 0.
-        var columnCount = allColumnNames.Count == 0 ? 1 : allColumnNames.Count;
-        var lastCell = sheet.Cell(_rows.Count + 1, columnCount); // Add 1 to the row count to account for the header row
-        var range = sheet.Range(firstCell, lastCell);
-        range.CreateTable();
-
-        // Adjust column widths only when running on Windows,
-        // as the required fonts may be missing on non-Windows systems.
-        // https://github.com/ClosedXML/ClosedXML/wiki/Graphic-Engine/8ee9bf5415f5e590da01c676baa71e118e76f31c
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            // Adjust column widths based on only the first 100 rows for much better performance.
-            sheet.Columns(1, columnCount).AdjustToContents(1, 100);
-        }
-        
-        var stream = new MemoryStream();
-        workbook.SaveAs(stream);
-        stream.Position = 0;
-        return stream;
     }
 
     private static object? MakeExcelCompatibleValue(object? value) => value switch
