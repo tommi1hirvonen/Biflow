@@ -134,7 +134,8 @@ public class TableData
             .ToArray();
 
         var allColumnNames = AddColumnHeaders(sheet, exportColumns);
-        AddRowData(sheet, exportColumns, _rows);
+        var lookupSheets = AddLookupSheets(workbook, exportColumns);
+        AddRowData(sheet, exportColumns, _rows, lookupSheets);
         
         var firstCell = sheet.Cell(1, 1);
         // Ensure columnCount > 0.
@@ -189,7 +190,44 @@ public class TableData
         return allColumnNames;
     }
 
-    private static void AddRowData(IXLWorksheet sheet, IReadOnlyList<Column> columns, IEnumerable<Row> rows)
+    private static Dictionary<Guid, LookupSheet> AddLookupSheets(XLWorkbook workbook, IReadOnlyList<Column> columns)
+    {
+        var dictionary = new Dictionary<Guid, LookupSheet>();
+        var sheetIndex = 1;
+        foreach (var column in columns)
+        {
+            if (!LookupColumnShouldBeAdded(column, out var lookup))
+            {
+                continue;
+            }
+            var sheetName = $"Lookup{sheetIndex}";
+            var sheet = workbook.Worksheets.Add(sheetName);
+            sheet.Cell(1, 1).SetValue(lookup.DataTableLookup.LookupValueColumn);
+            sheet.Cell(1, 2).SetValue(lookup.DataTableLookup.LookupDescriptionColumn);
+            var rowIndex = 2;
+            foreach (var lookupValue in lookup.Values)
+            {
+                var value = MakeExcelCompatibleValue(lookupValue.Value);
+                sheet.Cell(rowIndex, 1).Value = XLCellValue.FromObject(value);
+                var displayValue = MakeExcelCompatibleValue(lookupValue.DisplayValue);
+                sheet.Cell(rowIndex, 2).Value = XLCellValue.FromObject(displayValue);
+                rowIndex++;
+            }
+            dictionary[lookup.DataTableLookup.LookupId] = new LookupSheet(sheetName, rowIndex - 1);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                sheet.Columns(1, 2).AdjustToContents(1, 100);
+            }
+            sheetIndex++;
+        }
+        return dictionary;
+    }
+
+    private static void AddRowData(
+        IXLWorksheet sheet,
+        IReadOnlyList<Column> columns,
+        IEnumerable<Row> rows,
+        IDictionary<Guid, LookupSheet> lookupSheets)
     {
         var rowIndex = 2;
         foreach (var row in rows)
@@ -209,7 +247,21 @@ public class TableData
                 {
                     continue;
                 }
+
+                // If there is a matching lookup sheet, add a VLOOKUP formula.
+                if (lookupSheets.TryGetValue(lookup.DataTableLookup.LookupId, out var lookupSheet))
+                {
+                    // Translate the value column's (previous column) index to Excel column name.
+                    var valueColumn = GetExcelColumnName(colIndex - 1);
+                    var lookupFormula = $"=IF(ISBLANK({valueColumn}{rowIndex}), \"\"" + 
+                                        $", VLOOKUP({valueColumn}{rowIndex}, " + 
+                                        $"{lookupSheet.SheetName}!$A$2:$B${lookupSheet.RowCount}, 2, 0))";
+                    sheet.Cell(rowIndex, colIndex).FormulaA1 = lookupFormula;
+                    colIndex++;
+                    continue;
+                }
                 
+                // If there was no matching lookup sheet, add the description value directly as value.
                 var lookupValueOrNull = lookup.Values.FirstOrDefault(v => v.Value?.Equals(value) == true);
                 var lookupValue = MakeExcelCompatibleValue(lookupValueOrNull?.DisplayValue ?? value);
                 sheet.Cell(rowIndex, colIndex).Value = XLCellValue.FromObject(lookupValue);
@@ -242,4 +294,18 @@ public class TableData
         lookup = null;
         return false;
     }
+    
+    private static string GetExcelColumnName(int columnNumber)
+    {
+        var columnName = "";
+        while (columnNumber > 0)
+        {
+            var modulo = (columnNumber - 1) % 26;
+            columnName = Convert.ToChar('A' + modulo) + columnName;
+            columnNumber = (columnNumber - modulo) / 26;
+        } 
+        return columnName;
+    }
+    
+    private record LookupSheet(string SheetName, int RowCount);
 }
