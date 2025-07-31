@@ -1,13 +1,14 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/Biflow.Aspire.AppHost/Biflow.Aspire.AppHost.csproj" />
+    <Project Path="src/Biflow.Aspire.MigrationService/Biflow.Aspire.MigrationService.csproj" />
     <Project Path="src/Biflow.Aspire.ServiceDefaults/Biflow.Aspire.ServiceDefaults.csproj" />
     <Project Path="src/Biflow.Core/Biflow.Core.csproj" />
     <Project Path="src/Biflow.DataAccess/Biflow.DataAccess.csproj" />
     <Project Path="src/Biflow.Executor.Core/Biflow.Executor.Core.csproj" />
     <Project Path="src/Biflow.Executor.WebApp/Biflow.Executor.WebApp.csproj" />
-    <Project Path="src/Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" Type="Classic C#" />
-    <Project Path="src/Biflow.ExecutorProxy.WebApp\Biflow.ExecutorProxy.WebApp.csproj" Type="Classic C#" />
+    <Project Path="src/Biflow.ExecutorProxy.Core\Biflow.ExecutorProxy.Core.csproj" Type="C#" />
+    <Project Path="src/Biflow.ExecutorProxy.WebApp\Biflow.ExecutorProxy.WebApp.csproj" Type="C#" />
     <Project Path="src/Biflow.Scheduler.Core/Biflow.Scheduler.Core.csproj" />
     <Project Path="src/Biflow.Scheduler.WebApp/Biflow.Scheduler.WebApp.csproj" />
     <Project Path="src/Biflow.Ui.Api/Biflow.Ui.Api.csproj" />
@@ -19,12 +20,13 @@
     <Project Path="src/Biflow.Ui.SqlMetadataExtensions/Biflow.Ui.SqlMetadataExtensions.csproj" />
     <Project Path="src/Biflow.Ui.TableEditor/Biflow.Ui.TableEditor.csproj" />
     <Project Path="src/Biflow.Ui/Biflow.Ui.csproj" />
+    <Project Path="src\Biflow.Aspire.SqlAppHost\Biflow.Aspire.SqlAppHost.csproj" Type="C#" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Biflow.Core.Test/Biflow.Core.Test.csproj" />
     <Project Path="tests/Biflow.DataAccess.Test/Biflow.DataAccess.Test.csproj" />
     <Project Path="tests/Biflow.Executor.Core.Tests/Biflow.Executor.Core.Test.csproj" />
-    <Project Path="tests/Biflow.ExecutorProxy.Core.Test\Biflow.ExecutorProxy.Core.Test.csproj" Type="Classic C#" />
+    <Project Path="tests/Biflow.ExecutorProxy.Core.Test\Biflow.ExecutorProxy.Core.Test.csproj" Type="C#" />
     <Project Path="tests/Biflow.Scheduler.WebApp.Test/Biflow.Scheduler.WebApp.Test.csproj" />
   </Folder>
 </Solution>

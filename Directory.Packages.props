@@ -3,7 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.3.0" />
+    <PackageVersion Include="Aspire.Hosting.AppHost" Version="9.4.0" />
+    <PackageVersion Include="Aspire.Hosting.SqlServer" Version="9.4.0" />
     <PackageVersion Include="Azure.Analytics.Synapse.Artifacts" Version="1.0.0-preview.20" />
     <PackageVersion Include="Azure.Communication.Email" Version="1.0.1" />
     <PackageVersion Include="Azure.Identity" Version="1.13.1" />
@@ -33,13 +34,13 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.4.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.4" />
-    <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.4" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="9.0.7" />
     <PackageVersion Include="Microsoft.Extensions.ServiceDiscovery" Version="9.2.1" />
     <PackageVersion Include="Microsoft.Fabric.Api" Version="1.0.0-beta.13" />
     <PackageVersion Include="Microsoft.Graph" Version="5.81.0" />
