@@ -261,7 +261,13 @@ public partial class ExecutionDetails(
                 await graphTask;
             }
             _loading = false;
-            if (AutoRefresh && _execution?.ExecutionStatus is ExecutionStatus.Running or ExecutionStatus.NotStarted)
+            
+            // If AutoRefresh is enabled, and the execution is either running
+            // or it was created less than a minute ago and hasn't yet been started.
+            if (AutoRefresh 
+                && (_execution?.ExecutionStatus == ExecutionStatus.Running
+                    || _execution?.ExecutionStatus == ExecutionStatus.NotStarted
+                    && _execution?.CreatedOn >= DateTimeOffset.Now.AddMinutes(-1)))
             {
                 _timer.Start();
             }
