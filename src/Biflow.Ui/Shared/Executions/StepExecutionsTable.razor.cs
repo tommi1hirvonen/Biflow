@@ -119,6 +119,7 @@ public partial class StepExecutionsTable(
                 await using var context = await _dbContextFactory.CreateDbContextAsync();
                 _detailStep = await context.StepExecutionAttempts
                     .Include(e => e.StepExecution)
+                    .ThenInclude(e => e.Execution) // Required for StepExecutionAttempt.CanBeStopped
                     .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
                                               e.StepId == execution.StepId &&
                                               e.RetryAttemptIndex == execution.RetryAttemptIndex);

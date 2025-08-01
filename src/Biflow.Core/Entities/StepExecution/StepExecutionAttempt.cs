@@ -74,7 +74,8 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
         ExecutionStatus == StepExecutionStatus.Running
         || ExecutionStatus == StepExecutionStatus.AwaitingRetry
         || ExecutionStatus == StepExecutionStatus.Queued
-        || ExecutionStatus == StepExecutionStatus.NotStarted && StepExecution.Execution.ExecutionStatus == Entities.ExecutionStatus.Running;
+        || ExecutionStatus == StepExecutionStatus.NotStarted 
+        && StepExecution.Execution.ExecutionStatus == Entities.ExecutionStatus.Running;
 
     public void AddError(Exception? ex, string message, bool insertFirst = false)
     {
