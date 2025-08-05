@@ -189,6 +189,7 @@
                 alert,
                 subscription.NotifyOnOvertime);
             await Mediator.SendAsync(command);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch (Exception)
         {
@@ -206,6 +207,7 @@
                 subscription.AlertType,
                 onOvertime);
             await Mediator.SendAsync(command);
+            await OnSubscriptionCountChanged.InvokeAsync();
         }
         catch (Exception)
         {
