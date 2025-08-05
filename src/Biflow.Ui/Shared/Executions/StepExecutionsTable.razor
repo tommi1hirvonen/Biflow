@@ -173,7 +173,7 @@
                 var id = new StepExecutionId(item.ExecutionId, item.StepId, item.RetryAttemptIndex);
                 var checkBoxId = $"select_step_{item.StepId}_{item.RetryAttemptIndex}";
                 <ContextMenuToggle ContainerHtmlTag="tr"
-                                   CssClass="@(_selectedStepExecution == item ? "bg-body-tertiary cursor-pointer" : "cursor-pointer")"
+                                   CssClass="@(_selectedStepExecution?.IsSameAs(item) == true ? "bg-body-tertiary cursor-pointer" : "cursor-pointer")"
                                    CssClassDelegate="@(open => open ? "bg-body-tertiary" : null)"
                                    @onclick="async () => await ToggleSelectedStepExecutionAsync(item)">
                     <ChildContent>
@@ -254,7 +254,7 @@
                         </AuthorizeView>
                     </MenuContent>
                 </ContextMenuToggle>
-                @if (_selectedStepExecution == item)
+                @if (_selectedStepExecution?.IsSameAs(item) == true)
                 {
                     if (_detailStep is null)
                     {
