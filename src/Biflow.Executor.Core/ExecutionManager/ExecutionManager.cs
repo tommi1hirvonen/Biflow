@@ -2,6 +2,7 @@
 using Biflow.Executor.Core.JobExecutor;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Polly;
 
 namespace Biflow.Executor.Core;
 
@@ -44,7 +45,17 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
             }
         }
 
-        var jobExecutor = await _jobExecutorFactory.CreateAsync(executionId, cancellationToken);
+        // Loading the entire execution from the database into memory can sometimes be a heavy read operation.
+        // To avoid executions being skipped because of potential timeout exceptions, use a retry policy. 
+        var policy = Policy.Handle<Exception>()
+            .WaitAndRetryAsync(
+                retryCount: 2,
+                sleepDurationProvider: _ => TimeSpan.FromSeconds(5),
+                onRetry: (ex, _) =>
+                    _logger.LogWarning(ex, "Error creating JobExecutor for execution {executionId} ", executionId)); 
+        var jobExecutor = await policy.ExecuteAsync(ct =>
+            _jobExecutorFactory.CreateAsync(executionId, ct),
+            cancellationToken);
 
         lock (_lock)
         {
