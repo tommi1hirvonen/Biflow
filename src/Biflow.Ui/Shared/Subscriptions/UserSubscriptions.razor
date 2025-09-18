@@ -1,5 +1,4 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
-
+﻿
 <div class="row mt-4">
     <div class="col">
         @if (User is not null && string.IsNullOrWhiteSpace(User.Email))
@@ -70,17 +69,27 @@
         @switch (_showType)
         {
             case SubscriptionType.Job:
-                <JobSubscriptions User="User" Jobs="Jobs" OnSubscriptionCountChanged="StateHasChanged"/>
+                <JobSubscriptions User="User"
+                                  Jobs="Jobs"
+                                  OnSubscriptionCountChanged="OnSubscriptionCountChangedAsync"/>
                 break;
             case SubscriptionType.JobStepTag:
-                <JobStepTagSubscriptions User="User" Jobs="Jobs" Steps="Steps" StepTags="StepTags"
-                                         OnSubscriptionCountChanged="StateHasChanged"/>
+                <JobStepTagSubscriptions User="User"
+                                         Jobs="Jobs"
+                                         Steps="Steps"
+                                         StepTags="StepTags"
+                                         OnSubscriptionCountChanged="OnSubscriptionCountChangedAsync"/>
                 break;
             case SubscriptionType.StepTag:
-                <StepTagSubscriptions User="User" StepTags="StepTags" OnSubscriptionCountChanged="StateHasChanged"/>
+                <StepTagSubscriptions User="User"
+                                      StepTags="StepTags"
+                                      OnSubscriptionCountChanged="OnSubscriptionCountChangedAsync"/>
                 break;
             case SubscriptionType.Step:
-                <StepSubscriptions User="User" Jobs="Jobs" Steps="Steps" OnSubscriptionCountChanged="StateHasChanged"/>
+                <StepSubscriptions User="User"
+                                   Jobs="Jobs"
+                                   Steps="Steps"
+                                   OnSubscriptionCountChanged="OnSubscriptionCountChangedAsync"/>
                 break;
         }
     </div>
@@ -101,6 +110,15 @@
 
     [Parameter]
     public RenderFragment<User>? MissingEmailAlertTemplate { get; set; }
+    
+    [Parameter]
+    public EventCallback OnSubscriptionCountChanged { get; set; }
 
     private SubscriptionType _showType = SubscriptionType.Job;
+
+    private Task OnSubscriptionCountChangedAsync()
+    {
+        StateHasChanged();
+        return OnSubscriptionCountChanged.InvokeAsync();
+    }
 }

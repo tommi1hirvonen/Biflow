@@ -35,4 +35,9 @@ public interface IStepExecutionProjection
         || StepExecutionStatus == StepExecutionStatus.AwaitingRetry
         || StepExecutionStatus == StepExecutionStatus.Queued
         || StepExecutionStatus == StepExecutionStatus.NotStarted && ExecutionStatus == ExecutionStatus.Running;
+    
+    public bool IsSameAs(IStepExecutionProjection? other) =>
+        ExecutionId == other?.ExecutionId &&
+        StepId == other.StepId &&
+        RetryAttemptIndex == other.RetryAttemptIndex;
 }
