@@ -1,5 +1,6 @@
 ﻿using Biflow.Executor.Core.Exceptions;
 using Biflow.Executor.Core.JobExecutor;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Polly;
@@ -47,7 +48,7 @@ internal class ExecutionManager(ILogger<ExecutionManager> logger, IJobExecutorFa
 
         // Loading the entire execution from the database into memory can sometimes be a heavy read operation.
         // To avoid executions being skipped because of potential timeout exceptions, use a retry policy. 
-        var policy = Policy.Handle<Exception>()
+        var policy = Policy.Handle<SqlException>()
             .WaitAndRetryAsync(
                 retryCount: 2,
                 sleepDurationProvider: _ => TimeSpan.FromSeconds(5),
