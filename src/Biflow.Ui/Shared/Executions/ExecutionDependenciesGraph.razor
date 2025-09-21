@@ -6,103 +6,115 @@
     </HxAlert>
 }
 
-<div class="row align-items-end mb-3">
-    <div class="col" style="max-width: 40rem;">
-        <HxAutosuggest @bind-Value="_dependencyGraphStepFilter"
-                       @bind-Value:after="LoadGraphAsync"
-                       DataProvider="ProvideSuggestions"
-                       TextSelector="TextSelector"
-                       MinimumLength="0"
-                       Delay="1"
-                       InputSize="InputSize.Small"
-                       Placeholder="Filter step"
-                       autocomplete="off">
-            <ItemTemplate Context="item">
-                <StepTypeIcon StepType="item.StepType" />
-                @item.StepName
-            </ItemTemplate>
-            <EmptyTemplate>
-                <span class="p-2">No matching steps</span>
-            </EmptyTemplate>
-        </HxAutosuggest>
+@if (_stepExecutions is null)
+{
+    <div class="row my-4 align-items-center">
+        <div class="col d-flex justify-content-center">
+            <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Regular" />
+            <span class="ms-3">Loading data and rendering graph</span>
+        </div>
     </div>
-    <div class="col-xxl-auto mt-xxl-0 mt-3 d-flex flex-row align-items-end">
-        <div class="form-group">
-            <label class="form-label">Depth backwards</label>
-            <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
-                 <ChildContent>
-                     <span class="cursor-pointer">
-                         <SvgIcon Icon="LucideIcon.Info" />
-                     </span>
-                 </ChildContent>
-             </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
-         </div>
-         <div class="form-group ms-3">
-             <label class="form-label">Depth forwards</label>
-             <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
-                 <ChildContent>
-                     <span class="cursor-pointer">
-                         <SvgIcon Icon="LucideIcon.Info" />
-                     </span>
-                 </ChildContent>
-             </HxPopover>
-             <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;" />
-         </div>
-        <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
-            <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
-                Apply depth filters
-            </HxButton>
-            <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
-                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
-                    Direction
-                </HxDropdownToggleButton>
-                <HxDropdownContent CssClass="p-3">
-                    <div class="row mt-2" style="min-width: 12rem;">
-                        <div class="col">
-                            <div class="form-check">
-                                <input class="form-check-input" type="radio" id="direction_radio_admin"
-                                       checked=@(_direction == DependencyGraphDirection.LeftToRight)
-                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
-                                <label class="form-check-label fw-normal" for="direction_radio_admin">
-                                    <SvgIcon Icon="LucideIcon.MoveRight" />
-                                    Left to right
-                                </label>
-                            </div>
-                            <div class="form-check mt-1">
-                                <input class="form-check-input" type="radio" id="direction_radio_editor"
-                                       checked=@(_direction == DependencyGraphDirection.RightToLeft)
-                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
-                                <label class="form-check-label fw-normal" for="direction_radio_editor">
-                                    <SvgIcon Icon="LucideIcon.MoveLeft" />
-                                    Right to left
-                                </label>
-                            </div>
-                            <div class="form-check mt-1">
-                                <input class="form-check-input" type="radio" id="direction_radio_operator"
-                                       checked=@(_direction == DependencyGraphDirection.TopToBottom)
-                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
-                                <label class="form-check-label fw-normal" for="direction_radio_operator">
-                                    <SvgIcon Icon="LucideIcon.MoveDown" />
-                                    Top to bottom
-                                </label>
-                            </div>
-                            <div class="form-check mt-1">
-                                <input class="form-check-input" type="radio" id="direction_radio_viewer"
-                                       checked=@(_direction == DependencyGraphDirection.BottomToTop)
-                                       @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
-                                <label class="form-check-label fw-normal" for="direction_radio_viewer">
-                                    <SvgIcon Icon="LucideIcon.MoveUp" />
-                                    Bottom to top
-                                </label>
+}
+else
+{
+    <div class="row align-items-end mb-3">
+        <div class="col" style="max-width: 40rem;">
+            <HxAutosuggest @bind-Value="_dependencyGraphStepFilter"
+                           @bind-Value:after="LoadGraphAsync"
+                           DataProvider="ProvideSuggestions"
+                           TextSelector="TextSelector"
+                           MinimumLength="0"
+                           Delay="1"
+                           InputSize="InputSize.Small"
+                           Placeholder="Filter step"
+                           autocomplete="off">
+                <ItemTemplate Context="item">
+                    <StepTypeIcon StepType="item.StepType"/>
+                    @item.StepName
+                </ItemTemplate>
+                <EmptyTemplate>
+                    <span class="p-2">No matching steps</span>
+                </EmptyTemplate>
+            </HxAutosuggest>
+        </div>
+        <div class="col-xxl-auto mt-xxl-0 mt-3 d-flex flex-row align-items-end">
+            <div class="form-group">
+                <label class="form-label">Depth backwards</label>
+                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal backwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                    <ChildContent>
+                        <span class="cursor-pointer">
+                            <SvgIcon Icon="LucideIcon.Info"/>
+                        </span>
+                    </ChildContent>
+                </HxPopover>
+                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;"/>
+            </div>
+            <div class="form-group ms-3">
+                <label class="form-label">Depth forwards</label>
+                <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@("<p>The depth of traversal forwards when drawing the dependency graph starting from the filtered step.</p><p>Available only when the graph has been filtered.</p><p>0 = no limit</p>")">
+                    <ChildContent>
+                        <span class="cursor-pointer">
+                            <SvgIcon Icon="LucideIcon.Info"/>
+                        </span>
+                    </ChildContent>
+                </HxPopover>
+                <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_dependencyGraphStepFilter is null) style="max-width: 9rem;"/>
+            </div>
+            <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
+                <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
+                    Apply depth filters
+                </HxButton>
+                <HxDropdownButtonGroup AutoClose="DropdownAutoClose.Outside">
+                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto">
+                        Direction
+                    </HxDropdownToggleButton>
+                    <HxDropdownContent CssClass="p-3">
+                        <div class="row mt-2" style="min-width: 12rem;">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" id="direction_radio_admin"
+                                           checked=@(_direction == DependencyGraphDirection.LeftToRight)
+                                                                                                                                                                @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.LeftToRight))">
+                                    <label class="form-check-label fw-normal" for="direction_radio_admin">
+                                        <SvgIcon Icon="LucideIcon.MoveRight"/>
+                                        Left to right
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" id="direction_radio_editor"
+                                           checked=@(_direction == DependencyGraphDirection.RightToLeft)
+                                                                                                                                                                @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.RightToLeft))">
+                                    <label class="form-check-label fw-normal" for="direction_radio_editor">
+                                        <SvgIcon Icon="LucideIcon.MoveLeft"/>
+                                        Right to left
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" id="direction_radio_operator"
+                                           checked=@(_direction == DependencyGraphDirection.TopToBottom)
+                                                                                                                                                                @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.TopToBottom))">
+                                    <label class="form-check-label fw-normal" for="direction_radio_operator">
+                                        <SvgIcon Icon="LucideIcon.MoveDown"/>
+                                        Top to bottom
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="radio" id="direction_radio_viewer"
+                                           checked=@(_direction == DependencyGraphDirection.BottomToTop)
+                                                                                                                                                                @onchange="@(_ => SetDirectionAsync(DependencyGraphDirection.BottomToTop))">
+                                    <label class="form-check-label fw-normal" for="direction_radio_viewer">
+                                        <SvgIcon Icon="LucideIcon.MoveUp"/>
+                                        Bottom to top
+                                    </label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </HxDropdownContent>
-            </HxDropdownButtonGroup>
-        </HxButtonGroup>
-     </div>
- </div>
+                    </HxDropdownContent>
+                </HxDropdownButtonGroup>
+            </HxButtonGroup>
+        </div>
+    </div>
+}
 
  @if (ExecutionId is not null)
 {

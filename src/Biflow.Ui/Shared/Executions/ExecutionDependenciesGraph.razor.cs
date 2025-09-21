@@ -114,7 +114,6 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
             throw new ArgumentNullException(nameof(ExecutionId));
         }
         ArgumentNullException.ThrowIfNull(_stepExecutions);
-        ArgumentNullException.ThrowIfNull(_dependencyGraph);
         
         var allNodes = _stepExecutions
             .Select(step =>
@@ -187,7 +186,11 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
                 return;
             }
         }
-        await _dependencyGraph.DrawAsync(nodes, edges, _direction);
+
+        if (_dependencyGraph is not null)
+        {
+            await _dependencyGraph.DrawAsync(nodes, edges, _direction);
+        }
         await InvokeAsync(StateHasChanged);
     }
 

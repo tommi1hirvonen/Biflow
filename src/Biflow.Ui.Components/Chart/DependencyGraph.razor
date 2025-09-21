@@ -45,9 +45,17 @@
         }
     }
 
-    public async Task DrawAsync(IEnumerable<DependencyGraphNode> nodes, IEnumerable<DependencyGraphEdge> edges, DependencyGraphDirection direction = default)
+    public async Task DrawAsync(
+        IEnumerable<DependencyGraphNode> nodes,
+        IEnumerable<DependencyGraphEdge> edges,
+        DependencyGraphDirection direction = default)
     {
-        ArgumentNullException.ThrowIfNull(_jsObject);
+        // The JS object might be null if it has been disposed, and in this case we just want to return.
+        // This can happen if the user navigates away from the page
+        // while a reference to this component is being held in .NET and DrawAsync() is called
+        // after the JS object has already been disposed. This in turn can happen if loading data for drawing
+        // the dependency graph takes a considerable amount of time.
+        if (_jsObject is null) return;
         ArgumentNullException.ThrowIfNull(_dotNetObject);
         var nodesJson = JsonSerializer.Serialize(nodes);
         var edgesJson = JsonSerializer.Serialize(edges);
@@ -86,6 +94,7 @@
             try
             {
                 await _jsObject.DisposeAsync();
+                _jsObject = null;
             }
             catch (JSDisconnectedException) { }
         }
