@@ -127,6 +127,12 @@ public class ExecutionBuilder : IDisposable
         {
             throw new ArgumentException($"Argument {nameof(step)} value was not in the list of provided steps");
         }
+        
+        // TODO
+        // Check if the step has parameters inheriting their value from a job parameter,
+        // which in turn is updated by an upstream dependency step. Commonly, in these cases, the upstream dependency
+        // step should be included because it sets the job parameter to the correct value.
+        
         var stepExecution = step.ToStepExecution(_execution);
         _execution.StepExecutions.Add(stepExecution);
     }
