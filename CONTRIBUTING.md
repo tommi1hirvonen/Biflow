@@ -2,7 +2,7 @@
 
 ## Setting up / development environment
 
-Visual Studio 2022 is recommended as the IDE for development.
+Visual Studio 2022 or JetBrains Rider is recommended as the IDE for development.
 
 <a href="https://marketplace.visualstudio.com/items?itemName=Failwyn.WebCompiler64">Web Compiler 2022+</a> Visual Studio extension is used to compile the Scss code in `Biflow.Ui/wwwroot/scss/bootstrap.custom.scss`. The configuration file for compiling the Scss code is located in `Biflow.Ui/compilerconfig.json`.
 
@@ -86,6 +86,22 @@ The following new or existing files/classes need to be added or edited when addi
 - JobExecutorFactory
   - Add possible new navigation property include statements to the initial execution load command.
 
+### Biflow.Ui.Core
+
+**Add new classes**
+
+- CreateFooStep
+  - Command handler for creating new FooStep instance in the mediator pattern
+- UpdateFooStep
+  - Command handler for updating and existing FooStep in the mediator pattern
+
+**Update existing classes**
+
+- StepValidator
+  - Add potential new validation logic for the new step type.
+- VersionRevert
+  - Include potential new endpoint collections when handling environment version snapshot reverts.
+
 ### Biflow.Ui
 
 **Add new classes**
@@ -107,9 +123,16 @@ The following new or existing files/classes need to be added or edited when addi
 - DependenciesGraph
   - Add FooStepEditModal to the end of the component
 
-### Biflow.Ui.Core
+### Biflow.Ui.Api
+
+**Add new classes**
+
+- FooStepDto
+  - Record type used for endpoint inputs
 
 **Update existing classes**
 
-- VersionRevert
-  - Include potential new endpoint collections when handling environment version snapshot reverts.
+- StepsCreateEndpoints
+  - Add endpoint for FooStep
+- StepsUpdateEndpoints
+  - Add endpoint for FooStep
