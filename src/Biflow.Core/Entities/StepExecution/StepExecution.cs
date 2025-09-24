@@ -20,6 +20,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(ScdStepExecution), nameof(StepType.Scd))]
 [JsonDerivedType(typeof(DataflowStepExecution), nameof(StepType.Dataflow))]
 [JsonDerivedType(typeof(FabricStepExecution), nameof(StepType.Fabric))]
+[JsonDerivedType(typeof(HttpStepExecution), nameof(StepType.Http))]
 public abstract class StepExecution(string stepName, StepType stepType)
 {
     protected StepExecution(Step step, Execution execution) : this(step.StepName ?? "", step.StepType)

@@ -22,6 +22,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(ScdStep), nameof(StepType.Scd))]
 [JsonDerivedType(typeof(DataflowStep), nameof(StepType.Dataflow))]
 [JsonDerivedType(typeof(FabricStep), nameof(StepType.Fabric))]
+[JsonDerivedType(typeof(HttpStep), nameof(StepType.Http))]
 public abstract class Step : IComparable, IAuditable
 {
     protected Step(StepType stepType)

@@ -66,5 +66,9 @@ public enum StepType
     
     [Category("SQL Server", 5)]
     [Description("SQL Server Agent job")]
-    AgentJob
+    AgentJob,
+    
+    [Category("Other", 4)]
+    [Description("Send arbitrary HTTP request")]
+    Http
 }

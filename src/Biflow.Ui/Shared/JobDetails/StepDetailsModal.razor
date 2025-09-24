@@ -196,6 +196,38 @@
                                         <td>@function.FunctionAppId</td>
                                     </tr>
                                     break;
+                                case HttpStep http:
+                                    <dt class="col-sm-3">
+                                        Url
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        @http.Url
+                                    </dd>
+                                    <dt class="col-sm-3">
+                                        Method
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        @http.Method.ToString().ToUpper()
+                                    </dd>
+                                    <dt class="col-sm-3">
+                                        Request body
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        <pre><code>@http.Body</code></pre>
+                                    </dd>
+                                    <dt class="col-sm-3">
+                                        Disable async pattern
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        @http.DisableAsyncPattern
+                                    </dd>
+                                    <dt class="col-sm-3">
+                                        Headers
+                                    </dt>
+                                    <dd class="col-sm-9">
+                                        @string.Join("\n", http.Headers.Select(x => $"{x.Key}: {x.Value}"))
+                                    </dd>
+                                    break;
                                 case AgentJobStep agent:
                                     <tr>
                                         <td>Agent job name</td>

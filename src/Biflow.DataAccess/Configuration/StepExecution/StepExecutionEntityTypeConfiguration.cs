@@ -23,7 +23,8 @@ internal class StepExecutionEntityTypeConfiguration : IEntityTypeConfiguration<S
             .HasValue<DbtStepExecution>(StepType.Dbt)
             .HasValue<ScdStepExecution>(StepType.Scd)
             .HasValue<DataflowStepExecution>(StepType.Dataflow)
-            .HasValue<FabricStepExecution>(StepType.Fabric);
+            .HasValue<FabricStepExecution>(StepType.Fabric)
+            .HasValue<HttpStepExecution>(StepType.Http);
 
         builder.OwnsOne(s => s.ExecutionConditionExpression, ece =>
         {

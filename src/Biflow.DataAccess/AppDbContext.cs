@@ -43,6 +43,7 @@ public class AppDbContext : DbContext
     public DbSet<DatabricksStep> DatabricksSteps => Set<DatabricksStep>();
     public DbSet<DbtStep> DbtSteps => Set<DbtStep>();
     public DbSet<ScdStep> ScdSteps => Set<ScdStep>();
+    public DbSet<HttpStep> HttpSteps => Set<HttpStep>();
     public DbSet<DataObject> DataObjects => Set<DataObject>();
     public DbSet<Execution> Executions => Set<Execution>();
     public DbSet<StepExecution> StepExecutions => Set<StepExecution>();

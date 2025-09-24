@@ -63,6 +63,7 @@ public class StepValidator : AsyncAbstractValidator<Step>
             v.Add(new DbtStepValidator());
             v.Add(new DatabricksStepValidator());
             v.Add(new FunctionStepValidator());
+            v.Add(new HttpStepValidator());
             v.Add(new ExeStepValidator());
         });
         When(step => step is IHasStepParameters, () =>
@@ -113,6 +114,16 @@ file class FunctionStepValidator : AbstractValidator<FunctionStep>
             .Must(step => step.FunctionAppId is not null || !string.IsNullOrEmpty(step.FunctionKey))
             .WithMessage("Either the function app or the function key property must be set");
     }
+}
+
+file class HttpStepValidator : AbstractValidator<HttpStep>
+{
+    public HttpStepValidator()
+    {
+        RuleFor(step => step.Headers)
+            .Must(headers => headers.Select(h => h.Key).Distinct().Count() == headers.Count)
+            .WithMessage("The header keys must be unique");
+    }   
 }
 
 file class TabularStepValidator : AbstractValidator<TabularStep>

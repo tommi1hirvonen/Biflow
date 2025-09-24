@@ -35,7 +35,8 @@ internal class StepExecutionParameterEntityTypeConfiguration : IEntityTypeConfig
             .HasValue<PipelineStepExecutionParameter>(ParameterType.Pipeline)
             .HasValue<EmailStepExecutionParameter>(ParameterType.Email)
             .HasValue<DatabricksStepExecutionParameter>(ParameterType.DatabricksNotebook)
-            .HasValue<FabricStepExecutionParameter>(ParameterType.Fabric);
+            .HasValue<FabricStepExecutionParameter>(ParameterType.Fabric)
+            .HasValue<HttpStepExecutionParameter>(ParameterType.Http);
 
         builder.OwnsOne(s => s.Expression, ece =>
         {

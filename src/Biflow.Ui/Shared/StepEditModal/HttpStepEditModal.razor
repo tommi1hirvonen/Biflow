@@ -1,0 +1,167 @@
+@inherits StepEditModal<HttpStep>
+
+<StepEditModalTemplate Modal="this" TStep="HttpStep">
+    @if (Step is not null)
+    {
+        <div class="row">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">Timeout (min)</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.OctagonX" />
+                    </div>
+                    <InputNumber class="form-control form-control-sm"
+                                 @bind-Value="Step.TimeoutMinutes"
+                                 style="max-width: 5rem;"></InputNumber>
+                </div>
+                <span class="form-text">0 = indefinite</span>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">URL</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Globe" />
+                    </div>
+                    <InputTextArea class="form-control form-control-sm" rows="3" @bind-Value="Step.Url"></InputTextArea>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">
+                    HTTP method
+                </label>
+            </div>
+            <div class="col-md-6">
+                <InputSelect class="form-select form-select-sm" @bind-Value="Step.Method" style="max-width: 8rem;">
+                    @foreach (var type in Enum.GetValues<HttpStepMethod>())
+                    {
+                        <option value="@type">@type.ToString().ToUpper()</option>
+                    }
+                </InputSelect>
+            </div>
+        </div>
+        
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0"
+                       for="disable_async_pattern">
+                    Disable async pattern
+                    <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DisableAsyncPatternInfoContent">
+                        <SvgIcon Icon="LucideIcon.Info" />
+                    </HxPopover>
+                </label>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check form-check-inline">
+                    <input type="checkbox" class="form-check-input" id="disable_async_pattern"
+                           checked=@Step.DisableAsyncPattern
+                           @bind-value="Step.DisableAsyncPattern">
+                </div>
+            </div>
+        </div>
+        
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-9">
+                <label class="form-label">Request headers</label>
+                <table class="table table-sm">
+                    <tbody>
+                    @if (Step.Headers.Count == 0)
+                    {
+                        <tr>
+                            <td class="small text-muted">No headers</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var header in Step.Headers)
+                        {
+                            <tr>
+                                <td>
+                                    <InputText class="form-control form-control-sm"
+                                               @bind-Value="header.Key"
+                                               placeholder="Key" />
+                                </td>
+                                <td>
+                                    <InputText class="form-control form-control-sm"
+                                               @bind-Value="header.Value"
+                                               placeholder="Value" />
+                                </td>
+                                <td>
+                                    <HxButtonGroup Size="ButtonGroupSize.Small">
+                                        <HxButton Color="ThemeColor.None"
+                                                  CssClass="btn-auto"
+                                                  Size="ButtonSize.Small"
+                                                  @onclick="() => Step.Headers.Remove(header)">
+                                            <SvgIcon Icon="LucideIcon.Delete" />
+                                        </HxButton>
+                                    </HxButtonGroup>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+                <HxButtonGroup Size="ButtonGroupSize.Small">
+                    <HxButton Color="ThemeColor.None"
+                              CssClass="btn-auto"
+                              Size="ButtonSize.Small"
+                              @onclick="() => Step.Headers.Add(new HttpHeader())">
+                        <SvgIcon Icon="LucideIcon.Plus" />
+                        Add header
+                    </HxButton>
+                </HxButtonGroup>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-9">
+                <label class="form-label">Request body</label>
+            </div>
+        </div>
+        <div class="row justify-content-center">
+            <div class="col-md-9">
+                <CodeEditor @ref="_editor"
+                            Language="@(Step.BodyFormat == HttpBodyFormat.Json ? "json" : "")"
+                            MinimapEnabled="false"
+                            InitialValueExpression="() => Step.Body"
+                            OnValueChanged="value => Step.Body = value"
+                            Resize="CodeEditor.CodeEditorResize.Both" />
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-check-label mb-lg-0">Body format</label>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_request_body_raw"
+                           checked=@(Step.BodyFormat == HttpBodyFormat.PlainText)
+                           @onchange="() => SetLanguageAsync(HttpBodyFormat.PlainText)">
+                    <label class="form-check-label fw-normal" for="radio_request_body_raw">Plain text</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_request_body_json"
+                           checked=@(Step.BodyFormat == HttpBodyFormat.Json)
+                           @onchange="() => SetLanguageAsync(HttpBodyFormat.Json)">
+                    <label class="form-check-label fw-normal" for="radio_request_body_json">JSON</label>
+                </div>
+            </div>
+        </div>
+        
+        
+        <StepParametersEditor Step="Step" 
+                              NewParameterDelegate="() => new() { Step = Step }"
+                              Title="Parameters"
+                              InfoContent="@ParametersInfoContent" />
+    }
+</StepEditModalTemplate>

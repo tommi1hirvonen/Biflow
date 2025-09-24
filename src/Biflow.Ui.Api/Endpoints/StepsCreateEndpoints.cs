@@ -521,6 +521,70 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .WithDescription("Create a new Azure Functions step")
             .WithName("CreateFunctionStep");
         
+        group.MapPost("/{jobId:guid}/steps/http", async (Guid jobId, HttpStepDto stepDto,
+            LinkGenerator linker, HttpContext ctx,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new CreateExecutionConditionParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var parameters = stepDto.Parameters
+                    .Select(p => new CreateStepParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.UseExpression,
+                        p.Expression,
+                        p.InheritFromJobParameterId,
+                        p.ExpressionParameters
+                            .Select(e => new CreateExpressionParameter(e.ParameterName, e.InheritFromJobParameterId))
+                            .ToArray()))
+                    .ToArray();
+                var command = new CreateHttpStepCommand
+                {
+                    JobId = jobId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    TimeoutMinutes = stepDto.TimeoutMinutes,
+                    Url = stepDto.Url,
+                    Method = stepDto.Method,
+                    Body = stepDto.Body,
+                    BodyFormat = stepDto.BodyFormat,
+                    Headers = stepDto.Headers,
+                    DisableAsyncPattern = stepDto.DisableAsyncPattern,
+                    Parameters = parameters,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
+                return Results.Created(url, step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<HttpStep>(StatusCodes.Status201Created)
+            .WithSummary("Create HTTP step")
+            .WithDescription("Create a new HTTP request step")
+            .WithName("CreateHttpStep");
+        
         group.MapPost("/{jobId:guid}/steps/job", async (Guid jobId, JobStepDto stepDto,
             LinkGenerator linker, HttpContext ctx,
             IMediator mediator, CancellationToken cancellationToken) =>

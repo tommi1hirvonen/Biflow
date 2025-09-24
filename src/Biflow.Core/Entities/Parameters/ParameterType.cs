@@ -10,5 +10,6 @@ public enum ParameterType
     Function,
     Email,
     DatabricksNotebook,
-    Fabric
+    Fabric,
+    Http
 }
