@@ -100,6 +100,8 @@ Currently supported step types:
     - Run locally stored executables (e.g., Python or PowerShell scripts)
 - Mail
     - Send emails as part of your workflows
+- Http
+    - Send arbitrary HTTP requests
 - Job
     - Start another Biflow job as part of your workflow
 
