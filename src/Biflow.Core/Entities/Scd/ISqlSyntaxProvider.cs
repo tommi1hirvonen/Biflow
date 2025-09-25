@@ -44,7 +44,7 @@ internal interface ISqlFunctionProvider
     public string CurrentTimestamp { get; }
     public string MaxDateTime { get; }
     public string True { get; }
-    public string Md5(IEnumerable<string> columns);
+    public string Md5(IReadOnlyList<string> columns);
 }
 
 internal interface ISqlIndexProvider

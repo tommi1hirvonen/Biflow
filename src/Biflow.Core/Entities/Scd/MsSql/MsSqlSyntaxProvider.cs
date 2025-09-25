@@ -20,8 +20,12 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         public string CurrentTimestamp => "GETDATE()";
         public string MaxDateTime => "CONVERT(DATETIME2(6), '9999-12-31')";
         public string True => "1";
-        public string Md5(IEnumerable<string> columns) =>
-            $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})), 2)";
+        public string Md5(IReadOnlyList<string> columns) => columns switch
+        {
+            [] => throw new ArgumentException("columns was empty. MD5 requires at least one columns.", nameof(columns)),
+            [var c] => $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONVERT(VARCHAR(MAX), {c.QuoteName()})), 2)",
+            _ => $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})), 2)"
+        };
     }
 
     private class MsSqlIndexProvider : ISqlIndexProvider

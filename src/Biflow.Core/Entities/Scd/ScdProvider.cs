@@ -350,7 +350,8 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
         
         IEnumerable<ILoadColumn> recordColumns = [..naturalKeyColumns, ..otherColumns];
         var quotedRecordColumns = recordColumns
-            .Select(c => c.ColumnName);
+            .Select(c => c.ColumnName)
+            .ToArray();
         var recordHashColumn = new LoadColumn
         {
             ColumnName = RecordHashColumn,
