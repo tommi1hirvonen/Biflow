@@ -22,8 +22,13 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         public string CurrentTimestamp => "CURRENT_TIMESTAMP";
         public string MaxDateTime => "CAST('9999-12-31' AS TIMESTAMP_NTZ)";
         public string True => "1";
-        public string Md5(IEnumerable<string> columns) =>
-            $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})))";
+        public string Md5(IReadOnlyList<string> columns) => columns switch
+        {
+            [] => throw new ArgumentException("columns was empty. MD5 requires at least one columns.", nameof(columns)),
+            [var c] => $"UPPER(MD5(TO_VARCHAR({c.QuoteName()})))",
+            _ => $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})))"
+        };
+
     }
 
     private class SnowflakeIndexProvider : ISqlIndexProvider
