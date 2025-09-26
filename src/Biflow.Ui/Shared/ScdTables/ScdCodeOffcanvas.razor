@@ -1,13 +1,20 @@
 ﻿@inject ToasterService Toaster
 @inject IJSRuntime Js
 
-<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Backdrop="OffcanvasBackdrop.False" ScrollingEnabled="true">
+<HxOffcanvas @ref="_offcanvas"
+             Size="OffcanvasSize.Large"
+             Backdrop="OffcanvasBackdrop.False"
+             ScrollingEnabled="true"
+             RenderMode="OffcanvasRenderMode.Always">
+    @* Use OffcanvasRenderMode.Always so that the CodeEditor is always rendered.
+    The CodeEditor content may be updated before the offcanvas has had a chance to fully open,
+    leading to the editor potentially not being rendered otherwise (OffcanvasRenderMode.OpenOnly). *@
     <BodyTemplate>
         @if (_loading)
         {
             <div class="row my-3">
                 <div class="col text-center">
-                    <HxSpinner Color="ThemeColor.Secondary" />
+                    <HxSpinner Color="ThemeColor.Secondary"/>
                 </div>
             </div>
         }
@@ -29,7 +36,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary"
+                  Spinner="false"
+                  @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
