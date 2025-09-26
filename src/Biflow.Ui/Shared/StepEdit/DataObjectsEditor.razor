@@ -275,7 +275,7 @@
 
     [Parameter] public SqlConnectionBase? Connection { get; set; }
     
-    [Parameter] public Func<Task<IEnumerable<DataObject>>> LoadAllDataObjects { get; set; } = null!;
+    [Parameter] public Func<Task<IReadOnlyList<DataObject>>> LoadAllDataObjects { get; set; } = null!;
 
     private Func<DataObject, DataObjectMappingResult> GetMappingResult => ReferenceType switch
     {
@@ -288,7 +288,7 @@
     private string _noDataObjects = "";
     private string _addButton = "";
     private string _popoverContent = "";
-    private IEnumerable<DataObject>? _allObjects;
+    private IReadOnlyList<DataObject>? _allObjects;
     private DataObject? _newObject;
     private StepDataObject? _editReference;
     private List<string> _editReferenceAttributes = [];
@@ -359,6 +359,7 @@
             await using var context = await DbContextFactory.CreateDbContextAsync();
             var scdTable = await context.ScdTables.FirstOrDefaultAsync(t => t.ScdTableId == step.ScdTableId);
             if (scdTable is null) return;
+            _allObjects ??= await LoadAllDataObjects();
             var (schema, table) = ReferenceType switch
             {
                 DataObjectReferenceType.Source => (scdTable.SourceTableSchema, scdTable.SourceTableName),

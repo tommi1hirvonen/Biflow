@@ -37,11 +37,11 @@ public abstract class StepEditModal<TStep>(
 
     protected IDbContextFactory<AppDbContext> DbContextFactory { get; } = dbContextFactory;
 
-    private IEnumerable<DataObject>? _dataObjects;
+    private IReadOnlyList<DataObject>? _dataObjects;
 
     protected virtual Task OnModalShownAsync(TStep step) => Task.CompletedTask;
 
-    public async Task<IEnumerable<DataObject>> GetDataObjectsAsync()
+    public async Task<IReadOnlyList<DataObject>> GetDataObjectsAsync()
     {
         if (_dataObjects is not null)
         {
