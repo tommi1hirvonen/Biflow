@@ -66,7 +66,9 @@ function Publish-WebApp([String]$ProjectPath, [String]$AppName, [String]$Runtime
     $appId = "$($AppName)-$($Runtime)$(If ($SelfContained) { '-self-contained' } Else { '' })"
     Write-Host "Publishing $($appId)"
     $publishPath = Join-Path $PublishBasePath $appid
-    Remove-Item $publishPath -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Cleaning publish folder"
+    Remove-Item $publishPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    Write-Host "Starting build process"
     if ($PublishSelfContained)
     {
         dotnet publish $ProjectPath `
@@ -76,14 +78,16 @@ function Publish-WebApp([String]$ProjectPath, [String]$AppName, [String]$Runtime
             --output $publishPath `
             -p:PublishSingleFile=true `
             -p:IncludeNativeLibrariesForSelfExtract=true `
-            -maxcpucount:1
+            -maxcpucount:1 `
+            --tl:off
     }
     else
     {
         dotnet publish $ProjectPath `
             --configuration Release `
             --runtime $Runtime `
-            --output $publishPath
+            --output $publishPath `
+            --tl:off
     }
     if ($LASTEXITCODE -ne 0)
     {
@@ -92,13 +96,15 @@ function Publish-WebApp([String]$ProjectPath, [String]$AppName, [String]$Runtime
     }
     foreach ($item in $RemoveItems)
     {
-        Join-Path $publishPath $item | Remove-Item
+        Join-Path $publishPath $item | ForEach-Object { Remove-Item $_ -ProgressAction SilentlyContinue }
     }
     if ($Zip)
     {
         $path = Join-Path $publishPath "*"
         $destinationPath = "$($publishPath).zip"
-        Remove-Item $destinationPath -Force -ErrorAction SilentlyContinue
+        Write-Host "Compressing zip file"
+        Remove-Item $destinationPath -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+        $ProgressPreference = 'SilentlyContinue'
         Compress-Archive -Path $path -DestinationPath $destinationPath -Force
     }
 }
@@ -109,11 +115,14 @@ function Publish-WebAppAot([String]$ProjectPath, [String]$AppName, [String[]]$Re
     $appId = "$($AppName)-$($OsName)-aot"
     Write-Host "Publishing $($appId)"
     $publishPath = Join-Path $PublishBasePath $appId
-    Remove-Item $publishPath -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host "Cleaning publish folder"
+    Remove-Item $publishPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    Write-Host "Starting build process"
     dotnet publish $ProjectPath `
         --configuration Release `
         --output $publishPath `
-        -p:PublishAot=true
+        -p:PublishAot=true `
+        --tl:off
     if ($LASTEXITCODE -ne 0)
     {
         Write-Host "Error publishing $($appId)"
@@ -121,13 +130,15 @@ function Publish-WebAppAot([String]$ProjectPath, [String]$AppName, [String[]]$Re
     }
     foreach ($item in $RemoveItems)
     {
-        Join-Path $publishPath $item | Remove-Item
+        Join-Path $publishPath $item | ForEach-Object { Remove-Item $_ -ProgressAction SilentlyContinue }
     }
     if ($Zip)
     {
         $path = Join-Path $publishPath "*"
         $destinationPath = "$($publishPath).zip"
-        Remove-Item $destinationPath -Force -ErrorAction SilentlyContinue
+        Write-Host "Compressing zip file"
+        Remove-Item $destinationPath -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+        $ProgressPreference = 'SilentlyContinue'
         Compress-Archive -Path $path -DestinationPath $destinationPath -Force
     }
 }
