@@ -19,6 +19,7 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
     private StepExecutionDetailsOffcanvas? _stepExecutionDetailsOffcanvas;
     private StepHistoryOffcanvas? _stepHistoryOffcanvas;
     private DependencyGraphDirection _direction = DependencyGraphDirection.LeftToRight;
+    private bool _initialRender = true; // true until the graph has been rendered for the first time
 
     private int FilterDepthBackwards
     {
@@ -37,14 +38,6 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
 
     // TODO Replace with field keyword in .NET 10
     private int _filterDepthForwards;
-
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (!firstRender) return;
-        if (InitialStepId is not { } filterStepId) return;
-        _dependencyGraphStepFilter = _stepExecutions?.FirstOrDefault(s => s.StepId == filterStepId);
-        StateHasChanged();
-    }
 
     private StepExecution? ItemFromNodeId(string nodeId)
     {
@@ -114,6 +107,15 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
             throw new ArgumentNullException(nameof(ExecutionId));
         }
         ArgumentNullException.ThrowIfNull(_stepExecutions);
+
+        // Use the InitialStepId parameter to filter the graph only on the initial render.
+        // Subsequent renders are filtered by the _dependencyGraphStepFilter field set by the autosuggest field.
+        if (_initialRender)
+        {
+            _initialRender = false;
+            if (InitialStepId is { } id)
+                _dependencyGraphStepFilter = _stepExecutions.FirstOrDefault(s => s.StepId == id);
+        }
         
         var allNodes = _stepExecutions
             .Select(step =>
