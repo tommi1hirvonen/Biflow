@@ -119,7 +119,13 @@ public static class Extensions
         );
 
     private static async Task<Dictionary<string, Lookup>> GetLookupsAsync(this MasterDataTable table) =>
-        await table.Lookups.ToAsyncEnumerable().SelectAwait(async lookup =>
+        await MapLookupsAsync(table.Lookups.ToAsyncEnumerable())
+            .ToDictionaryAsync(key => key.ColumnName, value => value.Lookup);
+
+    private static async IAsyncEnumerable<(string ColumnName, Lookup Lookup)> MapLookupsAsync(
+        IAsyncEnumerable<MasterDataTableLookup> lookups)
+    {
+        await foreach (var lookup in lookups)
         {
             await using var connection = new SqlConnection(lookup.LookupTable.Connection.ConnectionString);
             await connection.OpenAsync();
@@ -138,9 +144,9 @@ public static class Extensions
             ArgumentNullException.ThrowIfNull(lookupDisplayValueDatatype);
 
             var results = await connection.QueryAsync<(object? Value, object? Description)>($"""
-                SELECT {QuoteName(lookup.LookupValueColumn)}, {QuoteName(lookup.LookupDescriptionColumn)}
-                FROM {QuoteName(lookup.LookupTable.TargetSchemaName)}.{QuoteName(lookup.LookupTable.TargetTableName)}
-                """);
+                 SELECT {QuoteName(lookup.LookupValueColumn)}, {QuoteName(lookup.LookupDescriptionColumn)}
+                 FROM {QuoteName(lookup.LookupTable.TargetSchemaName)}.{QuoteName(lookup.LookupTable.TargetTableName)}
+                 """);
 
             var data = results.Select(value =>
             {
@@ -154,8 +160,9 @@ public static class Extensions
                 return new LookupValue(value.Value, displayValue);
             });
 
-            return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
-        }).ToDictionaryAsync(key => key.ColumnName, value => value.Item2);
+            yield return (lookup.ColumnName, new Lookup(lookup, lookupDisplayValueDatatype, data));
+        }
+    }
 
     private static Task<IEnumerable<(string Name, string Datatype, string DatatypeDesc, string CreateDatatype, bool Computed)>>
         GetColumnDatatypesAsync(this MasterDataTable table, SqlConnection connection) =>

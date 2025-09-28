@@ -1,6 +1,7 @@
 <Project>
   <PropertyGroup>
-	  <!-- Solution level common version identifier -->
+    <TargetFramework>net10.0</TargetFramework>
+	<!-- Solution level common version identifier -->
     <VersionName>1.11.0</VersionName>
   </PropertyGroup>
 </Project>

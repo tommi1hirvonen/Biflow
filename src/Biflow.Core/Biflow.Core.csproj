@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-	<LangVersion>preview</LangVersion>
 	<Nullable>enable</Nullable>
 	<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-	<!-- Allow NuGet warnings to remain as warnings -->
-	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+	<!-- Allow NuGet warnings to remain as warnings. -->
+      <!-- Also suppress deprecation warning. -->
+	<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904;CS0618</WarningsNotAsErrors>
 	<ImplicitUsings>enable</ImplicitUsings>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	<AssemblyVersion>$(VersionName)</AssemblyVersion>
@@ -31,7 +30,6 @@
     <PackageReference Include="Microsoft.PowerBI.Api" />
     <PackageReference Include="Quartz" />
     <PackageReference Include="Snowflake.Data" />
-    <PackageReference Include="System.Linq.Async" />
 	<PackageReference Include="System.Runtime.Caching" />
   </ItemGroup>
 

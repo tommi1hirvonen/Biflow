@@ -72,7 +72,7 @@
 
 @code {
     [SupplyParameterFromForm]
-    private Biflow.Core.Entities.Login LoginModel { get; set; } = new();
+    private Biflow.Core.Entities.Login LoginModel { get; init; } = null!;
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = null!;
