@@ -38,19 +38,16 @@
 
     private int? RetryAttempts
     {
-        get => _retries;
+        get;
         set
         {
             if (value is null or >= 0)
             {
-                _retries = value;
+                field = value;
             }
         }
     }
 
-    // TODO Replace with field keyword in .NET 10
-    private int? _retries;
-    
     public async Task ShowAsync()
     {
         if (!SelectedSteps.Any())

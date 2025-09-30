@@ -23,21 +23,15 @@ public partial class ExecutionDependenciesGraph(IDbContextFactory<AppDbContext> 
 
     private int FilterDepthBackwards
     {
-        get => _filterDepthBackwards;
-        set => _filterDepthBackwards = value >= 0 ? value : _filterDepthBackwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
-
-    // TODO Replace with field keyword in .NET 10
-    private int _filterDepthBackwards;
 
     private int FilterDepthForwards
     {
-        get => _filterDepthForwards;
-        set => _filterDepthForwards = value >= 0 ? value : _filterDepthForwards;
+        get;
+        set => field = value >= 0 ? value : field;
     }
-
-    // TODO Replace with field keyword in .NET 10
-    private int _filterDepthForwards;
 
     private StepExecution? ItemFromNodeId(string nodeId)
     {

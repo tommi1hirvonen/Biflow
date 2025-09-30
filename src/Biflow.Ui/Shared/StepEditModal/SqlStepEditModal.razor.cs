@@ -1,4 +1,5 @@
-﻿using Biflow.Ui.Shared.StepEdit;
+﻿using System.Diagnostics.CodeAnalysis;
+using Biflow.Ui.Shared.StepEdit;
 using Biflow.Ui.SqlMetadataExtensions;
 
 namespace Biflow.Ui.Shared.StepEditModal;
@@ -23,22 +24,20 @@ public partial class SqlStepEditModal(
 
     private StoredProcedureSelectOffcanvas? _storedProcedureSelectModal;
     private CodeEditor? _editor;
-    
+
+    [field: AllowNull, MaybeNull]
     private SqlConnectionBase Connection
     {
         get
         {
-            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            if (field is null || field.ConnectionId != Step?.ConnectionId)
             {
-                _connection = Integrations.SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                              ?? Integrations.SqlConnections.First();
+                field = Integrations.SqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                        ?? Integrations.SqlConnections.First();
             }
-            return _connection;
+            return field;
         }
-    }
-
-    // TODO Replace with field keyword in .NET 10
-    private SqlConnectionBase? _connection = null;
+    } = null;
 
     protected override Task<SqlStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
         context.SqlSteps

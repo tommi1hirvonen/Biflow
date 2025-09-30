@@ -60,20 +60,17 @@ public partial class ExecutionDetails(
 
     private bool AutoRefresh
     {
-        get => _autoRefresh;
+        get;
         set
         {
-            _autoRefresh = value;
+            field = value;
             _timer.Stop();
-            if (_autoRefresh)
+            if (field)
             {
                 _timer.Start();
             }
         }
-    }
-
-    // TODO Replace with field keyword in .NET 10
-    private bool _autoRefresh = true;
+    } = true;
 
     private bool Stopping => _stoppingExecutions.Any(id => id == ExecutionId);
 

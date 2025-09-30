@@ -1,4 +1,5 @@
-﻿using Biflow.Ui.Shared.StepEdit;
+﻿using System.Diagnostics.CodeAnalysis;
+using Biflow.Ui.Shared.StepEdit;
 
 namespace Biflow.Ui.Shared.StepEditModal;
 
@@ -11,22 +12,20 @@ public partial class AgentJobStepEditModal(
     private AgentJobSelectOffcanvas? _agentJobSelectOffcanvas;
 
     internal override string FormId => "agent_job_step_edit_form";
-    
+
+    [field: AllowNull, MaybeNull]
     private MsSqlConnection Connection
     {
         get
         {
-            if (_connection is null || _connection.ConnectionId != Step?.ConnectionId)
+            if (field is null || field.ConnectionId != Step?.ConnectionId)
             {
-                _connection = Integrations.MsSqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
-                              ?? Integrations.MsSqlConnections.First();
+                field = Integrations.MsSqlConnections.FirstOrDefault(c => c.ConnectionId == Step?.ConnectionId)
+                        ?? Integrations.MsSqlConnections.First();
             }
-            return _connection;
+            return field;
         }
-    }
-
-    // TODO Replace with field keyword in .NET 10
-    private MsSqlConnection? _connection = null;
+    } = null;
 
     protected override AgentJobStep CreateNewStep(Job job) =>
         new()
