@@ -9,11 +9,11 @@ public static class MediatorExtensions
         services.Scan(selector =>
         {
             selector.FromAssemblyOf<TScanEntryPoint>()
-                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<>)))
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithTransientLifetime();
             selector.FromAssemblyOf<TScanEntryPoint>()
-                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<,>)))
+                .AddClasses(filter => filter.AssignableTo(typeof(IRequestHandler<,>)), publicOnly: false)
                 .AsImplementedInterfaces()
                 .WithTransientLifetime();
         });
