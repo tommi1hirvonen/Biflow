@@ -21,7 +21,12 @@
                 <div class="card">
                     <h5 class="card-header">Log in</h5>
                     <div class="card-body">
-                        <EditForm id="form-login" Model="LoginModel" method="post" class="form-horizontal" OnValidSubmit="LoginAsync" FormName="login">
+                        <EditForm id="form-login"
+                                  Model="LoginModel"
+                                  method="post"
+                                  class="form-horizontal"
+                                  OnValidSubmit="LoginAsync"
+                                  FormName="login">
                             @if (!string.IsNullOrEmpty(_errorMessage))
                             {
                                 <span class="text-danger">@_errorMessage</span>
@@ -32,7 +37,10 @@
                                     <span class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.User" />
                                     </span>
-                                    <InputText class="form-control" id="input-username" placeholder="Username" @bind-Value="LoginModel.Username" />
+                                    <InputText class="form-control"
+                                               id="input-username"
+                                               placeholder="Username"
+                                               @bind-Value="LoginModel!.Username" />
                                 </div>
                                 <ValidationMessage For="() => LoginModel.Username" />
                             </div>
@@ -41,7 +49,10 @@
                                     <div class="input-group-text">
                                         <SvgIcon Icon="LucideIcon.Key" />
                                     </div>
-                                    <InputText type="password" class="form-control" placeholder="Password" @bind-Value="LoginModel.Password" />
+                                    <InputText type="password"
+                                               class="form-control"
+                                               placeholder="Password"
+                                               @bind-Value="LoginModel!.Password" />
                                 </div>
                                 <ValidationMessage For="() => LoginModel.Password" />
                             </div>
@@ -72,17 +83,20 @@
 
 @code {
     [SupplyParameterFromForm]
-    private Biflow.Core.Entities.Login LoginModel { get; init; } = null!;
+    private Biflow.Core.Entities.Login? LoginModel { get; set; }
 
     [CascadingParameter]
     private HttpContext HttpContext { get; set; } = null!;
 
     private string? _errorMessage;
 
+    protected override void OnInitialized() => LoginModel ??= new();
+
     private async Task LoginAsync()
     {
         try
         {
+            ArgumentNullException.ThrowIfNull(LoginModel);
             var roles = await AuthHandler.AuthenticateUserAsync(LoginModel.Username!, LoginModel.Password!);
             var claims = new List<Claim>
             {
