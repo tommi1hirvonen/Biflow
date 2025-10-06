@@ -20,7 +20,15 @@ internal class FunctionStepExecutor(
 
     private const int MaxRefreshRetries = 3;
 
-    private static readonly JsonSerializerOptions CamelCaseOptions = new() { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+    /// <summary>
+    /// Options for deserializing durable function start response.
+    /// Depending on the DurableTask version, the casing of the property names may vary
+    /// => set PropertyNameCaseInsensitive = true
+    /// </summary>
+    private static readonly JsonSerializerOptions CaseInsensitiveOptions = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
 
     protected override Task<Result> ExecuteAsync(
         OrchestrationContext context,
@@ -80,7 +88,7 @@ internal class FunctionStepExecutor(
         try
         {
             response.EnsureSuccessStatusCode();
-            startResponse = JsonSerializer.Deserialize<StartResponse>(content, CamelCaseOptions)
+            startResponse = JsonSerializer.Deserialize<StartResponse>(content, CaseInsensitiveOptions)
                 ?? throw new InvalidOperationException("Start response was null");
         }
         catch (Exception ex)
@@ -306,7 +314,7 @@ internal class FunctionStepExecutor(
         {
             var response = await client.GetAsync(statusUrl, cancellation);
             var content = await response.Content.ReadAsStringAsync(cancellation);
-            var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CamelCaseOptions)
+            var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CaseInsensitiveOptions)
                 ?? throw new InvalidOperationException("Status response was null");
             return statusResponse;
         }, cancellationToken);
