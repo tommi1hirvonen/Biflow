@@ -89,10 +89,23 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
 
     public void CancelExecution(string username)
     {
-        // Cancel all steps
-        foreach (var pair in _cancellationTokenSources)
+        // Cancel all steps.
+        // Start canceling in reverse topological order, i.e., cancel steps with the most dependencies first.
+        // Otherwise, some steps might be marked with status DependenciesFailed before they are canceled.
+        IEnumerable<KeyValuePair<StepExecution, ExtendedCancellationTokenSource>> steps;
+        try
         {
-            pair.Value.Cancel(username);
+            var comparer = new TopologicalStepExecutionComparer(_cancellationTokenSources.Keys);
+            steps = _cancellationTokenSources.OrderByDescending(e => e.Key, comparer);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while doing topological sort for job cancellation");
+            steps = _cancellationTokenSources.OrderByDescending(e => e.Key.ExecutionPhase);
+        }
+        foreach (var (_, cts) in steps)
+        {
+            cts.Cancel(username);
         }
     }
 
