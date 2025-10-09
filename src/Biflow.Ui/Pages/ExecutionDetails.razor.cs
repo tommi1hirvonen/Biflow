@@ -143,6 +143,8 @@ public partial class ExecutionDetails(
             return;
         }
         _prevExecutionId = ExecutionId;
+        ClearFilters();
+        _sortMode = StepExecutionSortMode.StartedAsc;
         AutoRefresh = true;
         await LoadData();
     }
@@ -360,6 +362,15 @@ public partial class ExecutionDetails(
         {
             _toaster.AddError("Error deleting execution", ex.Message);
         }
+    }
+
+    private void ClearFilters()
+    {
+        _stepStatusFilter.Clear();
+        _stepFilter.Clear();
+        _stepTypeFilter.Clear();
+        _tagFilter.Clear();
+        _tagFilterMode = FilterDropdownMode.Any;
     }
     
     private int GetProgressPercent()

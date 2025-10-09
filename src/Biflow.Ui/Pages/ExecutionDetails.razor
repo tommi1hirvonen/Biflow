@@ -448,7 +448,7 @@
                         </TitleTemplate>
                     </FilterDropdown>
                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto"
-                              @onclick="() => { _stepStatusFilter.Clear(); _stepFilter.Clear(); _stepTypeFilter.Clear(); _tagFilter.Clear(); }">
+                              @onclick="ClearFilters">
                         <SvgIcon Icon="LucideIcon.X"/>
                         Reset
                     </HxButton>
