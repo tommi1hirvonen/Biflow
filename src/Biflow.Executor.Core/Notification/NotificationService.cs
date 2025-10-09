@@ -64,7 +64,9 @@ internal class NotificationService(
             .SelectMany(e => e.StepExecutionAttempts)
             .Where(e => e.ExecutionStatus != StepExecutionStatus.Succeeded
                     && e.ExecutionStatus != StepExecutionStatus.Warning
-                    && e.ExecutionStatus != StepExecutionStatus.AwaitingRetry)
+                    && e.ExecutionStatus != StepExecutionStatus.AwaitingRetry
+                    && e.ExecutionStatus != StepExecutionStatus.Retry
+                    && e.ExecutionStatus != StepExecutionStatus.Skipped)
             .Select(e => $"""
             <tr>
                 <td>{e.StepExecution.StepName}</td>
