@@ -31,7 +31,7 @@ public record StepExecutionProjection(
 
     public override int GetHashCode() => base.GetHashCode();
 
-    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+    public double? ExecutionInSeconds { get; } = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     public bool CanBeStopped =>
         StepExecutionStatus == StepExecutionStatus.Running

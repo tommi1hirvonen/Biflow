@@ -16,5 +16,5 @@ public record StepExecutionDetailsProjection(
     Guid[] Dependencies,
     TagProjection[] StepTags) : IStepExecutionProjection
 {
-    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+    public double? ExecutionInSeconds { get; } = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }

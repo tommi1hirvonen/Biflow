@@ -22,5 +22,5 @@ public record ExecutionDetailsProjection(
 {
     public string? GetDurationInReadableFormat() => ExecutionInSeconds?.SecondsToReadableFormat();
     
-    private double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+    private double? ExecutionInSeconds { get; } = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 }

@@ -49,9 +49,28 @@ public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus
 
     public DateTimeOffset CreatedOn { get; private set; } = createdOn;
 
-    public DateTimeOffset? StartedOn { get; set; }
+    public DateTimeOffset? StartedOn
+    {
+        get;
+        set
+        {
+            field = value;
+            ExecutionInSeconds = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+        }
+    }
 
-    public DateTimeOffset? EndedOn { get; set; }
+    public DateTimeOffset? EndedOn
+    {
+        get;
+        set
+        {
+            field = value;
+            ExecutionInSeconds = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+        }
+    }
+
+    [JsonIgnore]
+    public double? ExecutionInSeconds { get; private set; }
 
     public ExecutionStatus ExecutionStatus { get; set; } = executionStatus;
 
@@ -95,8 +114,6 @@ public class Execution(string jobName, DateTimeOffset createdOn, ExecutionStatus
     public IEnumerable<ExecutionConcurrency> ExecutionConcurrencies { get; } = new List<ExecutionConcurrency>();
 
     public IEnumerable<ExecutionDataObject> DataObjects { get; } = new List<ExecutionDataObject>();
-
-    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     /// <summary>
     /// Calculates and returns the execution's status based on its child step execution attempt statuses.

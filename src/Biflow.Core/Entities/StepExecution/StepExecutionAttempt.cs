@@ -45,9 +45,28 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
 
     public int RetryAttemptIndex { get; [UsedImplicitly] private set; }
 
-    public DateTimeOffset? StartedOn { get; set; }
+    public DateTimeOffset? StartedOn
+    {
+        get;
+        set
+        {
+            field = value;
+            ExecutionInSeconds = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+        }
+    }
 
-    public DateTimeOffset? EndedOn { get; set; }
+    public DateTimeOffset? EndedOn
+    {
+        get;
+        set
+        {
+            field = value;
+            ExecutionInSeconds = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+        }
+    }
+
+    [JsonIgnore]
+    public double? ExecutionInSeconds { get; private set; }
 
     public StepExecutionStatus ExecutionStatus { get; set; } = executionStatus;
 
@@ -67,8 +86,6 @@ public abstract class StepExecutionAttempt(StepExecutionStatus executionStatus, 
 
     [JsonIgnore]
     public string UniqueId => string.Concat(ExecutionId, StepId, RetryAttemptIndex);
-
-    public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
 
     [JsonIgnore]
     public bool CanBeStopped =>
