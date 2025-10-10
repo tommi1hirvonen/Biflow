@@ -7,7 +7,7 @@ public class CreateFunctionStepCommand : CreateStepCommand<FunctionStep>
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public required FunctionInputFormat FunctionInputFormat { get; init; }
-    public required bool FunctionIsDurable { get; init; }
+    public required bool DisableAsyncPattern { get; init; }
     public required string? FunctionKey { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }
 }
@@ -45,7 +45,7 @@ internal class CreateFunctionStepCommandHandler(
             FunctionUrl = request.FunctionUrl,
             FunctionInput = request.FunctionInput,
             FunctionInputFormat = request.FunctionInputFormat,
-            FunctionIsDurable = request.FunctionIsDurable,
+            DisableAsyncPattern = request.DisableAsyncPattern,
             FunctionKey = request.FunctionKey
         };
         

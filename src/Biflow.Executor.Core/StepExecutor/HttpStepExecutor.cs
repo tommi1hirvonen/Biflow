@@ -2,7 +2,6 @@ using System.Net;
 using System.Text;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.Graph;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -52,60 +51,60 @@ internal class HttpStepExecutor(
         HttpResponseMessage? response = null;
         try
         {
-            using var request = BuildRequest(step, attempt);
-            response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
-            attempt.AddOutput($"Response status code: {(int)response.StatusCode} {response.StatusCode}");
-            var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
-            if (!string.IsNullOrEmpty(content))
-                attempt.AddOutput($"Response content:\n{content}");
-        }
-        catch (OperationCanceledException ex)
-        {
-            response?.Dispose();
-            if (timeoutCts.IsCancellationRequested)
+            try
             {
-                attempt.AddError(ex, "Step execution timed out");
+                using var request = BuildRequest(step, attempt);
+                response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
+                attempt.AddOutput($"Response status code: {(int)response.StatusCode} {response.StatusCode}");
+                var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
+                if (!string.IsNullOrEmpty(content))
+                    attempt.AddOutput($"Response content:\n{content}");
+            }
+            catch (OperationCanceledException ex)
+            {
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    attempt.AddError(ex, "Step execution timed out");
+                    return Result.Failure;
+                }
+
+                attempt.AddWarning(ex);
+                return Result.Cancel;
+            }
+            catch (Exception ex)
+            {
+                attempt.AddError(ex, "Error building/sending HTTP request");
                 return Result.Failure;
             }
-            attempt.AddWarning(ex);
-            return Result.Cancel;
-        }
-        catch (Exception ex)
-        {
-            response?.Dispose();
-            attempt.AddError(ex, "Error building/sending HTTP request");
-            return Result.Failure;
-        }
 
-        try
-        {
-            response.EnsureSuccessStatusCode();
-        }
-        catch (Exception ex)
-        {
-            response.Dispose();
-            attempt.AddError(ex, "HTTP response reported error status code");
-            return Result.Failure;
-        }
+            try
+            {
+                response.EnsureSuccessStatusCode();
+            }
+            catch (Exception ex)
+            {
+                attempt.AddError(ex, "HTTP response reported error status code");
+                return Result.Failure;
+            }
 
-        if (step.DisableAsyncPattern)
-        {
-            response.Dispose();
-            return Result.Success;
-        }
-        
-        try
-        {
-            return await PollAsyncPatternAsync(attempt, noTimeoutClient, response, linkedCts.Token);
-        }
-        catch (Exception ex)
-        {
-            attempt.AddError(ex, "Error polling for async pattern");
-            return Result.Failure;
+            if (step.DisableAsyncPattern)
+            {
+                return Result.Success;
+            }
+
+            try
+            {
+                return await PollAsyncPatternAsync(attempt, noTimeoutClient, response, linkedCts.Token);
+            }
+            catch (Exception ex)
+            {
+                attempt.AddError(ex, "Error polling for async pattern");
+                return Result.Failure;
+            }
         }
         finally
         {
-            response.Dispose();
+            response?.Dispose();
         }
     }
 

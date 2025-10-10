@@ -11,7 +11,7 @@ public class UpdateFunctionStepCommand : UpdateStepCommand<FunctionStep>
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public required FunctionInputFormat FunctionInputFormat { get; init; }
-    public required bool FunctionIsDurable { get; init; }
+    public required bool DisableAsyncPattern { get; init; }
     /// <summary>
     /// If null, the previous FunctionKey value will be retained.
     /// If empty string, the FunctionKey value will be cleared.
@@ -60,7 +60,7 @@ internal class UpdateFunctionStepCommandHandler(
         step.FunctionUrl = request.FunctionUrl;
         step.FunctionInput = request.FunctionInput;
         step.FunctionInputFormat = request.FunctionInputFormat;
-        step.FunctionIsDurable = request.FunctionIsDurable;
+        step.DisableAsyncPattern = request.DisableAsyncPattern;
         if (request.FunctionKey is not null)
         {
             step.FunctionKey = request.FunctionKey;

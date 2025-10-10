@@ -8,7 +8,7 @@ public record FunctionStepDto : StepDto
     public required string FunctionUrl { get; init; }
     public required string? FunctionInput { get; init; }
     public FunctionInputFormat FunctionInputFormat { get; init; } = FunctionInputFormat.PlainText;
-    public required bool FunctionIsDurable { get; init; }
+    public required bool DisableAsyncPattern { get; init; }
     public string? FunctionKey { get; init; }
     public StepParameterDto[] Parameters { get; init; } = [];
 }
