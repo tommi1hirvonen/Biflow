@@ -9,6 +9,14 @@ public partial class FunctionStepEditModal(
     : StepEditModal<FunctionStep>(mediator, toaster, dbContextFactory)
 {
     internal override string FormId => "function_step_edit_form";
+    
+    private const string DisableAsyncPatternInfoContent = """
+        <div>
+            Option to disable async polling of status for durable functions.
+            If enabled, the step will be completed immediately after the function has been successfully invoked.
+            This option has no effect when invoking non-durable functions.
+        </div>
+        """;
 
     private const string ParametersInfoContent = """
         <div>
@@ -86,7 +94,7 @@ public partial class FunctionStepEditModal(
             FunctionUrl = step.FunctionUrl,
             FunctionInput = step.FunctionInput,
             FunctionInputFormat = step.FunctionInputFormat,
-            FunctionIsDurable = step.FunctionIsDurable,
+            DisableAsyncPattern = step.DisableAsyncPattern,
             FunctionKey = step.FunctionKey,
             Dependencies = dependencies,
             ExecutionConditionParameters = executionConditionParameters,
@@ -147,7 +155,7 @@ public partial class FunctionStepEditModal(
             FunctionUrl = step.FunctionUrl,
             FunctionInput = step.FunctionInput,
             FunctionInputFormat = step.FunctionInputFormat,
-            FunctionIsDurable = step.FunctionIsDurable,
+            DisableAsyncPattern = step.DisableAsyncPattern,
             FunctionKey = step.FunctionKey,
             Dependencies = dependencies,
             ExecutionConditionParameters = executionConditionParameters,

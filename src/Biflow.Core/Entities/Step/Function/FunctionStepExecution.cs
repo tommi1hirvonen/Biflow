@@ -20,7 +20,7 @@ public class FunctionStepExecution : StepExecution,
         FunctionAppId = step.FunctionAppId;
         FunctionUrl = step.FunctionUrl;
         FunctionInput = step.FunctionInput;
-        FunctionIsDurable = step.FunctionIsDurable;
+        DisableAsyncPattern = step.DisableAsyncPattern;
         TimeoutMinutes = step.TimeoutMinutes;
 
         StepExecutionParameters = step.StepParameters
@@ -36,7 +36,12 @@ public class FunctionStepExecution : StepExecution,
 
     public string? FunctionInput { get; private set; }
 
-    public bool FunctionIsDurable { get; private set; }
+    /// <summary>
+    /// Option to disable async polling of status for durable functions.
+    /// If enabled, the step will be completed immediately after the function has been successfully invoked.
+    /// This option has no effect when invoking non-durable functions.
+    /// </summary>
+    public bool DisableAsyncPattern { get; init; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 

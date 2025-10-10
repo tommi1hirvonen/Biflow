@@ -498,7 +498,7 @@ public abstract class StepsCreateEndpoints : IEndpoints
                     FunctionUrl = stepDto.FunctionUrl,
                     FunctionInput = stepDto.FunctionInput,
                     FunctionInputFormat = stepDto.FunctionInputFormat,
-                    FunctionIsDurable = stepDto.FunctionIsDurable,
+                    DisableAsyncPattern = stepDto.DisableAsyncPattern,
                     FunctionKey = stepDto.FunctionKey,
                     Parameters = parameters,
                     Dependencies = dependencies,

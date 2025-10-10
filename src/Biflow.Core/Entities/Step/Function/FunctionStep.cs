@@ -18,7 +18,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
         FunctionUrl = other.FunctionUrl;
         FunctionInput = other.FunctionInput;
         FunctionInputFormat = other.FunctionInputFormat;
-        FunctionIsDurable = other.FunctionIsDurable;
+        DisableAsyncPattern = other.DisableAsyncPattern;
         FunctionKey = other.FunctionKey;
         StepParameters = other.StepParameters
             .Select(p => new FunctionStepParameter(p, this, targetJob))
@@ -43,7 +43,12 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     
     public FunctionInputFormat FunctionInputFormat { get; set; } = FunctionInputFormat.PlainText;
 
-    public bool FunctionIsDurable { get; set; }
+    /// <summary>
+    /// Option to disable async polling of status for durable functions.
+    /// If enabled, the step will be completed immediately after the function has been successfully invoked.
+    /// This option has no effect when invoking non-durable functions.
+    /// </summary>
+    public bool DisableAsyncPattern { get; set; }
 
     [MaxLength(1000)]
     [JsonSensitive]

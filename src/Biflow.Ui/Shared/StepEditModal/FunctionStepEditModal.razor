@@ -93,13 +93,19 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-check-label mb-lg-0" for="function_is_durable">Is durable function</label>
+                <label class="form-check-label mb-lg-0"
+                       for="disable_async_pattern">
+                    Disable async pattern
+                    <HxPopover Trigger="PopoverTrigger.Hover" Html Content="@DisableAsyncPatternInfoContent">
+                        <SvgIcon Icon="LucideIcon.Info" />
+                    </HxPopover>
+                </label>
             </div>
             <div class="col-md-6">
                 <div class="form-check form-check-inline">
-                    <input type="checkbox" class="form-check-input" id="function_is_durable"
-                           checked=@Step.FunctionIsDurable
-                           @bind-value="Step.FunctionIsDurable">
+                    <input type="checkbox" class="form-check-input" id="disable_async_pattern"
+                           checked=@Step.DisableAsyncPattern
+                           @bind-value="Step.DisableAsyncPattern">
                 </div>
             </div>
         </div>
