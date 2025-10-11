@@ -97,7 +97,7 @@ internal class JobExecutor(
             // If the notification task completed first, send long-running notification.
             if (notificationTask.IsCompleted)
             {
-                await _notificationService.SendLongRunningExecutionNotificationAsync(Execution);
+                _ = await _notificationService.SendLongRunningExecutionNotificationAsync(Execution);
             }
             await notificationCts.CancelAsync();
             await orchestrationTask; // Wait for orchestration to finish.
@@ -128,7 +128,7 @@ internal class JobExecutor(
         // In case of cancellation (service shutdown), do not send notifications.
         cancellationToken.ThrowIfCancellationRequested();
 
-        await _notificationService.SendCompletionNotificationAsync(Execution);
+        _ = await _notificationService.SendCompletionNotificationAsync(Execution);
     }
 
     public void Cancel(string username) => _jobOrchestrator.CancelExecution(username);

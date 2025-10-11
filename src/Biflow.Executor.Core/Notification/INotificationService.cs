@@ -2,7 +2,7 @@
 
 public interface INotificationService
 {
-    public Task SendCompletionNotificationAsync(Execution execution);
+    public Task<NotificationResponse> SendCompletionNotificationAsync(Execution execution);
 
-    public Task SendLongRunningExecutionNotificationAsync(Execution execution);
+    public Task<NotificationResponse> SendLongRunningExecutionNotificationAsync(Execution execution);
 }

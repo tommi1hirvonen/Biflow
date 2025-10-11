@@ -16,14 +16,14 @@ internal class NotificationService(
     private readonly ISubscribersResolver _subscribersResolver = subscribersResolver;
     private readonly INotificationMessageService _notificationMessageService = notificationMessageService;
 
-    public async Task SendCompletionNotificationAsync(Execution execution)
+    public async Task<NotificationResponse> SendCompletionNotificationAsync(Execution execution)
     {
         if (execution is { Notify: false, NotifyCaller: null })
         {
-            return;
+            return NotificationResponse.Empty;
         }
 
-        IEnumerable<string> recipients;
+        ICollection<string> recipients;
         try
         {
             recipients = await _subscribersResolver.ResolveSubscriberEmailsAsync(execution);
@@ -32,12 +32,12 @@ internal class NotificationService(
         {
             _healthService.AddError(execution.ExecutionId, $"Error getting recipients for notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error getting recipients for notification", execution.ExecutionId);
-            return;
+            return NotificationResponse.Empty;
         }
 
-        if (!recipients.Any())
+        if (recipients.Count == 0)
         { 
-            return;
+            return NotificationResponse.Empty;
         }
 
         if (_messageDispatcher is null)
@@ -48,7 +48,7 @@ internal class NotificationService(
                 "{ExecutionId} Error sending notification email. " +
                 "No message dispatcher was configured in the application settings.",
                 execution.ExecutionId);
-            return;
+            return  NotificationResponse.Empty;
         }
 
         string messageBody;
@@ -70,22 +70,24 @@ internal class NotificationService(
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, true);
             _logger.LogInformation("{ExecutionId} Notification email sent to: {recipients}",
                 execution.ExecutionId, string.Join(", ", recipients));
+            return new NotificationResponse(recipients, subject, messageBody, true);
         }
         catch (Exception ex)
         {
             _healthService.AddError(execution.ExecutionId, $"Error sending notification mail: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
+            return  NotificationResponse.Empty;
         }
     }
 
-    public async Task SendLongRunningExecutionNotificationAsync(Execution execution)
+    public async Task<NotificationResponse> SendLongRunningExecutionNotificationAsync(Execution execution)
     {
         if (execution is { Notify: false, NotifyCallerOvertime: false })
         {
-            return;
+            return NotificationResponse.Empty;
         }
 
-        IEnumerable<string> recipients;
+        ICollection<string> recipients;
         try
         {
             recipients = await _subscribersResolver.ResolveLongRunningSubscriberEmailsAsync(execution);
@@ -96,12 +98,12 @@ internal class NotificationService(
                 $"Error getting recipients for long running execution notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error getting recipients for long running execution notification",
                 execution.ExecutionId);
-            return;
+            return  NotificationResponse.Empty;
         }
 
-        if (!recipients.Any())
+        if (recipients.Count == 0)
         {
-            return;
+            return  NotificationResponse.Empty;
         }
         
         if (_messageDispatcher is null)
@@ -113,7 +115,7 @@ internal class NotificationService(
                 "{ExecutionId} Error sending long-running execution notification email. " +
                 "No message dispatcher was configured in the application settings.",
                 execution.ExecutionId);
-            return;
+            return   NotificationResponse.Empty;
         }
 
         try
@@ -124,12 +126,14 @@ internal class NotificationService(
             await _messageDispatcher.SendMessageAsync(recipients, subject, messageBody, false);
             _logger.LogInformation("{ExecutionId} Long-running execution notification email sent to: {recipients}",
                 execution.ExecutionId, string.Join(", ", recipients));
+            return new NotificationResponse(recipients, subject, messageBody, false);
         }
         catch (Exception ex)
         {
             _healthService.AddError(execution.ExecutionId,
                 $"Error sending long-running execution notification: ${ex.Message}");
             _logger.LogError(ex, "{ExecutionId} Error sending notification email.", execution.ExecutionId);
+            return NotificationResponse.Empty;
         }
     }
 }
