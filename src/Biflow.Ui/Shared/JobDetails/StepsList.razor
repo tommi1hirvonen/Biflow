@@ -150,13 +150,7 @@
                     <SvgIcon Icon="LucideIcon.Ellipsis" />
                     More filters
                 </HxButton>
-                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="async () =>
-                    {
-                        _tagsFilterSet.Clear();
-                        _stepTypeFilter.Clear();
-                        _stepNameFilter = string.Empty;
-                        await _advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
-                    }">
+                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="ClearFiltersAsync">
                     <SvgIcon Icon="LucideIcon.X" />
                     Clear
                 </HxButton>

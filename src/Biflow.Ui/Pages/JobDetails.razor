@@ -155,7 +155,7 @@
 
                         @* Leave steps component rendered but only update the visibility css class. This way rendering is quicker when returning to the component. *@
                         <div class="@(DetailsPage == "steps" ? null : "d-none")">
-                            <StepsList InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
+                            <StepsList @ref="_stepsList" InitialStepId="@(DetailsPage == "steps" ? InitialStepId : null)" />
                         </div>
 
                         @if (DetailsPage == "parameters")

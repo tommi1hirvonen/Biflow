@@ -64,6 +64,16 @@ public partial class StepsList(
         .AsEnumerable()
         ?? [];
 
+    public async Task ClearFiltersAsync()
+    {
+        _tagsFilterSet.Clear();
+        _stepTypeFilter.Clear();
+        _stepNameFilter = string.Empty;
+        _stateFilter = StateFilter.All;
+        _tagsFilterMode = FilterDropdownMode.Any;
+        await _advancedFiltersOffcanvas.LetAsync(x => x.ClearAsync());
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (_initialStepModalShouldOpen && InitialStepId is { } stepId)

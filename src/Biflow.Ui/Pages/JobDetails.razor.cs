@@ -1,5 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using System.Text.Json;
+using Biflow.Ui.Shared.JobDetails;
 
 namespace Biflow.Ui.Pages;
 
@@ -30,6 +31,7 @@ public partial class JobDetails(
     private readonly IJSRuntime _js = js;
     private readonly CancellationTokenSource _cts = new();
 
+    private StepsList? _stepsList;
     private IntegrationsContainer _integrations = IntegrationsContainer.Empty;
     private Job? _job;
     private List<Job> _jobs = [];
@@ -42,6 +44,12 @@ public partial class JobDetails(
         if (Id != _previousJobId)
         {
             _previousJobId = Id;
+            if (_stepsList is not null)
+            {
+                // The job has changed. As there may be filters applied on the StepsList component,
+                // reset them if the component is visible.
+                await _stepsList.ClearFiltersAsync();
+            }
             await OnInitializedAsync();
         }
 
