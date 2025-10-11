@@ -180,7 +180,25 @@ public class DatabaseFixture : IAsyncLifetime
             var executionBuilder1 = await _executionBuilderFactory.CreateAsync(job1.JobId, "admin");
             ArgumentNullException.ThrowIfNull(executionBuilder1);
             executionBuilder1.AddAll();
-            await executionBuilder1.SaveExecutionAsync();
+            _ = await executionBuilder1.SaveExecutionAsync();
+            
+            var executionBuilder2 = await _executionBuilderFactory.CreateAsync(job1.JobId, "admin");
+            ArgumentNullException.ThrowIfNull(executionBuilder2);
+            executionBuilder2.AddAll();
+            var execution2 = await executionBuilder2.SaveExecutionAsync();
+            ArgumentNullException.ThrowIfNull(execution2);
+            await context.Executions
+                .Where(e => e.ExecutionId == execution2.ExecutionId)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(e => e.ExecutionStatus, ExecutionStatus.Failed)
+                    .SetProperty(e => e.StartedOn, new DateTime(2025, 1, 1, 10, 0, 0))
+                    .SetProperty(e => e.EndedOn, new DateTime(2025, 1, 1, 10, 10, 0)));
+            await context.StepExecutionAttempts
+                .Where(e => e.ExecutionId == execution2.ExecutionId)
+                .ExecuteUpdateAsync(x => x
+                    .SetProperty(e => e.ExecutionStatus, StepExecutionStatus.Failed)
+                    .SetProperty(e => e.StartedOn, new DateTime(2025, 1, 1, 10, 0, 0))
+                    .SetProperty(e => e.EndedOn, new DateTime(2025, 1, 1, 10, 10, 0)));
 
             _databaseInitialized = true;
         }
