@@ -22,6 +22,10 @@ internal class ExecutionEntityTypeConfiguration(AppDbContext context) : IEntityT
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<StepExecutionAttemptReference?>(to, null as JsonSerializerOptions));
 
+        // Use property access mode for StartedOn and EndedOn,
+        // because they have logic in their setters for calculating ExecutionInSeconds.
+        builder.Property(x => x.StartedOn).UsePropertyAccessMode(PropertyAccessMode.Property);
+        builder.Property(x => x.EndedOn).UsePropertyAccessMode(PropertyAccessMode.Property);
         builder.Ignore(x => x.ExecutionInSeconds);
 
         builder.Property(p => p.ParentExecution)

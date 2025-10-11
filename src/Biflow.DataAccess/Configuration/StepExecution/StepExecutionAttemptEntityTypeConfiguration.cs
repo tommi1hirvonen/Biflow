@@ -19,6 +19,10 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.Ignore(x => x.UniqueId);
         builder.Ignore(x => x.ExecutionInSeconds);
         builder.Ignore(x => x.CanBeStopped);
+        // Use property access mode for StartedOn and EndedOn,
+        // because they have logic in their setters for calculating ExecutionInSeconds.
+        builder.Property(x => x.StartedOn).UsePropertyAccessMode(PropertyAccessMode.Property);
+        builder.Property(x => x.EndedOn).UsePropertyAccessMode(PropertyAccessMode.Property);
 
         builder.HasDiscriminator<StepType>("StepType")
             .HasValue<DatasetStepExecutionAttempt>(StepType.Dataset)
