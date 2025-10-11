@@ -1,6 +1,7 @@
 ﻿using Biflow.Core;
 using Biflow.Core.Entities;
 using Biflow.DataAccess;
+using Biflow.Executor.Core.Notification;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,8 @@ public class DatabaseFixture : IAsyncLifetime
         var services = new ServiceCollection()
             .AddSingleton<IConfiguration>(configuration)
             .AddExecutorServices(configuration)
+            // Replace the MessageDispatcher implementation.
+            .AddSingleton<IMessageDispatcher, MockMessageDispatcher>()
             .BuildServiceProvider();
         Services = services;
         _dbContextFactory = services.GetRequiredService<IDbContextFactory<ExecutorDbContext>>();

@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Executor.Core.Notification;
 
-internal interface INotificationService
+public interface INotificationService
 {
     public Task SendCompletionNotificationAsync(Execution execution);
 
