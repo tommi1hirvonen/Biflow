@@ -36,6 +36,7 @@ public static class Extensions
         services.AddKeyedSingleton<HealthService>(ExecutorServiceKeys.NotificationHealthService);
         services.AddSingleton<ISubscriptionsProviderFactory, SubscriptionsProviderFactory>();
         services.AddSingleton<ISubscribersResolver, SubscribersResolver>();
+        services.AddSingleton<INotificationMessageService, NotificationMessageService>();
 
         // Configure email options and services based on which section was configured in appsettings.
         var emailSection = executorConfiguration.GetSection(EmailOptions.Section);
