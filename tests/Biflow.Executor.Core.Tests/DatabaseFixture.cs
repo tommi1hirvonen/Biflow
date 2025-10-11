@@ -143,7 +143,7 @@ public class DatabaseFixture : IAsyncLifetime
             var user1 = new User
             {
                 Username = "admin",
-                Email = "",
+                Email = "admin@test.test",
                 AuthorizeAllDataTables = true,
                 AuthorizeAllJobs = true
             };
@@ -188,6 +188,8 @@ public class DatabaseFixture : IAsyncLifetime
             var executionBuilder2 = await _executionBuilderFactory.CreateAsync(job1.JobId, "admin");
             ArgumentNullException.ThrowIfNull(executionBuilder2);
             executionBuilder2.AddAll();
+            executionBuilder2.Notify = true;
+            executionBuilder2.NotifyCaller = AlertType.OnCompletion;
             var execution2 = await executionBuilder2.SaveExecutionAsync();
             ArgumentNullException.ThrowIfNull(execution2);
             await context.Executions

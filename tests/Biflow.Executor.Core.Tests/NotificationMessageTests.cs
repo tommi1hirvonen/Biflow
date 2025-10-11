@@ -35,6 +35,10 @@ public class NotificationMessageTests(DatabaseFixture fixture, ITestOutputHelper
         var execution = await context.Executions
             .Include(e => e.StepExecutions).ThenInclude(e => e.StepExecutionAttempts)
             .FirstAsync(e => e.ExecutionStatus == ExecutionStatus.Failed);
-        await _notificationService.SendCompletionNotificationAsync(execution);
+        var response = await _notificationService.SendCompletionNotificationAsync(execution);
+        Assert.NotEmpty(response.Recipients);
+        output.WriteLine(response.Subject);
+        output.WriteLine(response.Body);
+        output.WriteLine(response.IsBodyHtml.ToString());
     }
 }

@@ -13,9 +13,19 @@ public class SubscriptionsProviderTests(DatabaseFixture fixture) : IClassFixture
         fixture.Services.GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
 
     [Fact]
+    public async Task GetJobSubscriptions()
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        var execution = await context.Executions.FirstAsync();
+        var subscriptionsProvider = _subscriptionsProviderFactory.Create(execution);
+        var subs = await subscriptionsProvider.GetJobSubscriptionsAsync();
+        Assert.NotEmpty(subs);
+    }
+    
+    [Fact]
     public async Task GetTagSubscriptions()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions.FirstAsync();
         var subscriptionsProvider = _subscriptionsProviderFactory.Create(execution);
         var subs = await subscriptionsProvider.GetStepTagSubscriptionsAsync();
@@ -25,7 +35,7 @@ public class SubscriptionsProviderTests(DatabaseFixture fixture) : IClassFixture
     [Fact]
     public async Task GetJobTagSubscriptions()
     {
-        using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync();
         var execution = await context.Executions.FirstAsync();
         var subscriptionsProvider = _subscriptionsProviderFactory.Create(execution);
         var subs = await subscriptionsProvider.GetJobStepTagSubscriptionsAsync();
