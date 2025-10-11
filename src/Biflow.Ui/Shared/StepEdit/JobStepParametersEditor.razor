@@ -82,11 +82,14 @@ else if (Step is not null && _targetJob is not null)
                     }
                     else
                     {
-                        // TODO Changing parameter from dynamic back to static now leaves it in
-                        // ParameterValueType.Empty state without being able to change the type
-                        // because StaticEditTemplate is used.
-                        <DynamicParameterEditor Parameter="param" TParameter="StepParameterBase"
-                                           OnParameterEdit="OnParameterEdit">
+                        var defaultValueType = _targetJob.JobParameters
+                            .FirstOrDefault(p => p.ParameterId == param.AssignToJobParameterId)
+                            ?.ParameterValue.ValueType
+                            ?? ParameterValueType.Empty;
+                        <DynamicParameterEditor Parameter="param"
+                                                TParameter="StepParameterBase"
+                                                OnParameterEdit="OnParameterEdit"
+                                                DefaultValueType="defaultValueType">
                             <StaticEditTemplate>
                                 <td>
                                     <div class="input-group input-group-sm">
