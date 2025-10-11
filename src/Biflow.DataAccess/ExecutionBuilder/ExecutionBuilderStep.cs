@@ -26,8 +26,8 @@ public class ExecutionBuilderStep
 
     public IEnumerable<ITag> Tags { get; }
 
-    public void AddToExecution() => _builder.Add(_step);
+    public IReadOnlyCollection<Step> AddToExecution(bool autoIncludeJobParameterDependencies) =>
+        _builder.Add(_step, autoIncludeJobParameterDependencies);
 
-    public void AddWithDependencies(bool onlyOnSuccess = true) =>
-        _builder.AddWithDependencies(_step, onlyOnSuccess);
+    public void AddWithDependencies(bool onlyOnSuccess) => _builder.AddWithDependencies(_step, onlyOnSuccess);
 }

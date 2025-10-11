@@ -106,21 +106,26 @@ public class ExecutionBuilder : IDisposable
     /// </summary>
     public void Clear() => _execution.StepExecutions.Clear();
 
-    public void AddAll(Func<ExecutionBuilderStep, bool>? predicate = null)
+    public void AddAll() => AddAll(true);
+
+    public IReadOnlyCollection<Step> AddAll(
+        bool autoIncludeJobParameterDependencies,
+        Func<ExecutionBuilderStep, bool>? predicate = null)
     {
         predicate ??= _ => true;
-        foreach (var step in Steps.Where(s => predicate(s)))
-        {
-            step.AddToExecution();
-        }
+        var autoIncludedStep = Steps
+            .Where(predicate)
+            .SelectMany(s => s.AddToExecution(autoIncludeJobParameterDependencies))
+            .ToArray();
+        return autoIncludedStep;
     }
 
-    internal void Add(Step step)
+    internal IReadOnlyCollection<Step> Add(Step step, bool autoIncludeJobParameterDependencies)
     {
         // Step was already added.
         if (_execution.StepExecutions.Any(e => e.StepId == step.StepId))
         {
-            return;
+            return [];
         }
         // Step is not one of the provided steps.
         if (!_steps.Contains(step))
@@ -128,13 +133,47 @@ public class ExecutionBuilder : IDisposable
             throw new ArgumentException($"Argument {nameof(step)} value was not in the list of provided steps");
         }
         
-        // TODO
         // Check if the step has parameters inheriting their value from a job parameter,
         // which in turn is updated by an upstream dependency step. Commonly, in these cases, the upstream dependency
         // step should be included because it sets the job parameter to the correct value.
+        IReadOnlyCollection<Step> autoIncludedSteps;
+        if (autoIncludeJobParameterDependencies && step is IHasStepParameters paramStep)
+        {
+            // Get job parameter ids that are being referenced by this step's parameters.
+            var jobParamIds = paramStep.StepParameters
+                .Select(s => s.InheritFromJobParameterId)
+                .OfType<Guid>()
+                .Distinct()
+                .ToArray();
+            var dependencySteps = step.Dependencies
+                // Only include on-success dependencies.
+                // Dependencies defined due to previous steps writing to job parameters that this step is reading
+                // should logically always be of type OnSucceeded.
+                .Where(d => d.DependencyType == DependencyType.OnSucceeded)
+                .Select(d => d.DependantOnStep)
+                // Currently only SqlSteps support writing to job parameters.
+                .OfType<SqlStep>()
+                // Make sure the step is not yet included.
+                .Where(s1 => _execution.StepExecutions.All(s2 => s1.StepId != s2.StepId))
+                // And finally, check that the step is writing to a job parameter referenced by this step.
+                .Where(s => s.ResultCaptureJobParameterId is { } id && jobParamIds.Contains(id))
+                .ToArray();
+            autoIncludedSteps =
+            [
+                ..dependencySteps,
+                // Check for auto-included steps recursively.
+                ..dependencySteps.SelectMany(s => Add(s, autoIncludeJobParameterDependencies))
+            ];
+        }
+        else
+        {
+            autoIncludedSteps = [];
+        }
         
         var stepExecution = step.ToStepExecution(_execution);
         _execution.StepExecutions.Add(stepExecution);
+
+        return autoIncludedSteps;
     }
 
     internal void Remove(StepExecution stepExecution) =>
@@ -146,7 +185,7 @@ public class ExecutionBuilder : IDisposable
     private void RecurseDependencies(Step step, List<Step> processedSteps, bool onlyOnSuccess)
     {
         // Add the step to the list of steps to execute if it is not there yet.
-        Add(step);
+        Add(step, autoIncludeJobParameterDependencies: false);
 
         // Get dependency ids.
         var dependencyStepIds = step.Dependencies

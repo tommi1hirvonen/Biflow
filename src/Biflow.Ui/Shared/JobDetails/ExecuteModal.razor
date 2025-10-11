@@ -3,7 +3,6 @@
 @inject ToasterService Toaster
 @inject IExecutionBuilderFactory<AppDbContext> BuilderFactory
 @inject IExecutorService Executor
-@inject NavigationManager NavigationManager
 
 <HxModal @ref="_modal" Fullscreen="ModalFullscreen.Always" Scrollable="true" Title="Execute steps"
          BodyCssClass="pt-0"
@@ -126,7 +125,7 @@
                                 <HxButtonGroup>
                                     @*Add all available AND enabled steps that have not yet been added to selected steps. Also filter based on current filter text.*@
                                     <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
-                                              @onclick="() => _builder.AddAll(s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId))">
+                                              @onclick="() => AddAvailable(_builder)">
                                         <SvgIcon Icon="LucideIcon.ChevronsRight" />
                                         Select all
                                     </HxButton>
@@ -148,12 +147,14 @@
                                     @foreach (var step in StepsAvailableToExecute)
                                     {
                                         <tr class="cursor-pointer" title="@(step.IsEnabled ? null : "Step is disabled")">
-                                            <td class="@(step.IsEnabled ? null : "text-secondary") align-middle" @onclick="() => step.AddToExecution()">
+                                            <td class="@(step.IsEnabled ? null : "text-secondary") align-middle"
+                                                @onclick="() => Add(step)">
                                                 <StepTypeIcon StepType="@step.StepType" />
                                                 &nbsp;
                                                 <HighlightableText Text="@step.StepName" PartToHighlight="@_executeFilterText" />
                                             </td>
-                                            <td class="@(_builder.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)" @onclick="() => step.AddToExecution()">
+                                            <td class="@(_builder.ExecutionMode == ExecutionMode.Dependency ? "text-body-tertiary" : null)"
+                                                @onclick="() => Add(step)">
                                                 <SvgIcon Icon="LucideIcon.Layers3" />
                                                 <sup>@step.ExecutionPhase</sup>
                                             </td>
@@ -168,8 +169,12 @@
                                                             </HxDropdownToggleElement>
                                                             <HxDropdownMenu>
                                                                 <HxDropdownHeader>Include dependencies (only enabled steps)</HxDropdownHeader>
-                                                                <HxDropdownItem OnClick="() => step.AddWithDependencies(true)">On-success dependencies</HxDropdownItem>
-                                                                <HxDropdownItem OnClick="() => step.AddWithDependencies(false)">All dependencies</HxDropdownItem>
+                                                                <HxDropdownItem OnClick="() => step.AddWithDependencies(true)">
+                                                                    On-success dependencies
+                                                                </HxDropdownItem>
+                                                                <HxDropdownItem OnClick="() => step.AddWithDependencies(false)">
+                                                                    All dependencies
+                                                                </HxDropdownItem>
                                                             </HxDropdownMenu>
                                                         </HxDropdown>
                                                     }
@@ -498,7 +503,29 @@
         _activeView = View.Steps;
     }
 
-    public async Task ShowAsync(Guid jobId, IEnumerable<Step>? initiallySelectedSteps = null)
+    private void Add(ExecutionBuilderStep step)
+    {
+        var autoIncludedSteps = step.AddToExecution(autoIncludeJobParameterDependencies: true);
+        if (autoIncludedSteps.Count > 0)
+        {
+            Toaster.AddInformation(
+                "Auto-included dependencies which update job parameter values referenced by selected step(s)");
+        }
+    }
+    
+    private void AddAvailable(ExecutionBuilder builder)
+    {
+        var autoIncludedSteps = builder.AddAll(
+            autoIncludeJobParameterDependencies: true,
+            predicate: s => StepsAvailableToExecute.Any(available => s.StepId == available.StepId));
+        if (autoIncludedSteps.Count > 0)
+        {
+            Toaster.AddInformation(
+                "Auto-included dependencies which update job parameter values referenced by selected step(s)");
+        }
+    }
+
+    public async Task ShowAsync(Guid jobId, ICollection<Step>? initiallySelectedSteps = null)
     {
         _activeView = View.Steps;
         _builder?.Dispose();
@@ -515,10 +542,20 @@
             Toaster.AddWarning("Job with the given id could not be found");
             return;
         }
-        foreach (var selected in initiallySelectedSteps ?? [])
+
+        initiallySelectedSteps ??= [];
+        var autoIncludedSteps = initiallySelectedSteps
+            .SelectMany(selected =>
+                 _builder.Steps.FirstOrDefault(s => s.StepId == selected.StepId)
+                     ?.AddToExecution(autoIncludeJobParameterDependencies: true)
+                 ?? [])
+            .Select(s => s.StepId)
+            .ToArray();
+        // Check if there were auto-included steps.
+        if (autoIncludedSteps.Any(id => initiallySelectedSteps.All(s => s.StepId != id)))
         {
-            var step = _builder.Steps.FirstOrDefault(s => s.StepId == selected.StepId);
-            step?.AddToExecution();
+            Toaster.AddInformation(
+                "Auto-included dependencies which update job parameter values referenced by selected step(s)");
         }
         StateHasChanged();
     }

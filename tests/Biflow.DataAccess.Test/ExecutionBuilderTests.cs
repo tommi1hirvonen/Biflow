@@ -21,7 +21,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         Assert.NotNull(builder);
         foreach (var step in builder.Steps)
         {
-            step.AddToExecution();
+            step.AddToExecution(autoIncludeJobParameterDependencies: false);
         }
         var execution = await builder.SaveExecutionAsync();
         Assert.NotNull(execution);
@@ -39,7 +39,7 @@ public class ExecutionBuilderTests(DatabaseFixture fixture)
         Assert.NotNull(builder);
         foreach (var step in builder.Steps)
         {
-            step.AddToExecution();
+            step.AddToExecution(autoIncludeJobParameterDependencies: false);
         }
         var execution = await builder.SaveExecutionAsync();
         Assert.NotNull(execution);
