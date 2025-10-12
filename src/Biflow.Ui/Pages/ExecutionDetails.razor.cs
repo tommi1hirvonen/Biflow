@@ -43,6 +43,7 @@ public partial class ExecutionDetails(
     private Schedule? _schedule;
     private bool _loading;
     private StepExecutionSortMode _sortMode = StepExecutionSortMode.StartedAsc;
+    private bool _showStepTags;
     private ExecutionParameterLineageOffcanvas? _parameterLineageOffcanvas;
     private ExecutionDependenciesGraph? _dependenciesGraph;
     // Cache dependency graph step executions here in the parent component.

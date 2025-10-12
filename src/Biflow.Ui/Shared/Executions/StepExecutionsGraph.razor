@@ -72,17 +72,36 @@
                     var overlapsWithSelf = Executions
                         .Where(other => other.StepId == e.StepId && e.ExecutionId != other.ExecutionId)
                         .Any(other => e.StartedOn >= other.StartedOn && e.StartedOn <= (other.EndedOn ?? DateTime.Now));
-                    return (e.StepId, e.StepName, e.StepType, overlapsWithSelf ? e.ExecutionId : Guid.Empty);
+                    return new GraphStep
+                    {
+                        StepId = e.StepId, OverlapId = overlapsWithSelf ? e.ExecutionId : Guid.Empty,
+                        StepName = e.StepName, StepType = e.StepType, StepTags = e.StepTags
+                    };
                 })
                 .ToList();
             <Virtualize Context="group" Items="executions" ItemSize="32.5714f">
                 <div class="row border-top gantt-row">
                     <div class="col-xl-3 col-lg-4 col-5 text-end py-1">
-                        <small>
-                            @group.Key.StepName
-                            &nbsp;
-                            <StepTypeIcon StepType="group.Key.StepType" />
-                        </small>
+                        <div class="row">
+                            <div class="col">
+                                <small>
+                                    @group.Key.StepName
+                                    &nbsp;
+                                    <StepTypeIcon StepType="group.Key.StepType"/>
+                                </small>
+                            </div>
+                        </div>
+                        @if (ShowStepTags)
+                        {
+                            <div class="row">
+                                <div class="col px-2 d-flex flex-wrap align-items-center justify-content-end">
+                                    @foreach (var tag in group.Key.StepTags.Order())
+                                    {
+                                        <TagBadge Tag="tag" CssClass="m-1" />
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
                     <div class="col-xl-9 col-lg-8 col-7 d-flex align-items-center" style="position: relative;">
                         @for (int i = 0; i <= Columns; i++)
@@ -201,6 +220,8 @@
     [Parameter] public StepExecutionSortMode SortMode { get; set; }
 
     [Parameter] public EventCallback<StepExecutionSortMode> OnSortingChanged { get; set; }
+    
+    [Parameter] public bool ShowStepTags { get; set; }
 
     private const int Columns = 12;
 
@@ -316,4 +337,19 @@
         return time.ToString("d");
     }
 
+    // Use a custom record to be used as the grouping key for graph items.
+    // StepId and OverlapId are defined in the primary constructor, so they are used for value equality.
+    private class GraphStep
+    {
+        public required Guid StepId { get; init; }
+        public required Guid OverlapId { get; init; }
+        public required string StepName { get; init; }
+        public required StepType StepType { get; init; }
+        public required IReadOnlyCollection<ITag> StepTags { get; init; }
+
+        public override bool Equals(object? obj) =>
+            obj is GraphStep other && StepId.Equals(other.StepId) && OverlapId.Equals(other.OverlapId);
+
+        public override int GetHashCode() => HashCode.Combine(StepId, OverlapId);
+    }
 }

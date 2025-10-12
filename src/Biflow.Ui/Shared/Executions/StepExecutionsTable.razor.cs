@@ -18,6 +18,8 @@ public partial class StepExecutionsTable(
     [Parameter] public IEnumerable<IStepExecutionProjection>? Executions { get; set; }
 
     [Parameter] public bool ShowDetailed { get; set; } = true;
+    
+    [Parameter] public bool ShowStepTags { get; set; }
 
     [Parameter] public Func<IStepExecutionProjection, StepExecutionAttempt?>? DetailStepProvider { get; set; }
 

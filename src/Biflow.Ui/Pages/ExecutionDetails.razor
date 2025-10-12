@@ -374,8 +374,8 @@
     
     case Report.List or Report.Gantt:
     
-        <div class="row mt-1">
-            <div class="col d-inline">
+        <div class="row mt-1 align-items-center">
+            <div class="col-auto d-inline">
                 <SvgIcon Icon="LucideIcon.Filter"/>
                 <span class="me-3">Filter</span>
 
@@ -454,6 +454,15 @@
                     </HxButton>
                 </HxButtonGroup>
             </div>
+            
+            <div class="col-auto">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="show_details"
+                           checked=@_showStepTags
+                           @onchange="args => _showStepTags = (bool)args.Value!">
+                    <label class="form-check-label" for="show_details">Show tags</label>
+                </div>
+            </div>
         </div>
     
         break;
@@ -465,6 +474,7 @@
         <div class="card mt-3 pt-2 table-responsive mb-4">
             <StepExecutionsTable
                 ShowDetailed="false"
+                ShowStepTags="_showStepTags"
                 Executions="GetOrderedExecutions()"
                 SortMode="_sortMode"
                 OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }"
@@ -474,6 +484,7 @@
     case Report.Gantt:
         <div class="card mt-3 pt-3 mb-4">
             <StepExecutionsGraph Executions="GetOrderedExecutions()"
+                                 ShowStepTags="_showStepTags"
                                  SortMode="_sortMode"
                                  OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }" />
         </div>
