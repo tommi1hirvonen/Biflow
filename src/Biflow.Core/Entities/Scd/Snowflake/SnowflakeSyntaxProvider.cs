@@ -17,9 +17,16 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         public string Boolean => "BOOLEAN";
     }
 
+    private class SnowflakeVariableProvider : ISqlVariableProvider
+    {
+        public string Initialize(string name, string datatype, string defaultValue) =>
+            $"LET {name} {datatype} := {defaultValue};";
+        public string Reference(string name) => $":{name}";
+    }
+
     private class SnowflakeFunctionProvider : ISqlFunctionProvider
     {
-        public string CurrentTimestamp => "CURRENT_TIMESTAMP";
+        public string CurrentTimestamp => "CURRENT_TIMESTAMP()";
         public string MaxDateTime => "CAST('9999-12-31' AS TIMESTAMP_NTZ)";
         public string True => "1";
         public string Md5(IReadOnlyList<string> columns) => columns switch
@@ -28,7 +35,8 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
             [var c] => $"UPPER(MD5(TO_VARCHAR({c.QuoteName()})))",
             _ => $"UPPER(MD5(CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})))"
         };
-
+        public string DateAdd(DatePart part, int amount, string date) =>
+            $"DATEADD({part.ToString().ToLower()}, {amount}, {date})";
     }
 
     private class SnowflakeIndexProvider : ISqlIndexProvider
@@ -43,9 +51,10 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
             throw new NotSupportedException("Indexes are not supported on Snowflake.");
     }
 
-    public ISqlDatatypeProvider Datatypes => new SnowflakeDatatypeProvider();
-    public ISqlFunctionProvider Functions => new SnowflakeFunctionProvider();
-    public ISqlIndexProvider Indexes => new SnowflakeIndexProvider();
+    public ISqlDatatypeProvider Datatypes { get; } = new SnowflakeDatatypeProvider();
+    public ISqlVariableProvider Variables { get; } = new SnowflakeVariableProvider();
+    public ISqlFunctionProvider Functions { get; } = new SnowflakeFunctionProvider();
+    public ISqlIndexProvider Indexes { get; } = new SnowflakeIndexProvider();
 
     public bool SupportsDdlRollback => false;
 
@@ -117,7 +126,8 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         string isCurrentColumn,
         string validUntilColumn,
         string hashKeyColumn,
-        string recordHashColumn)
+        string recordHashColumn,
+        string currentTimestampVariableReference)
     {
         var source = QuoteTable(sourceSchema, sourceTable);
         var target = QuoteTable(targetSchema, targetTable);
@@ -127,7 +137,7 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
             // Update removed records validity.
             builder.AppendLine($"""
                 UPDATE {target} AS tgt
-                SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = CURRENT_TIMESTAMP
+                SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = {currentTimestampVariableReference}
                 WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND
                       NOT EXISTS (
                           SELECT *
@@ -140,7 +150,7 @@ internal sealed class SnowflakeSyntaxProvider : ISqlSyntaxProvider
         // Update changed records validity.
         builder.AppendLine($"""
             UPDATE {target} AS tgt
-            SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = CURRENT_TIMESTAMP
+            SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = {currentTimestampVariableReference}
             FROM {source} AS src
             WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND
                   tgt.{hashKeyColumn.QuoteName()} = src.{hashKeyColumn.QuoteName()} AND -- inner join

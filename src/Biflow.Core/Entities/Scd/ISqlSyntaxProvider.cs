@@ -4,7 +4,8 @@ internal interface ISqlSyntaxProvider
 {
     public string QuoteColumn(string column);
     public string QuoteTable(string? schema, string table);
-    public ISqlDatatypeProvider Datatypes { get; }  
+    public ISqlDatatypeProvider Datatypes { get; }
+    public ISqlVariableProvider Variables { get; }
     public ISqlFunctionProvider Functions { get; }
     public ISqlIndexProvider Indexes { get; }
     public bool SupportsDdlRollback { get; }
@@ -27,7 +28,8 @@ internal interface ISqlSyntaxProvider
         string isCurrentColumn,
         string validUntilColumn,
         string hashKeyColumn,
-        string recordHashColumn);
+        string recordHashColumn,
+        string currentTimestampVariableReference);
     public string AlterColumnDropNull(string schema, string table, IStructureColumn column);
     public string AlterTableAddColumn(string schema, string table, IStructureColumn column, bool nullable);
 }
@@ -39,12 +41,19 @@ internal interface ISqlDatatypeProvider
     public string Varchar(int length);
 }
 
+internal interface ISqlVariableProvider
+{
+    public string Initialize(string name, string datatype, string defaultValue);
+    public string Reference(string name);
+}
+
 internal interface ISqlFunctionProvider
 {
     public string CurrentTimestamp { get; }
     public string MaxDateTime { get; }
     public string True { get; }
     public string Md5(IReadOnlyList<string> columns);
+    public string DateAdd(DatePart datePart, int amount, string date);
 }
 
 internal interface ISqlIndexProvider
@@ -52,4 +61,16 @@ internal interface ISqlIndexProvider
     public bool AreSupported { get; }
     public string ClusteredIndex(string schema, string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns);
     public string NonClusteredIndex(string schema, string table, string index, IEnumerable<(string ColumnName, bool Descending)> columns);
+}
+
+internal enum DatePart
+{
+    Year,
+    Month,
+    Day,
+    Hour,
+    Minute,
+    Second,
+    Millisecond,
+    Microsecond
 }

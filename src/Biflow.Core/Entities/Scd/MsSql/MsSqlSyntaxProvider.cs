@@ -15,6 +15,13 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         public string Boolean => "BIT";
     }
 
+    private class MsSqlVariableProvider : ISqlVariableProvider
+    {
+        public string Initialize(string name, string datatype, string defaultValue) =>
+            $"DECLARE @{name} {datatype} = {defaultValue};";
+        public string Reference(string name) => $"@{name}";
+    }
+
     private class MsSqlFunctionProvider : ISqlFunctionProvider
     {
         public string CurrentTimestamp => "GETDATE()";
@@ -26,6 +33,8 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
             [var c] => $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONVERT(VARCHAR(MAX), {c.QuoteName()})), 2)",
             _ => $"CONVERT(VARCHAR(32), HASHBYTES('MD5', CONCAT({string.Join(", '|', ", columns.Select(c => c.QuoteName()))})), 2)"
         };
+        public string DateAdd(DatePart part, int amount, string date) =>
+            $"DATEADD({part.ToString().ToLower()}, {amount}, {date})";
     }
 
     private class MsSqlIndexProvider : ISqlIndexProvider
@@ -55,9 +64,10 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         }
     }
     
-    public ISqlDatatypeProvider Datatypes => new MsSqlDatatypeProvider();
-    public ISqlFunctionProvider Functions => new MsSqlFunctionProvider();
-    public ISqlIndexProvider Indexes => new MsSqlIndexProvider();
+    public ISqlDatatypeProvider Datatypes { get; } = new MsSqlDatatypeProvider();
+    public ISqlVariableProvider Variables { get; } = new MsSqlVariableProvider();
+    public ISqlFunctionProvider Functions { get; } = new MsSqlFunctionProvider();
+    public ISqlIndexProvider Indexes { get; } = new MsSqlIndexProvider();
 
     public bool SupportsDdlRollback => true;
 
@@ -129,14 +139,15 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
         string isCurrentColumn,
         string validUntilColumn,
         string hashKeyColumn,
-        string recordHashColumn)
+        string recordHashColumn,
+        string currentTimestampVariableReference)
     {
         var source = QuoteTable(sourceSchema, sourceTable);
         var target = QuoteTable(targetSchema, targetTable);
         return fullLoad
             ? $"""
                UPDATE tgt
-               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = GETDATE()
+               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = {currentTimestampVariableReference}
                FROM {target} AS tgt
                LEFT JOIN {source} AS src ON tgt.{hashKeyColumn.QuoteName()} = src.{hashKeyColumn.QuoteName()}
                WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND
@@ -145,7 +156,7 @@ internal sealed class MsSqlSyntaxProvider : ISqlSyntaxProvider
                """
             : $"""
                UPDATE tgt
-               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = GETDATE()
+               SET {isCurrentColumn.QuoteName()} = 0, {validUntilColumn.QuoteName()} = {currentTimestampVariableReference}
                FROM {target} AS tgt
                INNER JOIN {source} AS src ON tgt.{hashKeyColumn.QuoteName()} = src.{hashKeyColumn.QuoteName()}
                WHERE tgt.{isCurrentColumn.QuoteName()} = 1 AND

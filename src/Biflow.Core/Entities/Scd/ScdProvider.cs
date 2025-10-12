@@ -9,6 +9,7 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
     protected abstract string ValidUntilColumn { get; }
     protected abstract string IsCurrentColumn { get; }
     protected abstract string RecordHashColumn { get; }
+    private static string CurrentTimestampVariableName => "_current_timestamp_";
     
     protected abstract ISqlSyntaxProvider SyntaxProvider { get; }
 
@@ -66,6 +67,14 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
             targetColumns.Cast<IColumn>().ToArray());
         Scd.EnsureScdTableValidatedForLoad(table, targetColumns.Cast<IColumn>().ToArray());
 
+        var currentTimestampVariableInitialization = SyntaxProvider.Variables.Initialize(
+            name: CurrentTimestampVariableName,
+            datatype: SyntaxProvider.Datatypes.DateTime,
+            defaultValue: SyntaxProvider.Functions.CurrentTimestamp);
+
+        var currentTimestampMinusOneMicrosecond = SyntaxProvider.Functions.DateAdd(
+            DatePart.Microsecond, -1, SyntaxProvider.Variables.Reference(CurrentTimestampVariableName));
+
         var update = SyntaxProvider.ScdUpdate(
             sourceSchema: table.StagingTableSchema,
             sourceTable: table.StagingTableName,
@@ -75,7 +84,8 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
             isCurrentColumn: IsCurrentColumn,
             validUntilColumn: ValidUntilColumn,
             hashKeyColumn: HashKeyColumn,
-            recordHashColumn: RecordHashColumn);
+            recordHashColumn: RecordHashColumn,
+            currentTimestampVariableReference: currentTimestampMinusOneMicrosecond);
         
         var targetTableName = SyntaxProvider.QuoteTable(table.TargetTableSchema, table.TargetTableName);
         var stagingTableName = SyntaxProvider.QuoteTable(table.StagingTableSchema, table.StagingTableName);
@@ -104,6 +114,8 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
         
         var block = SyntaxProvider.RollbackOnError($"""
             {table.PreLoadScript}
+            
+            {currentTimestampVariableInitialization}
 
             {update}
 
@@ -313,7 +325,7 @@ internal abstract class ScdProvider(ScdTable table, IColumnMetadataProvider colu
             ColumnName = ValidFromColumn,
             IncludeInStagingTable = false,
             StagingTableExpression = null,
-            TargetTableExpression = SyntaxProvider.Functions.CurrentTimestamp
+            TargetTableExpression = SyntaxProvider.Variables.Reference(CurrentTimestampVariableName)
         };
         var validUntil = new LoadColumn
         {
