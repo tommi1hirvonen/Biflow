@@ -24,6 +24,20 @@
                 @StepExecutionAttempt.StepId
             }
         </dd>
+        
+        <dt class="col-sm-3">
+            Tags
+        </dt>
+        <dd class="col-sm-9 d-flex flex-wrap align-items-center">
+            @if (Tags.Count == 0)
+            {
+                <span class="text-muted">No tags</span>
+            }
+            @foreach (var tag in Tags.Order())
+            {
+                <TagBadge Tag="tag" CssClass="m-1"/>
+            }
+        </dd>
 
         @if (ShowExtraDetails)
         {
@@ -671,6 +685,9 @@
 @code {
     [Parameter, EditorRequired]
     public StepExecutionAttempt? StepExecutionAttempt { get; set; }
+
+    [Parameter]
+    public IReadOnlyCollection<ITag> Tags { get; set; } = [];
 
     [Parameter]
     public bool ShowExtraDetails { get; set; }

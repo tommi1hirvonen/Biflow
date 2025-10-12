@@ -28,6 +28,8 @@ public interface IStepExecutionProjection
     
     public Guid[] Dependencies { get; }
     
+    public IReadOnlyCollection<ITag> StepTags { get; }
+    
     public double? ExecutionInSeconds => ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
     
     public bool CanBeStopped =>

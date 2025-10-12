@@ -17,4 +17,6 @@ public record StepExecutionDetailsProjection(
     TagProjection[] StepTags) : IStepExecutionProjection
 {
     public double? ExecutionInSeconds { get; } = ((EndedOn ?? DateTime.Now) - StartedOn)?.TotalSeconds;
+    
+    IReadOnlyCollection<ITag> IStepExecutionProjection.StepTags => StepTags;
 }
