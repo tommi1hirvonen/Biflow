@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Channels;
 using Biflow.ExecutorProxy.Core;
 
 namespace Biflow.Executor.Core.StepExecutor;
@@ -17,6 +19,8 @@ internal class ExeStepExecutor(
     private readonly ILogger<ExeStepExecutor> _logger = logger;
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+
+    private const int MaxOutputLength = 500_000;
 
     protected override Task<Result> ExecuteAsync(
         OrchestrationContext context,
@@ -75,116 +79,227 @@ internal class ExeStepExecutor(
             attempt.AddWarning("Running executables with impersonation is only supported on Windows.");
         }
 
-        var outputBuilder = new StringBuilder();
+        var outputMessage = new InfoMessage("");
+        attempt.InfoMessages.Insert(0, outputMessage);
+        
+        var outputChannel = Channel.CreateUnbounded<string?>();
+        
         var errorBuilder = new StringBuilder();
 
         using var process = new Process();
         process.StartInfo = startInfo;
-        process.OutputDataReceived += (_, e) => outputBuilder.AppendLine(e.Data);
+        process.OutputDataReceived += (__, e) => _ = outputChannel.Writer.TryWrite(e.Data);
         process.ErrorDataReceived += (_, e) => errorBuilder.AppendLine(e.Data);
 
-        try
-        {
-            process.Start();
-            process.BeginErrorReadLine();
-            process.BeginOutputReadLine();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}",
-                step.ExecutionId, step, step.ExeFileName);
-            attempt.AddError(ex, "Error starting process");
-            return Result.Failure;
-        }
+        using var outputCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var outputConsumerTask = OutputConsumerAsync(outputChannel.Reader, attempt, outputMessage, outputCts.Token);
 
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
-            attempt.ExeProcessId = process.Id; // Might throw an exception
-            await dbContext.Set<ExeStepExecutionAttempt>()
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                .ExecuteUpdateAsync(x => x
-                    .SetProperty(p => p.ExeProcessId, attempt.ExeProcessId), CancellationToken.None);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", step.ExecutionId, step);
-            attempt.AddWarning(ex, "Error logging child process id");
-        }
-
-        using var timeoutCts = step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
-            : new CancellationTokenSource();
-
-        try
-        {
-            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-
-            await process.WaitForExitAsync(linkedCts.Token);
-
-            // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
-            if (step.ExeSuccessExitCode is null || process.ExitCode == step.ExeSuccessExitCode)
-            {
-                return Result.Success;
-            }
-            else
-            {
-                attempt.AddError($"Process finished with exit code {process.ExitCode}");
-                return Result.Failure;
-            }
-        }
-        catch (OperationCanceledException cancelEx)
-        {
-            // In case of cancellation or timeout 
             try
             {
-                process.Kill(entireProcessTree: true);
+                process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", step.ExecutionId,
-                    step);
-                attempt.AddWarning(ex, "Error killing process after timeout");
-            }
-
-            if (timeoutCts.IsCancellationRequested)
-            {
-                attempt.AddError(cancelEx, "Executing exe timed out");
+                _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}",
+                    step.ExecutionId, step, step.ExeFileName);
+                attempt.AddError(ex, "Error starting process");
                 return Result.Failure;
             }
 
-            attempt.AddWarning(cancelEx);
-            return Result.Cancel;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step,
-                step.ExeFileName);
-            attempt.AddError(ex, "Error while executing exe");
-            return Result.Failure;
+            try
+            {
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                attempt.ExeProcessId = process.Id; // Might throw an exception
+                await dbContext.Set<ExeStepExecutionAttempt>()
+                    .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                    .ExecuteUpdateAsync(x => x
+                        .SetProperty(p => p.ExeProcessId, attempt.ExeProcessId), CancellationToken.None);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", step.ExecutionId, step);
+                attempt.AddWarning(ex, "Error logging child process id");
+            }
+
+            using var timeoutCts = step.TimeoutMinutes > 0
+                ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
+                : new CancellationTokenSource();
+
+            try
+            {
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+
+                await process.WaitForExitAsync(linkedCts.Token);
+
+                // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
+                if (step.ExeSuccessExitCode is null || process.ExitCode == step.ExeSuccessExitCode)
+                {
+                    return Result.Success;
+                }
+                else
+                {
+                    attempt.AddError($"Process finished with exit code {process.ExitCode}");
+                    return Result.Failure;
+                }
+            }
+            catch (OperationCanceledException cancelEx)
+            {
+                // In case of cancellation or timeout 
+                try
+                {
+                    process.Kill(entireProcessTree: true);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", step.ExecutionId,
+                        step);
+                    attempt.AddWarning(ex, "Error killing process after timeout");
+                }
+
+                if (timeoutCts.IsCancellationRequested)
+                {
+                    attempt.AddError(cancelEx, "Executing exe timed out");
+                    return Result.Failure;
+                }
+
+                attempt.AddWarning(cancelEx);
+                return Result.Cancel;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step,
+                    step.ExeFileName);
+                attempt.AddError(ex, "Error while executing exe");
+                return Result.Failure;
+            }
+            finally
+            {
+                // Executable output and error messages can be significantly long.
+                // Handle super long messages here.
+                if (errorBuilder.ToString() is { Length: > 0 } error)
+                {
+                    attempt.AddError(null, error[..Math.Min(MaxOutputLength, error.Length)], insertFirst: true);
+                    if (error.Length > MaxOutputLength)
+                    {
+                        attempt.AddError(null, "Error message has been truncated to first 500 000 characters.",
+                            insertFirst: true);
+                    }
+                }
+            }
         }
         finally
         {
+            await outputCts.CancelAsync();
+            await outputConsumerTask;
+        }
+    }
+    
+    private async Task OutputConsumerAsync(ChannelReader<string?> reader, ExeStepExecutionAttempt attempt,
+        InfoMessage output, CancellationToken token)
+    {
+        var buffer = new List<string?>();
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        var readTask = ReadFromChannelAsync(reader, buffer, token);
+        var publishTask = UpdateOutputPeriodicallyAsync(timer, attempt, output, buffer, token);
+        await Task.WhenAll(readTask, publishTask);
+        
+        // Final flush
+        if (buffer.Count > 0)
+            await UpdateOutputAsync(attempt, output, buffer, token);
+    }
+    
+    private async Task ReadFromChannelAsync(ChannelReader<string?> reader, List<string?> buffer,
+        CancellationToken token)
+    {
+        try
+        {
+            await foreach (var item in reader.ReadAllAsync(token))
+            {
+                buffer.Add(item);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Graceful cancellation
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error while reading from output channel");
+        }
+    }
+    
+    private async Task UpdateOutputPeriodicallyAsync(PeriodicTimer timer, ExeStepExecutionAttempt attempt,
+        InfoMessage output, List<string?> buffer, CancellationToken token)
+    {
+        try
+        {
+            while (output.Message.Length < MaxOutputLength && await timer.WaitForNextTickAsync(token))
+            {
+                if (buffer.Count == 0) continue;
+                await UpdateOutputAsync(attempt, output, buffer, token);
+                buffer.Clear(); // TODO Not thread safe!
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Graceful exit
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in output update loop");
+        }
+    }
+    
+    private async Task UpdateOutputAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
+        List<string?> buffer, CancellationToken cancellationToken)
+    {
+        // If the output is already too long, don't bother updating it.
+        // The output cannot grow too long outside this method.
+        // The truncation warning has thus already been added.
+        if (output.Message.Length >= MaxOutputLength)
+        {
+            return;
+        }
+        
+        try
+        {
+            // Update the message of the output InfoMessage.
+            var outputBuilder = new StringBuilder().Append(output.Message); // Preserve the original message.
+            foreach (var message in buffer) outputBuilder.AppendLine(message);
+            
             // Executable output and error messages can be significantly long.
             // Handle super long messages here.
-            if (outputBuilder.ToString() is { Length: > 0 } output)
+            if (outputBuilder.ToString() is { Length: > 0 } o)
             {
-                attempt.AddOutput(output[..Math.Min(500_000, output.Length)], insertFirst: true);
-                if (output.Length > 500_000)
+                output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
+                if (o.Length >= MaxOutputLength)
                 {
-                    attempt.AddOutput("Output has been truncated to first 500 000 characters.", insertFirst: true);
-                }
-            }
-
-            if (errorBuilder.ToString() is { Length: > 0 } error)
-            {
-                attempt.AddError(null, error[..Math.Min(500_000, error.Length)], insertFirst: true);
-                if (error.Length > 500_000)
-                {
-                    attempt.AddError(null, "Error message has been truncated to first 500 000 characters.",
+                    attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
                         insertFirst: true);
                 }
             }
+            else
+            {
+                return;
+            }
+            
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await dbContext.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(
+                    // The output InfoMessage should be included in the InfoMessages collection.
+                    x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
+                    cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating output for step");
         }
     }
 
