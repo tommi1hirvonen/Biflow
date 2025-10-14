@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text;
@@ -91,8 +90,12 @@ internal class ExeStepExecutor(
         process.OutputDataReceived += (__, e) => _ = outputChannel.Writer.TryWrite(e.Data);
         process.ErrorDataReceived += (_, e) => errorBuilder.AppendLine(e.Data);
 
-        using var outputCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        var outputConsumerTask = OutputConsumerAsync(outputChannel.Reader, attempt, outputMessage, outputCts.Token);
+        using var outputConsumer = new PeriodicChannelConsumer<string?>(
+            logger: _logger,
+            reader: outputChannel.Reader,
+            interval: TimeSpan.FromSeconds(10),
+            bufferPublished: (buffer, ct) => UpdateOutputAsync(attempt, outputMessage, buffer, ct));
+        var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
 
         try
         {
@@ -115,7 +118,9 @@ internal class ExeStepExecutor(
                 await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 attempt.ExeProcessId = process.Id; // Might throw an exception
                 await dbContext.Set<ExeStepExecutionAttempt>()
-                    .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                    .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                                x.StepId == attempt.StepId &&
+                                x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                     .ExecuteUpdateAsync(x => x
                         .SetProperty(p => p.ExeProcessId, attempt.ExeProcessId), CancellationToken.None);
             }
@@ -135,7 +140,8 @@ internal class ExeStepExecutor(
 
                 await process.WaitForExitAsync(linkedCts.Token);
 
-                // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined, then report success in any case (not applicable).
+                // If SuccessExitCode was defined, check the actual ExitCode. If SuccessExitCode is not defined,
+                // then report success in any case (not applicable).
                 if (step.ExeSuccessExitCode is null || process.ExitCode == step.ExeSuccessExitCode)
                 {
                     return Result.Success;
@@ -193,69 +199,13 @@ internal class ExeStepExecutor(
         }
         finally
         {
-            await outputCts.CancelAsync();
+            outputConsumer.Cancel();
             await outputConsumerTask;
         }
     }
     
-    private async Task OutputConsumerAsync(ChannelReader<string?> reader, ExeStepExecutionAttempt attempt,
-        InfoMessage output, CancellationToken token)
-    {
-        var buffer = new List<string?>();
-        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
-        var readTask = ReadFromChannelAsync(reader, buffer, token);
-        var publishTask = UpdateOutputPeriodicallyAsync(timer, attempt, output, buffer, token);
-        await Task.WhenAll(readTask, publishTask);
-        
-        // Final flush
-        if (buffer.Count > 0)
-            await UpdateOutputAsync(attempt, output, buffer, token);
-    }
-    
-    private async Task ReadFromChannelAsync(ChannelReader<string?> reader, List<string?> buffer,
-        CancellationToken token)
-    {
-        try
-        {
-            await foreach (var item in reader.ReadAllAsync(token))
-            {
-                buffer.Add(item);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Graceful cancellation
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error while reading from output channel");
-        }
-    }
-    
-    private async Task UpdateOutputPeriodicallyAsync(PeriodicTimer timer, ExeStepExecutionAttempt attempt,
-        InfoMessage output, List<string?> buffer, CancellationToken token)
-    {
-        try
-        {
-            while (output.Message.Length < MaxOutputLength && await timer.WaitForNextTickAsync(token))
-            {
-                if (buffer.Count == 0) continue;
-                await UpdateOutputAsync(attempt, output, buffer, token);
-                buffer.Clear(); // TODO Not thread safe!
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // Graceful exit
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error in output update loop");
-        }
-    }
-    
     private async Task UpdateOutputAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
-        List<string?> buffer, CancellationToken cancellationToken)
+        IReadOnlyList<string?> buffer, CancellationToken cancellationToken)
     {
         // If the output is already too long, don't bother updating it.
         // The output cannot grow too long outside this method.
