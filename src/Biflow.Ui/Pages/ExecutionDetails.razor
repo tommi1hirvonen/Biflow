@@ -473,6 +473,7 @@
     case Report.List:
         <div class="card mt-3 pt-2 table-responsive mb-4">
             <StepExecutionsTable
+                @ref="_stepExecutionsTable"
                 ShowDetailed="false"
                 ShowStepTags="_showStepTags"
                 Executions="GetOrderedExecutions()"
@@ -483,7 +484,8 @@
         break;
     case Report.Gantt:
         <div class="card mt-3 pt-3 mb-4">
-            <StepExecutionsGraph Executions="GetOrderedExecutions()"
+            <StepExecutionsGraph @ref="_stepExecutionsGraph" 
+                                 Executions="GetOrderedExecutions()"
                                  ShowStepTags="_showStepTags"
                                  SortMode="_sortMode"
                                  OnSortingChanged="sortMode => { _sortMode = sortMode; StateHasChanged(); }" />

@@ -44,6 +44,9 @@ public partial class StepExecutionsTable(
 
     private record StepExecutionId(Guid ExecutionId, Guid StepId, int RetryAttemptIndex);
 
+    public Task RefreshSelectedStepExecutionAsync() =>
+        _selectedStepExecution is not null ? LoadStepExecutionAsync(_selectedStepExecution) : Task.CompletedTask;
+
     private void ToggleJobSortMode()
     {
         var sortMode = SortMode switch
@@ -102,7 +105,7 @@ public partial class StepExecutionsTable(
     private async Task ToggleSelectedStepExecutionAsync(IStepExecutionProjection execution)
     {
         // If the selected execution is the same that was previously selected, set to null
-        // => hides step execution details component.
+        // => hides the step execution details component.
         if (_selectedStepExecution == execution)
         {
             _selectedStepExecution = null;
@@ -111,40 +114,46 @@ public partial class StepExecutionsTable(
         else
         {
             _selectedStepExecution = execution;
-
-            if (DetailStepProvider is not null)
-            {
-                _detailStep = DetailStepProvider(execution);
-            }
-            else
-            {
-                await using var context = await _dbContextFactory.CreateDbContextAsync();
-                _detailStep = await context.StepExecutionAttempts
-                    .Include(e => e.StepExecution)
-                    .ThenInclude(e => e.Execution) // Required for StepExecutionAttempt.CanBeStopped
-                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
-                                              e.StepId == execution.StepId &&
-                                              e.RetryAttemptIndex == execution.RetryAttemptIndex);
-                // Request rendering for the data we already have.
-                StateHasChanged();
-                // The rest of the data is loaded in the background, as it may take some time.
-                // Use EF change tracking to populate the navigation properties of the previously loaded entity. 
-                _ = await context.StepExecutions
-                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
-                    .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
-                    .Include(e => e.ExecutionConditionParameters)
-                    .ThenInclude(e => e.ExecutionParameter)
-                    .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
-                    .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
-                StateHasChanged();
-                if (_detailStep is not null)
-                {
-                    var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);
-                    _detailStep.StepExecution.SetStep(step);
-                }
-            }
+            await LoadStepExecutionAsync(execution);
         }
         StateHasChanged();
+    }
+
+    private async Task LoadStepExecutionAsync(IStepExecutionProjection execution)
+    {
+        if (DetailStepProvider is not null)
+        {
+            _detailStep = DetailStepProvider(execution);
+        }
+        else
+        {
+            await using var context = await _dbContextFactory.CreateDbContextAsync();
+            _detailStep = await context.StepExecutionAttempts
+                .Include(e => e.StepExecution)
+                .ThenInclude(e => e.Execution) // Required for StepExecutionAttempt.CanBeStopped
+                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
+                                          e.StepId == execution.StepId &&
+                                          e.RetryAttemptIndex == execution.RetryAttemptIndex);
+            // Request rendering for the data we already have.
+            await InvokeAsync(StateHasChanged);
+            // The rest of the data is loaded in the background, as it may take some time.
+            // Use EF change tracking to populate the navigation properties of the previously loaded entity. 
+            _ = await context.StepExecutions
+                .Include(
+                    $"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.InheritFromExecutionParameter)}")
+                .Include(
+                    $"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
+                .Include(e => e.ExecutionConditionParameters)
+                .ThenInclude(e => e.ExecutionParameter)
+                .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
+                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
+            await InvokeAsync(StateHasChanged);
+            if (_detailStep is not null)
+            {
+                var step = await context.Steps.FirstOrDefaultAsync(s => s.StepId == _detailStep.StepId);
+                _detailStep.StepExecution.SetStep(step);
+            }
+        }
     }
 
     private async Task StopStepExecutionAsync(Guid executionId, Guid stepId, string stepName)

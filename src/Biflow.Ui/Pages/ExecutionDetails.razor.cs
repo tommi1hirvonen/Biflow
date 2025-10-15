@@ -44,6 +44,8 @@ public partial class ExecutionDetails(
     private bool _loading;
     private StepExecutionSortMode _sortMode = StepExecutionSortMode.StartedAsc;
     private bool _showStepTags;
+    private StepExecutionsTable? _stepExecutionsTable;
+    private StepExecutionsGraph? _stepExecutionsGraph;
     private ExecutionParameterLineageOffcanvas? _parameterLineageOffcanvas;
     private ExecutionDependenciesGraph? _dependenciesGraph;
     // Cache dependency graph step executions here in the parent component.
@@ -252,6 +254,12 @@ public partial class ExecutionDetails(
                         .AsNoTrackingWithIdentityResolution()
                         .FirstOrDefaultAsync(s => s.ScheduleId == _execution.ScheduleId, _cts.Token)
                     : null;
+
+                if (_stepExecutionsTable is not null)
+                    await _stepExecutionsTable.RefreshSelectedStepExecutionAsync();
+                
+                if (_stepExecutionsGraph is not null)
+                    await _stepExecutionsGraph.RefreshSelectedStepExecutionAsync();
             }
             catch (OperationCanceledException)
             {
