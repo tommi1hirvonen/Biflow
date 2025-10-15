@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace Biflow.Executor.Core;
 
 /// <summary>
-/// <c>PeriodicChannelConsumer</c> is a designed for consuming data from a channel reader with a periodic interval.
+/// <c>PeriodicChannelConsumer</c> is designed for consuming data from a channel reader with a periodic interval.
 /// It buffers data read from the channel and invokes a specified action at each interval or when the channel completes.
 /// The class ensures proper handling of cancellation tokens and resource cleanup upon disposal.
 /// </summary>
@@ -102,7 +102,7 @@ public class PeriodicChannelConsumer<T>(
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex, "Error in output update loop");
+                    logger.LogError(ex, "Error while running buffer publish delegate");
                     continue;
                 }
 
@@ -118,7 +118,7 @@ public class PeriodicChannelConsumer<T>(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error in output update loop");
+            logger.LogError(ex, "Error in timer tick loop");
         }
     }
 
