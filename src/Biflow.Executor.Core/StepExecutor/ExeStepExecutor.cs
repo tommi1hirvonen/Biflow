@@ -217,7 +217,12 @@ internal class ExeStepExecutor(
         {
             // Update the message of the output InfoMessage.
             var outputBuilder = new StringBuilder().Append(output.Message); // Preserve the original message.
-            foreach (var message in buffer) outputBuilder.AppendLine(message);
+            foreach (var message in buffer)
+            {
+                if (string.IsNullOrEmpty(message))
+                    continue;
+                outputBuilder.AppendLine(message);
+            }
             
             // Executable output and error messages can be significantly long.
             // Handle super long messages here.
@@ -262,7 +267,12 @@ internal class ExeStepExecutor(
         try
         {
             var errorBuilder = new StringBuilder().Append(error.Message);
-            foreach (var message in buffer) errorBuilder.AppendLine(message);
+            foreach (var message in buffer)
+            {
+                if (string.IsNullOrEmpty(message))
+                    continue;
+                errorBuilder.AppendLine(message);
+            }
             
             if (errorBuilder.ToString() is { Length: > 0 } o)
             {
