@@ -78,6 +78,8 @@ internal class ExeStepExecutor(
             attempt.AddWarning("Running executables with impersonation is only supported on Windows.");
         }
 
+        // Create channels for output and error messages.
+        // Store messages in the attempt because the messages themselves will be updated periodically.
         var (outputMessage, errorMessage) = (new InfoMessage(""), new ErrorMessage("", null));
         attempt.InfoMessages.Insert(0, outputMessage);
         attempt.ErrorMessages.Insert(0, errorMessage);
@@ -88,6 +90,9 @@ internal class ExeStepExecutor(
         process.OutputDataReceived += (__, e) => _ = outputChannel.Writer.TryWrite(e.Data);
         process.ErrorDataReceived += (__, e) => _ = errorChannel.Writer.TryWrite(e.Data);
 
+        // Create periodic consumers to update info and error messages while the process is still running.
+        // This way we can push updates to the database even if the process has not yet finished.
+        // This can be useful in scenarios where the process is long-running and the user wants to see the progress.
         using var outputConsumer = new PeriodicChannelConsumer<string?>(
             logger: _logger,
             reader: outputChannel.Reader,
