@@ -3,9 +3,9 @@ using JetBrains.Annotations;
 
 namespace Biflow.ExecutorProxy.Core;
 
-[JsonDerivedType(typeof(ExeTaskRunningResponse), "Running")]
-[JsonDerivedType(typeof(ExeTaskCompletedResponse), "Completed")]
-[JsonDerivedType(typeof(ExeTaskFailedResponse), "Failed")]
+[JsonDerivedType(typeof(ExeTaskRunningResponse), "running")]
+[JsonDerivedType(typeof(ExeTaskCompletedResponse), "completed")]
+[JsonDerivedType(typeof(ExeTaskFailedResponse), "failed")]
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "status")]
 public abstract class ExeTaskStatusResponse;
 
@@ -13,23 +13,21 @@ public abstract class ExeTaskStatusResponse;
 public class ExeTaskRunningResponse : ExeTaskStatusResponse
 {
     public required int ProcessId { get; init; }
+    public required string? Output { get; init; }
+    public required bool OutputIsTruncated { get; init; }
+    public required string? ErrorOutput { get; init; }
+    public required bool ErrorOutputIsTruncated { get; init; }
 }
 
 [PublicAPI]
 public class ExeTaskCompletedResponse : ExeTaskStatusResponse
 {
     public required int ProcessId { get; init; }
-    
     public required int ExitCode { get; init; }
-    
     public required string? Output { get; init; }
-    
     public required bool OutputIsTruncated { get; init; }
-    
     public required string? ErrorOutput { get; init; }
-    
     public required bool ErrorOutputIsTruncated { get; init; }
-    
     public required string? InternalError { get; init; }
 }
 

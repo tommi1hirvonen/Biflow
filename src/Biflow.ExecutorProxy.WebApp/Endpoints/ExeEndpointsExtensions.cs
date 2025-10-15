@@ -38,20 +38,10 @@ internal static class ExeEndpointsExtensions
             {
                 var status = runner.GetStatus(id);
                 var result = status.Match(
-                    (Result<ExeTaskCompletedResponse> result) =>
-                    {
-                        ExeTaskStatusResponse response = new ExeTaskCompletedResponse
-                        {
-                            ProcessId = result.Value.ProcessId,
-                            ExitCode = result.Value.ExitCode,
-                            Output = result.Value.Output,
-                            OutputIsTruncated = result.Value.OutputIsTruncated,
-                            ErrorOutput = result.Value.ErrorOutput,
-                            ErrorOutputIsTruncated = result.Value.ErrorOutputIsTruncated,
-                            InternalError = result.Value.InternalError
-                        };
-                        return Results.Ok(response);
-                    },
+                    (Result<ExeTaskCompletedResponse> result) => 
+                        // Cast the results to the abstract base type so that JSON serialization works correctly,
+                        // and the discriminator (status) field is added.
+                        Results.Ok((ExeTaskStatusResponse)result.Value),
                     (Error<Exception> error) =>
                     {
                         ExeTaskStatusResponse response = new ExeTaskFailedResponse
@@ -62,13 +52,9 @@ internal static class ExeEndpointsExtensions
                     },
                     (Running<ExeTaskRunningResponse> running) =>
                     {
-                        ExeTaskStatusResponse response = new ExeTaskRunningResponse
-                        {
-                            ProcessId = running.Value.ProcessId
-                        };
                         var uri = linker.GetUriByName(context, "GetExeStatus",
                             new RouteValueDictionary { { "id", id } });
-                        return Results.Accepted(uri, response);
+                        return Results.Accepted(uri, (ExeTaskStatusResponse)running.Value);
                     },
                     (NotFound notfound) => throw new TaskNotFoundException(id));
                 return result;
