@@ -87,7 +87,14 @@ public class PeriodicChannelConsumer<T>(
                 
                 try
                 {
-                    await bufferPublished(buffer, token);
+                    // Copy the buffer to avoid concurrency issues while
+                    // the buffer might be iterated over in the callback.
+                    T[] bufferCopy;
+                    lock (_bufferLock)
+                    {
+                        bufferCopy = [..buffer];
+                    }
+                    await bufferPublished(bufferCopy, token);
                 }
                 catch (OperationCanceledException)
                 {
