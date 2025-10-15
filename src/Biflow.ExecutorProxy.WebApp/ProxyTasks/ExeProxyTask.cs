@@ -116,7 +116,7 @@ internal class ExeProxyTask(ExeProxyRunRequest request) : IProxyTask<ExeTaskRunn
 
     private void OutputDataReceived(object _, DataReceivedEventArgs e)
     {
-        if (string.IsNullOrEmpty(e.Data))
+        if (_outputBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(e.Data))
             return;
         
         try
@@ -132,7 +132,7 @@ internal class ExeProxyTask(ExeProxyRunRequest request) : IProxyTask<ExeTaskRunn
 
     private void ErrorDataReceived(object _, DataReceivedEventArgs e)
     {
-        if (string.IsNullOrEmpty(e.Data))
+        if (_errorBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(e.Data))
             return;
         
         try

@@ -219,7 +219,7 @@ internal class ExeStepExecutor(
             var outputBuilder = new StringBuilder().Append(output.Message); // Preserve the original message.
             foreach (var message in buffer)
             {
-                if (string.IsNullOrEmpty(message))
+                if (outputBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(message))
                     continue;
                 outputBuilder.AppendLine(message);
             }
@@ -269,7 +269,7 @@ internal class ExeStepExecutor(
             var errorBuilder = new StringBuilder().Append(error.Message);
             foreach (var message in buffer)
             {
-                if (string.IsNullOrEmpty(message))
+                if (errorBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(message))
                     continue;
                 errorBuilder.AppendLine(message);
             }
