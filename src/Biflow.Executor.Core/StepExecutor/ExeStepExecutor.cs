@@ -78,17 +78,15 @@ internal class ExeStepExecutor(
             attempt.AddWarning("Running executables with impersonation is only supported on Windows.");
         }
 
-        var outputMessage = new InfoMessage("");
+        var (outputMessage, errorMessage) = (new InfoMessage(""), new ErrorMessage("", null));
         attempt.InfoMessages.Insert(0, outputMessage);
-        
-        var outputChannel = Channel.CreateUnbounded<string?>();
-        
-        var errorBuilder = new StringBuilder();
+        attempt.ErrorMessages.Insert(0, errorMessage);
+        var (outputChannel, errorChannel) = (Channel.CreateUnbounded<string?>(), Channel.CreateUnbounded<string?>());
 
         using var process = new Process();
         process.StartInfo = startInfo;
         process.OutputDataReceived += (__, e) => _ = outputChannel.Writer.TryWrite(e.Data);
-        process.ErrorDataReceived += (_, e) => errorBuilder.AppendLine(e.Data);
+        process.ErrorDataReceived += (__, e) => _ = errorChannel.Writer.TryWrite(e.Data);
 
         using var outputConsumer = new PeriodicChannelConsumer<string?>(
             logger: _logger,
@@ -96,6 +94,13 @@ internal class ExeStepExecutor(
             interval: TimeSpan.FromSeconds(10),
             bufferPublished: (buffer, ct) => UpdateOutputAsync(attempt, outputMessage, buffer, ct));
         var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
+
+        using var errorConsumer = new PeriodicChannelConsumer<string?>(
+            logger: _logger,
+            reader: errorChannel.Reader,
+            interval: TimeSpan.FromSeconds(10),
+            bufferPublished: (buffer, ct) => UpdateErrorsAsync(attempt, errorMessage, buffer, ct));
+        var errorConsumerTask = errorConsumer.StartConsumingAsync(cancellationToken);
 
         try
         {
@@ -182,25 +187,13 @@ internal class ExeStepExecutor(
                 attempt.AddError(ex, "Error while executing exe");
                 return Result.Failure;
             }
-            finally
-            {
-                // Executable output and error messages can be significantly long.
-                // Handle super long messages here.
-                if (errorBuilder.ToString() is { Length: > 0 } error)
-                {
-                    attempt.AddError(null, error[..Math.Min(MaxOutputLength, error.Length)], insertFirst: true);
-                    if (error.Length > MaxOutputLength)
-                    {
-                        attempt.AddError(null, "Error message has been truncated to first 500 000 characters.",
-                            insertFirst: true);
-                    }
-                }
-            }
         }
         finally
         {
             outputConsumer.Cancel();
+            errorConsumer.Cancel();
             await outputConsumerTask;
+            await errorConsumerTask;
         }
     }
     
@@ -250,6 +243,48 @@ internal class ExeStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating output for step");
+        }
+    }
+    
+    private async Task UpdateErrorsAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
+        IReadOnlyList<string?> buffer, CancellationToken cancellationToken)
+    {
+        if (error.Message.Length >= MaxOutputLength)
+        {
+            return;
+        }
+        
+        try
+        {
+            var errorBuilder = new StringBuilder().Append(error.Message);
+            foreach (var message in buffer) errorBuilder.AppendLine(message);
+            
+            if (errorBuilder.ToString() is { Length: > 0 } o)
+            {
+                error.Message = o[..Math.Min(MaxOutputLength, o.Length)];
+                if (o.Length >= MaxOutputLength)
+                {
+                    attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
+                        insertFirst: true);
+                }
+            }
+            else
+            {
+                return;
+            }
+            
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await dbContext.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(
+                    x => x.SetProperty(p => p.ErrorMessages, attempt.ErrorMessages),
+                    cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating error output for step");
         }
     }
 
