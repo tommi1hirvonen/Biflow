@@ -407,7 +407,6 @@ internal class FunctionStepExecutor(
                         x.StepId == attempt.StepId &&
                         x.RetryAttemptIndex == attempt.RetryAttemptIndex)
             .ExecuteUpdateAsync(
-                // The output InfoMessage should be included in the InfoMessages collection.
                 x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
                 cancellationToken: cancellationToken);
     }

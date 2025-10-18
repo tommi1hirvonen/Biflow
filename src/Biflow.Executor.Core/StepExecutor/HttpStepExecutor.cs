@@ -14,6 +14,7 @@ internal class HttpStepExecutor(
     : StepExecutor<HttpStepExecution, HttpStepExecutionAttempt>(logger, dbContextFactory)
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
 
     private static readonly string[] ContentHeaders =
     [
@@ -169,6 +170,18 @@ internal class HttpStepExecutor(
         }
 
         attempt.AddOutput($"Polling URL:\n{url}");
+        
+        // Update output, which by now contains response headers, content and location header URL.
+        try
+        {
+            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating output for step");
+            attempt.AddWarning(ex, "Error updating step output");
+        }
+        
         using var response = await PollAndGetResponseAsync(client, url, cancellationToken);
         
         attempt.AddOutput($"Final polling response status code: {(int)response.StatusCode} {response.StatusCode}");
@@ -200,5 +213,17 @@ internal class HttpStepExecutor(
                 return response;
             response.Dispose();
         }
+    }
+    
+    private async Task UpdateOutputToDbAsync(HttpStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await dbContext.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                        x.StepId == attempt.StepId &&
+                        x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(
+                x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
+                cancellationToken: cancellationToken);
     }
 }
