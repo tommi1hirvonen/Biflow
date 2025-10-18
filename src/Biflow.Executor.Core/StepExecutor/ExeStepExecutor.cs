@@ -234,107 +234,6 @@ internal class ExeStepExecutor(
         }
     }
 
-    private static bool UpdateOutput(ExeStepExecutionAttempt attempt, InfoMessage output,
-        StringBuilder outputBuilder, ReaderWriterLockSlim outputLock)
-    {
-        string text;
-        try
-        {
-            outputLock.EnterReadLock();
-            text = outputBuilder.ToString();
-        }
-        finally{ outputLock.ExitReadLock();}
-        // The output is empty, there are no changes, or the output max length has already been reached => do nothing.
-        if (text is not { Length: > 0 } o ||
-            o.Length == output.Message.Length ||
-            output.Message.Length >= MaxOutputLength)
-        {
-            return false; // No changes
-        }
-        // Executable output and error messages can be significantly long. Handle super long messages here.
-        output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
-        if (output.Message.Length >= MaxOutputLength)
-        {
-            attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
-                insertFirst: true);
-        }
-        return true; // Changes were made
-    }
-
-    private static bool UpdateErrors(ExeStepExecutionAttempt attempt, ErrorMessage error,
-        StringBuilder errorBuilder, ReaderWriterLockSlim errorLock)
-    {
-        string text;
-        try
-        {
-            errorLock.EnterReadLock();
-            text = errorBuilder.ToString();
-        }
-        finally { errorLock.ExitReadLock(); }
-        
-        // The error is empty, there are no changes, or the error max length has already been reached => do nothing.
-        if (text is not { Length: > 0 } e ||
-            e.Length == error.Message.Length ||
-            error.Message.Length >= MaxOutputLength)
-        {
-            return false; // No changes
-        }
-        error.Message = e[..Math.Min(MaxOutputLength, e.Length)];
-        if (error.Message.Length >= MaxOutputLength)
-        {
-            attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
-                insertFirst: true);
-        }
-        return true; // Changes were made
-    }
-    
-    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
-        IReadOnlyList<StringBuilder> outputBuilders, ReaderWriterLockSlim outputLock, CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (outputBuilders is not [var outputBuilder, ..] || !UpdateOutput(attempt, output, outputBuilder, outputLock))
-                return;
-            
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            await dbContext.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId &&
-                            x.StepId == attempt.StepId &&
-                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                .ExecuteUpdateAsync(
-                    // The output InfoMessage should be included in the InfoMessages collection.
-                    x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
-                    cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating output for step");
-        }
-    }
-    
-    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
-        IReadOnlyList<StringBuilder> errorBuilders, ReaderWriterLockSlim errorLock, CancellationToken cancellationToken)
-    {
-        try
-        {
-            if (errorBuilders is not [var errorBuilder, ..] || !UpdateErrors(attempt, error, errorBuilder, errorLock))
-                return;
-            
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-            await dbContext.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId &&
-                            x.StepId == attempt.StepId &&
-                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                .ExecuteUpdateAsync(
-                    x => x.SetProperty(p => p.ErrorMessages, attempt.ErrorMessages),
-                    cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating error output for step");
-        }
-    }
-
     private async Task<Result> ExecuteRemoteAsync(ExeStepExecution step, ExeStepExecutionAttempt attempt,
         Proxy proxy, CancellationToken cancellationToken)
     {
@@ -504,6 +403,107 @@ internal class ExeStepExecutor(
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", attempt.ExecutionId, step);
             attempt.AddWarning(ex, "Error logging child process id");
+        }
+    }
+
+    private static bool UpdateOutput(ExeStepExecutionAttempt attempt, InfoMessage output,
+        StringBuilder outputBuilder, ReaderWriterLockSlim outputLock)
+    {
+        string text;
+        try
+        {
+            outputLock.EnterReadLock();
+            text = outputBuilder.ToString();
+        }
+        finally{ outputLock.ExitReadLock();}
+        // The output is empty, there are no changes, or the output max length has already been reached => do nothing.
+        if (text is not { Length: > 0 } o ||
+            o.Length == output.Message.Length ||
+            output.Message.Length >= MaxOutputLength)
+        {
+            return false; // No changes
+        }
+        // Executable output and error messages can be significantly long. Handle super long messages here.
+        output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
+        if (output.Message.Length >= MaxOutputLength)
+        {
+            attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
+                insertFirst: true);
+        }
+        return true; // Changes were made
+    }
+
+    private static bool UpdateErrors(ExeStepExecutionAttempt attempt, ErrorMessage error,
+        StringBuilder errorBuilder, ReaderWriterLockSlim errorLock)
+    {
+        string text;
+        try
+        {
+            errorLock.EnterReadLock();
+            text = errorBuilder.ToString();
+        }
+        finally { errorLock.ExitReadLock(); }
+        
+        // The error is empty, there are no changes, or the error max length has already been reached => do nothing.
+        if (text is not { Length: > 0 } e ||
+            e.Length == error.Message.Length ||
+            error.Message.Length >= MaxOutputLength)
+        {
+            return false; // No changes
+        }
+        error.Message = e[..Math.Min(MaxOutputLength, e.Length)];
+        if (error.Message.Length >= MaxOutputLength)
+        {
+            attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
+                insertFirst: true);
+        }
+        return true; // Changes were made
+    }
+    
+    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
+        IReadOnlyList<StringBuilder> outputBuilders, ReaderWriterLockSlim outputLock, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (outputBuilders is not [var outputBuilder, ..] || !UpdateOutput(attempt, output, outputBuilder, outputLock))
+                return;
+            
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await dbContext.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(
+                    // The output InfoMessage should be included in the InfoMessages collection.
+                    x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
+                    cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating output for step");
+        }
+    }
+    
+    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
+        IReadOnlyList<StringBuilder> errorBuilders, ReaderWriterLockSlim errorLock, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (errorBuilders is not [var errorBuilder, ..] || !UpdateErrors(attempt, error, errorBuilder, errorLock))
+                return;
+            
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await dbContext.StepExecutionAttempts
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .ExecuteUpdateAsync(
+                    x => x.SetProperty(p => p.ErrorMessages, attempt.ErrorMessages),
+                    cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating error output for step");
         }
     }
 }
