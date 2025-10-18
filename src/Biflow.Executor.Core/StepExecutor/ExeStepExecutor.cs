@@ -121,14 +121,24 @@ internal class ExeStepExecutor(
             reader: outputChannel.Reader,
             // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
-            bufferPublished: (sb, ct) => UpdateOutputToDbAsync(attempt, outputMessage, sb, outputLock, ct));
+            bufferPublished: async (buffer, ct) =>
+            {
+                if (buffer is not [var builder, ..] || !UpdateOutput(outputMessage, builder, outputLock))
+                    return;
+                await UpdateOutputToDbAsync(attempt, ct);
+            });
         var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
 
         using var errorConsumer = new PeriodicChannelConsumer<StringBuilder>(
             logger: _logger,
             reader: errorChannel.Reader,
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
-            bufferPublished: (sb, ct) => UpdateErrorsToDbAsync(attempt, errorMessage, sb, errorLock, ct));
+            bufferPublished: async (buffer, ct) =>
+            {
+                if (buffer is not [var builder, ..] || !UpdateErrors(errorMessage, builder, errorLock))
+                    return;
+                await UpdateErrorsToDbAsync(attempt, ct);
+            });
         var errorConsumerTask = errorConsumer.StartConsumingAsync(cancellationToken);
 
         try
@@ -225,8 +235,8 @@ internal class ExeStepExecutor(
             // the periodic consumers did not have a chance to handle the latest updates from the channel.
             try
             {
-                _ = UpdateOutput(attempt, outputMessage, outputBuilder, outputLock);
-                _ = UpdateErrors(attempt, errorMessage, errorBuilder, errorLock);
+                _ = UpdateOutput(outputMessage, outputBuilder, outputLock);
+                _ = UpdateErrors(errorMessage, errorBuilder, errorLock);
             }
             catch (Exception ex) { _logger.LogError(ex, "Error updating final output and error messages"); }
             await outputConsumerTask;
@@ -259,61 +269,101 @@ internal class ExeStepExecutor(
             : new CancellationTokenSource();
         
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+        
+        // Create channels for output and error messages.
+        // Store messages in the attempt because the messages themselves will be updated periodically.
+        var (outputMessage, errorMessage) = (new InfoMessage(""), new ErrorMessage("", null));
+        attempt.InfoMessages.Insert(0, outputMessage);
+        attempt.ErrorMessages.Insert(0, errorMessage);
+        // Create unbounded channels. These are used in conjunction with LIFO consumers to update the latest message.
+        var outputChannel = Channel.CreateUnbounded<(string Text, bool IsTruncated)>();
+        var errorChannel = Channel.CreateUnbounded<(string Text, string? StackTrace, bool IsTruncated)>();
+        
+        using var outputConsumer = new PeriodicChannelConsumer<(string Text, bool IsTruncated)>(
+            logger: _logger,
+            reader: outputChannel.Reader,
+            // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
+            interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
+            bufferPublished: async (buffer, ct) =>
+            {
+                if (buffer is not [.., var (text, isTruncated)] || !UpdateOutput(outputMessage, text, isTruncated))
+                    return;
+                await UpdateOutputToDbAsync(attempt, ct);
+            },
+            // Since we are consuming entire messages from the proxy API instead of an internal string builder,
+            // enable LIFO so that the last message is always processed.
+            enableLastInFirstOut: true,
+            bufferCapacity: 1);
+        var outputConsumerTask = outputConsumer.StartConsumingAsync(linkedCts.Token);
 
+        using var errorConsumer = new PeriodicChannelConsumer<(string Text, string? StackTrace, bool IsTruncated)>(
+            logger: _logger,
+            reader: errorChannel.Reader,
+            interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
+            bufferPublished: async (buffer, ct) =>
+            {
+                if (buffer is not [.., var (text, stackTrace, isTruncated)] ||
+                    !UpdateErrors(errorMessage, text, stackTrace, isTruncated))
+                    return;
+                await UpdateErrorsToDbAsync(attempt, ct);
+            },
+            enableLastInFirstOut: true,
+            bufferCapacity: 1);
+        var errorConsumerTask = errorConsumer.StartConsumingAsync(linkedCts.Token);
+
+        string? output = null, error = null, stackTrace = null;
+        bool outputTruncated = false, errorTruncated = false;
         try
         {
-            // TODO Periodically update the outputs from the status object to the app database, same as for local executions.
             ExeTaskStatusResponse? status;
             do
             {
                 await Task.Delay(TimeSpan.FromSeconds(5), linkedCts.Token);
-                
+
                 status = await client.GetFromJsonAsync<ExeTaskStatusResponse>($"/exe/{taskStartedResponse.TaskId}",
                     linkedCts.Token);
 
-                int? processId = status switch
+                (var processId, output, outputTruncated, error, errorTruncated, stackTrace) = status switch
                 {
-                    ExeTaskRunningResponse running => running.ProcessId,
-                    ExeTaskCompletedResponse completed => completed.ProcessId,
-                    _ => null
+                    ExeTaskRunningResponse running =>
+                        (running.ProcessId, running.Output, running.OutputIsTruncated, running.ErrorOutput,
+                            running.ErrorOutputIsTruncated, null),
+                    ExeTaskCompletedResponse completed =>
+                        (completed.ProcessId, completed.Output, completed.OutputIsTruncated, completed.ErrorOutput,
+                            completed.ErrorOutputIsTruncated, completed.InternalError),
+                    _ =>
+                        (null as int?, null as string, false, null as string, false, null as string)
                 };
-                if (processId == attempt.ExeProcessId)
+                if (processId != attempt.ExeProcessId)
                 {
-                    continue;
+                    attempt.ExeProcessId = processId;
+                    await UpdateProcessIdAsync(step, attempt);
                 }
-                attempt.ExeProcessId = processId;
-                await UpdateProcessIdAsync(step, attempt);
+                _ = outputChannel.Writer.TryWrite((output ?? "", outputTruncated));
+                _ = errorChannel.Writer.TryWrite((error ?? "", stackTrace, errorTruncated));
             } while (status is ExeTaskRunningResponse);
-            
+
             switch (status)
             {
                 case null:
-                    _logger.LogError("{ExecutionId} {Step} Error getting remote execution status, no status was returned",
+                    _logger.LogError(
+                        "{ExecutionId} {Step} Error getting remote execution status, no status was returned",
                         step.ExecutionId, step);
                     attempt.AddError("No status was returned from the proxy when getting remote execution status.");
                     return Result.Failure;
                 case ExeTaskCompletedResponse completed:
-                    if (completed.OutputIsTruncated)
-                        attempt.AddOutput("Output is truncated.");
-                    attempt.AddOutput(completed.Output);
-                    
-                    if (completed.ErrorOutputIsTruncated)
-                        attempt.AddError("Error output is truncated.");
-                    if (!string.IsNullOrWhiteSpace(completed.ErrorOutput))
-                        attempt.AddError(completed.ErrorOutput);
-                    
                     if (step.ExeSuccessExitCode is { } successExitCode)
                     {
                         return completed.ExitCode == successExitCode ? Result.Success : Result.Failure;
                     }
-                    
                     return Result.Success;
                 case ExeTaskFailedResponse failed:
                     attempt.AddError("Remote execution failed with an internal error.");
                     attempt.AddError(failed.ErrorMessage);
                     return Result.Failure;
                 default:
-                    attempt.AddError($"Unrecognized status {status.GetType().Name} from the proxy when getting remote execution status.");
+                    attempt.AddError(
+                        $"Unrecognized status {status.GetType().Name} from the proxy when getting remote execution status.");
                     return Result.Failure; // Should never happen, but just in case.
             }
         }
@@ -349,6 +399,21 @@ internal class ExeStepExecutor(
                 step.ExeFileName);
             attempt.AddError(ex, "Error while executing remote executable");
             return Result.Failure;
+        }
+        finally
+        {
+            outputConsumer.Cancel();
+            errorConsumer.Cancel();
+            // Update the output and errors one last time in case
+            // the periodic consumers did not have a chance to handle the latest updates from the channel.
+            try
+            {
+                _ = UpdateOutput(outputMessage, output ?? "", outputTruncated);
+                _ = UpdateErrors(errorMessage, error ?? "", stackTrace, errorTruncated);
+            }
+            catch (Exception ex) { _logger.LogError(ex, "Error updating final output and error messages"); }
+            await outputConsumerTask;
+            await errorConsumerTask;
         }
     }
 
@@ -406,8 +471,7 @@ internal class ExeStepExecutor(
         }
     }
 
-    private static bool UpdateOutput(ExeStepExecutionAttempt attempt, InfoMessage output,
-        StringBuilder outputBuilder, ReaderWriterLockSlim outputLock)
+    private static bool UpdateOutput(InfoMessage output, StringBuilder outputBuilder, ReaderWriterLockSlim outputLock)
     {
         string text;
         try
@@ -416,25 +480,41 @@ internal class ExeStepExecutor(
             text = outputBuilder.ToString();
         }
         finally{ outputLock.ExitReadLock();}
-        // The output is empty, there are no changes, or the output max length has already been reached => do nothing.
-        if (text is not { Length: > 0 } o ||
-            o.Length == output.Message.Length ||
-            output.Message.Length >= MaxOutputLength)
+        return UpdateOutput(output, text);
+    }
+    
+    private static bool UpdateOutput(InfoMessage output, string text)
+    {
+        // The output is empty or there are no changes.
+        if (string.IsNullOrEmpty(text) || text.Length == output.Message.Length)
         {
             return false; // No changes
         }
-        // Executable output and error messages can be significantly long. Handle super long messages here.
-        output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
-        if (output.Message.Length >= MaxOutputLength)
+
+        // The output max length has been reached, but the message was not yet marked as truncated.
+        if (text.Length >= MaxOutputLength && output.Message.Length >= MaxOutputLength && !output.IsTruncated)
         {
-            attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
-                insertFirst: true);
+            output.IsTruncated = true;
+            return true;
         }
+        
+        // Executable output and error messages can be significantly long. Handle super long messages here.
+        output.Message = text[..Math.Min(MaxOutputLength, text.Length)];
+        output.IsTruncated = text.Length > output.Message.Length;
         return true; // Changes were made
     }
+    
+    private static bool UpdateOutput(InfoMessage output, string text, bool isTruncated)
+    {
+        var other = new InfoMessage(text, isTruncated);
+        if (output.Equals(other)) return false;
+        
+        output.Message = text[..Math.Min(MaxOutputLength, text.Length)];
+        output.IsTruncated = text.Length > output.Message.Length || isTruncated;
+        return true;
+    }
 
-    private static bool UpdateErrors(ExeStepExecutionAttempt attempt, ErrorMessage error,
-        StringBuilder errorBuilder, ReaderWriterLockSlim errorLock)
+    private static bool UpdateErrors(ErrorMessage error, StringBuilder errorBuilder, ReaderWriterLockSlim errorLock)
     {
         string text;
         try
@@ -443,31 +523,44 @@ internal class ExeStepExecutor(
             text = errorBuilder.ToString();
         }
         finally { errorLock.ExitReadLock(); }
-        
-        // The error is empty, there are no changes, or the error max length has already been reached => do nothing.
-        if (text is not { Length: > 0 } e ||
-            e.Length == error.Message.Length ||
-            error.Message.Length >= MaxOutputLength)
+        return UpdateErrors(error, text);
+    }
+    
+    private static bool UpdateErrors(ErrorMessage error, string text)
+    {
+        // The error is empty or there are no changes.
+        if (string.IsNullOrEmpty(text) || text.Length == error.Message.Length)
         {
             return false; // No changes
         }
-        error.Message = e[..Math.Min(MaxOutputLength, e.Length)];
-        if (error.Message.Length >= MaxOutputLength)
+
+        // The error message max length has been reached, but the message was not yet marked as truncated.
+        if (text.Length >= MaxOutputLength && error.Message.Length >= MaxOutputLength && !error.IsTruncated)
         {
-            attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
-                insertFirst: true);
+            error.IsTruncated = true;
+            return true;
         }
+        
+        error.Message = text[..Math.Min(MaxOutputLength, text.Length)];
+        error.IsTruncated = text.Length > error.Message.Length;
         return true; // Changes were made
     }
     
-    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
-        IReadOnlyList<StringBuilder> outputBuilders, ReaderWriterLockSlim outputLock, CancellationToken cancellationToken)
+    private static bool UpdateErrors(ErrorMessage error, string text, string? stackTrace, bool isTruncated)
+    {
+        var other = new ErrorMessage(text, stackTrace, isTruncated);
+        if (error.Equals(other)) return false;
+        
+        error.Message = text[..Math.Min(MaxOutputLength, text.Length)];
+        error.Exception = stackTrace;
+        error.IsTruncated = text.Length > error.Message.Length || isTruncated;
+        return true;
+    }
+    
+    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, CancellationToken cancellationToken)
     {
         try
         {
-            if (outputBuilders is not [var outputBuilder, ..] || !UpdateOutput(attempt, output, outputBuilder, outputLock))
-                return;
-            
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -484,14 +577,10 @@ internal class ExeStepExecutor(
         }
     }
     
-    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
-        IReadOnlyList<StringBuilder> errorBuilders, ReaderWriterLockSlim errorLock, CancellationToken cancellationToken)
+    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, CancellationToken cancellationToken)
     {
         try
         {
-            if (errorBuilders is not [var errorBuilder, ..] || !UpdateErrors(attempt, error, errorBuilder, errorLock))
-                return;
-            
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&

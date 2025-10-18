@@ -19,7 +19,9 @@ public class PeriodicChannelConsumer<T>(
     ILogger logger,
     ChannelReader<T> reader,
     Func<int, TimeSpan> interval,
-    Func<IReadOnlyList<T>, CancellationToken, Task> bufferPublished) : IDisposable
+    Func<IReadOnlyList<T>, CancellationToken, Task> bufferPublished,
+    bool enableLastInFirstOut = false,
+    int? bufferCapacity = null) : IDisposable
 {
     private readonly Lock _bufferLock = new();
     private CancellationTokenSource? _cts;
@@ -59,6 +61,15 @@ public class PeriodicChannelConsumer<T>(
             {
                 lock (_bufferLock)
                 {
+                    if (bufferCapacity is { } cap && buffer.Count >= cap)
+                    {
+                        // Using FIFO principle, discard new items because the buffer is full. 
+                        if (!enableLastInFirstOut)
+                            continue;
+                        
+                        // Using LIFO principle, discard old items because the buffer is full.
+                        while (buffer.Count >= cap) buffer.RemoveAt(0);
+                    }
                     buffer.Add(item);
                 }
             }

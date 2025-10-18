@@ -6,9 +6,9 @@ namespace Biflow.DataAccess.Configuration;
 
 internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfiguration<StepExecutionAttempt>
 {
-    private static readonly JsonSerializerOptions IgnoreNullsOptions = new()
+    private static readonly JsonSerializerOptions IgnoreDefaultOptions = new()
     {
-        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault
     };
 
     public void Configure(EntityTypeBuilder<StepExecutionAttempt> builder)
@@ -46,8 +46,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.Property(x => x.InfoMessages)
             .HasColumnName("InfoMessages")
             .HasConversion(
-            from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-            to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreNullsOptions) ?? new(),
+            from => JsonSerializer.Serialize(from, IgnoreDefaultOptions),
+            to => JsonSerializer.Deserialize<List<InfoMessage>>(to, IgnoreDefaultOptions) ?? new(),
             new ValueComparer<IList<InfoMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -56,8 +56,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.Property(x => x.WarningMessages)
             .HasColumnName("WarningMessages")
             .HasConversion(
-            from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-            to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreNullsOptions) ?? new(),
+            from => JsonSerializer.Serialize(from, IgnoreDefaultOptions),
+            to => JsonSerializer.Deserialize<List<WarningMessage>>(to, IgnoreDefaultOptions) ?? new(),
             new ValueComparer<IList<WarningMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
@@ -66,8 +66,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
         builder.Property(x => x.ErrorMessages)
             .HasColumnName("ErrorMessages")
             .HasConversion(
-            from => JsonSerializer.Serialize(from, IgnoreNullsOptions),
-            to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreNullsOptions) ?? new(),
+            from => JsonSerializer.Serialize(from, IgnoreDefaultOptions),
+            to => JsonSerializer.Deserialize<List<ErrorMessage>>(to, IgnoreDefaultOptions) ?? new(),
             new ValueComparer<IList<ErrorMessage>>(
                 (x, y) => x != null && y != null && x.SequenceEqual(y),
                 x => x.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),

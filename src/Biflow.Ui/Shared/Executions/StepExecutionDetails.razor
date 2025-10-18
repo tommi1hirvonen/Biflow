@@ -585,6 +585,12 @@
         <dd class="col-sm-9">
             @foreach (var info in StepExecutionAttempt.InfoMessages)
             {
+                if (info.IsTruncated)
+                {
+                    <code class="text-body">
+                        Message has been truncated to first @info.Message.Length characters.
+                    </code>
+                }
                 <code class="text-body" style="white-space: pre-wrap; display: block;">
                     @info.Message
                 </code>
@@ -596,6 +602,12 @@
         <dd class="col-sm-9">
             @foreach (var error in StepExecutionAttempt.ErrorMessages)
             {
+                if (error.IsTruncated)
+                {
+                    <code class="text-danger">
+                        Message has been truncated to first @error.Message.Length characters.
+                    </code>
+                }
                 <code class="text-danger" style="white-space: pre-wrap; display: block;">
                     @error.Message
                 </code>
