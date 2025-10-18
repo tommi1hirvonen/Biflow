@@ -223,8 +223,12 @@ internal class ExeStepExecutor(
             errorConsumer.Cancel();
             // Update the output and errors one last time in case
             // the periodic consumers did not have a chance to handle the latest updates from the channel.
-            _ = UpdateOutput(attempt, outputMessage, outputBuilder, outputLock);
-            _ = UpdateErrors(attempt, errorMessage, errorBuilder, errorLock);
+            try
+            {
+                _ = UpdateOutput(attempt, outputMessage, outputBuilder, outputLock);
+                _ = UpdateErrors(attempt, errorMessage, errorBuilder, errorLock);
+            }
+            catch (Exception ex) { _logger.LogError(ex, "Error updating final output and error messages"); }
             await outputConsumerTask;
             await errorConsumerTask;
         }
