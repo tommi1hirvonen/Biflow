@@ -83,29 +83,52 @@ internal class ExeStepExecutor(
         var (outputMessage, errorMessage) = (new InfoMessage(""), new ErrorMessage("", null));
         attempt.InfoMessages.Insert(0, outputMessage);
         attempt.ErrorMessages.Insert(0, errorMessage);
-        var (outputChannel, errorChannel) = (Channel.CreateUnbounded<string?>(), Channel.CreateUnbounded<string?>());
+        var (outputBuilder, errorBuilder) = (new StringBuilder(), new StringBuilder());
+        var (outputLock, errorLock) = (new ReaderWriterLockSlim(), new ReaderWriterLockSlim());
+        // Create bounded channels. The string builder with all outputs is passed, so capacity of 1 is enough.
+        var (outputChannel, errorChannel) = (Channel.CreateBounded<StringBuilder>(1), Channel.CreateBounded<StringBuilder>(1));
 
         using var process = new Process();
         process.StartInfo = startInfo;
-        process.OutputDataReceived += (__, e) => _ = outputChannel.Writer.TryWrite(e.Data);
-        process.ErrorDataReceived += (__, e) => _ = errorChannel.Writer.TryWrite(e.Data);
+        process.OutputDataReceived += (__, e) =>
+        {
+            if (outputBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(e.Data)) return;
+            try
+            {
+                outputLock.EnterWriteLock();
+                outputBuilder.AppendLine(e.Data);
+                _ = outputChannel.Writer.TryWrite(outputBuilder);
+            }
+            finally { outputLock.ExitWriteLock(); }
+        };
+        process.ErrorDataReceived += (__, e) =>
+        {
+            if (errorBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(e.Data)) return;
+            try
+            {
+                errorLock.EnterWriteLock();
+                errorBuilder.AppendLine(e.Data);
+                _ = errorChannel.Writer.TryWrite(errorBuilder);
+            }
+            finally { errorLock.ExitWriteLock(); }
+        };
 
         // Create periodic consumers to update info and error messages while the process is still running.
         // This way we can push updates to the database even if the process has not yet finished.
         // This can be useful in scenarios where the process is long-running and the user wants to see the progress.
-        using var outputConsumer = new PeriodicChannelConsumer<string?>(
+        using var outputConsumer = new PeriodicChannelConsumer<StringBuilder>(
             logger: _logger,
             reader: outputChannel.Reader,
             // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
-            bufferPublished: (buffer, ct) => UpdateOutputAsync(attempt, outputMessage, buffer, ct));
+            bufferPublished: (sb, ct) => UpdateOutputToDbAsync(attempt, outputMessage, sb, outputLock, ct));
         var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
 
-        using var errorConsumer = new PeriodicChannelConsumer<string?>(
+        using var errorConsumer = new PeriodicChannelConsumer<StringBuilder>(
             logger: _logger,
             reader: errorChannel.Reader,
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
-            bufferPublished: (buffer, ct) => UpdateErrorsAsync(attempt, errorMessage, buffer, ct));
+            bufferPublished: (sb, ct) => UpdateErrorsToDbAsync(attempt, errorMessage, sb, errorLock, ct));
         var errorConsumerTask = errorConsumer.StartConsumingAsync(cancellationToken);
 
         try
@@ -198,48 +221,76 @@ internal class ExeStepExecutor(
         {
             outputConsumer.Cancel();
             errorConsumer.Cancel();
+            // Update the output and errors one last time in case
+            // the periodic consumers did not have a chance to handle the latest updates from the channel.
+            _ = UpdateOutput(attempt, outputMessage, outputBuilder, outputLock);
+            _ = UpdateErrors(attempt, errorMessage, errorBuilder, errorLock);
             await outputConsumerTask;
             await errorConsumerTask;
         }
     }
-    
-    private async Task UpdateOutputAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
-        IReadOnlyList<string?> buffer, CancellationToken cancellationToken)
+
+    private static bool UpdateOutput(ExeStepExecutionAttempt attempt, InfoMessage output,
+        StringBuilder outputBuilder, ReaderWriterLockSlim outputLock)
     {
-        // If the output is already too long, don't bother updating it.
-        // The output cannot grow too long outside this method.
-        // The truncation warning has thus already been added.
-        if (output.Message.Length >= MaxOutputLength)
-        {
-            return;
-        }
-        
+        string text;
         try
         {
-            // Update the message of the output InfoMessage.
-            var outputBuilder = new StringBuilder().Append(output.Message); // Preserve the original message.
-            foreach (var message in buffer)
-            {
-                if (outputBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(message))
-                    continue;
-                outputBuilder.AppendLine(message);
-            }
-            
-            // Executable output and error messages can be significantly long.
-            // Handle super long messages here.
-            if (outputBuilder.ToString() is { Length: > 0 } o)
-            {
-                output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
-                if (o.Length >= MaxOutputLength)
-                {
-                    attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
-                        insertFirst: true);
-                }
-            }
-            else
-            {
+            outputLock.EnterReadLock();
+            text = outputBuilder.ToString();
+        }
+        finally{ outputLock.ExitReadLock();}
+        // The output is empty, there are no changes, or the output max length has already been reached => do nothing.
+        if (text is not { Length: > 0 } o ||
+            o.Length == output.Message.Length ||
+            output.Message.Length >= MaxOutputLength)
+        {
+            return false; // No changes
+        }
+        // Executable output and error messages can be significantly long. Handle super long messages here.
+        output.Message = o[..Math.Min(MaxOutputLength, o.Length)];
+        if (output.Message.Length >= MaxOutputLength)
+        {
+            attempt.AddOutput($"Output has been truncated to first {MaxOutputLength} characters.",
+                insertFirst: true);
+        }
+        return true; // Changes were made
+    }
+
+    private static bool UpdateErrors(ExeStepExecutionAttempt attempt, ErrorMessage error,
+        StringBuilder errorBuilder, ReaderWriterLockSlim errorLock)
+    {
+        string text;
+        try
+        {
+            errorLock.EnterReadLock();
+            text = errorBuilder.ToString();
+        }
+        finally { errorLock.ExitReadLock(); }
+        
+        // The error is empty, there are no changes, or the error max length has already been reached => do nothing.
+        if (text is not { Length: > 0 } e ||
+            e.Length == error.Message.Length ||
+            error.Message.Length >= MaxOutputLength)
+        {
+            return false; // No changes
+        }
+        error.Message = e[..Math.Min(MaxOutputLength, e.Length)];
+        if (error.Message.Length >= MaxOutputLength)
+        {
+            attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
+                insertFirst: true);
+        }
+        return true; // Changes were made
+    }
+    
+    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, InfoMessage output,
+        IReadOnlyList<StringBuilder> outputBuilders, ReaderWriterLockSlim outputLock, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (outputBuilders is not [var outputBuilder, ..] || !UpdateOutput(attempt, output, outputBuilder, outputLock))
                 return;
-            }
             
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
@@ -257,37 +308,13 @@ internal class ExeStepExecutor(
         }
     }
     
-    private async Task UpdateErrorsAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
-        IReadOnlyList<string?> buffer, CancellationToken cancellationToken)
+    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, ErrorMessage error,
+        IReadOnlyList<StringBuilder> errorBuilders, ReaderWriterLockSlim errorLock, CancellationToken cancellationToken)
     {
-        if (error.Message.Length >= MaxOutputLength)
-        {
-            return;
-        }
-        
         try
         {
-            var errorBuilder = new StringBuilder().Append(error.Message);
-            foreach (var message in buffer)
-            {
-                if (errorBuilder.Length >= MaxOutputLength || string.IsNullOrEmpty(message))
-                    continue;
-                errorBuilder.AppendLine(message);
-            }
-            
-            if (errorBuilder.ToString() is { Length: > 0 } o)
-            {
-                error.Message = o[..Math.Min(MaxOutputLength, o.Length)];
-                if (o.Length >= MaxOutputLength)
-                {
-                    attempt.AddError(null, $"Error output has been truncated to first {MaxOutputLength} characters.",
-                        insertFirst: true);
-                }
-            }
-            else
-            {
+            if (errorBuilders is not [var errorBuilder, ..] || !UpdateErrors(attempt, error, errorBuilder, errorLock))
                 return;
-            }
             
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
