@@ -18,7 +18,7 @@ namespace Biflow.Executor.Core;
 public class PeriodicChannelConsumer<T>(
     ILogger logger,
     ChannelReader<T> reader,
-    TimeSpan interval,
+    Func<int, TimeSpan> interval,
     Func<IReadOnlyList<T>, CancellationToken, Task> bufferPublished) : IDisposable
 {
     private readonly Lock _bufferLock = new();
@@ -34,9 +34,8 @@ public class PeriodicChannelConsumer<T>(
     {
         _cts = CancellationTokenSource.CreateLinkedTokenSource(token);
         var buffer = new List<T>();
-        using var timer = new PeriodicTimer(interval);
         var readTask = ReadFromChannelAsync(buffer, _cts.Token);
-        var looperTask = LoopTimerTicksAsync(timer, buffer, _cts.Token);
+        var looperTask = LoopTimerTicksAsync(buffer, _cts.Token);
         await Task.WhenAll(readTask, looperTask);
         
         // Final flush
@@ -74,10 +73,12 @@ public class PeriodicChannelConsumer<T>(
         }
     }
     
-    private async Task LoopTimerTicksAsync(PeriodicTimer timer, List<T> buffer, CancellationToken token)
+    private async Task LoopTimerTicksAsync(List<T> buffer, CancellationToken token)
     {
         try
         {
+            var iteration = 1;
+            using var timer = new PeriodicTimer(interval(iteration));
             while (await timer.WaitForNextTickAsync(token))
             {
                 if (buffer.Count == 0)
@@ -110,6 +111,8 @@ public class PeriodicChannelConsumer<T>(
                 {
                     buffer.Clear();
                 }
+
+                timer.Period = interval(++iteration);
             }
         }
         catch (OperationCanceledException)

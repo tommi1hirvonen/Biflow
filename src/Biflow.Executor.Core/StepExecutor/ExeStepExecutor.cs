@@ -96,14 +96,15 @@ internal class ExeStepExecutor(
         using var outputConsumer = new PeriodicChannelConsumer<string?>(
             logger: _logger,
             reader: outputChannel.Reader,
-            interval: TimeSpan.FromSeconds(10),
+            // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
+            interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
             bufferPublished: (buffer, ct) => UpdateOutputAsync(attempt, outputMessage, buffer, ct));
         var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
 
         using var errorConsumer = new PeriodicChannelConsumer<string?>(
             logger: _logger,
             reader: errorChannel.Reader,
-            interval: TimeSpan.FromSeconds(10),
+            interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
             bufferPublished: (buffer, ct) => UpdateErrorsAsync(attempt, errorMessage, buffer, ct));
         var errorConsumerTask = errorConsumer.StartConsumingAsync(cancellationToken);
 
@@ -331,6 +332,7 @@ internal class ExeStepExecutor(
 
         try
         {
+            // TODO Periodically update the outputs from the status object to the app database, same as for local executions.
             ExeTaskStatusResponse? status;
             do
             {
