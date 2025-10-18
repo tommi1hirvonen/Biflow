@@ -144,7 +144,7 @@ internal class FunctionStepExecutor(
         }
         
         attempt.AddOutput("No status response object was returned from the function. "
-                          + "Polling for status using status codes instead.");
+                          + "Polling for status using location header and status codes instead.");
 
         if (initialResponse.Headers.Location is { AbsoluteUri: { Length: > 0 } url })
         {
@@ -215,19 +215,24 @@ internal class FunctionStepExecutor(
         // Update instance id for the step execution attempt
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.FunctionInstanceId = startResponse.Id;
-            await context.Set<FunctionStepExecutionAttempt>()
-                .Where(x => x.ExecutionId == attempt.ExecutionId &&
-                            x.StepId == attempt.StepId &&
-                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                .ExecuteUpdateAsync(x => x
-                    .SetProperty(p => p.FunctionInstanceId, attempt.FunctionInstanceId), CancellationToken.None);
+            await UpdateFunctionInstanceIdToDbAsync(attempt, CancellationToken.None);
         }
         catch (Exception ex)
         {
             logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
+        }
+        
+        // Update output, which by now contains the start response.
+        try
+        {
+            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating output for step");
+            attempt.AddWarning(ex, "Error updating step output");
         }
 
         StatusResponse status;
@@ -337,6 +342,18 @@ internal class FunctionStepExecutor(
         CancellationToken cancellationToken)
     {
         attempt.AddOutput($"Polling URL:\n{url}");
+        
+        // Update output, which by now contains the location header URL.
+        try
+        {
+            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error updating output for step");
+            attempt.AddWarning(ex, "Error updating step output");
+        }
+        
         using var response = await PollAndGetResponseAsync(client, url, cancellationToken);
         
         attempt.AddOutput($"Final polling response status code: {(int)response.StatusCode} {response.StatusCode}");
@@ -368,6 +385,31 @@ internal class FunctionStepExecutor(
                 return response;
             response.Dispose();
         }
+    }
+
+    private async Task UpdateFunctionInstanceIdToDbAsync(FunctionStepExecutionAttempt attempt,
+        CancellationToken cancellationToken)
+    {
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await context.Set<FunctionStepExecutionAttempt>()
+            .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                        x.StepId == attempt.StepId &&
+                        x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.FunctionInstanceId, attempt.FunctionInstanceId), cancellationToken);
+    }
+    
+    private async Task UpdateOutputToDbAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await dbContext.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                        x.StepId == attempt.StepId &&
+                        x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(
+                // The output InfoMessage should be included in the InfoMessages collection.
+                x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
+                cancellationToken: cancellationToken);
     }
 
     private record StartResponse(
