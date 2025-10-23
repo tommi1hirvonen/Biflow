@@ -78,8 +78,4 @@ internal class DatasetStepExecutor(
             }
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }

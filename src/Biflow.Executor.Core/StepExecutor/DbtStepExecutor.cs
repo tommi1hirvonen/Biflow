@@ -146,8 +146,4 @@ internal class DbtStepExecutor(
             return null;
         }
     }
-
-    public void Dispose()
-    {
-    }
 }

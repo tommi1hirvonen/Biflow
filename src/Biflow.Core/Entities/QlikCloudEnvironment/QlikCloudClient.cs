@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Biflow.Core.Entities;
 
-public class QlikCloudClient : IDisposable
+public class QlikCloudClient
 {
     private readonly HttpClient _httpClient;
 
@@ -166,9 +166,7 @@ public class QlikCloudClient : IDisposable
         } while (url is not null);
         return spaces;
     }
-
-    public void Dispose() => _httpClient.Dispose();
-
+    
     private record GetAppResponse(GetAppResponseAttributes Attributes);
 
     [UsedImplicitly]

@@ -32,8 +32,4 @@ internal class EmailStepExecutor(
 
         return Result.Success;
     }
-
-    public void Dispose()
-    {
-    }
 }

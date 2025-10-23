@@ -295,8 +295,4 @@ internal class PackageStepExecutor(
             attempt.AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
     }
-
-    public void Dispose()
-    {
-    }
 }

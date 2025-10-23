@@ -368,10 +368,6 @@ internal class FunctionStepExecutor(
                 cancellationToken: cancellationToken);
     }
 
-    public void Dispose()
-    {
-    }
-
     private record StartResponse(
         string Id,
         string StatusQueryGetUri,

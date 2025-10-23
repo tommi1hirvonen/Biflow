@@ -184,8 +184,4 @@ internal class SqlStepExecutor(
 
         return Result.Success;
     }
-    
-    public void Dispose()
-    {
-    }
 }

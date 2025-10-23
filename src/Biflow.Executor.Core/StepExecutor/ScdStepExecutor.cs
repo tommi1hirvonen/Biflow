@@ -216,8 +216,4 @@ internal class ScdStepExecutor(
                 attempt.ExecutionId, attempt.StepId);
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }

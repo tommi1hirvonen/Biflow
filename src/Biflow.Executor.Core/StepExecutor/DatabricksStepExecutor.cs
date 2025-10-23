@@ -12,7 +12,7 @@ internal class DatabricksStepExecutor(
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     DatabricksStepExecution step,
-    DatabricksStepExecutionAttempt attempt) : IStepExecutor
+    DatabricksStepExecutionAttempt attempt) : IStepExecutor, IDisposable
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     private readonly DatabricksClient _client =
@@ -245,8 +245,5 @@ internal class DatabricksStepExecutor(
         }
     }
 
-    public void Dispose()
-    {
-        _client.Dispose();
-    }
+    public void Dispose() => _client.Dispose();
 }

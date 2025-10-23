@@ -213,8 +213,4 @@ internal class HttpStepExecutor(
                 x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
                 cancellationToken: cancellationToken);
     }
-    
-    public void Dispose()
-    {
-    }
 }

@@ -166,8 +166,4 @@ internal class FabricStepExecutor(
             attempt.AddWarning(ex, $"Error stopping item job instance {instanceId}");
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }

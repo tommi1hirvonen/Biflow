@@ -213,8 +213,4 @@ internal class QlikStepExecutor(
             attempt.AddWarning(ex, "Error canceling automation run");
         }
     }
-
-    public void Dispose()
-    {
-    }
 }

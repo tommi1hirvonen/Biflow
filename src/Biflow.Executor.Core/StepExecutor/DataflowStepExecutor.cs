@@ -140,8 +140,4 @@ internal class DataflowStepExecutor(
             attempt.AddWarning(ex, $"Error stopping dataflow transaction id {transaction.Id}");
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }

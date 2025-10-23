@@ -108,9 +108,10 @@ internal class StepOrchestrator(
         await UpdateExecutionRunningAsync(executionAttempt);
 
         Result result;
+        IStepExecutor? stepExecutor = null;
         try
         {
-            using var stepExecutor = stepExecutorProvider.GetExecutorFor(stepExecution, executionAttempt);
+            stepExecutor = stepExecutorProvider.GetExecutorFor(stepExecution, executionAttempt);
             result = await stepExecutor.ExecuteAsync(context, cts);
         }
         catch (OperationCanceledException ex) when (cts.IsCancellationRequested)
@@ -122,6 +123,11 @@ internal class StepOrchestrator(
         {
             executionAttempt.AddError(ex, "Unhandled error caught in step orchestrator");
             result = Result.Failure;
+        }
+        finally
+        {
+            // Some executors may have created disposable resources.
+            if (stepExecutor is IDisposable disposable) disposable.Dispose();
         }
 
         return await result.Match(

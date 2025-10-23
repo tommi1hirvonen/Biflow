@@ -3,8 +3,7 @@
 namespace Biflow.Executor.Core.StepExecutor;
 
 [UsedImplicitly]
-internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecutionAttempt attempt)
-    : IStepExecutor
+internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecutionAttempt attempt) : IStepExecutor
 {
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
@@ -81,9 +80,5 @@ internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecuti
         }
 
         return Result.Success;
-    }
-    
-    public void Dispose()
-    {
     }
 }

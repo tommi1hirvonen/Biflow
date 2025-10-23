@@ -163,8 +163,4 @@ internal class JobStepExecutor(
             return Result.Failure;
         }
     }
-
-    public void Dispose()
-    {
-    }
 }

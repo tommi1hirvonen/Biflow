@@ -148,8 +148,4 @@ internal class PipelineStepExecutor(
             attempt.AddWarning(ex, $"Error stopping pipeline run {runId}");
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }

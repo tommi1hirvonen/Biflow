@@ -338,8 +338,4 @@ internal class LocalExeStepExecutor : IStepExecutor
             _logger.LogError(ex, "Error updating error output for step");
         }
     }
-
-    public void Dispose()
-    {
-    }
 }

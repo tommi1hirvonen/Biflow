@@ -154,8 +154,4 @@ internal class AgentJobStepExecutor(
             return Result.Failure;
         }
     }
-    
-    public void Dispose()
-    {
-    }
 }
