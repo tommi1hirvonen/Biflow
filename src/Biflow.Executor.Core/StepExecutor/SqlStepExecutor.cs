@@ -8,19 +8,13 @@ namespace Biflow.Executor.Core.StepExecutor;
 [UsedImplicitly]
 internal class SqlStepExecutor(
     ILogger<SqlStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<SqlStepExecution, SqlStepExecutionAttempt>(logger, dbContextFactory)
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    SqlStepExecution step,
+    SqlStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<SqlStepExecutor> _logger = logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-
-    protected override Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        SqlStepExecution step,
-        SqlStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         var connection = step.GetConnection();
@@ -29,22 +23,18 @@ internal class SqlStepExecutor(
         switch (connection)
         {
             case MsSqlConnection mssql:
-                return ExecuteMsSqlAsync(step, attempt, mssql, cancellationToken);
+                return ExecuteMsSqlAsync(mssql, cancellationToken);
             case SnowflakeConnection sf:
-                return ExecuteSnowflakeAsync(step, attempt, sf, cancellationToken);
+                return ExecuteSnowflakeAsync(sf, cancellationToken);
             default:
-                _logger.LogError("Unsupported connection type: {connectionType}. Connection must be of type {msSqlType} or {snowFlakeType}.",
+                logger.LogError("Unsupported connection type: {connectionType}. Connection must be of type {msSqlType} or {snowFlakeType}.",
                     connection.GetType().Name, nameof(MsSqlConnection), nameof(SnowflakeConnection));
                 attempt.AddError($"Unsupported connection type: {connection.GetType().Name}. Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}.");
                 return Task.FromResult(Result.Failure);
         }
     }
 
-    private async Task<Result> ExecuteMsSqlAsync(
-        SqlStepExecution step,
-        SqlStepExecutionAttempt attempt,
-        MsSqlConnection msSqlConnection,
-        CancellationToken cancellationToken)
+    private async Task<Result> ExecuteMsSqlAsync(MsSqlConnection msSqlConnection, CancellationToken cancellationToken)
     {
 
         if (msSqlConnection.Credential is not null && !OperatingSystem.IsWindows())
@@ -54,7 +44,7 @@ internal class SqlStepExecutor(
 
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
+            logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
             await using var connection = new SqlConnection(msSqlConnection.ConnectionString);
             connection.InfoMessage += (_, eventArgs) => attempt.AddOutput(eventArgs.Message);
 
@@ -76,7 +66,7 @@ internal class SqlStepExecutor(
                     () => connection.ExecuteScalarAsync(command));
 
                 // Update the capture value.
-                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var context = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
@@ -118,7 +108,7 @@ internal class SqlStepExecutor(
                 return Result.Cancel;
             }
 
-            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }
@@ -126,15 +116,12 @@ internal class SqlStepExecutor(
         return Result.Success;
     }
 
-    private async Task<Result> ExecuteSnowflakeAsync(
-        SqlStepExecution step,
-        SqlStepExecutionAttempt attempt,
-        SnowflakeConnection sfConnection,
+    private async Task<Result> ExecuteSnowflakeAsync(SnowflakeConnection sfConnection,
         CancellationToken cancellationToken)
     {
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector", step.ExecutionId, step);
+            logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector", step.ExecutionId, step);
             await using var connection = new SnowflakeDbConnection(sfConnection.ConnectionString);
 
             var parameters = step.StepExecutionParameters
@@ -154,7 +141,7 @@ internal class SqlStepExecutor(
                 var result = await connection.ExecuteScalarAsync(command);
 
                 // Update the capture value.
-                await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var context = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
@@ -190,11 +177,15 @@ internal class SqlStepExecutor(
                 return Result.Cancel;
             }
 
-            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }
 
         return Result.Success;
+    }
+    
+    public void Dispose()
+    {
     }
 }

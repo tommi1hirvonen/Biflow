@@ -10,22 +10,20 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class DatabricksStepExecutor(
     ILogger<DatabricksStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<DatabricksStepExecution, DatabricksStepExecutionAttempt>(logger, dbContextFactory)
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    DatabricksStepExecution step,
+    DatabricksStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<DatabricksStepExecutor> _logger = logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly DatabricksClient _client =
+        step.GetWorkspace()?.CreateClient().Client
+        ?? throw new ArgumentNullException(message: "Step's databricks workspace is null", innerException: null);
 
     private const int MaxRefreshRetries = 3;
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        DatabricksStepExecution step,
-        DatabricksStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         // Get possible parameters.
@@ -38,13 +36,10 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving DbNotebook parameters", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error retrieving DbNotebook parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading DbNotebook parameters");
             return Result.Failure;
         }
-
-        using var client = step.GetWorkspace()?.CreateClient().Client;
-        ArgumentNullException.ThrowIfNull(client);
 
         // Create run submit settings and the notebook task.
 
@@ -53,7 +48,7 @@ internal class DatabricksStepExecutor(
         if (step.DatabricksStepSettings is DbJobStepSettings dbJob)
         {
             var runParams = new RunParameters { JobParams = parameters };
-            startRunTask = client.Jobs.RunNow(dbJob.JobId, runParams, cancellationToken: cancellationToken);
+            startRunTask = _client.Jobs.RunNow(dbJob.JobId, runParams, cancellationToken: cancellationToken);
         }
         else
         {
@@ -112,7 +107,7 @@ internal class DatabricksStepExecutor(
                     break;
             }
 
-            startRunTask = client.Jobs.RunSubmit(settings, cancellationToken: cancellationToken);
+            startRunTask = _client.Jobs.RunSubmit(settings, cancellationToken: cancellationToken);
         }
 
         long runId;
@@ -127,7 +122,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error creating run for workspace {DatabricksWorkspaceId}",
+            logger.LogError(ex, "{ExecutionId} {Step} Error creating run for workspace {DatabricksWorkspaceId}",
                 step.ExecutionId, step, step.DatabricksWorkspaceId);
             attempt.AddError(ex, "Error starting notebook run");
             return Result.Failure;
@@ -141,7 +136,7 @@ internal class DatabricksStepExecutor(
 
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobRunId = runId;
             await dbContext.Set<DatabricksStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -150,7 +145,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating notebook job run id", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating notebook job run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating notebook job run id {runId}");
         }
 
@@ -160,7 +155,7 @@ internal class DatabricksStepExecutor(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (true)
             {
-                run = await GetRunWithRetriesAsync(client, step, runId, linkedCts.Token);
+                run = await GetRunWithRetriesAsync(runId, linkedCts.Token);
                 if (run.Status.State == RunStatusState.TERMINATED)
                 {
                     break;
@@ -170,7 +165,7 @@ internal class DatabricksStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(client, step, attempt, runId);
+            await CancelAsync(runId);
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -196,7 +191,7 @@ internal class DatabricksStepExecutor(
         // try to get the output for the one task in the one-time triggered run submit.
         try
         {
-            var output = await client.Jobs.RunsGetOutput(task.RunId, cancellationToken);
+            var output = await _client.Jobs.RunsGetOutput(task.RunId, cancellationToken);
             if (!string.IsNullOrEmpty(output.Error))
             {
                 attempt.AddError(output.Error);
@@ -212,7 +207,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error getting task run output");
         }
 
@@ -221,11 +216,7 @@ internal class DatabricksStepExecutor(
             : Result.Failure;
     }
 
-    private async Task<Run> GetRunWithRetriesAsync(
-        DatabricksClient client,
-        DatabricksStepExecution step,
-        long runId,
-        CancellationToken cancellationToken)
+    private async Task<Run> GetRunWithRetriesAsync(long runId, CancellationToken cancellationToken)
     {
         var policy = Polly.Policy
             .Handle<Exception>()
@@ -233,28 +224,29 @@ internal class DatabricksStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
+                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
 
         var (run, _) = await policy.ExecuteAsync(cancellation =>
-            client.Jobs.RunsGet(runId, cancellationToken: cancellation), cancellationToken);
+            _client.Jobs.RunsGet(runId, cancellationToken: cancellation), cancellationToken);
         return run;
     }
 
-    private async Task CancelAsync(
-        DatabricksClient client,
-        DatabricksStepExecution step,
-        DatabricksStepExecutionAttempt attempt,
-        long runId)
+    private async Task CancelAsync(long runId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping run id {runId}", step.ExecutionId, step, runId);
+        logger.LogInformation("{ExecutionId} {Step} Stopping run id {runId}", step.ExecutionId, step, runId);
         try
         {
-            await client.Jobs.RunsCancel(runId);
+            await _client.Jobs.RunsCancel(runId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping run {runId}", step.ExecutionId, step, runId);
+            logger.LogError(ex, "{ExecutionId} {Step} Error stopping run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping run {runId}");
         }
+    }
+
+    public void Dispose()
+    {
+        _client.Dispose();
     }
 }

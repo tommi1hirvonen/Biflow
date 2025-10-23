@@ -11,11 +11,14 @@ internal class FunctionStepExecutor(
     ILogger<FunctionStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory)
-    : StepExecutor<FunctionStepExecution, FunctionStepExecutionAttempt>(logger, dbContextFactory)
+    IHttpClientFactory httpClientFactory,
+    FunctionStepExecution step,
+    FunctionStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    // Use an HttpClient with no timeout.
+    // The step timeout setting is used for request timeout via cancellation token. 
+    private readonly HttpClient _client = httpClientFactory.CreateClient("notimeout");
 
     private const int MaxRefreshRetries = 3;
 
@@ -29,13 +32,9 @@ internal class FunctionStepExecutor(
         PropertyNameCaseInsensitive = true
     };
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        FunctionStepExecution step,
-        FunctionStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
         
         using var timeoutCts = step.TimeoutMinutes > 0
@@ -44,10 +43,6 @@ internal class FunctionStepExecutor(
 
         // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-        
-        // Use an HttpClient with no timeout.
-        // The step timeout setting is used for request timeout via cancellation token. 
-        var noTimeoutClient = httpClientFactory.CreateClient("notimeout");
 
         HttpResponseMessage? response = null;
         try
@@ -55,11 +50,11 @@ internal class FunctionStepExecutor(
             string content;
             try
             {
-                using var request = await BuildFunctionInvokeRequestAsync(step, attempt, cancellationToken);
+                using var request = await BuildFunctionInvokeRequestAsync(cancellationToken);
 
                 // Send the request to the function url. This will start the function if the request was successful.
                 // A durable function will return immediately and run asynchronously.
-                response = await noTimeoutClient.SendAsync(request, cancellationToken);
+                response = await _client.SendAsync(request, cancellationToken);
                 attempt.AddOutput($"Response status code: {(int)response.StatusCode} {response.StatusCode}");
                 content = await response.Content.ReadAsStringAsync(CancellationToken.None);
                 if (!string.IsNullOrEmpty(content))
@@ -69,7 +64,7 @@ internal class FunctionStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                if (cancellationTokenSource.IsCancellationRequested)
+                if (cts.IsCancellationRequested)
                 {
                     attempt.AddWarning(ex);
                     return Result.Cancel;
@@ -102,9 +97,6 @@ internal class FunctionStepExecutor(
             try
             {
                 return await PollAsyncPatternAsync(
-                    step: step,
-                    attempt: attempt,
-                    client: noTimeoutClient,
                     initialResponse: response,
                     initialContent: content,
                     isTimeout: () => timeoutCts.IsCancellationRequested,
@@ -122,14 +114,8 @@ internal class FunctionStepExecutor(
         }
     }
 
-    private async Task<Result> PollAsyncPatternAsync(
-        FunctionStepExecution step,
-        FunctionStepExecutionAttempt attempt,
-        HttpClient client,
-        HttpResponseMessage initialResponse,
-        string initialContent,
-        Func<bool> isTimeout,
-        CancellationToken cancellationToken)
+    private async Task<Result> PollAsyncPatternAsync(HttpResponseMessage initialResponse, string initialContent,
+        Func<bool> isTimeout, CancellationToken cancellationToken)
     {
         if (initialResponse.StatusCode != HttpStatusCode.Accepted)
         {
@@ -139,8 +125,7 @@ internal class FunctionStepExecutor(
         var startResponse = JsonSerializer.Deserialize<StartResponse>(initialContent, CaseInsensitiveOptions);
         if (startResponse is not null)
         {
-            return await PollUsingStatusResponseAsync(
-                step, attempt, client, startResponse, isTimeout, cancellationToken);
+            return await PollUsingStatusResponseAsync(startResponse, isTimeout, cancellationToken);
         }
         
         attempt.AddOutput("No status response object was returned from the function. "
@@ -148,7 +133,7 @@ internal class FunctionStepExecutor(
 
         if (initialResponse.Headers.Location is { AbsoluteUri: { Length: > 0 } url })
         {
-            return await PollUsingStatusCodesAsync(attempt, client, url, cancellationToken);
+            return await PollUsingStatusCodesAsync(url, cancellationToken);
         }
         
         attempt.AddWarning("No status response object or location header was returned from the function. "
@@ -156,16 +141,13 @@ internal class FunctionStepExecutor(
         return Result.Success;
     }
 
-    private async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(
-        FunctionStepExecution step,
-        FunctionStepExecutionAttempt attempt,
-        CancellationToken cancellationToken)
+    private async Task<HttpRequestMessage> BuildFunctionInvokeRequestAsync(CancellationToken cancellationToken)
     {
         string? functionKey = null;
         try
         {
             // Try and get the function key from the actual step if it was defined.
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             functionKey = await context.FunctionSteps
                 .AsNoTracking()
                 .Where(s => s.StepId == step.StepId)
@@ -180,7 +162,7 @@ internal class FunctionStepExecutor(
 
         var message = new HttpRequestMessage(HttpMethod.Post, step.FunctionUrl);
 
-        // Add function security code as a request header. If the function specific code was defined, use that.
+        // Add function security code as a request header. If the function-specific code was defined, use that.
         // Otherwise, revert to the function app code if it was defined.
         var functionApp = step.GetApp();
 
@@ -204,19 +186,14 @@ internal class FunctionStepExecutor(
         return message;
     }
 
-    private async Task<Result> PollUsingStatusResponseAsync(
-        FunctionStepExecution step,
-        FunctionStepExecutionAttempt attempt,
-        HttpClient client,
-        StartResponse startResponse,
-        Func<bool> isTimeout,
+    private async Task<Result> PollUsingStatusResponseAsync(StartResponse startResponse, Func<bool> isTimeout,
         CancellationToken cancellationToken)
     {
         // Update instance id for the step execution attempt
         try
         {
             attempt.FunctionInstanceId = startResponse.Id;
-            await UpdateFunctionInstanceIdToDbAsync(attempt, CancellationToken.None);
+            await UpdateFunctionInstanceIdToDbAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -227,7 +204,7 @@ internal class FunctionStepExecutor(
         // Update output, which by now contains the start response.
         try
         {
-            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+            await UpdateOutputToDbAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -240,11 +217,7 @@ internal class FunctionStepExecutor(
         {
             try
             {
-                status = await GetStatusResponseWithRetriesAsync(
-                    step,
-                    client,
-                    startResponse.StatusQueryGetUri,
-                    cancellationToken);
+                status = await GetStatusResponseWithRetriesAsync(startResponse.StatusQueryGetUri, cancellationToken);
                 if (status.RuntimeStatus is "Pending" or "Running" or "ContinuedAsNew")
                 {
                     await Task.Delay(_pollingIntervalMs, cancellationToken);
@@ -257,7 +230,7 @@ internal class FunctionStepExecutor(
             catch (OperationCanceledException ex)
             {
                 var reason = isTimeout() ? "StepTimedOut" : "StepWasCanceled";
-                await CancelAsync(step, attempt, client, startResponse.TerminatePostUri, reason);
+                await CancelAsync(startResponse.TerminatePostUri, reason);
                 if (isTimeout())
                 {
                     attempt.AddError(ex, "Step execution timed out");
@@ -291,10 +264,7 @@ internal class FunctionStepExecutor(
         }
     }
 
-    private async Task<StatusResponse> GetStatusResponseWithRetriesAsync(
-        FunctionStepExecution step,
-        HttpClient client,
-        string statusUrl,
+    private async Task<StatusResponse> GetStatusResponseWithRetriesAsync(string statusUrl,
         CancellationToken cancellationToken)
     {
         var policy = Policy
@@ -307,7 +277,7 @@ internal class FunctionStepExecutor(
 
         return await policy.ExecuteAsync(async cancellation =>
         {
-            var response = await client.GetAsync(statusUrl, cancellation);
+            var response = await _client.GetAsync(statusUrl, cancellation);
             var content = await response.Content.ReadAsStringAsync(cancellation);
             var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CaseInsensitiveOptions)
                 ?? throw new InvalidOperationException("Status response was null");
@@ -315,17 +285,12 @@ internal class FunctionStepExecutor(
         }, cancellationToken);
     }
     
-    private async Task CancelAsync(
-        FunctionStepExecution step, 
-        FunctionStepExecutionAttempt attempt,
-        HttpClient client,
-        string terminateUrl,
-        string reason)
+    private async Task CancelAsync(string terminateUrl, string reason)
     {
         try
         {
             var url = terminateUrl.Replace("{text}", reason);
-            var response = await client.PostAsync(url, null!);
+            var response = await _client.PostAsync(url, null!);
             response.EnsureSuccessStatusCode();
         }
         catch (Exception ex)
@@ -335,18 +300,14 @@ internal class FunctionStepExecutor(
         }
     }
     
-    private async Task<Result> PollUsingStatusCodesAsync(
-        FunctionStepExecutionAttempt attempt,
-        HttpClient client,
-        string url,
-        CancellationToken cancellationToken)
+    private async Task<Result> PollUsingStatusCodesAsync(string url, CancellationToken cancellationToken)
     {
         attempt.AddOutput($"Polling URL:\n{url}");
         
         // Update output, which by now contains the location header URL.
         try
         {
-            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+            await UpdateOutputToDbAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -354,7 +315,7 @@ internal class FunctionStepExecutor(
             attempt.AddWarning(ex, "Error updating step output");
         }
         
-        using var response = await PollAndGetResponseAsync(client, url, cancellationToken);
+        using var response = await PollAndGetResponseAsync(url, cancellationToken);
         
         attempt.AddOutput($"Final polling response status code: {(int)response.StatusCode} {response.StatusCode}");
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -372,25 +333,21 @@ internal class FunctionStepExecutor(
         return Result.Failure;
     }
     
-    private async Task<HttpResponseMessage> PollAndGetResponseAsync(
-        HttpClient client,
-        string url,
-        CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> PollAndGetResponseAsync(string url, CancellationToken cancellationToken)
     {
         while (true)
         {
             await Task.Delay(_pollingIntervalMs, cancellationToken);
-            var response = await client.GetAsync(url, cancellationToken);
+            var response = await _client.GetAsync(url, cancellationToken);
             if (response.StatusCode != HttpStatusCode.Accepted)
                 return response;
             response.Dispose();
         }
     }
 
-    private async Task UpdateFunctionInstanceIdToDbAsync(FunctionStepExecutionAttempt attempt,
-        CancellationToken cancellationToken)
+    private async Task UpdateFunctionInstanceIdToDbAsync(CancellationToken cancellationToken)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Set<FunctionStepExecutionAttempt>()
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&
@@ -399,9 +356,9 @@ internal class FunctionStepExecutor(
                 .SetProperty(p => p.FunctionInstanceId, attempt.FunctionInstanceId), cancellationToken);
     }
     
-    private async Task UpdateOutputToDbAsync(FunctionStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task UpdateOutputToDbAsync(CancellationToken cancellationToken)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.StepExecutionAttempts
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&
@@ -409,6 +366,10 @@ internal class FunctionStepExecutor(
             .ExecuteUpdateAsync(
                 x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
                 cancellationToken: cancellationToken);
+    }
+
+    public void Dispose()
+    {
     }
 
     private record StartResponse(

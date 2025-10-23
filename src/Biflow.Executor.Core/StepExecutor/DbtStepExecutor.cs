@@ -10,13 +10,14 @@ internal class DbtStepExecutor(
     ILogger<DbtStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory)
-    : StepExecutor<DbtStepExecution, DbtStepExecutionAttempt>(logger, dbContextFactory)
+    IHttpClientFactory httpClientFactory,
+    DbtStepExecution step,
+    DbtStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<DbtStepExecutor> _logger = logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly DbtClient _client =
+        step.GetAccount()?.CreateClient(httpClientFactory)
+        ?? throw new ArgumentNullException(message: "DbtAccount was null", innerException: null);
 
     private const int MaxRefreshRetries = 3;
 
@@ -26,22 +27,15 @@ internal class DbtStepExecutor(
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
     };
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        DbtStepExecution step,
-        DbtStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var client = step.GetAccount()?.CreateClient(_httpClientFactory);
-        ArgumentNullException.ThrowIfNull(client);
-
         DbtJobRun run;
         try
         {
-            run = await client.TriggerJobRunAsync(step.DbtJob.Id, cancellationToken);
+            run = await _client.TriggerJobRunAsync(step.DbtJob.Id, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -49,7 +43,7 @@ internal class DbtStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting dbt job run");
+            logger.LogError(ex, "Error starting dbt job run");
             attempt.AddError(ex, "Error starting dbt job run");
             return Result.Failure;
         }
@@ -63,7 +57,7 @@ internal class DbtStepExecutor(
         // Update run id for the step execution attempt.
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.DbtJobRunId = run.Id;
             await dbContext.Set<DbtStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -72,7 +66,7 @@ internal class DbtStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating dbt job run id", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating dbt job run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating dbt job run id {run.Id}");
         }
 
@@ -81,7 +75,7 @@ internal class DbtStepExecutor(
             using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             while (true)
             {
-                run = await GetRunWithRetriesAsync(client, step, run.Id, linkedCts.Token);
+                run = await GetRunWithRetriesAsync(run.Id, linkedCts.Token);
                 if (run.Status is DbtJobRunStatus.Success or DbtJobRunStatus.Error or DbtJobRunStatus.Cancelled)
                 {
                     break;
@@ -91,7 +85,7 @@ internal class DbtStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            var cancelRun = await CancelAsync(client, step, attempt, run.Id);
+            var cancelRun = await CancelAsync(run.Id);
             var cancelJson = JsonSerializer.Serialize(cancelRun ?? run, JsonOptions);
             attempt.AddOutput(cancelJson);
             if (timeoutCts.IsCancellationRequested)
@@ -123,11 +117,7 @@ internal class DbtStepExecutor(
             : Result.Failure;
     }
 
-    private async Task<DbtJobRun> GetRunWithRetriesAsync(
-        DbtClient client,
-        DbtStepExecution step,
-        long runId,
-        CancellationToken cancellationToken)
+    private async Task<DbtJobRun> GetRunWithRetriesAsync(long runId, CancellationToken cancellationToken)
     {
         var policy = Policy
             .Handle<Exception>()
@@ -135,29 +125,29 @@ internal class DbtStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
+                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
 
         var run = await policy.ExecuteAsync(cancellation =>
-            client.GetJobRunAsync(runId, cancellationToken: cancellation), cancellationToken);
+            _client.GetJobRunAsync(runId, cancellationToken: cancellation), cancellationToken);
         return run;
     }
 
-    private async Task<DbtJobRun?> CancelAsync(
-        DbtClient client,
-        DbtStepExecution step,
-        DbtStepExecutionAttempt attempt,
-        long runId)
+    private async Task<DbtJobRun?> CancelAsync(long runId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping dbt run id {runId}", step.ExecutionId, step, runId);
+        logger.LogInformation("{ExecutionId} {Step} Stopping dbt run id {runId}", step.ExecutionId, step, runId);
         try
         {
-            return await client.CancelJobRunAsync(runId);
+            return await _client.CancelJobRunAsync(runId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping dbt run {runId}", step.ExecutionId, step, runId);
+            logger.LogError(ex, "{ExecutionId} {Step} Error stopping dbt run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping dbt run {runId}");
             return null;
         }
+    }
+
+    public void Dispose()
+    {
     }
 }

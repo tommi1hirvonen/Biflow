@@ -11,28 +11,22 @@ internal class FabricStepExecutor(
     ILogger<FabricStepExecutor> logger,
     IOptionsMonitor<ExecutionOptions> options,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ITokenService tokenService)
-    : StepExecutor<FabricStepExecution, FabricStepExecutionAttempt>(logger, dbContextFactory)
+    ITokenService tokenService,
+    FabricStepExecution step,
+    FabricStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<FabricStepExecutor> _logger = logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly ITokenService _tokenService = tokenService;
+    private readonly FabricWorkspaceClient _client =
+        step.GetAzureCredential()?.CreateFabricWorkspaceClient(tokenService)
+        ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     
     private const int MaxRefreshRetries = 3;
     
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        FabricStepExecution step,
-        FabricStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
-
-        var client = step.GetAzureCredential()?.CreateFabricWorkspaceClient(_tokenService);
-        ArgumentNullException.ThrowIfNull(client);
         
         // Get possible parameters.
         IDictionary<string, object> parameters;
@@ -44,7 +38,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving Fabric item parameters", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error retrieving Fabric item parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading Fabric item parameters");
             return Result.Failure;
         }
@@ -52,12 +46,12 @@ internal class FabricStepExecutor(
         Guid instanceId;
         try
         {
-            instanceId = await client.StartOnDemandItemJobAsync(
+            instanceId = await _client.StartOnDemandItemJobAsync(
                 step.WorkspaceId, step.ItemId, step.ItemType, parameters, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 "{ExecutionId} {Step} Error creating item job instance for workspace id {WorkspaceId} and item {ItemId}",
                 step.ExecutionId,
@@ -76,7 +70,7 @@ internal class FabricStepExecutor(
         
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobInstanceId = instanceId;
             await dbContext.Set<FabricStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -87,7 +81,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating item job instance id", step.ExecutionId, step);
+            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating item job instance id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating item job instance id {instanceId}");
         }
         
@@ -99,7 +93,7 @@ internal class FabricStepExecutor(
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 
-                instance = await GetItemJobInstanceWithRetriesAsync(client, step, instanceId, linkedCts.Token);
+                instance = await GetItemJobInstanceWithRetriesAsync(instanceId, linkedCts.Token);
                 
                 if (instance.Status is null ||
                     instance.Status == Status.NotStarted ||
@@ -113,7 +107,7 @@ internal class FabricStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(client, step, attempt, instanceId);
+            await CancelAsync(instanceId);
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -140,10 +134,7 @@ internal class FabricStepExecutor(
         return Result.Failure;
     }
     
-    private async Task<ItemJobInstance> GetItemJobInstanceWithRetriesAsync(
-        FabricWorkspaceClient client,
-        FabricStepExecution step,
-        Guid instanceId,
+    private async Task<ItemJobInstance> GetItemJobInstanceWithRetriesAsync(Guid instanceId,
         CancellationToken cancellationToken)
     {
         var policy = Policy
@@ -152,31 +143,31 @@ internal class FabricStepExecutor(
                 retryCount: MaxRefreshRetries,
                 sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
                 onRetry: (ex, _) =>
-                    _logger.LogWarning(
+                    logger.LogWarning(
                         ex, "{ExecutionId} {Step} Error getting item job instance for instance id {instanceId}",
                         step.ExecutionId, step, instanceId));
 
         return await policy.ExecuteAsync(cancellation =>
-            client.GetItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId, cancellation), cancellationToken);
+            _client.GetItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId, cancellation), cancellationToken);
     }
     
-    private async Task CancelAsync(
-        FabricWorkspaceClient client,
-        FabricStepExecution step,
-        FabricStepExecutionAttempt attempt,
-        Guid instanceId)
+    private async Task CancelAsync(Guid instanceId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping item job instance id {instanceId}",
+        logger.LogInformation("{ExecutionId} {Step} Stopping item job instance id {instanceId}",
             step.ExecutionId, step, instanceId);
         try
         {
-            await client.CancelItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId);
+            await _client.CancelItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping item job instance {instanceId}",
+            logger.LogError(ex, "{ExecutionId} {Step} Error stopping item job instance {instanceId}",
                 step.ExecutionId, step, instanceId);
             attempt.AddWarning(ex, $"Error stopping item job instance {instanceId}");
         }
+    }
+    
+    public void Dispose()
+    {
     }
 }

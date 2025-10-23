@@ -9,10 +9,9 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 [UsedImplicitly]
 internal class AgentJobStepExecutor(
-    ILogger<AgentJobStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IOptionsMonitor<ExecutionOptions> options)
-    : StepExecutor<AgentJobStepExecution, AgentJobStepExecutionAttempt>(logger, dbContextFactory)
+    IOptionsMonitor<ExecutionOptions> options,
+    AgentJobStepExecution step,
+    AgentJobStepExecutionAttempt attempt) : IStepExecutor
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
     
@@ -22,10 +21,8 @@ internal class AgentJobStepExecutor(
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    protected override async Task<Result> ExecuteAsync(
+    public async Task<Result> ExecuteAsync(
         OrchestrationContext context,
-        AgentJobStepExecution step,
-        AgentJobStepExecutionAttempt attempt,
         ExtendedCancellationTokenSource cancellationTokenSource)
     {
         var cancellationToken = cancellationTokenSource.Token;
@@ -36,7 +33,8 @@ internal class AgentJobStepExecutor(
 
         if (connection.Credential is not null && !OperatingSystem.IsWindows())
         {
-            attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
+            attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. "
+                               + "Impersonation will be skipped.");
         }
 
         var connectionString = connection.ConnectionString;
@@ -156,5 +154,8 @@ internal class AgentJobStepExecutor(
             return Result.Failure;
         }
     }
-
+    
+    public void Dispose()
+    {
+    }
 }

@@ -8,35 +8,28 @@ namespace Biflow.Executor.Core.StepExecutor;
 [UsedImplicitly]
 internal class DataflowStepExecutor(
     ILogger<DataflowStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
     ITokenService tokenService,
-    IHttpClientFactory httpClientFactory)
-    : StepExecutor<DataflowStepExecution, DataflowStepExecutionAttempt>(logger, dbContextFactory)
+    IHttpClientFactory httpClientFactory,
+    DataflowStepExecution step,
+    DataflowStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<DataflowStepExecutor> _logger = logger;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly ITokenService _tokenService = tokenService;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+    private readonly DataflowClient _client =
+        step.GetAzureCredential()?.CreateDataflowClient(tokenService, httpClientFactory)
+        ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     
     private const int MaxRefreshRetries = 3;
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        DataflowStepExecution step,
-        DataflowStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
-
-        var client = step.GetAzureCredential()?.CreateDataflowClient(_tokenService, _httpClientFactory);
-        ArgumentNullException.ThrowIfNull(client);
 
         // Start dataflow refresh.
         try
         {
-            await client.RefreshDataflowAsync(step.WorkspaceId, step.DataflowId, cancellationToken);
+            await _client.RefreshDataflowAsync(step.WorkspaceId, step.DataflowId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -44,7 +37,7 @@ internal class DataflowStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting dataflow refresh");
+            logger.LogError(ex, "Error starting dataflow refresh");
             attempt.AddError(ex, "Error starting dataflow refresh operation");
             return Result.Failure;
         }
@@ -65,8 +58,7 @@ internal class DataflowStepExecutor(
             
             while (true)
             {
-                (var status, transaction) = await GetDataflowTransactionStatusWithRetriesAsync(
-                    client, step, linkedCts.Token);
+                (var status, transaction) = await GetDataflowTransactionStatusWithRetriesAsync(linkedCts.Token);
                 switch (status)
                 {
                     case DataflowRefreshStatus.Success:
@@ -87,7 +79,7 @@ internal class DataflowStepExecutor(
             if (transaction is not null)
             {
                 attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
-                await CancelAsync(client, step, attempt, transaction);
+                await CancelAsync(transaction);
             }
             if (timeoutCts.IsCancellationRequested)
             {
@@ -117,10 +109,7 @@ internal class DataflowStepExecutor(
     }
 
     private async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)>
-        GetDataflowTransactionStatusWithRetriesAsync(
-        DataflowClient client,
-        DataflowStepExecution step,
-        CancellationToken cancellationToken)
+        GetDataflowTransactionStatusWithRetriesAsync(CancellationToken cancellationToken)
     {
         var policy = Policy
             .Handle<Exception>()
@@ -128,31 +117,31 @@ internal class DataflowStepExecutor(
                 retryCount: MaxRefreshRetries,
                 sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
                 onRetry: (ex, _) =>
-                    _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dataflow transaction status",
+                    logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dataflow transaction status",
                         step.ExecutionId, step));
 
         return await policy.ExecuteAsync(cancellation =>
-            client.GetDataflowTransactionStatusAsync(step.WorkspaceId, step.DataflowId, cancellation),
+            _client.GetDataflowTransactionStatusAsync(step.WorkspaceId, step.DataflowId, cancellation),
             cancellationToken);
     }
     
-    private async Task CancelAsync(
-        DataflowClient client,
-        DataflowStepExecution step,
-        DataflowStepExecutionAttempt attempt,
-        DataflowTransaction transaction)
+    private async Task CancelAsync(DataflowTransaction transaction)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping dataflow transaction id {transactionId}",
+        logger.LogInformation("{ExecutionId} {Step} Stopping dataflow transaction id {transactionId}",
             step.ExecutionId, step, transaction.Id);
         try
         {
-            await client.CancelDataflowRefreshAsync(step.WorkspaceId, transaction);
+            await _client.CancelDataflowRefreshAsync(step.WorkspaceId, transaction);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping dataflow transaction id {transactionId}",
+            logger.LogError(ex, "{ExecutionId} {Step} Error stopping dataflow transaction id {transactionId}",
                 step.ExecutionId, step, transaction.Id);
             attempt.AddWarning(ex, $"Error stopping dataflow transaction id {transaction.Id}");
         }
+    }
+    
+    public void Dispose()
+    {
     }
 }

@@ -1,17 +1,15 @@
-﻿using Biflow.Executor.Core.StepExecutor;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.Orchestrator;
 
 internal class GlobalOrchestrator(
     ILogger<GlobalOrchestrator> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IStepExecutorProvider stepExecutorProvider) : IGlobalOrchestrator
+    IStepOrchestrator stepOrchestrator) : IGlobalOrchestrator
 {
     private readonly Lock _lock = new();
     private readonly ILogger<GlobalOrchestrator> _logger = logger;
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-    private readonly IStepExecutorProvider _stepExecutorProvider = stepExecutorProvider;
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
     private readonly Dictionary<Guid, List<Guid>> _childExecutions = [];
@@ -219,9 +217,7 @@ internal class GlobalOrchestrator(
         try
         {
             await listener.OnPreExecuteAsync(stepExecution, cts);
-            var stepExecutor = _stepExecutorProvider
-                .GetExecutorFor(stepExecution, stepExecution.StepExecutionAttempts.First());
-            result = await stepExecutor.RunAsync(context, stepExecution, cts);
+            result = await stepOrchestrator.RunAsync(context, stepExecution, cts);
         }
         catch (OperationCanceledException)
         {

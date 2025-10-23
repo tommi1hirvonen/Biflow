@@ -6,17 +6,13 @@ namespace Biflow.Executor.Core.StepExecutor;
 [UsedImplicitly]
 internal class EmailStepExecutor(
     ILogger<EmailStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IMessageDispatcher? messageDispatcher = null)
-    : StepExecutor<EmailStepExecution, EmailStepExecutionAttempt>(logger, dbContextFactory)
+    EmailStepExecution step,
+    EmailStepExecutionAttempt attempt,
+    IMessageDispatcher? messageDispatcher = null) : IStepExecutor
 {
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        EmailStepExecution step,
-        EmailStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         if (messageDispatcher is null)
@@ -35,5 +31,9 @@ internal class EmailStepExecutor(
         await messageDispatcher.SendMessageAsync(recipients, subject, body, false, cancellationToken);
 
         return Result.Success;
+    }
+
+    public void Dispose()
+    {
     }
 }

@@ -10,11 +10,14 @@ internal class HttpStepExecutor(
     ILogger<HttpStepExecutor> logger,
     IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory)
-    : StepExecutor<HttpStepExecution, HttpStepExecutionAttempt>(logger, dbContextFactory)
+    IHttpClientFactory httpClientFactory,
+    HttpStepExecution step,
+    HttpStepExecutionAttempt attempt) : IStepExecutor
 {
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    // Use an HttpClient with no timeout.
+    // The step timeout setting is used for request timeout via cancellation token. 
+    private readonly HttpClient _client = httpClientFactory.CreateClient("notimeout");
 
     private static readonly string[] ContentHeaders =
     [
@@ -29,13 +32,9 @@ internal class HttpStepExecutor(
         "Last-Modified"
     ];
     
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        HttpStepExecution step,
-        HttpStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
         
         using var timeoutCts = step.TimeoutMinutes > 0
@@ -45,17 +44,13 @@ internal class HttpStepExecutor(
         // The linked timeout token will cancel if the timeout expires or the step was canceled manually.
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
         
-        // Use an HttpClient with no timeout.
-        // The step timeout setting is used for request timeout via cancellation token. 
-        var noTimeoutClient = httpClientFactory.CreateClient("notimeout");
-        
         HttpResponseMessage? response = null;
         try
         {
             try
             {
-                using var request = BuildRequest(step, attempt);
-                response = await noTimeoutClient.SendAsync(request, linkedCts.Token);
+                using var request = BuildRequest();
+                response = await _client.SendAsync(request, linkedCts.Token);
                 attempt.AddOutput($"Response status code: {(int)response.StatusCode} {response.StatusCode}");
                 var content = await response.Content.ReadAsStringAsync(CancellationToken.None);
                 if (!string.IsNullOrEmpty(content))
@@ -95,7 +90,7 @@ internal class HttpStepExecutor(
 
             try
             {
-                return await PollAsyncPatternAsync(attempt, noTimeoutClient, response, linkedCts.Token);
+                return await PollAsyncPatternAsync(response, linkedCts.Token);
             }
             catch (Exception ex)
             {
@@ -109,9 +104,7 @@ internal class HttpStepExecutor(
         }
     }
 
-    private static HttpRequestMessage BuildRequest(
-        HttpStepExecution step,
-        HttpStepExecutionAttempt attempt)
+    private HttpRequestMessage BuildRequest()
     {
         var method = step.Method switch
         {
@@ -157,10 +150,7 @@ internal class HttpStepExecutor(
         return message;
     }
 
-    private async Task<Result> PollAsyncPatternAsync(
-        HttpStepExecutionAttempt attempt,
-        HttpClient client,
-        HttpResponseMessage initialResponse,
+    private async Task<Result> PollAsyncPatternAsync(HttpResponseMessage initialResponse,
         CancellationToken cancellationToken)
     {
         if (initialResponse.StatusCode != HttpStatusCode.Accepted ||
@@ -174,7 +164,7 @@ internal class HttpStepExecutor(
         // Update output, which by now contains response headers, content and location header URL.
         try
         {
-            await UpdateOutputToDbAsync(attempt, CancellationToken.None);
+            await UpdateOutputToDbAsync(CancellationToken.None);
         }
         catch (Exception ex)
         {
@@ -182,7 +172,7 @@ internal class HttpStepExecutor(
             attempt.AddWarning(ex, "Error updating step output");
         }
         
-        using var response = await PollAndGetResponseAsync(client, url, cancellationToken);
+        using var response = await PollAndGetResponseAsync(url, cancellationToken);
         
         attempt.AddOutput($"Final polling response status code: {(int)response.StatusCode} {response.StatusCode}");
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
@@ -200,24 +190,21 @@ internal class HttpStepExecutor(
         return Result.Failure;
     }
     
-    private async Task<HttpResponseMessage> PollAndGetResponseAsync(
-        HttpClient client,
-        string url,
-        CancellationToken cancellationToken)
+    private async Task<HttpResponseMessage> PollAndGetResponseAsync(string url, CancellationToken cancellationToken)
     {
         while (true)
         {
             await Task.Delay(_pollingIntervalMs, cancellationToken);
-            var response = await client.GetAsync(url, cancellationToken);
+            var response = await _client.GetAsync(url, cancellationToken);
             if (response.StatusCode != HttpStatusCode.Accepted)
                 return response;
             response.Dispose();
         }
     }
     
-    private async Task UpdateOutputToDbAsync(HttpStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task UpdateOutputToDbAsync(CancellationToken cancellationToken)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.StepExecutionAttempts
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&
@@ -225,5 +212,9 @@ internal class HttpStepExecutor(
             .ExecuteUpdateAsync(
                 x => x.SetProperty(p => p.InfoMessages, attempt.InfoMessages),
                 cancellationToken: cancellationToken);
+    }
+    
+    public void Dispose()
+    {
     }
 }

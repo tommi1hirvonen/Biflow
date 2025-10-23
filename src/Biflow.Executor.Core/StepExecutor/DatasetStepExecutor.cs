@@ -6,31 +6,25 @@ namespace Biflow.Executor.Core.StepExecutor;
 [UsedImplicitly]
 internal class DatasetStepExecutor(
     ILogger<DatasetStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
     IOptionsMonitor<ExecutionOptions> options,
-    ITokenService tokenService)
-    : StepExecutor<DatasetStepExecution, DatasetStepExecutionAttempt>(logger, dbContextFactory)
+    ITokenService tokenService,
+    DatasetStepExecution step,
+    DatasetStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<DatasetStepExecutor> _logger = logger;
     private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly ITokenService _tokenService = tokenService;
+    private readonly DatasetClient _client = 
+        step.GetAzureCredential()?.CreateDatasetClient(tokenService)
+        ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        DatasetStepExecution step,
-        DatasetStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
-
-        var client = step.GetAzureCredential()?.CreateDatasetClient(_tokenService);
-        ArgumentNullException.ThrowIfNull(client);
 
         // Start dataset refresh.
         try
         {
-            await client.RefreshDatasetAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
+            await _client.RefreshDatasetAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -38,7 +32,7 @@ internal class DatasetStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error starting dataset refresh");
+            logger.LogError(ex, "Error starting dataset refresh");
             attempt.AddError(ex, "Error starting dataset refresh operation");
             return Result.Failure;
         }
@@ -50,7 +44,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId,
+                var (status, refresh) = await _client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId,
                     cancellationToken);
                 switch (status)
                 {
@@ -83,5 +77,9 @@ internal class DatasetStepExecutor(
                 return Result.Failure;
             }
         }
+    }
+    
+    public void Dispose()
+    {
     }
 }

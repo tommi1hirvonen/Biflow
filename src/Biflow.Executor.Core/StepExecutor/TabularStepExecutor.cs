@@ -1,21 +1,14 @@
 ﻿using Microsoft.AnalysisServices.Tabular;
-using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
 [UsedImplicitly]
-internal class TabularStepExecutor(
-    ILogger<TabularStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<TabularStepExecution, TabularStepExecutionAttempt>(logger, dbContextFactory)
+internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecutionAttempt attempt)
+    : IStepExecutor
 {
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        TabularStepExecution step,
-        TabularStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         var connection = step.GetConnection();
@@ -73,7 +66,7 @@ internal class TabularStepExecutor(
             // Cancel the SaveChanges operation.
             await connection.RunImpersonatedOrAsCurrentUserAsync(
                 () => Task.Run(server.CancelCommand, CancellationToken.None));
-            if (cancellationTokenSource.IsCancellationRequested)
+            if (cts.IsCancellationRequested)
             {
                 attempt.AddWarning(ex);
                 return Result.Cancel;
@@ -88,5 +81,9 @@ internal class TabularStepExecutor(
         }
 
         return Result.Success;
+    }
+    
+    public void Dispose()
+    {
     }
 }

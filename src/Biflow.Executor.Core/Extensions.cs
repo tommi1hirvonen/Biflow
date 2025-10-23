@@ -63,26 +63,15 @@ public static class Extensions
         }
 
         services.AddSingleton<INotificationService, NotificationService>();
+        services.AddSingleton<IStepOrchestrator, StepOrchestrator>();
         services.AddSingleton<IStepExecutorProvider, StepExecutorProvider>();
         services.AddSingleton<IGlobalOrchestrator, GlobalOrchestrator>();
         services.AddSingleton<IJobOrchestratorFactory, JobOrchestratorFactory>();
         services.AddSingleton<IJobExecutorFactory, JobExecutorFactory>();
         services.AddSingleton<IExecutionManager, ExecutionManager>();
         services.AddHostedService(s => s.GetRequiredService<IExecutionManager>());
-        // Timeout for hosted services (e.g. ExecutionManager) to shut down gracefully when StopAsync() is called.
+        // Timeout for hosted services (e.g., ExecutionManager) to shut down gracefully when StopAsync() is called.
         services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(20));
-
-        // Scan assembly and add step executors as their implemented type and as singletons.
-        var stepExecutorType = typeof(IStepExecutor<,>);
-        var types = stepExecutorType.Assembly.GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && t.IsAssignableTo(typeof(IStepExecutor)));
-        foreach (var type in types)
-        {
-            var @interface = type.GetInterfaces()
-                .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == stepExecutorType);
-            if (@interface is null) continue;
-            services.AddSingleton(@interface, type);
-        }
         
         services.AddHealthChecks()
             .AddCheck<JobExecutorHealthCheck>("job_executor", tags: ["executor"])

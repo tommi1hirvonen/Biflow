@@ -12,34 +12,26 @@ namespace Biflow.Executor.Core.StepExecutor;
 internal class ExeStepExecutor(
     IHttpClientFactory httpClientFactory,
     ILogger<ExeStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<ExeStepExecution, ExeStepExecutionAttempt>(logger, dbContextFactory)
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    ExeStepExecution step,
+    ExeStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<ExeStepExecutor> _logger = logger;
-    private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
-
     private const int MaxOutputLength = 500_000;
 
-    protected override Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        ExeStepExecution step,
-        ExeStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
         if (step.GetProxy() is { } proxy)
         {
-            return ExecuteRemoteAsync(step, attempt, proxy, cancellationToken);
+            return ExecuteRemoteAsync(proxy, cancellationToken);
         }
 
-        return ExecuteLocalAsync(step, attempt, cancellationToken);
+        return ExecuteLocalAsync(cancellationToken);
     }
 
-    private async Task<Result> ExecuteLocalAsync(ExeStepExecution step, ExeStepExecutionAttempt attempt,
-        CancellationToken cancellationToken)
+    private async Task<Result> ExecuteLocalAsync(CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo
         {
@@ -117,7 +109,7 @@ internal class ExeStepExecutor(
         // This way we can push updates to the database even if the process has not yet finished.
         // This can be useful in scenarios where the process is long-running and the user wants to see the progress.
         using var outputConsumer = new PeriodicChannelConsumer<StringBuilder>(
-            logger: _logger,
+            logger: logger,
             reader: outputChannel.Reader,
             // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
@@ -125,19 +117,19 @@ internal class ExeStepExecutor(
             {
                 if (buffer is not [var builder, ..] || !UpdateOutput(outputMessage, builder, outputLock))
                     return;
-                await UpdateOutputToDbAsync(attempt, ct);
+                await UpdateOutputToDbAsync(ct);
             });
         var outputConsumerTask = outputConsumer.StartConsumingAsync(cancellationToken);
 
         using var errorConsumer = new PeriodicChannelConsumer<StringBuilder>(
-            logger: _logger,
+            logger: logger,
             reader: errorChannel.Reader,
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
             bufferPublished: async (buffer, ct) =>
             {
                 if (buffer is not [var builder, ..] || !UpdateErrors(errorMessage, builder, errorLock))
                     return;
-                await UpdateErrorsToDbAsync(attempt, ct);
+                await UpdateErrorsToDbAsync(ct);
             });
         var errorConsumerTask = errorConsumer.StartConsumingAsync(cancellationToken);
 
@@ -151,7 +143,7 @@ internal class ExeStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}",
+                logger.LogError(ex, "{ExecutionId} {Step} Error starting process for file name {FileName}",
                     step.ExecutionId, step, step.ExeFileName);
                 attempt.AddError(ex, "Error starting process");
                 return Result.Failure;
@@ -159,7 +151,7 @@ internal class ExeStepExecutor(
 
             try
             {
-                await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 attempt.ExeProcessId = process.Id; // Might throw an exception
                 await dbContext.Set<ExeStepExecutionAttempt>()
                     .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -170,7 +162,7 @@ internal class ExeStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", step.ExecutionId, step);
+                logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", step.ExecutionId, step);
                 attempt.AddWarning(ex, "Error logging child process id");
             }
 
@@ -205,7 +197,7 @@ internal class ExeStepExecutor(
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", step.ExecutionId,
+                    logger.LogError(ex, "{ExecutionId} {Step} Error killing process after timeout", step.ExecutionId,
                         step);
                     attempt.AddWarning(ex, "Error killing process after timeout");
                 }
@@ -221,7 +213,7 @@ internal class ExeStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step,
+                logger.LogError(ex, "{ExecutionId} {Step} Error while executing {FileName}", step.ExecutionId, step,
                     step.ExeFileName);
                 attempt.AddError(ex, "Error while executing exe");
                 return Result.Failure;
@@ -238,17 +230,16 @@ internal class ExeStepExecutor(
                 _ = UpdateOutput(outputMessage, outputBuilder, outputLock);
                 _ = UpdateErrors(errorMessage, errorBuilder, errorLock);
             }
-            catch (Exception ex) { _logger.LogError(ex, "Error updating final output and error messages"); }
+            catch (Exception ex) { logger.LogError(ex, "Error updating final output and error messages"); }
             await outputConsumerTask;
             await errorConsumerTask;
         }
     }
 
-    private async Task<Result> ExecuteRemoteAsync(ExeStepExecution step, ExeStepExecutionAttempt attempt,
-        Proxy proxy, CancellationToken cancellationToken)
+    private async Task<Result> ExecuteRemoteAsync(Proxy proxy, CancellationToken cancellationToken)
     {
         var client = CreateProxyHttpClient(proxy);
-        var request = CreateExeProxyRunRequest(step);
+        var request = CreateExeProxyRunRequest();
 
         using var response = await client.PostAsJsonAsync("/exe", request, cancellationToken);
         await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -258,7 +249,7 @@ internal class ExeStepExecutor(
 
         if (taskStartedResponse is null)
         {
-            _logger.LogError("{ExecutionId} {Step} Error starting remote execution, no task id was returned",
+            logger.LogError("{ExecutionId} {Step} Error starting remote execution, no task id was returned",
                 step.ExecutionId, step);
             attempt.AddError("No task id was returned from the proxy when starting remote execution.");
             return Result.Failure;
@@ -280,7 +271,7 @@ internal class ExeStepExecutor(
         var errorChannel = Channel.CreateUnbounded<(string Text, string? StackTrace, bool IsTruncated)>();
         
         using var outputConsumer = new PeriodicChannelConsumer<(string Text, bool IsTruncated)>(
-            logger: _logger,
+            logger: logger,
             reader: outputChannel.Reader,
             // Update every 10 seconds for the first 5 minutes (300 sec), then every 30 seconds.
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
@@ -288,7 +279,7 @@ internal class ExeStepExecutor(
             {
                 if (buffer is not [.., var (text, isTruncated)] || !UpdateOutput(outputMessage, text, isTruncated))
                     return;
-                await UpdateOutputToDbAsync(attempt, ct);
+                await UpdateOutputToDbAsync(ct);
             },
             // Since we are consuming entire messages from the proxy API instead of an internal string builder,
             // enable LIFO so that the last message is always processed.
@@ -297,7 +288,7 @@ internal class ExeStepExecutor(
         var outputConsumerTask = outputConsumer.StartConsumingAsync(linkedCts.Token);
 
         using var errorConsumer = new PeriodicChannelConsumer<(string Text, string? StackTrace, bool IsTruncated)>(
-            logger: _logger,
+            logger: logger,
             reader: errorChannel.Reader,
             interval: iteration => iteration <= 30 ? TimeSpan.FromSeconds(10) : TimeSpan.FromSeconds(30),
             bufferPublished: async (buffer, ct) =>
@@ -305,7 +296,7 @@ internal class ExeStepExecutor(
                 if (buffer is not [.., var (text, stackTrace, isTruncated)] ||
                     !UpdateErrors(errorMessage, text, stackTrace, isTruncated))
                     return;
-                await UpdateErrorsToDbAsync(attempt, ct);
+                await UpdateErrorsToDbAsync(ct);
             },
             enableLastInFirstOut: true,
             bufferCapacity: 1);
@@ -337,7 +328,7 @@ internal class ExeStepExecutor(
                 if (processId != attempt.ExeProcessId)
                 {
                     attempt.ExeProcessId = processId;
-                    await UpdateProcessIdAsync(step, attempt);
+                    await UpdateProcessIdAsync();
                 }
                 _ = outputChannel.Writer.TryWrite((output ?? "", outputTruncated));
                 _ = errorChannel.Writer.TryWrite((error ?? "", stackTrace, errorTruncated));
@@ -346,7 +337,7 @@ internal class ExeStepExecutor(
             switch (status)
             {
                 case null:
-                    _logger.LogError(
+                    logger.LogError(
                         "{ExecutionId} {Step} Error getting remote execution status, no status was returned",
                         step.ExecutionId, step);
                     attempt.AddError("No status was returned from the proxy when getting remote execution status.");
@@ -376,7 +367,7 @@ internal class ExeStepExecutor(
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{ExecutionId} {Step} Error canceling remote execution after timeout",
+                logger.LogError(ex, "{ExecutionId} {Step} Error canceling remote execution after timeout",
                     step.ExecutionId,
                     step);
                 attempt.AddWarning(ex, "Error canceling remote execution after timeout");
@@ -393,7 +384,7 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error while executing remote executable {FileName}",
+            logger.LogError(ex, "{ExecutionId} {Step} Error while executing remote executable {FileName}",
                 step.ExecutionId,
                 step,
                 step.ExeFileName);
@@ -411,7 +402,7 @@ internal class ExeStepExecutor(
                 _ = UpdateOutput(outputMessage, output ?? "", outputTruncated);
                 _ = UpdateErrors(errorMessage, error ?? "", stackTrace, errorTruncated);
             }
-            catch (Exception ex) { _logger.LogError(ex, "Error updating final output and error messages"); }
+            catch (Exception ex) { logger.LogError(ex, "Error updating final output and error messages"); }
             await outputConsumerTask;
             await errorConsumerTask;
         }
@@ -419,7 +410,7 @@ internal class ExeStepExecutor(
 
     private HttpClient CreateProxyHttpClient(Proxy proxy)
     {
-        var client = _httpClientFactory.CreateClient();
+        var client = httpClientFactory.CreateClient();
         client.BaseAddress = new Uri(proxy.ProxyUrl);
         if (proxy.ApiKey is not null)
         {
@@ -428,7 +419,7 @@ internal class ExeStepExecutor(
         return client;
     }
 
-    private static ExeProxyRunRequest CreateExeProxyRunRequest(ExeStepExecution step)
+    private ExeProxyRunRequest CreateExeProxyRunRequest()
     {
         string? arguments;
         if (!string.IsNullOrWhiteSpace(step.ExeArguments))
@@ -453,11 +444,11 @@ internal class ExeStepExecutor(
         return request;
     }
 
-    private async Task UpdateProcessIdAsync(ExeStepExecution step, ExeStepExecutionAttempt attempt)
+    private async Task UpdateProcessIdAsync()
     {
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync();
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync();
             await dbContext.Set<ExeStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
@@ -466,7 +457,7 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", attempt.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error logging child process id", attempt.ExecutionId, step);
             attempt.AddWarning(ex, "Error logging child process id");
         }
     }
@@ -557,11 +548,11 @@ internal class ExeStepExecutor(
         return true;
     }
     
-    private async Task UpdateOutputToDbAsync(ExeStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task UpdateOutputToDbAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
@@ -573,15 +564,15 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating output for step");
+            logger.LogError(ex, "Error updating output for step");
         }
     }
     
-    private async Task UpdateErrorsToDbAsync(ExeStepExecutionAttempt attempt, CancellationToken cancellationToken)
+    private async Task UpdateErrorsToDbAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             await dbContext.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
@@ -592,7 +583,11 @@ internal class ExeStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating error output for step");
+            logger.LogError(ex, "Error updating error output for step");
         }
+    }
+
+    public void Dispose()
+    {
     }
 }

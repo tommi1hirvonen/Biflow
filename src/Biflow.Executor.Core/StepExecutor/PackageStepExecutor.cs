@@ -8,32 +8,27 @@ namespace Biflow.Executor.Core.StepExecutor;
 [UsedImplicitly]
 internal class PackageStepExecutor(
     ILogger<PackageStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory)
-    : StepExecutor<PackageStepExecution, PackageStepExecutionAttempt>(logger, dbContextFactory)
+    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    PackageStepExecution step,
+    PackageStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ILogger<PackageStepExecutor> _logger = logger;
-    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = dbContextFactory;
+    private readonly MsSqlConnection _connection =
+        step.GetConnection()
+        ?? throw new ArgumentNullException(message: "Step's connection is null", innerException: null);
 
-    protected override async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        PackageStepExecution step,
-        PackageStepExecutionAttempt attempt,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cts.Token;
         cancellationToken.ThrowIfCancellationRequested();
 
-        var connection = step.GetConnection();
-        ArgumentNullException.ThrowIfNull(connection);
-
-        if (connection.Credential is not null && !OperatingSystem.IsWindows())
+        if (_connection.Credential is not null && !OperatingSystem.IsWindows())
         {
             attempt.AddWarning("Connection has impersonation enabled but the OS platform does not support it. Impersonation will be skipped.");
         }
 
-        var executeAsLogin = (connection.ExecutePackagesAsLogin, step.ExecuteAsLogin) switch
+        var executeAsLogin = (_connection.ExecutePackagesAsLogin, step.ExecuteAsLogin) switch
         {
-            ({ Length: > 0 }, _) => connection.ExecutePackagesAsLogin,
+            ({ Length: > 0 }, _) => _connection.ExecutePackagesAsLogin,
             (_, { Length: > 0}) => step.ExecuteAsLogin,
             _ => null
         };
@@ -42,8 +37,8 @@ internal class PackageStepExecutor(
         long packageOperationId;
         try
         {
-            _logger.LogInformation("{ExecutionId} {Step} Starting package execution", step.ExecutionId, step);
-            packageOperationId = await CreatePackageExecutionAsync(step, connection, executeAsLogin, cancellationToken);
+            logger.LogInformation("{ExecutionId} {Step} Starting package execution", step.ExecutionId, step);
+            packageOperationId = await CreatePackageExecutionAsync(executeAsLogin, cancellationToken);
         }
         catch (OperationCanceledException ex)
         {
@@ -52,7 +47,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error creating package execution", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error creating package execution", step.ExecutionId, step);
             attempt.AddError(ex, "Error creating package execution");
             return Result.Failure;
         }
@@ -66,16 +61,16 @@ internal class PackageStepExecutor(
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
 
         // Start the package execution asynchronously. The task is awaited later.
-        var packageRunTask = RunPackageExecutionAsync(packageOperationId, connection, executeAsLogin, linkedCts.Token);
+        var packageRunTask = RunPackageExecutionAsync(packageOperationId, executeAsLogin, linkedCts.Token);
 
         // In the meantime, persist the package operation id.
         try
         {
-            await UpdateOperationIdAsync(step, attempt, packageOperationId, cancellationToken);
+            await UpdateOperationIdAsync(packageOperationId, cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating SSIS package operation id", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error updating SSIS package operation id", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error updating package operation id");
         }
 
@@ -97,7 +92,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error executing package", step.ExecutionId, step);
             attempt.AddError(ex, "Error executing package");
         }
 
@@ -105,16 +100,16 @@ internal class PackageStepExecutor(
         bool success;
         try
         {
-            success = await GetPackageStatusAsync(connection, packageOperationId, cancellationToken);
+            success = await GetPackageStatusAsync(packageOperationId, cancellationToken);
         }
-        catch (Exception ex) when (cancellationTokenSource.IsCancellationRequested)
+        catch (Exception ex) when (cts.IsCancellationRequested)
         {
             attempt.AddWarning(ex);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error getting package execution status", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error getting package execution status", step.ExecutionId, step);
             attempt.AddError(ex, "Error getting package execution status");
             return Result.Failure;
         }
@@ -128,7 +123,7 @@ internal class PackageStepExecutor(
         // If the package failed, retrieve error messages.
         try
         {
-            var errors = await GetErrorMessagesAsync(connection, packageOperationId, cancellationToken);
+            var errors = await GetErrorMessagesAsync(packageOperationId, cancellationToken);
             foreach (var error in errors)
             {
                 if (error is not null)
@@ -136,24 +131,20 @@ internal class PackageStepExecutor(
             }
             return Result.Failure;
         }
-        catch (Exception ex) when (cancellationTokenSource.IsCancellationRequested)
+        catch (Exception ex) when (cts.IsCancellationRequested)
         {
             attempt.AddWarning(ex);
             return Result.Cancel;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", step.ExecutionId, step);
+            logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", step.ExecutionId, step);
             attempt.AddError(ex, "Error getting package error messages");
             return Result.Failure;
         }
     }
 
-    private static async Task<long> CreatePackageExecutionAsync(
-        PackageStepExecution step,
-        MsSqlConnection connection,
-        string? executeAsLogin,
-        CancellationToken cancellationToken)
+    private async Task<long> CreatePackageExecutionAsync(string? executeAsLogin, CancellationToken cancellationToken)
     {
         var commandBuilder = new StringBuilder();
 
@@ -220,17 +211,14 @@ internal class PackageStepExecutor(
             dynamicParams.Add($"ParameterValue{param.ParameterName}{param.ParameterLevel}", param.ParameterValue.Value);
         }
 
-        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(_connection.ConnectionString);
         var cmd = new CommandDefinition(commandString, dynamicParams, cancellationToken: cancellationToken);
-        var packageOperationId = await connection.RunImpersonatedOrAsCurrentUserAsync(
+        var packageOperationId = await _connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<long>(cmd));
         return packageOperationId;
     }
 
-    private static async Task RunPackageExecutionAsync(
-        long packageOperationId,
-        MsSqlConnection connection,
-        string? executeAsLogin,
+    private async Task RunPackageExecutionAsync(long packageOperationId, string? executeAsLogin,
         CancellationToken cancellationToken)
     {
         var commandBuilder = new StringBuilder();
@@ -249,18 +237,15 @@ internal class PackageStepExecutor(
         if (executeAsLogin is not null)
             dynamicParams.Add("ExecuteAsLogin", executeAsLogin);
 
-        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(_connection.ConnectionString);
         var cmd = new CommandDefinition(commandString, dynamicParams, commandTimeout: 0, cancellationToken: cancellationToken);
-        await connection.RunImpersonatedOrAsCurrentUserAsync(
+        await _connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteAsync(cmd));
     }
 
-    private static async Task<bool> GetPackageStatusAsync(
-        MsSqlConnection connection,
-        long packageOperationId,
-        CancellationToken cancellationToken)
+    private async Task<bool> GetPackageStatusAsync(long packageOperationId, CancellationToken cancellationToken)
     {
-        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(_connection.ConnectionString);
         var command = new CommandDefinition("""
             SELECT status
             FROM SSISDB.catalog.operations
@@ -268,18 +253,15 @@ internal class PackageStepExecutor(
             """,
             new { OperationId = packageOperationId },
             cancellationToken: cancellationToken);
-        var status = await connection.RunImpersonatedOrAsCurrentUserAsync(
+        var status = await _connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.ExecuteScalarAsync<int>(command));
         // created (1), running (2), canceled (3), failed (4), pending (5), ended unexpectedly (6), succeeded (7), stopping (8), completed (9)
         return status == 7;
     }
 
-    private static async Task<string?[]> GetErrorMessagesAsync(
-        MsSqlConnection connection,
-        long packageOperationId,
-        CancellationToken cancellationToken)
+    private async Task<string?[]> GetErrorMessagesAsync(long packageOperationId, CancellationToken cancellationToken)
     {
-        await using var sqlConnection = new SqlConnection(connection.ConnectionString);
+        await using var sqlConnection = new SqlConnection(_connection.ConnectionString);
         var cmd = new CommandDefinition("""
             SELECT message
             FROM SSISDB.catalog.operation_messages
@@ -287,31 +269,34 @@ internal class PackageStepExecutor(
             """, // message_type = 120 => error message
             new { OperationId = packageOperationId },
             cancellationToken: cancellationToken);
-        var messages = await connection.RunImpersonatedOrAsCurrentUserAsync(
+        var messages = await _connection.RunImpersonatedOrAsCurrentUserAsync(
             () => sqlConnection.QueryAsync<string?>(cmd));
         return messages.ToArray();
     }
 
-    private async Task UpdateOperationIdAsync(
-        PackageStepExecution step,
-        PackageStepExecutionAttempt attempt,
-        long packageOperationId,
-        CancellationToken cancellationToken)
+    private async Task UpdateOperationIdAsync(long packageOperationId, CancellationToken cancellationToken)
     {
         // Update the SSISDB operation id for the target package execution.
         try
         {
-            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
             attempt.PackageOperationId = packageOperationId;
             await context.Set<PackageStepExecutionAttempt>()
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.PackageOperationId, attempt.PackageOperationId), cancellationToken);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})", step.ExecutionId, step, packageOperationId);
+            logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})",
+                step.ExecutionId, step, packageOperationId);
             attempt.AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }
+    }
+
+    public void Dispose()
+    {
     }
 }
