@@ -38,8 +38,13 @@ internal class StepExecutorProvider(IServiceProvider services) : IStepExecutorPr
             CreateInstance<QlikStepExecutor>(services, step, attempt),
         (ScdStepExecution, ScdStepExecutionAttempt) =>
             CreateInstance<ScdStepExecutor>(services, step, attempt),
-        (SqlStepExecution, SqlStepExecutionAttempt) =>
-            CreateInstance<SqlStepExecutor>(services, step, attempt),
+        (SqlStepExecution sql, SqlStepExecutionAttempt) when sql.GetConnection() is MsSqlConnection msSql =>
+            CreateInstance<MsSqlStepExecutor>(services, step, attempt, msSql),
+        (SqlStepExecution sql, SqlStepExecutionAttempt) when sql.GetConnection() is SnowflakeConnection snowflake =>
+            CreateInstance<SnowflakeSqlStepExecutor>(services, step, attempt, snowflake),
+        (SqlStepExecution sql, SqlStepExecutionAttempt) =>
+            throw new InvalidOperationException($"Unsupported connection type: {sql.GetConnection()?.GetType().Name}. " +
+                                                $"Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}."),
         (TabularStepExecution, TabularStepExecutionAttempt) =>
             CreateInstance<TabularStepExecutor>(services, step, attempt),
         _ => throw new InvalidOperationException("Error mapping step to an executor implementation. " +
