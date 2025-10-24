@@ -2,16 +2,19 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class PackageStepExecutor(
-    ILogger<PackageStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IServiceProvider serviceProvider,
     PackageStepExecution step,
     PackageStepExecutionAttempt attempt) : IStepExecutor
 {
+    private readonly ILogger<PackageStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<PackageStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
     private readonly MsSqlConnection _connection =
         step.GetConnection()
         ?? throw new ArgumentNullException(message: "Step's connection is null", innerException: null);
@@ -37,7 +40,7 @@ internal class PackageStepExecutor(
         long packageOperationId;
         try
         {
-            logger.LogInformation("{ExecutionId} {Step} Starting package execution", step.ExecutionId, step);
+            _logger.LogInformation("{ExecutionId} {Step} Starting package execution", step.ExecutionId, step);
             packageOperationId = await CreatePackageExecutionAsync(executeAsLogin, cancellationToken);
         }
         catch (OperationCanceledException ex)
@@ -47,7 +50,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error creating package execution", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating package execution", step.ExecutionId, step);
             attempt.AddError(ex, "Error creating package execution");
             return Result.Failure;
         }
@@ -70,7 +73,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error updating SSIS package operation id", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating SSIS package operation id", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error updating package operation id");
         }
 
@@ -92,7 +95,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error executing package", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error executing package", step.ExecutionId, step);
             attempt.AddError(ex, "Error executing package");
         }
 
@@ -109,7 +112,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error getting package execution status", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error getting package execution status", step.ExecutionId, step);
             attempt.AddError(ex, "Error getting package execution status");
             return Result.Failure;
         }
@@ -138,7 +141,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error getting package error messages", step.ExecutionId, step);
             attempt.AddError(ex, "Error getting package error messages");
             return Result.Failure;
         }
@@ -279,7 +282,7 @@ internal class PackageStepExecutor(
         // Update the SSISDB operation id for the target package execution.
         try
         {
-            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             attempt.PackageOperationId = packageOperationId;
             await context.Set<PackageStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -290,7 +293,7 @@ internal class PackageStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error updating target package operation id ({packageOperationId})",
                 step.ExecutionId, step, packageOperationId);
             attempt.AddWarning(ex, $"Error updating target package operation id {packageOperationId}");
         }

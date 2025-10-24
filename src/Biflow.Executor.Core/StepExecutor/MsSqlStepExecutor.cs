@@ -1,17 +1,21 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class MsSqlStepExecutor(
-    ILogger<MsSqlStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IServiceProvider serviceProvider,
     SqlStepExecution step,
     SqlStepExecutionAttempt attempt,
     MsSqlConnection msSqlConnection) : IStepExecutor
 {
+    private readonly ILogger<MsSqlStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<MsSqlStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
@@ -24,7 +28,7 @@ internal class MsSqlStepExecutor(
 
         try
         {
-            logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with MSSQL connector", step.ExecutionId, step);
             await using var connection = new SqlConnection(msSqlConnection.ConnectionString);
             connection.InfoMessage += (_, eventArgs) => attempt.AddOutput(eventArgs.Message);
 
@@ -46,7 +50,7 @@ internal class MsSqlStepExecutor(
                     () => connection.ExecuteScalarAsync(command));
 
                 // Update the capture value.
-                await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new ParameterValue(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
@@ -88,7 +92,7 @@ internal class MsSqlStepExecutor(
                 return Result.Cancel;
             }
 
-            logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }

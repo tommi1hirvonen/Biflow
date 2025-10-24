@@ -1,23 +1,30 @@
+using System.Collections.Frozen;
 using System.Net;
 using System.Text;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class HttpStepExecutor(
-    ILogger<HttpStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
     HttpStepExecution step,
     HttpStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly ILogger<HttpStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<HttpStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
     // Use an HttpClient with no timeout.
     // The step timeout setting is used for request timeout via cancellation token. 
-    private readonly HttpClient _client = httpClientFactory.CreateClient("notimeout");
+    private readonly HttpClient _client = serviceProvider
+        .GetRequiredService<IHttpClientFactory>()
+        .CreateClient("notimeout");
 
     private static readonly FrozenSet<string> ContentHeaders =
     [
@@ -168,7 +175,7 @@ internal class HttpStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating output for step");
+            _logger.LogError(ex, "Error updating output for step");
             attempt.AddWarning(ex, "Error updating step output");
         }
         
@@ -204,7 +211,7 @@ internal class HttpStepExecutor(
     
     private async Task UpdateOutputToDbAsync(CancellationToken cancellationToken)
     {
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.StepExecutionAttempts
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&

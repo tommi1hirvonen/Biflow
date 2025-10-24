@@ -1,19 +1,21 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class AgentJobStepExecutor(
-    IOptionsMonitor<ExecutionOptions> options,
+    IServiceProvider serviceProvider,
     AgentJobStepExecution step,
     AgentJobStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
     
     private static readonly JsonSerializerOptions SerializerOptions = new()
     {

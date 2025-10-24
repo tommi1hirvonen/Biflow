@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Fabric.Api.Core.Models;
@@ -6,18 +7,22 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class FabricStepExecutor(
-    ILogger<FabricStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ITokenService tokenService,
+    IServiceProvider serviceProvider,
     FabricStepExecution step,
     FabricStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly FabricWorkspaceClient _client =
-        step.GetAzureCredential()?.CreateFabricWorkspaceClient(tokenService)
+    private readonly ILogger<FabricStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<FabricStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
+    private readonly FabricWorkspaceClient _client = step
+        .GetAzureCredential()
+        ?.CreateFabricWorkspaceClient(serviceProvider.GetRequiredService<ITokenService>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     
@@ -38,7 +43,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error retrieving Fabric item parameters", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving Fabric item parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading Fabric item parameters");
             return Result.Failure;
         }
@@ -51,7 +56,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(
+            _logger.LogError(
                 ex,
                 "{ExecutionId} {Step} Error creating item job instance for workspace id {WorkspaceId} and item {ItemId}",
                 step.ExecutionId,
@@ -70,7 +75,7 @@ internal class FabricStepExecutor(
         
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobInstanceId = instanceId;
             await dbContext.Set<FabricStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -81,7 +86,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating item job instance id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating item job instance id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating item job instance id {instanceId}");
         }
         
@@ -143,7 +148,7 @@ internal class FabricStepExecutor(
                 retryCount: MaxRefreshRetries,
                 sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
                 onRetry: (ex, _) =>
-                    logger.LogWarning(
+                    _logger.LogWarning(
                         ex, "{ExecutionId} {Step} Error getting item job instance for instance id {instanceId}",
                         step.ExecutionId, step, instanceId));
 
@@ -153,7 +158,7 @@ internal class FabricStepExecutor(
     
     private async Task CancelAsync(Guid instanceId)
     {
-        logger.LogInformation("{ExecutionId} {Step} Stopping item job instance id {instanceId}",
+        _logger.LogInformation("{ExecutionId} {Step} Stopping item job instance id {instanceId}",
             step.ExecutionId, step, instanceId);
         try
         {
@@ -161,7 +166,7 @@ internal class FabricStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping item job instance {instanceId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping item job instance {instanceId}",
                 step.ExecutionId, step, instanceId);
             attempt.AddWarning(ex, $"Error stopping item job instance {instanceId}");
         }

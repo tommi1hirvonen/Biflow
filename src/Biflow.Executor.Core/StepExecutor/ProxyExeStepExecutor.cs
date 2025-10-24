@@ -2,6 +2,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading.Channels;
 using Biflow.ExecutorProxy.Core;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
@@ -25,16 +26,15 @@ internal class ProxyExeStepExecutor : IStepExecutor
     private readonly ExeStepExecutionAttempt _attempt;
     private readonly Proxy _proxy;
 
-    public ProxyExeStepExecutor(IHttpClientFactory httpClientFactory,
-        ILogger<ProxyExeStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    public ProxyExeStepExecutor(
+        IServiceProvider serviceProvider,
         ExeStepExecution step,
         ExeStepExecutionAttempt attempt,
         Proxy proxy)
     {
-        _httpClientFactory = httpClientFactory;
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
+        _httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+        _logger = serviceProvider.GetRequiredService<ILogger<ProxyExeStepExecutor>>();
+        _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
         _step = step;
         _attempt = attempt;
         _proxy = proxy;

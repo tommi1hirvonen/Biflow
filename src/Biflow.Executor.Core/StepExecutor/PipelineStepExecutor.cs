@@ -1,23 +1,27 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class PipelineStepExecutor(
-    ILogger<PipelineStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    ITokenService tokenService,
+    IServiceProvider serviceProvider,
     PipelineStepExecution step,
     PipelineStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly IPipelineClient _client =
-        step.GetClient()?.CreatePipelineClient(tokenService)
+    private readonly ILogger<PipelineStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<PipelineStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly IPipelineClient _client = step
+        .GetClient()
+        ?.CreatePipelineClient(serviceProvider.GetRequiredService<ITokenService>())
         ?? throw new ArgumentNullException(message: "Pipeline client was null", innerException: null);
-
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
 
     private const int MaxRefreshRetries = 3;
 
@@ -36,7 +40,7 @@ internal class PipelineStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving pipeline parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading pipeline parameters");
             return Result.Failure;
         }
@@ -48,7 +52,7 @@ internal class PipelineStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
                 step.ExecutionId, step, step.PipelineClientId, step.PipelineName);
             attempt.AddError(ex, "Error starting pipeline run");
             return Result.Failure;
@@ -62,7 +66,7 @@ internal class PipelineStepExecutor(
 
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.PipelineRunId = runId;
             await dbContext.Set<PipelineStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -71,7 +75,7 @@ internal class PipelineStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating pipeline run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating pipeline run id {runId}");
         }
 
@@ -128,7 +132,7 @@ internal class PipelineStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}",
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}",
                     step.ExecutionId, step, runId));
 
         return await policy.ExecuteAsync(cancellation =>
@@ -137,14 +141,14 @@ internal class PipelineStepExecutor(
 
     private async Task CancelAsync(string runId)
     {
-        logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", step.ExecutionId, step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", step.ExecutionId, step, runId);
         try
         {
             await _client.CancelPipelineRunAsync(runId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", step.ExecutionId, step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping pipeline run {runId}");
         }
     }

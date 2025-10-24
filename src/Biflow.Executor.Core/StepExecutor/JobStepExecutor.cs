@@ -1,16 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class JobStepExecutor(
-    ILogger<JobStepExecutor> logger,
-    IExecutionManager executionManager,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IExecutionBuilderFactory<ExecutorDbContext> executionBuilderFactory,
+    IServiceProvider serviceProvider,
     JobStepExecution step,
     JobStepExecutionAttempt attempt) : IStepExecutor
 {
+    private readonly ILogger<JobStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<JobStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly IExecutionBuilderFactory<ExecutorDbContext> _executionBuilderFactory = serviceProvider
+        .GetRequiredService<IExecutionBuilderFactory<ExecutorDbContext>>();
+    private readonly IExecutionManager _executionManager = serviceProvider
+        .GetRequiredService<IExecutionManager>();
+    
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
@@ -25,7 +31,7 @@ internal class JobStepExecutor(
                 true => step.TagFilters.Select(t => t.TagId).ToArray(),
                 _ => null
             };
-            using var builder = await executionBuilderFactory.CreateAsync(
+            using var builder = await _executionBuilderFactory.CreateAsync(
                 step.JobToExecuteId,
                 createdBy: null,
                 parent: executionAttempt,
@@ -73,7 +79,7 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error initializing execution for job {jobId}",
                 step.ExecutionId, step, step.JobToExecuteId);
             attempt.AddError(ex, "Error initializing job execution");
             return Result.Failure;
@@ -81,7 +87,7 @@ internal class JobStepExecutor(
 
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ChildJobExecutionId = jobExecutionId;
             await dbContext.Set<JobStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
@@ -92,7 +98,7 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {jobExecutionId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error logging child job execution id {jobExecutionId}",
                 step.ExecutionId, step, jobExecutionId);
             attempt.AddWarning(ex, $"Error logging child job execution id {jobExecutionId}");
         }
@@ -104,11 +110,11 @@ internal class JobStepExecutor(
                 executionId: jobExecutionId,
                 parentExecutionId: context.ParentExecutionId ?? step.ExecutionId,
                 synchronizedExecution: step.JobExecuteSynchronized);
-            await executionManager.StartExecutionAsync(nextContext, CancellationToken.None);
+            await _executionManager.StartExecutionAsync(nextContext, CancellationToken.None);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {jobExecutionId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error starting executor process for execution {jobExecutionId}",
                 step.ExecutionId, step, jobExecutionId);
             attempt.AddError(ex, "Error starting executor process");
             return Result.Failure;
@@ -121,18 +127,18 @@ internal class JobStepExecutor(
         
         try
         {
-            await executionManager.WaitForTaskCompleted(jobExecutionId, cancellationToken);
+            await _executionManager.WaitForTaskCompleted(jobExecutionId, cancellationToken);
         }
         catch (OperationCanceledException ex)
         {
-            executionManager.CancelExecution(jobExecutionId, cts.Username);
+            _executionManager.CancelExecution(jobExecutionId, cts.Username);
             attempt.AddWarning(ex);
             return Result.Cancel;
         }
 
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             var status = await dbContext.Executions
                 .Where(e => e.ExecutionId == jobExecutionId)
                 .Select(e => e.ExecutionStatus)
@@ -157,7 +163,7 @@ internal class JobStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {jobExecutionId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error getting sub-execution status for execution id {jobExecutionId}",
                 step.ExecutionId, step, jobExecutionId);
             attempt.AddError(ex, "Error getting sub-execution status");
             return Result.Failure;

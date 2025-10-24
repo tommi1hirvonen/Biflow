@@ -2,21 +2,26 @@
 using Microsoft.Extensions.Options;
 using Polly;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class DbtStepExecutor(
-    ILogger<DbtStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
     DbtStepExecution step,
     DbtStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly DbtClient _client =
-        step.GetAccount()?.CreateClient(httpClientFactory)
+    private readonly ILogger<DbtStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<DbtStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
+    private readonly DbtClient _client = step
+        .GetAccount()
+        ?.CreateClient(serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "DbtAccount was null", innerException: null);
 
     private const int MaxRefreshRetries = 3;
@@ -43,7 +48,7 @@ internal class DbtStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting dbt job run");
+            _logger.LogError(ex, "Error starting dbt job run");
             attempt.AddError(ex, "Error starting dbt job run");
             return Result.Failure;
         }
@@ -57,7 +62,7 @@ internal class DbtStepExecutor(
         // Update run id for the step execution attempt.
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.DbtJobRunId = run.Id;
             await dbContext.Set<DbtStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -66,7 +71,7 @@ internal class DbtStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating dbt job run id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating dbt job run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating dbt job run id {run.Id}");
         }
 
@@ -125,7 +130,7 @@ internal class DbtStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
 
         var run = await policy.ExecuteAsync(cancellation =>
             _client.GetJobRunAsync(runId, cancellationToken: cancellation), cancellationToken);
@@ -134,14 +139,14 @@ internal class DbtStepExecutor(
 
     private async Task<DbtJobRun?> CancelAsync(long runId)
     {
-        logger.LogInformation("{ExecutionId} {Step} Stopping dbt run id {runId}", step.ExecutionId, step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping dbt run id {runId}", step.ExecutionId, step, runId);
         try
         {
             return await _client.CancelJobRunAsync(runId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping dbt run {runId}", step.ExecutionId, step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping dbt run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping dbt run {runId}");
             return null;
         }

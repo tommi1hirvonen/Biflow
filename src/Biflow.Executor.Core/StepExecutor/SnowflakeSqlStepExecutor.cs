@@ -1,17 +1,21 @@
 using Dapper;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Snowflake.Data.Client;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class SnowflakeSqlStepExecutor(
-    ILogger<SnowflakeSqlStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IServiceProvider serviceProvider,
     SqlStepExecution step,
     SqlStepExecutionAttempt attempt,
     SnowflakeConnection snowflakeConnection) : IStepExecutor
 {
+    private readonly ILogger<SnowflakeSqlStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<SnowflakeSqlStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
         var cancellationToken = cts.Token;
@@ -19,7 +23,7 @@ internal class SnowflakeSqlStepExecutor(
 
         try
         {
-            logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector",
+            _logger.LogInformation("{ExecutionId} {Step} Starting SQL execution with Snowflake connector",
                 step.ExecutionId, step);
             await using var connection = new SnowflakeDbConnection(snowflakeConnection.ConnectionString);
 
@@ -40,7 +44,7 @@ internal class SnowflakeSqlStepExecutor(
                 var result = await connection.ExecuteScalarAsync(command);
 
                 // Update the capture value.
-                await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+                await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
                 step.ResultCaptureJobParameterValue = new ParameterValue(result);
 
                 // Update the job execution parameter with the result value for following steps to use.
@@ -76,7 +80,7 @@ internal class SnowflakeSqlStepExecutor(
                 return Result.Cancel;
             }
 
-            logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SQL execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }

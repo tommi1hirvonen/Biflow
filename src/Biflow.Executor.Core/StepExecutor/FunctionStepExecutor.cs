@@ -3,22 +3,28 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class FunctionStepExecutor(
-    ILogger<FunctionStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
     FunctionStepExecution step,
     FunctionStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly ILogger<FunctionStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<FunctionStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
     // Use an HttpClient with no timeout.
     // The step timeout setting is used for request timeout via cancellation token. 
-    private readonly HttpClient _client = httpClientFactory.CreateClient("notimeout");
+    private readonly HttpClient _client = serviceProvider
+        .GetRequiredService<IHttpClientFactory>()
+        .CreateClient("notimeout");
 
     private const int MaxRefreshRetries = 3;
 
@@ -147,7 +153,7 @@ internal class FunctionStepExecutor(
         try
         {
             // Try and get the function key from the actual step if it was defined.
-            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             functionKey = await context.FunctionSteps
                 .AsNoTracking()
                 .Where(s => s.StepId == step.StepId)
@@ -156,7 +162,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error reading FunctionKey from database", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error reading function key from database");
         }
 
@@ -197,7 +203,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating function instance id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating function instance id {startResponse.Id}");
         }
         
@@ -208,7 +214,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating output for step");
+            _logger.LogError(ex, "Error updating output for step");
             attempt.AddWarning(ex, "Error updating step output");
         }
 
@@ -273,7 +279,7 @@ internal class FunctionStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
 
         return await policy.ExecuteAsync(async cancellation =>
         {
@@ -295,7 +301,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping function ", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error stopping function");
         }
     }
@@ -311,7 +317,7 @@ internal class FunctionStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error updating output for step");
+            _logger.LogError(ex, "Error updating output for step");
             attempt.AddWarning(ex, "Error updating step output");
         }
         
@@ -347,7 +353,7 @@ internal class FunctionStepExecutor(
 
     private async Task UpdateFunctionInstanceIdToDbAsync(CancellationToken cancellationToken)
     {
-        await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         await context.Set<FunctionStepExecutionAttempt>()
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&
@@ -358,7 +364,7 @@ internal class FunctionStepExecutor(
     
     private async Task UpdateOutputToDbAsync(CancellationToken cancellationToken)
     {
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
         await dbContext.StepExecutionAttempts
             .Where(x => x.ExecutionId == attempt.ExecutionId &&
                         x.StepId == attempt.StepId &&

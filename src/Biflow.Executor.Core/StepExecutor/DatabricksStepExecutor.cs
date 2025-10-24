@@ -1,20 +1,25 @@
 ﻿using Microsoft.Azure.Databricks.Client;
 using Microsoft.Azure.Databricks.Client.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class DatabricksStepExecutor(
-    ILogger<DatabricksStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IServiceProvider serviceProvider,
     DatabricksStepExecution step,
     DatabricksStepExecutionAttempt attempt) : IStepExecutor, IDisposable
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly ILogger<DatabricksStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<DatabricksStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
     private readonly DatabricksClient _client =
         step.GetWorkspace()?.CreateClient().Client
         ?? throw new ArgumentNullException(message: "Step's databricks workspace is null", innerException: null);
@@ -36,7 +41,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error retrieving DbNotebook parameters", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error retrieving DbNotebook parameters", step.ExecutionId, step);
             attempt.AddError(ex, "Error reading DbNotebook parameters");
             return Result.Failure;
         }
@@ -122,7 +127,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error creating run for workspace {DatabricksWorkspaceId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error creating run for workspace {DatabricksWorkspaceId}",
                 step.ExecutionId, step, step.DatabricksWorkspaceId);
             attempt.AddError(ex, "Error starting notebook run");
             return Result.Failure;
@@ -136,7 +141,7 @@ internal class DatabricksStepExecutor(
 
         try
         {
-            await using var dbContext = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.JobRunId = runId;
             await dbContext.Set<DatabricksStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -145,7 +150,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating notebook job run id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating notebook job run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating notebook job run id {runId}");
         }
 
@@ -207,7 +212,7 @@ internal class DatabricksStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting Databricks step task run output", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error getting task run output");
         }
 
@@ -224,7 +229,7 @@ internal class DatabricksStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
             onRetry: (ex, _) =>
-                logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
+                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
 
         var (run, _) = await policy.ExecuteAsync(cancellation =>
             _client.Jobs.RunsGet(runId, cancellationToken: cancellation), cancellationToken);
@@ -233,14 +238,14 @@ internal class DatabricksStepExecutor(
 
     private async Task CancelAsync(long runId)
     {
-        logger.LogInformation("{ExecutionId} {Step} Stopping run id {runId}", step.ExecutionId, step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping run id {runId}", step.ExecutionId, step, runId);
         try
         {
             await _client.Jobs.RunsCancel(runId);
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping run {runId}", step.ExecutionId, step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping run {runId}", step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping run {runId}");
         }
     }

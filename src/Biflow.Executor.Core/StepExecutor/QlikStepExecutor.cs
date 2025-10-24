@@ -1,21 +1,26 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class QlikStepExecutor(
-    ILogger<QlikStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
-    IOptionsMonitor<ExecutionOptions> options,
-    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
     QlikStepExecution step,
     QlikStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly QlikCloudClient _client =
-        step.GetEnvironment()?.CreateClient(httpClientFactory)
+    private readonly ILogger<QlikStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<QlikStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly QlikCloudClient _client = step
+        .GetEnvironment()
+        ?.CreateClient(serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "Qlik environment was null", innerException: null);
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
 
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
     {
@@ -43,7 +48,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting app reload");
+            _logger.LogError(ex, "Error starting app reload");
             attempt.AddError(ex, "Error starting app reload");
             return Result.Failure;
         }
@@ -58,7 +63,7 @@ internal class QlikStepExecutor(
         // Update reload id for the step execution attempt
         try
         {
-            await using var context = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ReloadOrRunId = reload.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -67,7 +72,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating app reload id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating app reload id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating app reload id {reload.Id}");
         }
 
@@ -123,7 +128,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting automation run");
+            _logger.LogError(ex, "Error starting automation run");
             attempt.AddError(ex, "Error starting automation run");
             return Result.Failure;
         }
@@ -138,7 +143,7 @@ internal class QlikStepExecutor(
         // Update reload id for the step execution attempt
         try
         {
-            await using var context = await dbContextFactory.CreateDbContextAsync(CancellationToken.None);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.ReloadOrRunId = run.Id;
             await context.Set<QlikStepExecutionAttempt>()
                 .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -147,7 +152,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "{ExecutionId} {Step} Error updating automation run id", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} Error updating automation run id", step.ExecutionId, step);
             attempt.AddWarning(ex, $"Error updating automation run id {run.Id}");
         }
 
@@ -196,7 +201,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error canceling app reload", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling app reload", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error canceling app reload");
         }
     }
@@ -209,7 +214,7 @@ internal class QlikStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error canceling automation run", step.ExecutionId, step);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error canceling automation run", step.ExecutionId, step);
             attempt.AddWarning(ex, "Error canceling automation run");
         }
     }

@@ -1,52 +1,50 @@
-﻿using static Microsoft.Extensions.DependencyInjection.ActivatorUtilities;
-
-namespace Biflow.Executor.Core.StepExecutor;
+﻿namespace Biflow.Executor.Core.StepExecutor;
 
 internal class StepExecutorProvider(IServiceProvider services) : IStepExecutorProvider
 {
     public IStepExecutor GetExecutorFor(StepExecution step, StepExecutionAttempt attempt) => (step, attempt) switch
     {
-        (AgentJobStepExecution, AgentJobStepExecutionAttempt) =>
-            CreateInstance<AgentJobStepExecutor>(services, step, attempt),
-        (DatabricksStepExecution, DatabricksStepExecutionAttempt) =>
-            CreateInstance<DatabricksStepExecutor>(services, step, attempt),
-        (DataflowStepExecution, DataflowStepExecutionAttempt) =>
-            CreateInstance<DataflowStepExecutor>(services, step, attempt),
-        (DatasetStepExecution, DatasetStepExecutionAttempt) =>
-            CreateInstance<DatasetStepExecutor>(services, step, attempt),
-        (DbtStepExecution, DbtStepExecutionAttempt) =>
-            CreateInstance<DbtStepExecutor>(services, step, attempt),
-        (EmailStepExecution, EmailStepExecutionAttempt) =>
-            CreateInstance<EmailStepExecutor>(services, step, attempt),
-        (ExeStepExecution exe, ExeStepExecutionAttempt) when exe.GetProxy() is { } proxy =>
-            CreateInstance<ProxyExeStepExecutor>(services, step, attempt, proxy),
-        (ExeStepExecution, ExeStepExecutionAttempt) =>
-            CreateInstance<LocalExeStepExecutor>(services, step, attempt),
-        (FabricStepExecution, FabricStepExecutionAttempt) =>
-            CreateInstance<FabricStepExecutor>(services, step, attempt),
-        (FunctionStepExecution, FunctionStepExecutionAttempt) =>
-            CreateInstance<FunctionStepExecutor>(services, step, attempt),
-        (HttpStepExecution, HttpStepExecutionAttempt) =>
-            CreateInstance<HttpStepExecutor>(services, step, attempt),
-        (JobStepExecution, JobStepExecutionAttempt) =>
-            CreateInstance<JobStepExecutor>(services, step, attempt),
-        (PackageStepExecution, PackageStepExecutionAttempt) =>
-            CreateInstance<PackageStepExecutor>(services, step, attempt),
-        (PipelineStepExecution, PipelineStepExecutionAttempt) =>
-            CreateInstance<PipelineStepExecutor>(services, step, attempt),
-        (QlikStepExecution, QlikStepExecutionAttempt) =>
-            CreateInstance<QlikStepExecutor>(services, step, attempt),
-        (ScdStepExecution, ScdStepExecutionAttempt) =>
-            CreateInstance<ScdStepExecutor>(services, step, attempt),
-        (SqlStepExecution sql, SqlStepExecutionAttempt) when sql.GetConnection() is MsSqlConnection msSql =>
-            CreateInstance<MsSqlStepExecutor>(services, step, attempt, msSql),
-        (SqlStepExecution sql, SqlStepExecutionAttempt) when sql.GetConnection() is SnowflakeConnection snowflake =>
-            CreateInstance<SnowflakeSqlStepExecutor>(services, step, attempt, snowflake),
-        (SqlStepExecution sql, SqlStepExecutionAttempt) =>
-            throw new InvalidOperationException($"Unsupported connection type: {sql.GetConnection()?.GetType().Name}. " +
+        (AgentJobStepExecution agentStep, AgentJobStepExecutionAttempt agentAttempt) =>
+            new AgentJobStepExecutor(services, agentStep, agentAttempt),
+        (DatabricksStepExecution dbxStep, DatabricksStepExecutionAttempt dbxAttempt) =>
+            new DatabricksStepExecutor(services, dbxStep, dbxAttempt),
+        (DataflowStepExecution dataflowStep, DataflowStepExecutionAttempt dataflowAttempt) =>
+            new DataflowStepExecutor(services, dataflowStep, dataflowAttempt),
+        (DatasetStepExecution datasetStep, DatasetStepExecutionAttempt datasetAttempt) =>
+            new DatasetStepExecutor(services, datasetStep, datasetAttempt),
+        (DbtStepExecution dbtStep, DbtStepExecutionAttempt dbtAttempt) =>
+            new DbtStepExecutor(services, dbtStep, dbtAttempt),
+        (EmailStepExecution emailStep, EmailStepExecutionAttempt emailAttempt) =>
+            new EmailStepExecutor(services, emailStep, emailAttempt),
+        (ExeStepExecution exeStep, ExeStepExecutionAttempt exeAttempt) when exeStep.GetProxy() is { } proxy =>
+            new ProxyExeStepExecutor(services, exeStep, exeAttempt, proxy),
+        (ExeStepExecution exeStep, ExeStepExecutionAttempt exeAttempt) =>
+            new LocalExeStepExecutor(services, exeStep, exeAttempt),
+        (FabricStepExecution fabricStep, FabricStepExecutionAttempt fabricAttempt) =>
+            new FabricStepExecutor(services, fabricStep, fabricAttempt),
+        (FunctionStepExecution functionStep, FunctionStepExecutionAttempt functionAttempt) =>
+            new FunctionStepExecutor(services, functionStep, functionAttempt),
+        (HttpStepExecution httpStep, HttpStepExecutionAttempt httpAttempt) =>
+            new HttpStepExecutor(services, httpStep, httpAttempt),
+        (JobStepExecution jobStep, JobStepExecutionAttempt jobAttempt) =>
+            new JobStepExecutor(services, jobStep, jobAttempt),
+        (PackageStepExecution packageStep, PackageStepExecutionAttempt packageAttempt) =>
+            new PackageStepExecutor(services, packageStep, packageAttempt),
+        (PipelineStepExecution pipelineStep, PipelineStepExecutionAttempt pipelineAttempt) =>
+            new PipelineStepExecutor(services, pipelineStep, pipelineAttempt),
+        (QlikStepExecution qlikStep, QlikStepExecutionAttempt qlikAttempt) =>
+            new QlikStepExecutor(services, qlikStep, qlikAttempt),
+        (ScdStepExecution scdStep, ScdStepExecutionAttempt scdAttempt) =>
+            new ScdStepExecutor(services, scdStep, scdAttempt),
+        (SqlStepExecution sqlStep, SqlStepExecutionAttempt sqlAttempt) when sqlStep.GetConnection() is MsSqlConnection msSql =>
+            new MsSqlStepExecutor(services, sqlStep, sqlAttempt, msSql),
+        (SqlStepExecution sqlStep, SqlStepExecutionAttempt sqlAttempt) when sqlStep.GetConnection() is SnowflakeConnection snowflake =>
+            new SnowflakeSqlStepExecutor(services, sqlStep, sqlAttempt, snowflake),
+        (SqlStepExecution sqlStep, _) =>
+            throw new InvalidOperationException($"Unsupported connection type: {sqlStep.GetConnection()?.GetType().Name}. " +
                                                 $"Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}."),
-        (TabularStepExecution, TabularStepExecutionAttempt) =>
-            CreateInstance<TabularStepExecutor>(services, step, attempt),
+        (TabularStepExecution tabularStep, TabularStepExecutionAttempt tabularAttempt) =>
+            new TabularStepExecutor(tabularStep, tabularAttempt),
         _ => throw new InvalidOperationException("Error mapping step to an executor implementation. " +
                                                  "Unhandled combination of StepExecution and StepExecutionAttempt types: " +
                                                  $"({step.GetType()}, {attempt.GetType()})")

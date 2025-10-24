@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerBI.Api.Models;
@@ -5,18 +6,22 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class DataflowStepExecutor(
-    ILogger<DataflowStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    ITokenService tokenService,
-    IHttpClientFactory httpClientFactory,
+    IServiceProvider serviceProvider,
     DataflowStepExecution step,
     DataflowStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly DataflowClient _client =
-        step.GetAzureCredential()?.CreateDataflowClient(tokenService, httpClientFactory)
+    private readonly ILogger<DataflowStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<DataflowStepExecutor>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
+    private readonly DataflowClient _client = step
+        .GetAzureCredential()
+        ?.CreateDataflowClient(
+            serviceProvider.GetRequiredService<ITokenService>(),
+            serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     
     private const int MaxRefreshRetries = 3;
@@ -37,7 +42,7 @@ internal class DataflowStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting dataflow refresh");
+            _logger.LogError(ex, "Error starting dataflow refresh");
             attempt.AddError(ex, "Error starting dataflow refresh operation");
             return Result.Failure;
         }
@@ -117,7 +122,7 @@ internal class DataflowStepExecutor(
                 retryCount: MaxRefreshRetries,
                 sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
                 onRetry: (ex, _) =>
-                    logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dataflow transaction status",
+                    _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dataflow transaction status",
                         step.ExecutionId, step));
 
         return await policy.ExecuteAsync(cancellation =>
@@ -127,7 +132,7 @@ internal class DataflowStepExecutor(
     
     private async Task CancelAsync(DataflowTransaction transaction)
     {
-        logger.LogInformation("{ExecutionId} {Step} Stopping dataflow transaction id {transactionId}",
+        _logger.LogInformation("{ExecutionId} {Step} Stopping dataflow transaction id {transactionId}",
             step.ExecutionId, step, transaction.Id);
         try
         {
@@ -135,7 +140,7 @@ internal class DataflowStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{ExecutionId} {Step} Error stopping dataflow transaction id {transactionId}",
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping dataflow transaction id {transactionId}",
                 step.ExecutionId, step, transaction.Id);
             attempt.AddWarning(ex, $"Error stopping dataflow transaction id {transaction.Id}");
         }

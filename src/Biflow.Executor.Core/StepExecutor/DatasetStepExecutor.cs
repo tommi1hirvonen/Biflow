@@ -1,19 +1,23 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class DatasetStepExecutor(
-    ILogger<DatasetStepExecutor> logger,
-    IOptionsMonitor<ExecutionOptions> options,
-    ITokenService tokenService,
+    IServiceProvider serviceProvider,
     DatasetStepExecution step,
     DatasetStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly int _pollingIntervalMs = options.CurrentValue.PollingIntervalMs;
-    private readonly DatasetClient _client = 
-        step.GetAzureCredential()?.CreateDatasetClient(tokenService)
+    private readonly ILogger<DatasetStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<DatasetStepExecutor>>();
+    private readonly int _pollingIntervalMs = serviceProvider
+        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+        .CurrentValue
+        .PollingIntervalMs;
+    private readonly DatasetClient _client = step
+        .GetAzureCredential()
+        ?.CreateDatasetClient(serviceProvider.GetRequiredService<ITokenService>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
 
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
@@ -32,7 +36,7 @@ internal class DatasetStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error starting dataset refresh");
+            _logger.LogError(ex, "Error starting dataset refresh");
             attempt.AddError(ex, "Error starting dataset refresh operation");
             return Result.Failure;
         }

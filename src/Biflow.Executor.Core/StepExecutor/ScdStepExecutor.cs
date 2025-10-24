@@ -2,20 +2,24 @@
 using Biflow.Core.Entities.Scd;
 using Dapper;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Snowflake.Data.Client;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class ScdStepExecutor(
-    ILogger<ScdStepExecutor> logger,
-    IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    IServiceProvider serviceProvider,
     ScdStepExecution step,
     ScdStepExecutionAttempt attempt) : IStepExecutor
 {
-    private readonly ScdTable _scdTable =
-        step.GetScdTable() ?? throw new ArgumentNullException(message: "SCD table was null", innerException: null);
+    private readonly ILogger<ScdStepExecutor> _logger = serviceProvider
+        .GetRequiredService<ILogger<ScdStepExecutor>>();
+    private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
+        .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly ScdTable _scdTable = step
+        .GetScdTable()
+        ?? throw new ArgumentNullException(message: "SCD table was null", innerException: null);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     
     public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
@@ -164,7 +168,7 @@ internal class ScdStepExecutor(
                 return Result.Cancel;
             }
 
-            logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }
@@ -181,7 +185,7 @@ internal class ScdStepExecutor(
                 return Result.Cancel;
             }
 
-            logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
 
             return Result.Failure;
         }
@@ -194,7 +198,7 @@ internal class ScdStepExecutor(
                 return Result.Cancel;
             }
             attempt.AddError(ex, "SCD table execution failed");
-            logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
+            _logger.LogWarning(ex, "{ExecutionId} {Step} SCD table execution failed", step.ExecutionId, step);
             return Result.Failure;
         }
     }
@@ -203,7 +207,7 @@ internal class ScdStepExecutor(
     {
         try
         {
-            await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
             await context.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId
                             && x.StepId == attempt.StepId
@@ -212,7 +216,7 @@ internal class ScdStepExecutor(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "{executionId} {stepId} Error updating SCD step execution attempt output",
+            _logger.LogError(ex, "{executionId} {stepId} Error updating SCD step execution attempt output",
                 attempt.ExecutionId, attempt.StepId);
         }
     }

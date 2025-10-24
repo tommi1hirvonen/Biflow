@@ -2,10 +2,10 @@
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-[UsedImplicitly]
 internal class LocalExeStepExecutor : IStepExecutor
 {
     private const int MaxOutputLength = 500_000;
@@ -25,13 +25,13 @@ internal class LocalExeStepExecutor : IStepExecutor
     private readonly ExeStepExecution _step;
     private readonly ExeStepExecutionAttempt _attempt;
 
-    public LocalExeStepExecutor(ILogger<LocalExeStepExecutor> logger,
-        IDbContextFactory<ExecutorDbContext> dbContextFactory,
+    public LocalExeStepExecutor(
+        IServiceProvider serviceProvider,
         ExeStepExecution step,
         ExeStepExecutionAttempt attempt)
     {
-        _logger = logger;
-        _dbContextFactory = dbContextFactory;
+        _logger = serviceProvider.GetRequiredService<ILogger<LocalExeStepExecutor>>();
+        _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
         _step = step;
         _attempt = attempt;
         // Store messages in the attempt because the messages themselves will be updated periodically.
