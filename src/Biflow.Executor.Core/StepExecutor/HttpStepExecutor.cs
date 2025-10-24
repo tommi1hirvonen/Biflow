@@ -19,7 +19,7 @@ internal class HttpStepExecutor(
     // The step timeout setting is used for request timeout via cancellation token. 
     private readonly HttpClient _client = httpClientFactory.CreateClient("notimeout");
 
-    private static readonly string[] ContentHeaders =
+    private static readonly FrozenSet<string> ContentHeaders =
     [
         "Content-Type",
         "Content-Length",
