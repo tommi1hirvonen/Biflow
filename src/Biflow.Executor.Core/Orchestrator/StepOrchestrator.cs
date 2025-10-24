@@ -121,6 +121,8 @@ internal class StepOrchestrator(
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "{ExecutionId} {Step} Unhandled error caught in step orchestrator",
+                stepExecution.ExecutionId, stepExecution);
             executionAttempt.AddError(ex, "Unhandled error caught in step orchestrator");
             result = Result.Failure;
         }
