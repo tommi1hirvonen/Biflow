@@ -8,7 +8,7 @@ Visual Studio 2022 or JetBrains Rider is recommended as the IDE for development.
 
 ## Adding new step types
 
-The following new or existing files/classes need to be added or edited when adding support for new step types. Other files and classes may also need to be updated or created if there are references from the new step to other classes or resources (e.g. app registrations, pipeline clients, function apps etc.).
+The following new classes need to be added and existing files/classes need to be edited when adding support for new step types. Other files and classes may also need to be updated or created if there are references from the new step to other classes or resources (e.g. Azure credentials, pipeline clients, function apps etc.).
 
 ### Biflow.Core
 
@@ -79,12 +79,14 @@ The following new or existing files/classes need to be added or edited when addi
 **Add new classes**
 
 - FooStepExecutor
-  - Inherits StepExecutor<FooStepExecution,FooStepExecutionAttempt>
+  - Implements IStepExecutor
 
 **Update existing classes**
 
+- StepExecutorProvider
+  - Add mapping from FooStepExecution and FooStepExecutionAttempt to FooStepExecutor
 - JobExecutorFactory
-  - Add possible new navigation property include statements to the initial execution load command.
+  - Add possible new navigation property include statements to the initial execution load command
 
 ### Biflow.Ui.Core
 
