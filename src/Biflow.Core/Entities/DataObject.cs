@@ -28,56 +28,9 @@ public partial class DataObject : IDataObject
     [JsonIgnore]
     public ICollection<StepDataObject> Steps { get; } = new List<StepDataObject>();
 
-    public bool UriEquals(IDataObject? other) =>
-        other is not null &&
-        ObjectUri.Equals(other.ObjectUri); // case sensitive
-
-    public bool UriIsPartOf(IDataObject? other)
-    {
-        if (other is null)
-        {
-            return false;
-        }
-        if (UriEquals(other))
-        {
-            return true;
-        }
-        if (ObjectUri.StartsWith("tabular://") && other.ObjectUri.StartsWith("tabular://"))
-        {
-            var tabularComponents = ObjectUri.Split('/') switch
-            {
-                [.. var prefix, ""] => prefix,
-                var x => x
-            };
-            var otherTabularComponents = other.ObjectUri.Split('/') switch
-            {
-                [.. var prefix, ""] => prefix,
-                var x => x
-            };
-            return tabularComponents
-                .Zip(otherTabularComponents)
-                .All(x => x.First == x.Second);
-        }
-
-        if (!ObjectUri.StartsWith("blob://") || !other.ObjectUri.StartsWith("blob://"))
-        {
-            return false;
-        }
-        
-        var blobComponents = ObjectUri.Split('/') switch
-        {
-            [.. var prefix, ""] => prefix,
-            var x => x
-        };
-        var otherBlobComponents = other.ObjectUri.Split('/') switch
-        {
-            [.. var prefix, ""] => prefix,
-            var x => x
-        };
-        return blobComponents
-            .Zip(otherBlobComponents)
-            .All(x => x.First == x.Second || WildcardMatch(x.First, x.Second) || WildcardMatch(x.Second, x.First));
-    }
+    public bool UriEquals(IDataObject? other) => IDataObject.UriEquals(this, other);
+    
+    public bool UriIsPartOf(IDataObject? other) => IDataObject.UriIsPartOf(this, other);
 
     [JsonIgnore]
     public bool IsValid => ObjectUri.All(char.IsAscii);
@@ -128,12 +81,6 @@ public partial class DataObject : IDataObject
         blobPath = NonAsciiCharsRegex.Replace(blobPath, Replacement);
         return $"blob://{accountName}/{containerName}/{blobPath}";
     }
-
-    private static bool WildcardMatch(string pattern, string input) =>
-        // Make sure the pattern is actually a wildcard pattern.
-        (pattern.Contains('*') || pattern.Contains('?')) && Regex.IsMatch(input, WildCardToRegexPattern(pattern));
-    private static string WildCardToRegexPattern(string value) =>
-        "^" + Regex.Escape(value).Replace("\\?", ".").Replace("\\*", ".*") + "$";
 
     private const string Replacement = "_";
 

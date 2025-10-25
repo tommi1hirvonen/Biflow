@@ -322,7 +322,8 @@
         ArgumentNullException.ThrowIfNull(_newObject);
         ArgumentNullException.ThrowIfNull(_references);
         
-        if (_references.Any(o => o.ReferenceType == ReferenceType && o.DataObject.UriEquals(_newObject)))
+        if (_references.Any(o => o.ReferenceType == ReferenceType &&
+                                 o.DataObject.UriEquals(_newObject)))
         {
             Toaster.AddWarning($"Duplicate {_listName} object");
             return;

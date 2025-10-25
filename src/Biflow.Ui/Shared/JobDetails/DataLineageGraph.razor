@@ -1,6 +1,4 @@
-﻿@inject IDbContextFactory<AppDbContext> DbFactory
-@inject IHxMessageBoxService Confirmer
-
+﻿
 @*CSS definitions for the dependency graph nodes and paths created in site.js through JSInterop.*@
 <style>
     html, body {
@@ -180,14 +178,8 @@
         ArgumentNullException.ThrowIfNull(Job);
         ArgumentNullException.ThrowIfNull(Steps);
         ArgumentNullException.ThrowIfNull(_dependencyGraph);
-
-        var uris = Steps
-            .SelectMany(step => step.DataObjects)
-            .Select(d => d.DataObject.ObjectUri)
-            .Distinct()
-            .ToArray();
-
-        var stepNodes = Steps.Select(step =>
+        
+        var stepNodes = Steps.Select(INode (step) =>
         {
             var node = new DependencyGraphNode(
                 Id: step.StepId.ToString(),
@@ -196,9 +188,16 @@
                 TooltipText: step.StepType.ToString(),
                 EnableOnClick: true
             );
-            return new StepNode(step.StepId.ToString(), step.StepName ?? "", node, step) as INode;
+            return new StepNode(step.StepId.ToString(), step.StepName ?? "", node, step);
         });
-        var dataNodes = uris.Select(uri =>
+        
+        var uris = Steps
+            .SelectMany(step => step.DataObjects)
+            .Select(d => d.DataObject.ObjectUri)
+            .Distinct()
+            .ToArray();
+        
+        var dataNodes = uris.Select(INode (uri) =>
         {
             var node = new DependencyGraphNode(
                 Id: uri,
@@ -208,14 +207,14 @@
                 EnableOnClick: true,
                 Rounded: false
             );
-            return new DataNode(uri, uri, node, uri) as INode;
+            return new DataNode(uri, uri, node, uri);
         });
 
         _graphNodes = stepNodes
             .Concat(dataNodes)
             .ToList();
 
-        // Replace filterNode with a new reference from graphNodes so that it has the selected css class.
+        // Replace filterNode with a new reference from graphNodes so that it has the selected CSS class.
         _filterNode = _graphNodes.FirstOrDefault(n => n.Id == _filterNode?.Id) ?? _filterNode;
 
         List<DependencyGraphNode> nodes;
@@ -236,13 +235,25 @@
                             Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
                     return sources.Concat(targets);
                 })
+                .Concat(
+                    // Add wildcard matches between data objects.
+                    uris.SelectMany(u1 =>
+                            uris
+                                .Select(u2 => (u1, u2))
+                                .Where(tuple => tuple.u1 != tuple.u2 && IDataObject.UriIsPartOf(tuple.u1, tuple.u2)))
+                        .Select(tuple => new DependencyGraphEdge(
+                            Id: tuple.u1, DependsOnId: tuple.u2, CssClass: "")))
                 .ToList();
         }
         else
         {
-            var iNodes = RecurseDependenciesBackward(_filterNode, _graphNodes, new(), 0);
-            iNodes.Remove(_filterNode);
-            iNodes = RecurseDependenciesForward(_filterNode, _graphNodes, iNodes, 0);
+            var iNodes = RecurseDependenciesBackward(_filterNode, _graphNodes, [], 0);
+            // Separate processed nodes from the rest of the added nodes such that
+            // only StepNodes are included in the list of processed.
+            // Also remove filter node so that forward recursion can be started from it.
+            // This way DataNodes can be processed twice, once for each direction, thus handling URI wildcard matches.
+            var processedNodes = iNodes.Where(n => n != _filterNode).OfType<StepNode>().Cast<INode>().ToHashSet();
+            iNodes = RecurseDependenciesForward(_filterNode, _graphNodes, processedNodes, iNodes, 0);
             nodes = iNodes.Select(n => n.Node).ToList();
             edges = Steps
                 .SelectMany(step =>
@@ -259,41 +270,50 @@
                             Id: t.DataObject.ObjectUri, DependsOnId: step.StepId.ToString(), CssClass: ""));
                     return sources.Concat(targets);
                 })
+                .Concat(
+                    // Add wildcard matches between data objects.
+                    iNodes.OfType<DataNode>().SelectMany(dn1 =>
+                        iNodes.OfType<DataNode>()
+                                .Select(dn2 => ((IDataObject)dn1, (IDataObject)dn2))
+                                .Where(tuple => !tuple.Item1.UriEquals(tuple.Item2) && tuple.Item1.UriIsPartOf(tuple.Item2)))
+                        .Select(tuple => new DependencyGraphEdge(
+                            Id: tuple.Item1.ObjectUri, DependsOnId: tuple.Item2.ObjectUri, CssClass: "")))
                 .ToList();
         }
 
         await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
-    private List<INode> RecurseDependenciesBackward(INode node, List<INode> allNodes, List<INode> processedNodes, int depth)
+    private HashSet<INode> RecurseDependenciesBackward(INode node, List<INode> allNodes, HashSet<INode> processedNodes,
+        int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
-        // If the node was already handled, return.
-        // This way we do not loop indefinitely in case of circular dependencies.
-        if (processedNodes.Any(n => n.Id == node.Id))
+        if (processedNodes.Contains(node) ||
+            depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
         {
             return processedNodes;
         }
 
-        if (depth++ > FilterDepthBackwards && FilterDepthBackwards > 0)
-        {
-            return processedNodes;
-        }
-
-        processedNodes.Add(node);
+        _ = processedNodes.Add(node);
 
         var dependencyNodes = node switch
         {
             StepNode step => allNodes
                 .OfType<DataNode>()
-                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source && d.DataObject.ObjectUri == dn.Uri))
+                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source &&
+                                                            d.DataObject.UriEquals(dn)))
                 .Cast<INode>()
                 .ToList(),
             DataNode data => allNodes
                 .OfType<StepNode>()
-                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target && d.DataObject.ObjectUri == data.Uri))
+                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target &&
+                                                          d.DataObject.UriEquals(data)))
                 .Cast<INode>()
+                .Concat(
+                    // Add wildcard matches between data objects.
+                    allNodes.OfType<DataNode>()
+                        .Where(dn => dn.ObjectUri != data.ObjectUri && dn.UriIsPartOf(data)))
                 .ToList(),
             _ => []
         };
@@ -307,43 +327,46 @@
         return processedNodes;
     }
 
-    private List<INode> RecurseDependenciesForward(INode node, List<INode> allNodes, List<INode> processedNodes, int depth)
+    private HashSet<INode> RecurseDependenciesForward(INode node, List<INode> allNodes, HashSet<INode> processedNodes,
+        HashSet<INode> nodes, int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
-        if (processedNodes.Any(n => n.Id == node.Id))
+        if (processedNodes.Contains(node) || depth++ > FilterDepthForwards && FilterDepthForwards > 0)
         {
-            return processedNodes;
+            return nodes;
         }
 
-        if (depth++ > FilterDepthForwards && FilterDepthForwards > 0)
-        {
-            return processedNodes;
-        }
-
-        processedNodes.Add(node);
+        _ = processedNodes.Add(node);
+        _ = nodes.Add(node);
 
         var dependencyNodes = node switch
         {
             StepNode step => allNodes
                 .OfType<DataNode>()
-                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target && d.DataObject.ObjectUri == dn.Uri))
+                .Where(dn => step.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Target &&
+                                                            d.DataObject.UriEquals(dn)))
                 .Cast<INode>()
                 .ToList(),
             DataNode data => allNodes
                 .OfType<StepNode>()
-                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source && d.DataObject.ObjectUri == data.Uri))
+                .Where(sn => sn.Step.DataObjects.Any(d => d.ReferenceType == DataObjectReferenceType.Source &&
+                                                          d.DataObject.UriEquals(data)))
                 .Cast<INode>()
+                .Concat(
+                    // Add wildcard matches between data objects.
+                    allNodes.OfType<DataNode>()
+                        .Where(dn => dn.ObjectUri != data.ObjectUri && dn.UriIsPartOf(data)))
                 .ToList(),
             _ => []
         };
 
         foreach (var dependencyNode in dependencyNodes)
         {
-            RecurseDependenciesForward(dependencyNode, allNodes, processedNodes, depth);
+            RecurseDependenciesForward(dependencyNode, allNodes, processedNodes, nodes, depth);
         }
 
-        return processedNodes;
+        return nodes;
     }
 
     private Task<AutosuggestDataProviderResult<INode>> ProvideSuggestionsAsync(AutosuggestDataProviderRequest request)
@@ -365,5 +388,8 @@
 
     private record StepNode(string Id, string Name, DependencyGraphNode Node, Step Step) : INode;
 
-    private record DataNode(string Id, string Name, DependencyGraphNode Node, string Uri) : INode;
+    private record DataNode(string Id, string Name, DependencyGraphNode Node, string ObjectUri) : INode, IDataObject
+    {
+        public bool UriIsPartOf(IDataObject? other) => IDataObject.UriIsPartOf(this, other);
+    }
 }
