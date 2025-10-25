@@ -125,7 +125,7 @@
         _testingConnection = true;
         try
         {
-            using var client = _environment.CreateClient(HttpClientFactory);
+            var client = _environment.CreateClient(HttpClientFactory);
             await client.TestConnectionAsync();
             _connectionTestSuccess = true;
         }

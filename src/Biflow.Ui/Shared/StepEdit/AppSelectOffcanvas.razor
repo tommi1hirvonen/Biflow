@@ -183,7 +183,7 @@
         {
             var client = QlikClients?.FirstOrDefault(c => c.QlikCloudEnvironmentId == _clientId);
             ArgumentNullException.ThrowIfNull(client);
-            using var connectedClient = client.CreateClient(HttpClientFactory);
+            var connectedClient = client.CreateClient(HttpClientFactory);
             _spaces = await connectedClient.GetAppsAsync();
         }
         catch (Exception ex)

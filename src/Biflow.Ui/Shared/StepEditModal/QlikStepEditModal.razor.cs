@@ -184,7 +184,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(httpClientFactory);
+                var client = environment.CreateClient(httpClientFactory);
                 return await client.GetAppAsync(value);
             }
             catch (Exception ex)
@@ -205,7 +205,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(httpClientFactory);
+                var client = environment.CreateClient(httpClientFactory);
                 var spaces = await client.GetAppsAsync();
                 _apps = spaces.SelectMany(s => s.Apps).OrderBy(a => a.Name).ToArray();
             }
@@ -235,7 +235,7 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(httpClientFactory);
+                var client = environment.CreateClient(httpClientFactory);
                 return await client.GetAutomationAsync(value);
             }
             catch (Exception ex)
@@ -256,9 +256,9 @@ public partial class QlikStepEditModal(
             {
                 var environment = CurrentEnvironment;
                 ArgumentNullException.ThrowIfNull(environment);
-                using var client = environment.CreateClient(httpClientFactory);
+                var client = environment.CreateClient(httpClientFactory);
                 var automations = await client.GetAutomationsAsync();
-                this._automations = automations.OrderBy(a => a.Name).ToArray();
+                _automations = automations.OrderBy(a => a.Name).ToArray();
             }
             catch (Exception ex)
             {
