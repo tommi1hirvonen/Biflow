@@ -10,10 +10,12 @@
 
 <div class="row align-items-end mb-3">
     <div class="col-xl-7 col-lg-9 col-12">
-        <HxAutosuggest @bind-Value="_filterNode"
+        <HxAutosuggest @bind-Value="_filterNodeId"
                        @bind-Value:after="LoadGraphAsync"
                        TItem="INode"
-                       TValue="INode"
+                       TValue="string"
+                       ItemFromValueResolver="v => Task.FromResult(_graphNodes.GetValueOrDefault(v)!)"
+                       ValueSelector="item => item.Id"
                        TextSelector="x => x.Name"
                        DataProvider="ProvideSuggestionsAsync"
                        MinimumLength="0"
@@ -49,7 +51,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_filterNode is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthBackwards" disabled=@(_filterNodeId is null) style="max-width: 9rem;" />
         </div>
         <div class="form-group ms-3">
             <label class="form-label">Depth forwards</label>
@@ -60,7 +62,7 @@
                     </span>
                 </ChildContent>
             </HxPopover>
-            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_filterNode is null) style="max-width: 9rem;" />
+            <input class="form-control form-control-sm" type="number" @bind-value="FilterDepthForwards" disabled=@(_filterNodeId is null) style="max-width: 9rem;" />
         </div>
         <HxButtonGroup Size="ButtonGroupSize.Small" CssClass="ms-3">
             <HxButton CssClass="btn-auto" Size="ButtonSize.Small" Color="ThemeColor.None" OnClick="LoadGraphAsync">
@@ -122,11 +124,11 @@
     <DependencyGraph @ref="_dependencyGraph"
                      TItem="INode"
                      AfterRender="LoadGraphAsync"
-                     ItemFromNodeIdSelector="nodeId => _graphNodes.FirstOrDefault(node => node.Id == nodeId)"
+                     ItemFromNodeIdSelector="nodeId => _graphNodes.GetValueOrDefault(nodeId)"
                      CssClass="dependency-graph">
         <ContextMenuTemplate Context="node">
             <li>
-                <span class="dropdown-item" role="button" @onclick="async () => { _filterNode = node; await LoadGraphAsync();}">
+                <span class="dropdown-item" role="button" @onclick="async () => { _filterNodeId = node.Id; await LoadGraphAsync();}">
                     <SvgIcon Icon="LucideIcon.Filter" />
                     Limit graph to this
                 </span>
@@ -139,10 +141,12 @@
     [CascadingParameter] public Job? Job { get; set; }
 
     [CascadingParameter] public List<Step>? Steps { get; set; }
+    
+    [Parameter] public Guid? InitialStepId { get; set; }
 
+    private string? _filterNodeId;
     private DependencyGraph<INode>? _dependencyGraph;
-    private INode? _filterNode;
-    private List<INode> _graphNodes = [];
+    private Dictionary<string, INode> _graphNodes = [];
     private DependencyGraphDirection _direction = DependencyGraphDirection.LeftToRight;
 
     private int FilterDepthBackwards
@@ -162,6 +166,14 @@
 
     // TODO Replace with field keyword in .NET 10
     private int _filterDepthForwards;
+    
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (!firstRender) return;
+        if (InitialStepId is not { } filterStepId) return;
+        _filterNodeId = filterStepId.ToString();
+        StateHasChanged();
+    }
 
     private Task SetDirectionAsync(DependencyGraphDirection direction)
     {
@@ -184,7 +196,7 @@
             var node = new DependencyGraphNode(
                 Id: step.StepId.ToString(),
                 Name: step.StepName ?? "",
-                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} internal {(_filterNode?.Id == step.StepId.ToString() ? "selected" : null)}",
+                CssClass: $"{(step.IsEnabled ? "enabled" : "disabled")} internal {(_filterNodeId == step.StepId.ToString() ? "selected" : null)}",
                 TooltipText: step.StepType.ToString(),
                 EnableOnClick: true
             );
@@ -202,7 +214,7 @@
             var node = new DependencyGraphNode(
                 Id: uri,
                 Name: uri,
-                CssClass: $"font-monospace internal {(_filterNode?.Id == uri ? "selected" : null)}",
+                CssClass: $"font-monospace internal {(_filterNodeId == uri ? "selected" : null)}",
                 TooltipText: "Data object",
                 EnableOnClick: true,
                 Rounded: false
@@ -212,16 +224,13 @@
 
         _graphNodes = stepNodes
             .Concat(dataNodes)
-            .ToList();
-
-        // Replace filterNode with a new reference from graphNodes so that it has the selected CSS class.
-        _filterNode = _graphNodes.FirstOrDefault(n => n.Id == _filterNode?.Id) ?? _filterNode;
+            .ToDictionary(x => x.Id, x => x);
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
-        if (_filterNode is null)
+        if (_filterNodeId is null)
         {
-            nodes = _graphNodes.Select(n => n.Node).ToList();
+            nodes = _graphNodes.Values.Select(n => n.Node).ToList();
             edges = Steps
                 .SelectMany(step =>
                 {
@@ -247,13 +256,16 @@
         }
         else
         {
-            var iNodes = RecurseDependenciesBackward(_filterNode, _graphNodes, [], 0);
+            var filterNode = _graphNodes.GetValueOrDefault(_filterNodeId);
+            if (filterNode is null) return;
+            
+            var iNodes = RecurseDependenciesBackward(filterNode, _graphNodes.Values, [], 0);
             // Separate processed nodes from the rest of the added nodes such that
             // only StepNodes are included in the list of processed.
             // Also remove filter node so that forward recursion can be started from it.
             // This way DataNodes can be processed twice, once for each direction, thus handling URI wildcard matches.
-            var processedNodes = iNodes.Where(n => n != _filterNode).OfType<StepNode>().Cast<INode>().ToHashSet();
-            iNodes = RecurseDependenciesForward(_filterNode, _graphNodes, processedNodes, iNodes, 0);
+            var processedNodes = iNodes.Where(n => n != filterNode).OfType<StepNode>().Cast<INode>().ToHashSet();
+            iNodes = RecurseDependenciesForward(filterNode, _graphNodes.Values, processedNodes, iNodes, 0);
             nodes = iNodes.Select(n => n.Node).ToList();
             edges = Steps
                 .SelectMany(step =>
@@ -284,8 +296,8 @@
         await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
-    private HashSet<INode> RecurseDependenciesBackward(INode node, List<INode> allNodes, HashSet<INode> processedNodes,
-        int depth)
+    private HashSet<INode> RecurseDependenciesBackward(INode node, IReadOnlyCollection<INode> allNodes, 
+        HashSet<INode> processedNodes, int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
@@ -327,8 +339,8 @@
         return processedNodes;
     }
 
-    private HashSet<INode> RecurseDependenciesForward(INode node, List<INode> allNodes, HashSet<INode> processedNodes,
-        HashSet<INode> nodes, int depth)
+    private HashSet<INode> RecurseDependenciesForward(INode node, IReadOnlyCollection<INode> allNodes,
+        HashSet<INode> processedNodes, HashSet<INode> nodes, int depth)
     {
         ArgumentNullException.ThrowIfNull(Steps);
 
@@ -373,7 +385,7 @@
     {
         return Task.FromResult(new AutosuggestDataProviderResult<INode>
         {
-            Data = _graphNodes.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
+            Data = _graphNodes.Values.Where(n => n.Name.ContainsIgnoreCase(request.UserInput))
         });
     }
 

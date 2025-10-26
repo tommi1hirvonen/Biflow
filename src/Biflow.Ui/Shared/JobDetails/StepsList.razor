@@ -581,6 +581,10 @@
                                 <SvgIcon Icon="LucideIcon.Workflow" />
                                 Dependencies
                             </DropdownMenuLink>
+                            <DropdownMenuLink href="@($"jobs/{Job?.JobId}/lineage/{item.StepId}")">
+                                <SvgIcon Icon="LucideIcon.Network" />
+                                Lineage
+                            </DropdownMenuLink>
                             <DropdownMenuItem @onclick="() => _stepDetailsModal.LetAsync(x => x.ShowAsync(item))">
                                 <SvgIcon Icon="LucideIcon.Info" />
                                 Details
