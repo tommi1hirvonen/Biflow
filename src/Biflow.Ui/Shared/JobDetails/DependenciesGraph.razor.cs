@@ -31,7 +31,7 @@ public partial class DependenciesGraph(
     private StepHistoryOffcanvas? _stepHistoryOffcanvas;
     private Guid? _stepFilter;
     private DependencyGraphDirection _direction = DependencyGraphDirection.LeftToRight;
-    private List<StepProjection>? _stepSlims;
+    private Dictionary<Guid, StepProjection>? _stepSlims;
 
     private int FilterDepthBackwards
     {
@@ -101,13 +101,13 @@ public partial class DependenciesGraph(
                 s.IsEnabled,
                 s.Tags.ToArray(),
                 s.Dependencies.Select(d => new DependencyProjection(d.StepId, d.DependantOnStepId, d.DependencyType)).ToArray()))
-            .ToListAsync();
+            .ToDictionaryAsync(x => x.StepId, x => x);
 
         List<DependencyGraphNode> nodes;
         List<DependencyGraphEdge> edges;
-        if (_stepFilter is null)
+        if (_stepFilter is not { } id)
         {
-            var steps = _stepSlims.Where(TagFilterPredicate).ToArray();
+            var steps = _stepSlims.Values.Where(TagFilterPredicate).ToArray();
             nodes = steps
                 .Where(TagFilterPredicate)
                 .Select(step => new DependencyGraphNode(
@@ -128,12 +128,12 @@ public partial class DependenciesGraph(
         }
         else
         {
-            var startStep = _stepSlims.FirstOrDefault(s => s.StepId == _stepFilter);
+            var startStep = _stepSlims.GetValueOrDefault(id);
             if (startStep is not null)
             {
-                var steps = RecurseDependenciesBackward(startStep, _stepSlims, [], 0);
+                var steps = RecurseDependenciesBackward(startStep, _stepSlims.Values, [], 0);
                 steps.Remove(startStep);
-                steps = RecurseDependenciesForward(startStep, _stepSlims, steps, 0);
+                steps = RecurseDependenciesForward(startStep, _stepSlims.Values, steps, 0);
 
                 nodes = steps.Select(step => new DependencyGraphNode(
                     Id: step.StepId.ToString(),
@@ -142,7 +142,7 @@ public partial class DependenciesGraph(
                     TooltipText: $"{step.StepType}",
                     EnableOnClick: true
                 )).ToList();
-                edges = _stepSlims
+                edges = _stepSlims.Values
                     .SelectMany(step => step.Dependencies)
                     .Where(d => steps.Any(s => d.DependentOnStepId == s.StepId) && steps.Any(s => d.StepId == s.StepId)) // only include dependencies whose step is included
                     .Select(dep => new DependencyGraphEdge(
@@ -160,8 +160,8 @@ public partial class DependenciesGraph(
         await _dependencyGraph.DrawAsync(nodes, edges, _direction);
     }
 
-    private List<StepProjection> RecurseDependenciesBackward(StepProjection step, List<StepProjection> allSteps,
-        List<StepProjection> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesBackward(StepProjection step,
+        IReadOnlyCollection<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
         // If the step was already handled, return.
         // This way we do not loop indefinitely in case of circular dependencies.
@@ -191,8 +191,8 @@ public partial class DependenciesGraph(
         return processedSteps;
     }
 
-    private List<StepProjection> RecurseDependenciesForward(StepProjection step, List<StepProjection> allSteps,
-        List<StepProjection> processedSteps, int depth)
+    private List<StepProjection> RecurseDependenciesForward(StepProjection step,
+        IReadOnlyCollection<StepProjection> allSteps, List<StepProjection> processedSteps, int depth)
     {
         if (processedSteps.Any(s => s.StepId == step.StepId))
         {
@@ -292,7 +292,7 @@ public partial class DependenciesGraph(
     private Task<AutosuggestDataProviderResult<StepProjection>> ProvideSuggestions(AutosuggestDataProviderRequest request)
     {
         ArgumentNullException.ThrowIfNull(_stepSlims);
-        var filteredModules = _stepSlims.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
+        var filteredModules = _stepSlims.Values.Where(s => s.StepName?.ContainsIgnoreCase(request.UserInput) ?? false);
         return Task.FromResult(new AutosuggestDataProviderResult<StepProjection>
         {
             Data = filteredModules

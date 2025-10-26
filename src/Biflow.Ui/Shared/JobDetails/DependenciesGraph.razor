@@ -22,7 +22,7 @@
                        @bind-Value="_stepFilter"
                        @bind-Value:after="LoadGraphAsync"
                        DataProvider="ProvideSuggestions"
-                       ItemFromValueResolver="v => Task.FromResult(_stepSlims?.FirstOrDefault(s => s.StepId == v)!)"
+                       ItemFromValueResolver="v => Task.FromResult(v is { } id ? _stepSlims?.GetValueOrDefault(id)! : null!)"
                        ValueSelector="item => item.StepId"
                        TextSelector="@(item => item.StepName ?? "")"
                        MinimumLength="0"
@@ -140,7 +140,7 @@
 {
     <DependencyGraph @ref="_dependencyGraph"
                      TItem="StepProjection"
-                     ItemFromNodeIdSelector="nodeId => _stepSlims?.FirstOrDefault(s => s.StepId.ToString() == nodeId)"
+                     ItemFromNodeIdSelector="nodeId => _stepSlims?.GetValueOrDefault(Guid.Parse(nodeId))"
                      AfterRender="LoadGraphAsync"
                      CssClass="dependency-graph">
         <ContextMenuTemplate Context="step">
