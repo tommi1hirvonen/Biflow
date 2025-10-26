@@ -191,7 +191,7 @@
                                     </td>
                                     <td>
                                         <HxButtonGroup Size="ButtonGroupSize.Small">
-                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => { _newObject = obj; }" title="Edit before adding">
+                                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" OnClick="() => _newObject.ObjectUri = obj.ObjectUri" title="Edit before adding">
                                                 <SvgIcon Icon="LucideIcon.Pen" />
                                             </HxButton>
                                         </HxButtonGroup>
