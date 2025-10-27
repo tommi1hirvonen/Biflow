@@ -252,7 +252,7 @@
                             }
                             else {if (!string.IsNullOrEmpty(_execution.ScheduleName))
                                 {
-                                    @:@_execution.ScheduleName (removed schedule, @Core.Extensions.GetCronExpressionDescription(_execution.CronExpression))
+                                    @:@_execution.ScheduleName (removed schedule, @Ui.Extensions.GetCronExpressionDescription(_execution.CronExpression))
                                 }
                                 else if (_execution.ScheduleId is not null)
                                 {
