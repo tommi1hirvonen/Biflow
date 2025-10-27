@@ -207,7 +207,7 @@
                             e.StepExecution.Execution.CreatedOn >= _fromDateTime &&
                             e.StepExecution.Execution.CreatedOn <= _toDateTime)
                 .OrderByDescending(e => e.StepExecution.Execution.CreatedOn)
-                .ToArrayAsync(_cts.Token);
+                .ToArrayWithNoLockAsync(_cts.Token);
         }
         catch (OperationCanceledException)
         {

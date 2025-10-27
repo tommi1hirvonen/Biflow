@@ -264,7 +264,7 @@
             _detailStep = await context.StepExecutionAttempts
                 .Include(e => e.StepExecution)
                 .ThenInclude(e => e.Execution) // Required for StepExecutionAttempt.CanBeStopped
-                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
+                .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == execution.ExecutionId &&
                                           e.StepId == execution.StepId &&
                                           e.RetryAttemptIndex == execution.RetryAttemptIndex);
             // Request rendering for the data we already have.
@@ -277,7 +277,7 @@
                 .Include(e => e.ExecutionConditionParameters)
                 .ThenInclude(e => e.ExecutionParameter)
                 .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
-                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
+                .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
             await InvokeAsync(StateHasChanged);
             if (_detailStep is not null)
             {

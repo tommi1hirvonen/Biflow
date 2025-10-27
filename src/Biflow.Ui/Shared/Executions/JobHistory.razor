@@ -248,7 +248,7 @@
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
                 Array.Empty<TagProjection>()))
-            .ToArrayAsync(_cts.Token);
+            .ToArrayWithNoLockAsync(_cts.Token);
         
         var chartSeries = _executions
             .Where(e => e.StartedOn is not null)

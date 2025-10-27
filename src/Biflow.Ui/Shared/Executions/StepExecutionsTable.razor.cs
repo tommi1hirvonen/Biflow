@@ -131,9 +131,9 @@ public partial class StepExecutionsTable(
             _detailStep = await context.StepExecutionAttempts
                 .Include(e => e.StepExecution)
                 .ThenInclude(e => e.Execution) // Required for StepExecutionAttempt.CanBeStopped
-                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId &&
-                                          e.StepId == execution.StepId &&
-                                          e.RetryAttemptIndex == execution.RetryAttemptIndex);
+                .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == execution.ExecutionId && 
+                                                    e.StepId == execution.StepId && 
+                                                    e.RetryAttemptIndex == execution.RetryAttemptIndex);
             // Request rendering for the data we already have.
             await InvokeAsync(StateHasChanged);
             // The rest of the data is loaded in the background, as it may take some time.
@@ -146,7 +146,7 @@ public partial class StepExecutionsTable(
                 .Include(e => e.ExecutionConditionParameters)
                 .ThenInclude(e => e.ExecutionParameter)
                 .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
-                .FirstOrDefaultAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
+                .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == execution.ExecutionId && e.StepId == execution.StepId);
             await InvokeAsync(StateHasChanged);
             if (_detailStep is not null)
             {

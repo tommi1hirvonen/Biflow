@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using JetBrains.Annotations;
 
 namespace Biflow.Ui;
 
@@ -13,7 +14,8 @@ public record ExecutionsMonitoringParallelQuery(DateTime FromDateTime, DateTime 
     : IRequest<ExecutionsMonitoringQueryResponse>;
 
 
-internal class ExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+[UsedImplicitly]
+internal class ExecutionsMonitoringParallelQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<ExecutionsMonitoringParallelQuery, ExecutionsMonitoringQueryResponse>
 {
     public async Task<ExecutionsMonitoringQueryResponse> Handle(ExecutionsMonitoringParallelQuery request, CancellationToken cancellationToken)
@@ -80,6 +82,6 @@ internal class ExecutionsParallelQueryHandler(IDbContextFactory<AppDbContext> db
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
                 job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
-            )).ToArrayAsync(cancellationToken);
+            )).ToArrayWithNoLockAsync(cancellationToken);
     }
 }

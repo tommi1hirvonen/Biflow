@@ -1,11 +1,14 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record ExecutionsMonitoringQuery(DateTime FromDateTime, DateTime ToDateTime)
     : IRequest<ExecutionsMonitoringQueryResponse>;
 
 public record ExecutionsMonitoringQueryResponse(IEnumerable<ExecutionProjection> Executions);
 
-internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+[UsedImplicitly]
+internal class ExecutionsMonitoringQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<ExecutionsMonitoringQuery, ExecutionsMonitoringQueryResponse>
 {
     public async Task<ExecutionsMonitoringQueryResponse> Handle(ExecutionsMonitoringQuery request, CancellationToken cancellationToken)
@@ -61,7 +64,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextF
                 e.ExecutionStatus,
                 e.StepExecutions.Count(),
                 job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
-            )).ToArrayAsync(cancellationToken);
+            )).ToArrayWithNoLockAsync(cancellationToken);
 
         return new ExecutionsMonitoringQueryResponse(executions);
     }

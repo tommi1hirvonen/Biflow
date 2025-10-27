@@ -1,11 +1,14 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record StepExecutionsMonitoringQuery(DateTime FromDateTime, DateTime ToDateTime)
     : IRequest<StepExecutionsMonitoringQueryResponse>;
 
 public record StepExecutionsMonitoringQueryResponse(IEnumerable<StepExecutionProjection> Executions);
 
-internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
+[UsedImplicitly]
+internal class StepExecutionsMonitoringQueryHandler(IDbContextFactory<AppDbContext> dbContextFactory)
     : IRequestHandler<StepExecutionsMonitoringQuery, StepExecutionsMonitoringQueryResponse>
 {
     public async Task<StepExecutionsMonitoringQueryResponse> Handle(StepExecutionsMonitoringQuery request, CancellationToken cancellationToken)
@@ -67,7 +70,7 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<AppDbContext> dbCont
                 step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
                 step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray(),
                 job.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
-            )).ToArrayAsync(cancellationToken);
+            )).ToArrayWithNoLockAsync(cancellationToken);
 
         return new StepExecutionsMonitoringQueryResponse(executions);
     }

@@ -23,7 +23,7 @@ internal class NotStartedExecutionsQueryHandler(IDbContextFactory<ServiceDbConte
         
         var executions = await query
             .Take(request.Limit)
-            .ToArrayAsync(cancellationToken);
+            .ToArrayWithNoLockAsync(cancellationToken);
         
         return executions;
     }

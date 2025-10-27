@@ -33,7 +33,7 @@ internal class StepExecutionsQueryHandler(IDbContextFactory<ServiceDbContext> db
         var stepExecutionAttempts = await query
             .Include(e => e.StepExecution)
             .Take(request.Limit)
-            .ToArrayAsync(cancellationToken);
+            .ToArrayWithNoLockAsync(cancellationToken);
         var stepExecutions = stepExecutionAttempts
             .Select(e => e.StepExecution)
             .OrderBy(e => e.ExecutionId)

@@ -18,7 +18,7 @@ internal class ExecutionStepsQueryHandler(IDbContextFactory<ServiceDbContext> db
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var executionExists = await dbContext.Executions
-            .AnyAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
+            .AnyWithNoLockAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
         if (!executionExists)
         {
             throw new NotFoundException<Execution>(request.ExecutionId);
@@ -51,7 +51,7 @@ internal class ExecutionStepsQueryHandler(IDbContextFactory<ServiceDbContext> db
                     $"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
                 .Include(e => e.ExecutionConditionParameters);
         }
-        var stepExecutions = await query.ToArrayAsync(cancellationToken);
+        var stepExecutions = await query.ToArrayWithNoLockAsync(cancellationToken);
         return stepExecutions;
     }
 }

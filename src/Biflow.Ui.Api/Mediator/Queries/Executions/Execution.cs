@@ -29,7 +29,7 @@ internal class ExecutionQueryHandler(IDbContextFactory<ServiceDbContext> dbConte
             query = query.Include(e => e.DataObjects);
         }
         var execution = await query
-            .FirstOrDefaultAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
+            .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == request.ExecutionId, cancellationToken);
         return execution ?? throw new NotFoundException<Execution>(request.ExecutionId);
     }
 }

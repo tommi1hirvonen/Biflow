@@ -130,7 +130,7 @@ public partial class Jobs(
                     .ToArray(),
                 IsRunning = context.Executions.Any(e => e.JobId == job.JobId && e.ExecutionStatus == ExecutionStatus.Running)
             })
-            .ToListAsync(_cts.Token);
+            .ToListWithNoLockAsync(_cts.Token);
         _lastExecutions = lastExecutions.ToDictionary(e => e.Key, e => e.Executions);
         _runningJobIds = lastExecutions
             .Where(e => e.IsRunning)

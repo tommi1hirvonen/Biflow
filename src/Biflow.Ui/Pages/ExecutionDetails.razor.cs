@@ -207,7 +207,7 @@ public partial class ExecutionDetails(
                         e.TimeoutMinutes,
                         e.OvertimeNotificationLimitMinutes,
                         e.ParentExecution
-                    )).FirstOrDefaultAsync(_cts.Token);
+                    )).FirstOrDefaultWithNoLockAsync(_cts.Token);
                 
                 _steps = await (
                     from e in context.StepExecutionAttempts.AsNoTracking()
@@ -232,7 +232,7 @@ public partial class ExecutionDetails(
                         e.StepExecution.Execution.JobName,
                         step.Dependencies.Select(d => d.DependantOnStepId).ToArray(),
                         step.Tags.Select(t => new TagProjection(t.TagId, t.TagName, t.Color, t.SortOrder)).ToArray()
-                    )).ToArrayAsync(_cts.Token);
+                    )).ToArrayWithNoLockAsync(_cts.Token);
                 
                 await InvokeAsync(StateHasChanged);
                 
@@ -242,7 +242,7 @@ public partial class ExecutionDetails(
                 _executionParameters = await context.Set<ExecutionParameter>()
                     .Where(p => p.ExecutionId == ExecutionId)
                     .OrderBy(p => p.ParameterName)
-                    .ToArrayAsync(_cts.Token);
+                    .ToArrayWithNoLockAsync(_cts.Token);
                 
                 _job = _execution is not null
                     ? await context.Jobs

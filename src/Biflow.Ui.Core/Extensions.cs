@@ -1,10 +1,12 @@
-﻿using Biflow.Executor.Core;
+﻿using System.Linq.Expressions;
+using Biflow.Executor.Core;
 using Biflow.Scheduler.Core;
 using CronExpressionDescriptor;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using System.Runtime.CompilerServices;
+using System.Transactions;
 using Biflow.Ui.Core.Validation;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using StartEnd = (System.DateTimeOffset? Start, System.DateTimeOffset? End);
@@ -181,7 +183,97 @@ public static class Extensions
             currentItems.Add(item);
         }
     }
+
+    /// <summary>
+    /// Executes a query asynchronously and retrieves the results as a list,
+    /// using a transaction scope with read-uncommitted isolation level to avoid locking.
+    /// </summary>
+    /// <param name="query">The query to execute.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <typeparam name="T">The type of elements in the query result.</typeparam>
+    /// <returns>A task that represents the asynchronous operation, containing the list of query results.</returns>
+    public static async Task<List<T>> ToListWithNoLockAsync<T>(this IQueryable<T> query,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = CreateReadUncommittedTransaction();
+        var result = await query.ToListAsync(cancellationToken);
+        scope.Complete();
+        return result;
+    }
+
+    /// <summary>
+    /// Executes a query asynchronously and retrieves the results as an array,
+    /// using a transaction scope with read-uncommitted isolation level to avoid locking.
+    /// </summary>
+    /// <param name="query">The query to execute.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <typeparam name="T">The type of elements in the query result.</typeparam>
+    /// <returns>A task that represents the asynchronous operation, containing the array of query results.</returns>
+    public static async Task<T[]> ToArrayWithNoLockAsync<T>(this IQueryable<T> query,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = CreateReadUncommittedTransaction();
+        var result = await query.ToArrayAsync(cancellationToken);
+        scope.Complete();
+        return result;
+    }
+
+    /// <summary>
+    /// Retrieves the first element of a sequence, or a default value, without acquiring a lock on the database during execution.
+    /// </summary>
+    /// <param name="query">The queryable sequence to retrieve the element from.</param>
+    /// <param name="cancellationToken">Optional cancellation token for managing task cancellation.</param>
+    /// <typeparam name="T">The type of the elements in the queryable sequence.</typeparam>
+    /// <returns>The first element in that meets the specified condition, or the default value of type T if no such element is found.</returns>
+    public static async Task<T?> FirstOrDefaultWithNoLockAsync<T>(this IQueryable<T> query,
+        CancellationToken cancellationToken = default)
+    {
+        using var scope = CreateReadUncommittedTransaction();
+        var result = await query.FirstOrDefaultAsync(cancellationToken);
+        scope.Complete();
+        return result;
+    }
+
+    /// <summary>
+    /// Returns the first element of a sequence that satisfies a specified predicate or a default value,
+    /// without acquiring a lock on the database during execution.
+    /// </summary>
+    /// <param name="query">The queryable source to operate on.</param>
+    /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="cancellationToken">A token to monitor for operation cancellation.</param>
+    /// <typeparam name="T">The type of elements in the query.</typeparam>
+    /// <returns>The first element which satisfies the predicate, or default if no such element is found.</returns>
+    public static async Task<T?> FirstOrDefaultWithNoLockAsync<T>(this IQueryable<T> query,
+        Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+    {
+        using var scope = CreateReadUncommittedTransaction();
+        var result = await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        scope.Complete();
+        return result;
+    }
+
+    /// <summary>
+    /// Determines whether any elements exist in the query without acquiring a lock on the database during execution.
+    /// </summary>
+    /// <param name="query">The queryable data source to evaluate.</param>
+    /// /// <param name="predicate">A function to test each element for a condition.</param>
+    /// <param name="cancellationToken">A token to monitor for task cancellation.</param>
+    /// <typeparam name="T">Type of the elements in the query.</typeparam>
+    /// <returns>True if the query contains any elements; otherwise, false.</returns>
+    public static async Task<bool> AnyWithNoLockAsync<T>(this IQueryable<T> query,
+        Expression<Func<T, bool>> predicate, CancellationToken cancellationToken = default)
+    {
+        using var scope = CreateReadUncommittedTransaction();
+        var result = await query.AnyAsync(predicate, cancellationToken);
+        scope.Complete();
+        return result;
+    }
     
+    private static TransactionScope CreateReadUncommittedTransaction() => new(
+        TransactionScopeOption.Required,
+        new TransactionOptions { IsolationLevel = IsolationLevel.ReadUncommitted },
+        TransactionScopeAsyncFlowOption.Enabled);
+
     /// <summary>
     /// Calculate Gantt graph dimensions for a tuple of DateTimeOffsets (start and end time). The start and end time are compared to the list of all tuples provided as an argument.
     /// The method assumes constant width of 100 for the Gantt graph.

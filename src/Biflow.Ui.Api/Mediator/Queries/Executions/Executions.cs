@@ -26,7 +26,7 @@ internal class ExecutionsQueryHandler(IDbContextFactory<ServiceDbContext> dbCont
         
         var executions = await query
             .Take(request.Limit)
-            .ToArrayAsync(cancellationToken);
+            .ToArrayWithNoLockAsync(cancellationToken);
         
         return executions;
     }

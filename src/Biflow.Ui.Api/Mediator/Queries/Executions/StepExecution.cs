@@ -46,7 +46,7 @@ internal class StepExecutionQueryHandler(IDbContextFactory<ServiceDbContext> dbC
                 .Include(e => e.ExecutionConditionParameters);
         }
         var stepExecution = await query
-            .FirstOrDefaultAsync(e => e.ExecutionId == request.ExecutionId && e.StepId == request.StepId,
+            .FirstOrDefaultWithNoLockAsync(e => e.ExecutionId == request.ExecutionId && e.StepId == request.StepId,
                 cancellationToken);
         return stepExecution ?? throw new NotFoundException<StepExecution>(
             (nameof(StepExecution.ExecutionId), request.ExecutionId),
