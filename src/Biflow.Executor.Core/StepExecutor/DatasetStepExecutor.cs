@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.PowerBI.Api.Models;
+using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
@@ -9,6 +11,8 @@ internal class DatasetStepExecutor(
     DatasetStepExecution step,
     DatasetStepExecutionAttempt attempt) : IStepExecutor
 {
+    private const int MaxRefreshRetries = 3;
+    
     private readonly ILogger<DatasetStepExecutor> _logger = serviceProvider
         .GetRequiredService<ILogger<DatasetStepExecutor>>();
     private readonly int _pollingIntervalMs = serviceProvider
@@ -48,7 +52,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await _client.GetDatasetRefreshStatusAsync(step.WorkspaceId, step.DatasetId,
+                var (status, refresh) = await GetDatasetRefreshStatusWithRetriesAsync(step.WorkspaceId, step.DatasetId,
                     cancellationToken);
                 switch (status)
                 {
@@ -64,13 +68,13 @@ internal class DatasetStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                // If the token was canceled, report result as 'Cancel'.
+                // If the token was canceled, report the result as 'Cancel'.
                 if (cancellationToken.IsCancellationRequested)
                 {
                     attempt.AddWarning(ex);
                     return Result.Cancel;
                 }
-                // If not, report error. This means the step was not canceled, but instead the DatasetClient's
+                // If not, report the error. This means the step was not canceled, but instead the DatasetClient's
                 // underlying HttpClient might have timed out.
                 attempt.AddError(ex);
                 return Result.Failure;
@@ -81,5 +85,17 @@ internal class DatasetStepExecutor(
                 return Result.Failure;
             }
         }
+    }
+    
+    private async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusWithRetriesAsync(
+        string workspaceId, string datasetId, CancellationToken cancellationToken)
+    {
+        var retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting dataset refresh status", step.ExecutionId, step));
+        return await retryPolicy.ExecuteAsync(cancellation =>
+            _client.GetDatasetRefreshStatusAsync(workspaceId, datasetId, cancellation), cancellationToken);
     }
 }
