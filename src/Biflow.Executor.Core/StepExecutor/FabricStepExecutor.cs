@@ -142,16 +142,12 @@ internal class FabricStepExecutor(
     private async Task<ItemJobInstance> GetItemJobInstanceWithRetriesAsync(Guid instanceId,
         CancellationToken cancellationToken)
     {
-        var policy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
-                retryCount: MaxRefreshRetries,
-                sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-                onRetry: (ex, _) =>
-                    _logger.LogWarning(
-                        ex, "{ExecutionId} {Step} Error getting item job instance for instance id {instanceId}",
-                        step.ExecutionId, step, instanceId));
-
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting item job instance for instance id {instanceId}",
+                step.ExecutionId, step, instanceId));
         return await policy.ExecuteAsync(cancellation =>
             _client.GetItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId, cancellation), cancellationToken);
     }

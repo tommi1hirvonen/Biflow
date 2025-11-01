@@ -52,7 +52,8 @@ internal class PipelineStepExecutor(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
+            _logger.LogError(ex,
+                "{ExecutionId} {Step} Error creating pipeline run for Pipeline Client id {PipelineClientId} and pipeline {PipelineName}",
                 step.ExecutionId, step, step.PipelineClientId, step.PipelineName);
             attempt.AddError(ex, "Error starting pipeline run");
             return Result.Failure;
@@ -69,7 +70,9 @@ internal class PipelineStepExecutor(
             await using var dbContext = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
             attempt.PipelineRunId = runId;
             await dbContext.Set<PipelineStepExecutionAttempt>()
-                .Where(x => x.ExecutionId == attempt.ExecutionId && x.StepId == attempt.StepId && x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+                .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                            x.StepId == attempt.StepId &&
+                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
                 .ExecuteUpdateAsync(x => x
                     .SetProperty(p => p.PipelineRunId, attempt.PipelineRunId), CancellationToken.None);
         }
@@ -126,29 +129,28 @@ internal class PipelineStepExecutor(
     private async Task<(string Status, string Message)> GetPipelineRunWithRetriesAsync(string runId,
         CancellationToken cancellationToken)
     {
-        var policy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}",
-                    step.ExecutionId, step, runId));
-
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting pipeline run status for run id {runId}",
+                step.ExecutionId, step, runId));
         return await policy.ExecuteAsync(cancellation =>
             _client.GetPipelineRunAsync(runId, cancellation), cancellationToken);
     }
 
     private async Task CancelAsync(string runId)
     {
-        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}", step.ExecutionId, step, runId);
+        _logger.LogInformation("{ExecutionId} {Step} Stopping pipeline run id {PipelineRunId}",
+            step.ExecutionId, step, runId);
         try
         {
             await _client.CancelPipelineRunAsync(runId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}", step.ExecutionId, step, runId);
+            _logger.LogError(ex, "{ExecutionId} {Step} Error stopping pipeline run {runId}",
+                step.ExecutionId, step, runId);
             attempt.AddWarning(ex, $"Error stopping pipeline run {runId}");
         }
     }

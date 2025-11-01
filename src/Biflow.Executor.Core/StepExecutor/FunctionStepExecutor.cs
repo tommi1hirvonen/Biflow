@@ -273,17 +273,14 @@ internal class FunctionStepExecutor(
     private async Task<StatusResponse> GetStatusResponseWithRetriesAsync(string statusUrl,
         CancellationToken cancellationToken)
     {
-        var policy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
-
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting function instance status", step.ExecutionId, step));
         return await policy.ExecuteAsync(async cancellation =>
         {
-            var response = await _client.GetAsync(statusUrl, cancellation);
+            using var response = await _client.GetAsync(statusUrl, cancellation);
             var content = await response.Content.ReadAsStringAsync(cancellation);
             var statusResponse = JsonSerializer.Deserialize<StatusResponse>(content, CaseInsensitiveOptions)
                 ?? throw new InvalidOperationException("Status response was null");

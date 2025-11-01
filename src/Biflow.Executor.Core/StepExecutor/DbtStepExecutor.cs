@@ -124,17 +124,13 @@ internal class DbtStepExecutor(
 
     private async Task<DbtJobRun> GetRunWithRetriesAsync(long runId, CancellationToken cancellationToken)
     {
-        var policy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
-
-        var run = await policy.ExecuteAsync(cancellation =>
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting dbt run for id {runId}", step.ExecutionId, step, runId));
+        return await policy.ExecuteAsync(cancellation =>
             _client.GetJobRunAsync(runId, cancellationToken: cancellation), cancellationToken);
-        return run;
     }
 
     private async Task<DbtJobRun?> CancelAsync(long runId)

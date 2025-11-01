@@ -116,15 +116,11 @@ internal class DataflowStepExecutor(
     private async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)>
         GetDataflowTransactionStatusWithRetriesAsync(CancellationToken cancellationToken)
     {
-        var policy = Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
-                retryCount: MaxRefreshRetries,
-                sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-                onRetry: (ex, _) =>
-                    _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting dataflow transaction status",
-                        step.ExecutionId, step));
-
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxRefreshRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting dataflow transaction status", step.ExecutionId, step));
         return await policy.ExecuteAsync(cancellation =>
             _client.GetDataflowTransactionStatusAsync(step.WorkspaceId, step.DataflowId, cancellation),
             cancellationToken);

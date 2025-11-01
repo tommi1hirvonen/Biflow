@@ -223,14 +223,11 @@ internal class DatabricksStepExecutor(
 
     private async Task<Run> GetRunWithRetriesAsync(long runId, CancellationToken cancellationToken)
     {
-        var policy = Polly.Policy
-            .Handle<Exception>()
-            .WaitAndRetryAsync(
+        var policy = Polly.Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
-            sleepDurationProvider: _ => TimeSpan.FromMilliseconds(_pollingIntervalMs),
-            onRetry: (ex, _) =>
-                _logger.LogWarning(ex, "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
-
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting run status for run id {runId}", step.ExecutionId, step, runId));
         var (run, _) = await policy.ExecuteAsync(cancellation =>
             _client.Jobs.RunsGet(runId, cancellationToken: cancellation), cancellationToken);
         return run;
