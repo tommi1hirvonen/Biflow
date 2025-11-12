@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace Biflow.ExecutorProxy.WebApp;
 
@@ -21,17 +21,10 @@ internal static class Extensions
                 In = ParameterLocation.Header,
                 Scheme = "ApiKeyScheme"
             });
-            var scheme = new OpenApiSecurityScheme
+            s.AddSecurityRequirement(document => new OpenApiSecurityRequirement
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "ApiKey"
-                },
-                In = ParameterLocation.Header
-            };
-            var requirement = new OpenApiSecurityRequirement { { scheme, [] } };
-            s.AddSecurityRequirement(requirement);
+                [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+            });
         });
         
         return services;

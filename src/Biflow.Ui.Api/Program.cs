@@ -6,7 +6,7 @@ using Biflow.Core.Converters;
 using Biflow.Ui.Api;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
@@ -58,17 +58,10 @@ builder.Services.AddSwaggerGen(s =>
         In = ParameterLocation.Header,
         Scheme = "ApiKeyScheme"
     });
-    var scheme = new OpenApiSecurityScheme
+    s.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        Reference = new OpenApiReference
-        {
-            Type = ReferenceType.SecurityScheme,
-            Id = "ApiKey"
-        },
-        In = ParameterLocation.Header
-    };
-    var requirement = new OpenApiSecurityRequirement { { scheme, [] } };
-    s.AddSecurityRequirement(requirement);
+        [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+    });
 });
 builder.Services.AddMemoryCache();
 builder.Services.AddUiCoreServices<UserService>(builder.Configuration, authenticationConfiguration: "UserAuthentication");
@@ -144,7 +137,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapDefaultEndpoints();
 }
-app.UseSwagger();
+app.UseSwagger(options => options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1);
 app.UseSwaggerUI(options => options.DocExpansion(DocExpansion.None));
 app.UseHttpsRedirection();
 app.MapEndpoints(Assembly.GetExecutingAssembly());

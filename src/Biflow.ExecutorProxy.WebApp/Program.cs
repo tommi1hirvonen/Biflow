@@ -5,6 +5,7 @@ using Biflow.ExecutorProxy.Core.FilesExplorer;
 using Biflow.ExecutorProxy.WebApp;
 using Biflow.ExecutorProxy.WebApp.Endpoints;
 using Microsoft.AspNetCore.Routing.Constraints;
+using Microsoft.OpenApi;
 using Serilog;
 using Serilog.Events;
 
@@ -55,7 +56,7 @@ if (app.Environment.IsDevelopment())
 {
     app.MapGet("/health", () => Results.Text("Healthy")); // Skip authentication for health checks in development.
     app.MapGet("/alive", () => Results.Text("Healthy"));
-    app.UseSwagger();
+    app.UseSwagger(options => options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1);
     app.UseSwaggerUI();
 }
 else

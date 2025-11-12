@@ -5,7 +5,7 @@ using Biflow.ExecutorProxy.Core.Authentication;
 using Biflow.Scheduler.Core;
 using Biflow.Scheduler.WebApp;
 using Biflow.Scheduler.WebApp.Execution;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,17 +35,10 @@ builder.Services.AddSwaggerGen(s =>
         In = ParameterLocation.Header,
         Scheme = "ApiKeyScheme"
     });
-    var scheme = new OpenApiSecurityScheme
+    s.AddSecurityRequirement(document => new OpenApiSecurityRequirement
     {
-        Reference = new OpenApiReference
-        {
-            Type = ReferenceType.SecurityScheme,
-            Id = "ApiKey"
-        },
-        In = ParameterLocation.Header
-    };
-    var requirement = new OpenApiSecurityRequirement { { scheme, [] } };
-    s.AddSecurityRequirement(requirement);
+        [new OpenApiSecuritySchemeReference("ApiKey", document)] = []
+    });
 });
 builder.Services.AddHttpClient("executor", (services, httpClient) =>
 {
@@ -88,7 +81,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapDefaultEndpoints(); // Skip authentication for health checks in development.
-    app.UseSwagger();
+    app.UseSwagger(options => options.OpenApiVersion = OpenApiSpecVersion.OpenApi3_1);
     app.UseSwaggerUI();
 }
 else
