@@ -2,9 +2,40 @@
 
 ## Setting up / development environment
 
-Visual Studio 2022 or JetBrains Rider is recommended as the IDE for development.
+Visual Studio 2026 or JetBrains Rider is recommended as the IDE for development.
 
-<a href="https://marketplace.visualstudio.com/items?itemName=Failwyn.WebCompiler64">Web Compiler 2022+</a> Visual Studio extension is used to compile the Scss code in `Biflow.Ui/wwwroot/scss/bootstrap.custom.scss`. The configuration file for compiling the Scss code is located in `Biflow.Ui/compilerconfig.json`.
+## Running locally
+
+1. Install the [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/10.0).
+2. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) and make sure it is running.
+   - Docker is used to host the SQL Server container for the app database.
+   - Aspire will automatically create this container on the first launch.
+3. Clone the repository locally.
+4. In a terminal, navigate to the `Biflow.Aspire.SqlAppHost` folder.
+5. Run `dotnet run`
+   - Alternatively you can run the project in Visual Studio or Rider. 
+   - This will start the Aspire app host, which in turn will start and orchestrate the app database container, backend API and fronted projects.
+   - The first launch may take a while as Aspire creates and spins up the SQL Server container and applies migrations.
+6. Using a browser, navigate to the Aspire dashboard, which can be found at the URL printed in the console.
+   - `Login to the dashboard at https://localhost:<port>/login?t=<token>`
+   - Especially on the first launch, resources may take a while to start. You can monitor the status of the resources on the dashboard until all are running. Aspire will first create and spin up the SQL container, then apply migrations and only then start the API and frontend resources.
+7. Navigate to the UI by following one of the `frontend` resource URLs (https or http) found on the dashboard
+8. You can login using the admin credentials found in the UI project app settings file (`Biflow.Ui/appsettings.json`). Look for the `AdminUser` section.
+
+## Compiling the UI CSS
+
+The UI uses the Bootstrap frontend toolkit (CSS, JavaScript and icons) and the Havit.Blazor.Components.Web.Bootstrap NuGet package for reusable Blazor components. The app CSS is generated from the Bootstrap SCSS files using SASS. This allows for easier customization of the Bootstrap theme. The following guide describes how to compile the CSS using SASS.
+
+#### Install SASS
+
+1. Install [Node.js](https://nodejs.org/en/download)
+2. Install [SASS](https://sass-lang.com/install) using npm
+  - `npm install -g sass`
+
+#### Compile the CSS
+
+1. In a terminal, navigate to the `Biflow.Ui/wwwroot/css` folder
+2. Run `sass bootstrap.custom.scss:bootstrap.custom.css`
 
 ## Adding new step types
 
