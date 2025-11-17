@@ -39,13 +39,27 @@ public abstract class StepExecution(string stepName, StepType stepType)
         ExecutionDependencies = step.Dependencies
             .Select(d => new ExecutionDependency(d, this))
             .ToList();
+        
+        // Keep track of data objects created here.
+        // A step may reference the same data object as a source and as a target.
+        // If the data object was not added previously,
+        // make sure the following logic does not create a new instance twice.
+        var dataObjectsCreatedHere = new List<ExecutionDataObject>();
         DataObjects = step.DataObjects
             .Select(d =>
             {
                 var existing = execution.StepExecutions
                     .SelectMany(e => e.DataObjects.Select(x => x.DataObject))
+                    .Concat(dataObjectsCreatedHere) // Also include data objects created here.
                     .FirstOrDefault(o => o.ObjectId == d.ObjectId);
-                var dataObject = existing ?? new ExecutionDataObject(d.DataObject, execution);
+                ExecutionDataObject dataObject;
+                if (existing is not null)
+                    dataObject = existing;
+                else
+                {
+                    dataObject = new ExecutionDataObject(d.DataObject, execution);
+                    dataObjectsCreatedHere.Add(dataObject);
+                }
                 return new StepExecutionDataObject(this, dataObject, d.ReferenceType, d.DataAttributes);
             })
             .ToArray();
