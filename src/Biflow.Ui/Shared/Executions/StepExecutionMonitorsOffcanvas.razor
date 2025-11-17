@@ -68,7 +68,11 @@
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Close</HxButton>
+        <HxButton Color="ThemeColor.Secondary"
+                  Spinner="false"
+                  @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
+            Close
+        </HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -90,7 +94,7 @@
             .Where(m => m.ExecutionId == step.ExecutionId && m.StepId == step.StepId)
             .Include(m => m.MonitoredStepExecution).ThenInclude(e => e.StepExecutionAttempts)
             .Include(m => m.MonitoredStepExecution).ThenInclude(e => e.Execution)
-            .ToArrayAsync();
+            .ToArrayWithNoLockAsync();
         StateHasChanged();
     }
 }
