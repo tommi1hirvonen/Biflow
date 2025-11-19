@@ -22,9 +22,9 @@ internal class ScdStepExecutor(
         ?? throw new ArgumentNullException(message: "SCD table was null", innerException: null);
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
     
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        cts.Token.ThrowIfCancellationRequested();
+        cancellationContext.CancellationToken.ThrowIfCancellationRequested();
         
         var scdTableJson = JsonSerializer.Serialize(_scdTable, JsonOptions);
         attempt.AddOutput($"SCD table configuration:\n{scdTableJson}");
@@ -36,7 +36,7 @@ internal class ScdStepExecutor(
             ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
             : new CancellationTokenSource();
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-            cts.Token, timeoutCts.Token);
+            cancellationContext.CancellationToken, timeoutCts.Token);
         var cancellationToken = linkedCts.Token;
 
         string structureUpdateStatement;

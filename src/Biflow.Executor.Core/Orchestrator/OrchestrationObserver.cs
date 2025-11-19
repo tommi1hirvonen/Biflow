@@ -7,12 +7,9 @@ internal class OrchestrationObserver(
     ILogger logger,
     StepExecution stepExecution,
     IEnumerable<IOrchestrationTracker> orchestrationTrackers,
-    ExtendedCancellationTokenSource cancellationTokenSource) : IOrchestrationObserver, IDisposable
+    CancellationContext cancellationContext) : IOrchestrationObserver, IDisposable
 {
     private readonly TaskCompletionSource<OrchestratorAction> _tcs = new();
-    private readonly ILogger _logger = logger;
-    private readonly IEnumerable<IOrchestrationTracker> _orchestrationTrackers = orchestrationTrackers;
-    private readonly ExtendedCancellationTokenSource _cancellationTokenSource = cancellationTokenSource;
     private IDisposable? _unsubscriber;
 
     public StepExecution StepExecution { get; } = stepExecution;
@@ -21,7 +18,7 @@ internal class OrchestrationObserver(
 
     public IEnumerable<StepExecutionMonitor> RegisterInitialUpdates(
         IEnumerable<OrchestrationUpdate> updates,
-        Action<ExtendedCancellationTokenSource> executeCallback)
+        Action<CancellationContext> executeCallback)
     {
         try
         {
@@ -33,7 +30,7 @@ internal class OrchestrationObserver(
             if (action?.Value is ExecuteAction)
             {
                 // If the action was ExecuteAction already after registering initial updates, request execution.
-                executeCallback(_cancellationTokenSource);
+                executeCallback(cancellationContext);
             }
             else if (action is not null)
             {
@@ -45,7 +42,7 @@ internal class OrchestrationObserver(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while registering initial updates in orchestration observer");
+            logger.LogError(ex, "Error while registering initial updates in orchestration observer");
             var action = Actions.Fail(StepExecutionStatus.Failed, "Error while registering initial updates in orchestration observer");
             SetResult(action);
             return [];
@@ -53,18 +50,18 @@ internal class OrchestrationObserver(
     }
 
     public async Task WaitForProcessingAsync(
-        Func<OrchestratorAction, ExtendedCancellationTokenSource, Task> processCallback)
+        Func<OrchestratorAction, CancellationContext, Task> processCallback)
     {
         OrchestratorAction stepAction;
         try
         {
-            stepAction = await _tcs.Task.WaitAsync(_cancellationTokenSource.Token);
+            stepAction = await _tcs.Task.WaitAsync(cancellationContext.CancellationToken);
         }
         catch (OperationCanceledException)
         {
             stepAction = Actions.Cancel;
         }
-        await processCallback(stepAction, _cancellationTokenSource);
+        await processCallback(stepAction, cancellationContext);
     }
 
     public void Subscribe(IOrchestrationObservable provider)
@@ -92,7 +89,7 @@ internal class OrchestrationObserver(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while handling update in orchestration observer");
+            logger.LogError(ex, "Error while handling update in orchestration observer");
             var action = Actions.Fail(StepExecutionStatus.Failed, "Error while handling update in orchestration observer");
             SetResult(action);
         }
@@ -112,7 +109,7 @@ internal class OrchestrationObserver(
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error while handling update in orchestration observer");
+            logger.LogError(ex, "Error while handling update in orchestration observer");
             var action = Actions.Fail(StepExecutionStatus.Failed, "Error while handling update in orchestration observer");
             SetResult(action);
             return [];
@@ -121,7 +118,7 @@ internal class OrchestrationObserver(
 
     private IEnumerable<StepExecutionMonitor> HandleUpdateAndGetMonitors(OrchestrationUpdate value)
     {
-        return _orchestrationTrackers
+        return orchestrationTrackers
             .Select(t => t.HandleUpdate(value))
             .OfType<StepExecutionMonitor>()
             .ToArray();
@@ -129,7 +126,7 @@ internal class OrchestrationObserver(
 
     private void HandleUpdate(OrchestrationUpdate value)
     {
-        foreach (var tracker in _orchestrationTrackers)
+        foreach (var tracker in orchestrationTrackers)
         {
             tracker.HandleUpdate(value);
         }
@@ -138,7 +135,7 @@ internal class OrchestrationObserver(
     private OrchestratorAction? GetStepAction()
     {
         // For each tracker, get the step action.
-        foreach (var tracker in _orchestrationTrackers)
+        foreach (var tracker in orchestrationTrackers)
         {
             var action = tracker.GetStepAction().Match<OrchestratorAction?>(
                 (WaitAction _) => null,

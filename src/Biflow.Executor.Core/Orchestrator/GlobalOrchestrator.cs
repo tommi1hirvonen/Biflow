@@ -13,6 +13,21 @@ internal class GlobalOrchestrator(
     private readonly List<IOrchestrationObserver> _observers = [];
     private readonly Dictionary<StepExecution, OrchestrationStatus> _stepStatuses = [];
     private readonly Dictionary<Guid, List<Guid>> _childExecutions = [];
+    
+    private const int MaxStatusUpdateRetries = 3;
+    
+    // Define the retry logic for status updates.
+    // This logic ensures that at least one attempt is made to update the status.
+    // Polly does not elegantly support this approach, so a custom implementation is used.
+    private static Task ExecuteWithLateCancellationRetryAsync(
+        Func<CancellationToken, Task> action,
+        CancellationToken cancellationToken) =>
+        Extensions.ExecuteWithLateCancellationRetryAsync(
+            action: action,
+            retryCount: MaxStatusUpdateRetries,
+            sleepDurationProvider: retryAttempt => Math.Pow(2, retryAttempt) * TimeSpan.FromSeconds(5),
+            shouldRetry: ex => ex is not OperationCanceledException,
+            cancellationToken);
 
     public async Task RegisterStepsAndObserversAsync(
         OrchestrationContext context,
@@ -81,12 +96,13 @@ internal class GlobalOrchestrator(
                     // from the same execution that may have already been started.
                     var monitorsFromNewObserver = observer.RegisterInitialUpdates(
                         updates: statuses,
-                        executeCallback: cts =>
+                        executeCallback: cancellationContext =>
                         {
                             // In case the observer immediately requests for execution,
                             // update the status for observers that have already subscribed and start the execution.
                             UpdateStatus(observer.StepExecution, OrchestrationStatus.Running);
-                            var task = ExecuteStepAsync(context, observer.StepExecution, stepExecutionListener, cts);
+                            var task = ExecuteStepAsync(context, observer.StepExecution, stepExecutionListener,
+                                cancellationContext);
                             tasks.Add(task);
                         });
 
@@ -100,9 +116,9 @@ internal class GlobalOrchestrator(
                     
                     // If the step was not started by the execute callback when registering initial updates,
                     // create a task to wait until the observer requests processing.
-                    var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cts) =>
-                        OnStepReadyForProcessingAsync(
-                            context, observer.StepExecution, stepAction, stepExecutionListener, cts));
+                    var waitTask = observer.WaitForProcessingAsync(processCallback: (stepAction, cancellationContext) =>
+                        OnStepReadyForProcessingAsync(context, observer.StepExecution, stepAction,
+                            stepExecutionListener, cancellationContext));
                     tasks.Add(waitTask);
                 }
 
@@ -171,26 +187,28 @@ internal class GlobalOrchestrator(
         StepExecution stepExecution,
         OrchestratorAction stepAction,
         IStepExecutionListener listener,
-        ExtendedCancellationTokenSource cts) =>
+        CancellationContext cancellationContext) =>
         stepAction.Match(
             async (ExecuteAction _) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Running);
-                await ExecuteStepAsync(context, stepExecution, listener, cts);
+                await ExecuteStepAsync(context, stepExecution, listener, cancellationContext);
             },
             async (CancelAction _) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Failed);
-                await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+                await UpdateExecutionCancelledAsync(stepExecution, cancellationContext.Username,
+                    cancellationContext.ShutdownToken);
             },
             async (FailAction fail) =>
             {
                 UpdateStatus(stepExecution, OrchestrationStatus.Failed);
-                await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage);
+                await UpdateStepAsync(stepExecution, fail.WithStatus, fail.ErrorMessage,
+                    cancellationContext.ShutdownToken);
             });
 
     private async Task ExecuteStepAsync(OrchestrationContext context, StepExecution stepExecution,
-        IStepExecutionListener listener, ExtendedCancellationTokenSource cts)
+        IStepExecutionListener listener, CancellationContext cancellationContext)
     {
         // Update the step's status to 'Queued'.
         try
@@ -216,17 +234,18 @@ internal class GlobalOrchestrator(
         var result = false;
         try
         {
-            await listener.OnPreExecuteAsync(stepExecution, cts);
-            result = await stepOrchestrator.RunAsync(context, stepExecution, cts);
+            await listener.OnPreExecuteAsync(stepExecution, cancellationContext);
+            result = await stepOrchestrator.RunAsync(context, stepExecution, cancellationContext);
         }
         catch (OperationCanceledException)
         {
-            // We should only arrive here if the step was canceled while it was Queued.
+            // We should only arrive here if the step was canceled while it was Queued (OnPreExecuteAsync()).
             // If the step was canceled once its execution had started, then the step's executor
             // should handle the cancellation and the result is returned normally from RunAsync().
             try
             {
-                await UpdateExecutionCancelledAsync(stepExecution, cts.Username);
+                await UpdateExecutionCancelledAsync(stepExecution, cancellationContext.Username,
+                    cancellationContext.ShutdownToken);
             }
             catch (Exception ex)
             {
@@ -237,7 +256,7 @@ internal class GlobalOrchestrator(
         {
             try
             {
-                await UpdateExecutionFailedAsync(ex1, stepExecution);
+                await UpdateExecutionFailedAsync(ex1, stepExecution, cancellationContext.ShutdownToken);
             }
             catch (Exception ex2)
             {
@@ -267,16 +286,17 @@ internal class GlobalOrchestrator(
         }
     }
 
-    private async Task UpdateExecutionCancelledAsync(StepExecution stepExecution, string username)
+    private async Task UpdateExecutionCancelledAsync(StepExecution stepExecution, string username,
+        CancellationToken shutdownToken)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
         foreach (var attempt in stepExecution.StepExecutionAttempts)
         {
             attempt.StartedOn ??= DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.StoppedBy = username;
             attempt.ExecutionStatus = StepExecutionStatus.Stopped;
-            await context.StepExecutionAttempts
+            await ExecuteWithLateCancellationRetryAsync(ct => context.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
                             x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -287,11 +307,13 @@ internal class GlobalOrchestrator(
                     .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
                     .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
                     .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages)
-                    .SetProperty(p => p.StoppedBy, attempt.StoppedBy), CancellationToken.None);
+                    .SetProperty(p => p.StoppedBy, attempt.StoppedBy), ct),
+                shutdownToken);
         }
     }
 
-    private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution)
+    private async Task UpdateExecutionFailedAsync(Exception ex, StepExecution stepExecution,
+        CancellationToken shutdownToken)
     {
         var attempt = stepExecution.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
         if (attempt is null)
@@ -299,35 +321,37 @@ internal class GlobalOrchestrator(
             return;
         }
 
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
         attempt.ExecutionStatus = StepExecutionStatus.Failed;
         attempt.StartedOn ??= DateTimeOffset.Now;
         attempt.EndedOn = DateTimeOffset.Now;
         // Place the error message first on the list.
         attempt.AddError(ex, $"Unhandled error caught in global orchestrator:\n\n{ex.Message}", insertFirst: true);
-        await context.StepExecutionAttempts
-                .Where(x => x.ExecutionId == attempt.ExecutionId &&
-                            x.StepId == attempt.StepId &&
-                            x.RetryAttemptIndex == attempt.RetryAttemptIndex)
-                .ExecuteUpdateAsync(x => x
-                    .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
-                    .SetProperty(p => p.StartedOn, attempt.StartedOn)
-                    .SetProperty(p => p.EndedOn, attempt.EndedOn)
-                    .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
-                    .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
-                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), CancellationToken.None);
+        await ExecuteWithLateCancellationRetryAsync(ct => context.StepExecutionAttempts
+            .Where(x => x.ExecutionId == attempt.ExecutionId &&
+                        x.StepId == attempt.StepId &&
+                        x.RetryAttemptIndex == attempt.RetryAttemptIndex)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(p => p.ExecutionStatus, attempt.ExecutionStatus)
+                .SetProperty(p => p.StartedOn, attempt.StartedOn)
+                .SetProperty(p => p.EndedOn, attempt.EndedOn)
+                .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
+                .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
+                .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), ct),
+            shutdownToken);
     }
 
-    private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status, string? errorMessage)
+    private async Task UpdateStepAsync(StepExecution step, StepExecutionStatus status, string? errorMessage,
+        CancellationToken shutdownToken)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(CancellationToken.None);
         foreach (var attempt in step.StepExecutionAttempts)
         {
             attempt.ExecutionStatus = status;
             attempt.StartedOn = DateTimeOffset.Now;
             attempt.EndedOn = DateTimeOffset.Now;
             attempt.AddError(errorMessage);
-            await context.StepExecutionAttempts
+            await ExecuteWithLateCancellationRetryAsync(ct => context.StepExecutionAttempts
                 .Where(x => x.ExecutionId == attempt.ExecutionId &&
                             x.StepId == attempt.StepId &&
                             x.RetryAttemptIndex == attempt.RetryAttemptIndex)
@@ -337,7 +361,8 @@ internal class GlobalOrchestrator(
                     .SetProperty(p => p.EndedOn, attempt.EndedOn)
                     .SetProperty(p => p.InfoMessages, attempt.InfoMessages)
                     .SetProperty(p => p.WarningMessages, attempt.WarningMessages)
-                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), CancellationToken.None);
+                    .SetProperty(p => p.ErrorMessages, attempt.ErrorMessages), ct),
+                shutdownToken);
         }
     }
 

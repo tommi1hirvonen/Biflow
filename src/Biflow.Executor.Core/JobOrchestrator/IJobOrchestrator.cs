@@ -2,7 +2,7 @@
 
 internal interface IJobOrchestrator
 {
-    public Task RunAsync(OrchestrationContext context, CancellationToken cancellationToken);
+    public Task RunAsync(OrchestrationContext context, CancellationToken shutdownToken);
 
     public void CancelExecution(string username);
 

@@ -1,6 +1,6 @@
 ﻿namespace Biflow.Executor.Core;
 
-public class ExtendedCancellationTokenSource : CancellationTokenSource
+internal class UserCancellationTokenSource : CancellationTokenSource
 {
     public string Username { get; private set; } = "timeout";
 

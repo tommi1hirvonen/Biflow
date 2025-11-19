@@ -12,7 +12,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
     private readonly SemaphoreSlim _mainSemaphore;
     private readonly Dictionary<StepType, SemaphoreSlim> _stepTypeSemaphores;
     private readonly Execution _execution;
-    private readonly Dictionary<StepExecution, ExtendedCancellationTokenSource> _cancellationTokenSources;
+    private readonly Dictionary<StepExecution, UserCancellationTokenSource> _cancellationTokenSources;
     private readonly ConcurrentDictionary<StepExecution, List<SemaphoreSlim>> _enteredSemaphores = [];
 
     public JobOrchestrator(
@@ -24,7 +24,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         _globalOrchestrator = globalOrchestrator;
         _execution = execution;
         _cancellationTokenSources = _execution.StepExecutions
-            .ToDictionary(e => e, _ => new ExtendedCancellationTokenSource());
+            .ToDictionary(e => e, _ => new UserCancellationTokenSource());
 
         // If MaxParallelSteps was defined for the job, use that.
         // Otherwise, default to int.MaxValue, i.e. practically no upper limit.
@@ -40,25 +40,26 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
             .ToDictionary(c => c.StepType, c => new SemaphoreSlim(c.MaxParallelSteps, c.MaxParallelSteps));
     }
 
-    public async Task RunAsync(OrchestrationContext context, CancellationToken cancellationToken)
+    public async Task RunAsync(OrchestrationContext context, CancellationToken shutdownToken)
     {
         var observers = _execution.StepExecutions
             .Select(step =>
             {
                 var trackers = GenerateOrchestrationTrackers(step).ToArray();
+                var userCancellation = _cancellationTokenSources[step];
+                var cancellationContext = new CancellationContext(userCancellation, shutdownToken);
                 var observer = new OrchestrationObserver(
                     logger: _logger,
                     stepExecution: step,
                     orchestrationTrackers: trackers,
-                    cancellationTokenSource: _cancellationTokenSources[step]);
+                    cancellationContext: cancellationContext);
                 return observer;
             })
             .ToArray();
         var orchestrationTask = _globalOrchestrator.RegisterStepsAndObserversAsync(context, observers,
             stepExecutionListener: this);
         
-        // CancellationToken is triggered when the executor service is being shut down
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(shutdownToken);
 
         if (_execution.TimeoutMinutes > 0)
         {
@@ -69,7 +70,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         await Task.WhenAny(orchestrationTask, waitTask);
         
         // If shutdown was requested before the orchestration task finished
-        if (cancellationToken.IsCancellationRequested)
+        if (shutdownToken.IsCancellationRequested)
         {
             CancelExecution("Executor service shutdown");
         }
@@ -92,7 +93,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         // Cancel all steps.
         // Start canceling in reverse topological order, i.e., cancel steps with the most dependencies first.
         // Otherwise, some steps might be marked with status DependenciesFailed before they are canceled.
-        IEnumerable<KeyValuePair<StepExecution, ExtendedCancellationTokenSource>> steps;
+        IEnumerable<KeyValuePair<StepExecution, UserCancellationTokenSource>> steps;
         try
         {
             var comparer = new TopologicalStepExecutionComparer(_cancellationTokenSources.Keys);
@@ -119,10 +120,9 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
         }
     }
 
-    public async Task OnPreExecuteAsync(StepExecution stepExecution,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task OnPreExecuteAsync(StepExecution stepExecution, CancellationContext cancellationContext)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
 
         List<SemaphoreSlim> enteredSemaphores = [];
         _enteredSemaphores[stepExecution] = enteredSemaphores;

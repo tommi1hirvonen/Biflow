@@ -38,9 +38,9 @@ internal class FunctionStepExecutor(
         PropertyNameCaseInsensitive = true
     };
 
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cts.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
         
         using var timeoutCts = step.TimeoutMinutes > 0
@@ -70,7 +70,7 @@ internal class FunctionStepExecutor(
             }
             catch (OperationCanceledException ex)
             {
-                if (cts.IsCancellationRequested)
+                if (cancellationContext.IsCancellationRequested)
                 {
                     attempt.AddWarning(ex);
                     return Result.Cancel;

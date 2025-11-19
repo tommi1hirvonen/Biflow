@@ -26,20 +26,20 @@ internal class JobExecutor(
 
     public Execution Execution { get; } = execution;
 
-    public async Task RunAsync(OrchestrationContext context, CancellationToken cancellationToken)
+    public async Task RunAsync(OrchestrationContext context, CancellationToken shutdownToken)
     {
         // CancellationToken is triggered when the executor service is being shut down
-        cancellationToken.ThrowIfCancellationRequested();
+        shutdownToken.ThrowIfCancellationRequested();
 
         try
         {
             var process = Process.GetCurrentProcess();
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(shutdownToken);
             dbContext.Attach(Execution);
             Execution.ExecutorProcessId = process.Id;
             Execution.ExecutionStatus = ExecutionStatus.Running;
             Execution.StartedOn = DateTimeOffset.Now;
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(shutdownToken);
         }
         catch (Exception ex)
         {
@@ -55,7 +55,7 @@ internal class JobExecutor(
             var result = await validator.ValidateAsync(
                 execution: Execution,
                 onValidationFailed: message => UpdateExecutionFailedAsync($"Execution failed validation. {message}"),
-                cancellationToken);
+                shutdownToken);
 
             if (!result)
             {
@@ -66,13 +66,13 @@ internal class JobExecutor(
         // Update execution parameter values for parameters that use expressions.
         try
         {
-            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
+            await using var dbContext = await _dbContextFactory.CreateDbContextAsync(shutdownToken);
             foreach (var parameter in Execution.ExecutionParameters.Where(p => p.UseExpression))
             {
                 dbContext.Attach(parameter);
-                parameter.ParameterValue = new(await parameter.EvaluateAsync());
+                parameter.ParameterValue = new ParameterValue(await parameter.EvaluateAsync());
             }
-            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContext.SaveChangesAsync(shutdownToken);
         }
         catch (Exception ex)
         {
@@ -90,7 +90,8 @@ internal class JobExecutor(
                 ? Task.Delay(TimeSpan.FromMinutes(Execution.OvertimeNotificationLimitMinutes), notificationCts.Token)
                 : Task.Delay(-1, notificationCts.Token); // infinite timeout
 
-            var orchestrationTask = _jobOrchestrator.RunAsync(context, cancellationToken);
+            // ReSharper disable once PossiblyMistakenUseOfCancellationToken
+            var orchestrationTask = _jobOrchestrator.RunAsync(context, shutdownToken);
 
             await Task.WhenAny(notificationTask, orchestrationTask);
 
@@ -126,7 +127,7 @@ internal class JobExecutor(
         }
 
         // In case of cancellation (service shutdown), do not send notifications.
-        cancellationToken.ThrowIfCancellationRequested();
+        shutdownToken.ThrowIfCancellationRequested();
 
         _ = await _notificationService.SendCompletionNotificationAsync(Execution);
     }

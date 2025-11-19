@@ -123,4 +123,45 @@ public static class Extensions
         })
         .ToDictionary(key => key.Name, value => value.Value);
     }
+
+    /// <summary>
+    /// Executes an asynchronous operation with a retry mechanism that supports late cancellation.
+    /// The first attempt will ignore the cancellation token, while subsequent retries will respect it.
+    /// </summary>
+    /// <param name="action">The asynchronous operation to execute, which accepts a <see cref="CancellationToken"/>.</param>
+    /// <param name="retryCount">The number of retries to attempt if the action fails and meets the retry condition.</param>
+    /// <param name="sleepDurationProvider">A function that determines the delay duration before each retry based on the retry attempt index.</param>
+    /// <param name="shouldRetry">A predicate that evaluates whether the exception thrown by the action qualifies for a retry.</param>
+    /// <param name="cancellationToken">The cancellation token used to signal cancellation for retries and delay intervals.</param>
+    /// <returns>A task that represents the asynchronous operation with retries.</returns>
+    /// <exception cref="InvalidOperationException">Thrown if the retry logic encounters an internal failure or reaches an invalid state.</exception>
+    public static async Task ExecuteWithLateCancellationRetryAsync(
+        Func<CancellationToken, Task> action,
+        int retryCount,
+        Func<int, TimeSpan> sleepDurationProvider,
+        Func<Exception, bool> shouldRetry,
+        CancellationToken cancellationToken)
+    {
+        for (var attempt = 0; attempt <= retryCount; attempt++)
+        {
+            try
+            {
+                // First attempt uses CancellationToken.None, subsequent attempts use actual token.
+                var effectiveToken = attempt == 0 ? CancellationToken.None : cancellationToken;
+                await action(effectiveToken);
+                return;
+            }
+            catch (Exception ex) when (attempt < retryCount && shouldRetry(ex))
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    throw;
+                    
+                var delay = sleepDurationProvider(attempt + 1);
+                // Always use the actual cancellation token for the delay
+                await Task.Delay(delay, cancellationToken);
+            }
+        }
+        // Should never reach here due to throw or return in loop
+        throw new InvalidOperationException("Retry logic error");
+    }
 }

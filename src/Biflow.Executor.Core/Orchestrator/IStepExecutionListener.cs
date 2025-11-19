@@ -2,7 +2,7 @@
 
 internal interface IStepExecutionListener
 {
-    public Task OnPreExecuteAsync(StepExecution stepExecution, ExtendedCancellationTokenSource cts);
+    public Task OnPreExecuteAsync(StepExecution stepExecution, CancellationContext cancellationContext);
 
     public Task OnPostExecuteAsync(StepExecution stepExecution);
 }

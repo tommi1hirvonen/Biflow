@@ -2,5 +2,6 @@
 
 internal interface IStepExecutor
 {
-    public Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts);
+    public Task<Result> ExecuteAsync(OrchestrationContext orchestrationContext,
+        CancellationContext cancellationContext);
 }

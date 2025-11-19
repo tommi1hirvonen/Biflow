@@ -16,9 +16,9 @@ internal class SnowflakeSqlStepExecutor(
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
         .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
     
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cts.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
         try

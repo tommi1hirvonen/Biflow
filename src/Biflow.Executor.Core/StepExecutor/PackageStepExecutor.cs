@@ -19,9 +19,9 @@ internal class PackageStepExecutor(
         step.GetConnection()
         ?? throw new ArgumentNullException(message: "Step's connection is null", innerException: null);
 
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cts.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
         if (_connection.Credential is not null && !OperatingSystem.IsWindows())
@@ -105,7 +105,7 @@ internal class PackageStepExecutor(
         {
             success = await GetPackageStatusAsync(packageOperationId, cancellationToken);
         }
-        catch (Exception ex) when (cts.IsCancellationRequested)
+        catch (Exception ex) when (cancellationContext.IsCancellationRequested)
         {
             attempt.AddWarning(ex);
             return Result.Cancel;
@@ -134,7 +134,7 @@ internal class PackageStepExecutor(
             }
             return Result.Failure;
         }
-        catch (Exception ex) when (cts.IsCancellationRequested)
+        catch (Exception ex) when (cancellationContext.IsCancellationRequested)
         {
             attempt.AddWarning(ex);
             return Result.Cancel;

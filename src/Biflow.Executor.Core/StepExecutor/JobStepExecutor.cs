@@ -17,9 +17,9 @@ internal class JobStepExecutor(
     private readonly IExecutionManager _executionManager = serviceProvider
         .GetRequiredService<IExecutionManager>();
     
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cts.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
         var executionAttempt = step.StepExecutionAttempts.MaxBy(e => e.RetryAttemptIndex);
@@ -131,7 +131,7 @@ internal class JobStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            _executionManager.CancelExecution(jobExecutionId, cts.Username);
+            _executionManager.CancelExecution(jobExecutionId, cancellationContext.Username);
             attempt.AddWarning(ex);
             return Result.Cancel;
         }

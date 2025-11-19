@@ -4,9 +4,9 @@ namespace Biflow.Executor.Core.StepExecutor;
 
 internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecutionAttempt attempt) : IStepExecutor
 {
-    public async Task<Result> ExecuteAsync(OrchestrationContext context, ExtendedCancellationTokenSource cts)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cts.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
         var connection = step.GetConnection();
@@ -64,7 +64,7 @@ internal class TabularStepExecutor(TabularStepExecution step, TabularStepExecuti
             // Cancel the SaveChanges operation.
             await connection.RunImpersonatedOrAsCurrentUserAsync(
                 () => Task.Run(server.CancelCommand, CancellationToken.None));
-            if (cts.IsCancellationRequested)
+            if (cancellationContext.IsCancellationRequested)
             {
                 attempt.AddWarning(ex);
                 return Result.Cancel;

@@ -8,5 +8,5 @@ public interface IJobExecutor
 
     public void Cancel(string username, Guid stepId);
 
-    public Task RunAsync(OrchestrationContext context, CancellationToken cancellationToken);
+    public Task RunAsync(OrchestrationContext context, CancellationToken shutdownToken);
 }

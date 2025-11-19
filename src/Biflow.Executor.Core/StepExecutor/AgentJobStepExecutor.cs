@@ -23,11 +23,9 @@ internal class AgentJobStepExecutor(
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
-    public async Task<Result> ExecuteAsync(
-        OrchestrationContext context,
-        ExtendedCancellationTokenSource cancellationTokenSource)
+    public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
-        var cancellationToken = cancellationTokenSource.Token;
+        var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
 
         var connection = step.GetConnection();

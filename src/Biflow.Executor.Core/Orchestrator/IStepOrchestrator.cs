@@ -1,7 +1,7 @@
 namespace Biflow.Executor.Core.Orchestrator;
 
-public interface IStepOrchestrator
+internal interface IStepOrchestrator
 {
     public Task<bool> RunAsync(OrchestrationContext context, StepExecution stepExecution,
-        ExtendedCancellationTokenSource cts);
+        CancellationContext cancellationContext);
 }
