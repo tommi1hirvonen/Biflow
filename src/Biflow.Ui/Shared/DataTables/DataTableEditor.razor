@@ -179,7 +179,6 @@
                 @if (_tableData is not null && rows is not null)
                 {
                     var columns = _tableData.Columns
-                        .Where(c => IsColumnSelected(c.Name) && !c.IsHidden)
                         .OrderBy(c => !_table.ColumnOrder.Contains(c.Name))
                         .ThenBy(c => _table.ColumnOrder.IndexOf(c.Name));
                     @if (_tableData.HasChanges)
@@ -198,9 +197,13 @@
                                     var hash = MD5.HashData(bytes);
                                     var id = Convert.ToHexString(hash);
                                     var width = _columnWidths.GetValueOrDefault(id) is { } s ? $"width: {s};" : null;
+                                    // Use "display: none" instead of not rendering the column at all.
+                                    // This way the resizer elements created in JavaScript
+                                    // for the resizable table are retained.
+                                    var display = IsColumnSelected(column.Name) && !column.IsHidden ? "" : "display: none;";
                                     var orderBy = _orderBy.FirstOrDefault(o => o.Column == column.Name);
                                     var filterSet = _quickFilters.GetOrCreate(column.Name);
-                                    <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width">
+                                    <th id="@id" class="fw-normal" title="@column.DbDatatypeDescription" style="@width @display">
                                         <div class="row g-0">
                                             <div class="col d-flex">
                                                 <span class="fw-bold cursor-pointer" @onclick="() => ToggleOrderBy(column.Name)">@column.Name</span>
@@ -269,7 +272,8 @@
                                         var column = columnInfo.Name;
                                         var datatype = columnInfo.Datatype;
                                         var lookupValues = columnInfo.Lookup?.Values;
-                                        <td>
+                                        var display = IsColumnSelected(columnInfo.Name) && !columnInfo.IsHidden ? "" : "display: none;";
+                                        <td style="@display">
                                             @if (_tableData.IsEditable && _editModeEnabled)
                                             {
                                                 @if (!columnInfo.IsEditable)

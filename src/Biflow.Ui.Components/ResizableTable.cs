@@ -14,10 +14,9 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
 
     [Parameter] public EventCallback<ResizableTableColumnWidth> ColumnWidthSet { get; set; }
 
-    private readonly IJSRuntime _js = js;
-
     private DotNetObjectReference<ResizableTable>? _dotNetObject;
     private IJSObjectReference? _jsObject;
+    private IJSObjectReference? _jsDisposable;
     private ElementReference _tableElement;
 
     protected override void OnInitialized()
@@ -43,11 +42,10 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
     {
         if (firstRender)
         {
-            _jsObject = await _js.InvokeAsync<IJSObjectReference>("import", "./_content/Biflow.Ui.Components/ResizableTable.js");
-        }
-        if (_jsObject is not null && _dotNetObject is not null)
-        {
-            await _jsObject.InvokeVoidAsync("createResizableTable", _tableElement, _dotNetObject);
+            _jsObject = await js.InvokeAsync<IJSObjectReference>("import",
+                "./_content/Biflow.Ui.Components/ResizableTable.js");
+            _jsDisposable = await _jsObject.InvokeAsync<IJSObjectReference>("createResizableTable", _tableElement,
+                _dotNetObject);
         }
     }
 
@@ -60,6 +58,15 @@ public class ResizableTable(IJSRuntime js) : ComponentBase, IAsyncDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (_jsDisposable is not null)
+        {
+            try
+            {
+                await _jsDisposable.InvokeVoidAsync("dispose");
+                await _jsDisposable.DisposeAsync();
+            }
+            catch (JSDisconnectedException) { }
+        }
         if (_jsObject is not null)
         {
             try
