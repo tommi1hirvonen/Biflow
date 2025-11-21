@@ -1,17 +1,31 @@
 export function createResizableTable(table, dotNetObjectReference) {
     const cols = table.querySelectorAll('th');
+    const resizers = [];
+
     const resizableColumns = Array.from(cols).map(function (col) {
         // Add a resizer element to the column
         const resizer = document.createElement('div');
         resizer.classList.add('resizer');
-        // Set the height
-        // TODO Set the height in a way that it reacts to the parent table's height.
         resizer.style.height = `${table.offsetHeight}px`;
         col.appendChild(resizer);
+        resizers.push(resizer);
         return createResizableColumn(col, resizer, dotNetObjectReference);
     });
+
+    // Use ResizeObserver to update resizer heights when table height changes
+    const resizeObserver = new ResizeObserver(() => {
+        const tableHeight = table.offsetHeight;
+        resizers.forEach(resizer => {
+            resizer.style.height = `${tableHeight}px`;
+        });
+    });
+    resizeObserver.observe(table);
+
     return {
-        dispose: () => resizableColumns.forEach(col => col.dispose())
+        dispose: () => {
+            resizeObserver.disconnect();
+            resizableColumns.forEach(col => col.dispose());
+        }
     }
 }
 
