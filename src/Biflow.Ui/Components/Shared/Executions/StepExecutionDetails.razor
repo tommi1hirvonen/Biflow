@@ -649,6 +649,18 @@
                     }
                 </AuthorizeView>
             }
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
+                @if (!_showWarningStackTrace && StepExecutionAttempt.WarningMessages.Any(e => !string.IsNullOrEmpty(e.Exception)))
+                {
+                    <div class="mt-2">
+                        <small>
+                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => _showWarningStackTrace = true">
+                                Stack trace available
+                            </a>
+                        </small>
+                    </div>
+                }
+            </AuthorizeView>
         </dd>
     </dl>
     <h6>Execution condition parameters</h6>
@@ -704,8 +716,8 @@
     [Parameter]
     public bool ShowExtraDetails { get; set; }
 
-    private bool _showErrorStackTrace = false;
-    private bool _showWarningStackTrace = false;
+    private bool _showErrorStackTrace;
+    private bool _showWarningStackTrace;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 }
