@@ -138,7 +138,32 @@
                     Capture value
                 </dt>
                 <dd class="col-sm-9">
-                    <pre><code style="white-space: pre-wrap;">@sql.ResultCaptureJobParameterValue.Value</code></pre>
+                    @{
+                        var resultCaptureText = sql.ResultCaptureJobParameterValue.Value?.ToString();
+                    }
+                    <pre>
+                        <code style="white-space: pre-wrap;">
+                            @if (_showFullSqlResultCapture || (resultCaptureText?.Length ?? 0) <= TruncatedSqlResultCaptureLength)
+                            {
+                                @resultCaptureText
+                            }
+                            else
+                            {
+                                @resultCaptureText?[..TruncatedSqlResultCaptureLength]
+                                <text>...</text>
+                            }
+                        </code>
+                    </pre>
+                    @if (!_showFullSqlResultCapture && (resultCaptureText?.Length ?? 0) > TruncatedSqlResultCaptureLength)
+                    {
+                        <div class="mt-2">
+                            <small>
+                                <span class="text-secondary text-decoration-underline cursor-pointer" @onclick="() => _showFullSqlResultCapture = true">
+                                    Show full-length value
+                                </span>
+                            </small>
+                        </div>
+                    }
                 </dd>
                 break;
             case PackageStepExecution package:
@@ -356,7 +381,29 @@
                     Function input
                 </dt>
                 <dd class="col-sm-9">
-                    <pre><code>@function.FunctionInput</code></pre>
+                    <pre>
+                        <code style="white-space: pre-wrap;">
+                            @if (_showFullFunctionInput || (function.FunctionInput?.Length ?? 0) <= TruncatedFunctionInputLength)
+                            {
+                                @function.FunctionInput
+                            }
+                            else
+                            {
+                                @function.FunctionInput?[..TruncatedFunctionInputLength]
+                                <text>...</text>
+                            }
+                        </code>
+                    </pre>
+                    @if (!_showFullFunctionInput && (function.FunctionInput?.Length ?? 0) > TruncatedFunctionInputLength)
+                    {
+                        <div class="mt-2">
+                            <small>
+                                <span class="text-secondary text-decoration-underline cursor-pointer" @onclick="() => _showFullFunctionInput = true">
+                                    Show full-length input
+                                </span>
+                            </small>
+                        </div>
+                    }
                 </dd>
                 <dt class="col-sm-3">
                     Disable async pattern
@@ -397,7 +444,29 @@
                     Request body
                 </dt>
                 <dd class="col-sm-9">
-                    <pre><code>@http.Body</code></pre>
+                    <pre>
+                        <code style="white-space: pre-wrap;">
+                            @if (_showFullHttpBody || (http.Body?.Length ?? 0) <= TruncatedHttpBodyLength)
+                            {
+                                @http.Body
+                            }
+                            else
+                            {
+                                @http.Body?[..TruncatedHttpBodyLength]
+                                <text>...</text>
+                            }
+                        </code>
+                    </pre>
+                    @if (!_showFullHttpBody && (http.Body?.Length ?? 0) > TruncatedHttpBodyLength)
+                    {
+                        <div class="mt-2">
+                            <small>
+                                <span class="text-secondary text-decoration-underline cursor-pointer" @onclick="() => _showFullHttpBody = true">
+                                    Show full-length body
+                                </span>
+                            </small>
+                        </div>
+                    }
                 </dd>
                 <dt class="col-sm-3">
                     Disable async pattern
@@ -591,9 +660,30 @@
                         Message has been truncated to first @info.Message.Length characters.
                     </code>
                 }
-                <code class="text-body" style="white-space: pre-wrap; display: block;">
-                    @info.Message
-                </code>
+                <pre>
+                    <code class="text-body" style="white-space: pre-wrap;">
+                        @if (_showFullOutput || info.Message.Length <= TruncatedOutputLength)
+                        {
+                            @info.Message
+                        }
+                        else
+                        {
+                            @info.Message[..TruncatedOutputLength]
+                            <text>...</text>
+                        }
+                    </code>
+                </pre>
+            }
+            @if (!_showFullOutput && StepExecutionAttempt.InfoMessages.Any(x => x.Message.Length > TruncatedOutputLength))
+            {
+                <div class="mt-2">
+                    <small>
+                        <span class="text-secondary text-decoration-underline cursor-pointer"
+                              @onclick="() => _showFullOutput = true">
+                            Show full-length outputs
+                        </span>
+                    </small>
+                </div>
             }
         </dd>
         <dt class="col-sm-3">
@@ -624,9 +714,9 @@
                 {
                     <div class="mt-2">
                         <small>
-                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => _showErrorStackTrace = true">
+                            <span class="text-secondary text-decoration-underline cursor-pointer" @onclick="() => _showErrorStackTrace = true">
                                 Stack trace available
-                            </a>
+                            </span>
                         </small>
                     </div>
                 }
@@ -654,9 +744,9 @@
                 {
                     <div class="mt-2">
                         <small>
-                            <a class="text-secondary" href="javascript:void(0);" @onclick="() => _showWarningStackTrace = true">
+                            <span class="text-secondary text-decoration-underline cursor-pointer" @onclick="() => _showWarningStackTrace = true">
                                 Stack trace available
-                            </a>
+                            </span>
                         </small>
                     </div>
                 }
@@ -687,11 +777,36 @@
             }
             @foreach (var param in parameters.OrderBy(p => p.ParameterName))
             {
+                var showFullParameterValue = _showFullParameterValues.GetValueOrDefault(param.ParameterId);
+                var parameterValue = param.DisplayValue;
                 <dt class="col-sm-3">
                     @param.DisplayName
                 </dt>
                 <dd class="col-sm-9">
-                    @param.DisplayValue
+                    <pre>
+                        <code style="white-space: pre-wrap;">
+                            @if (showFullParameterValue || parameterValue.Length <= TruncatedParameterValueLength)
+                            {
+                                @parameterValue
+                            }
+                            else
+                            {
+                                @parameterValue[..TruncatedParameterValueLength]
+                                <text>...</text>
+                            }
+                        </code>
+                    </pre>
+                    @if (!showFullParameterValue && parameterValue.Length > TruncatedParameterValueLength)
+                    {
+                        <div class="mt-2">
+                            <small>
+                                <span class="text-secondary text-decoration-underline cursor-pointer"
+                                      @onclick="() => _showFullParameterValues[param.ParameterId] = true">
+                                    Show full-length value
+                                </span>
+                            </small>
+                        </div>
+                    }
                     @if (param.UseExpression && param.ExpressionParameters.Any())
                     {
                         var expressionParameters = param.ExpressionParameters.Select(p => $"<p><small>{p.ParameterName} = {p.InheritFromExecutionParameter.DisplayValue}</small></p>");
@@ -715,9 +830,21 @@
 
     [Parameter]
     public bool ShowExtraDetails { get; set; }
+    
+    private readonly Dictionary<Guid, bool> _showFullParameterValues = [];
+    
+    private const int TruncatedFunctionInputLength = 1_000;
+    private const int TruncatedSqlResultCaptureLength = 1_000;
+    private const int TruncatedParameterValueLength = 1_000;
+    private const int TruncatedOutputLength = 1_000;
+    private const int TruncatedHttpBodyLength = 1_000;
 
     private bool _showErrorStackTrace;
     private bool _showWarningStackTrace;
+    private bool _showFullFunctionInput;
+    private bool _showFullSqlResultCapture;
+    private bool _showFullHttpBody;
+    private bool _showFullOutput;
 
     private static readonly JsonSerializerOptions JsonSerializerOptions = new() { WriteIndented = true };
 }

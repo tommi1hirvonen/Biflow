@@ -351,10 +351,37 @@
                     {
                         foreach (var param in _executionParameters.OrderBy(p => p.ParameterName))
                         {
+                            var showFullParameterValue = _showFullParameterValues.GetValueOrDefault(param.ParameterId);
+                            var parameterValue = param.DisplayValue;
                             <tr>
                                 <td>@param.DisplayName</td>
                                 <td class="font-monospace">@param.DefaultValue.Value</td>
-                                <td class="font-monospace">@param.DisplayValue</td>
+                                <td>
+                                    <pre>
+                                        <code style="white-space: pre-wrap;">
+                                            @if (showFullParameterValue || parameterValue.Length <= TruncatedParameterValueLength)
+                                            {
+                                                @parameterValue
+                                            }
+                                            else
+                                            {
+                                                @parameterValue[..TruncatedParameterValueLength]
+                                                <text>...</text>
+                                            }
+                                        </code>
+                                    </pre>
+                                    @if (!showFullParameterValue && parameterValue.Length > TruncatedParameterValueLength)
+                                    {
+                                        <div class="mt-2">
+                                            <small>
+                                                <span class="text-secondary text-decoration-underline cursor-pointer"
+                                                      @onclick="() => _showFullParameterValues[param.ParameterId] = true">
+                                                    Show full-length value
+                                                </span>
+                                            </small>
+                                        </div>
+                                    }
+                                </td>
                                 <td>@param.DisplayValueType</td>
                                 <td class="small">
                                     <a class="link-body-emphasis cursor-pointer"

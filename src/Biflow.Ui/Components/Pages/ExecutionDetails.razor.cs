@@ -20,6 +20,8 @@ public partial class ExecutionDetails(
     [Parameter] public string Page { get; set; } = "list";
 
     [Parameter] public Guid? InitialStepId { get; set; }
+    
+    private const int TruncatedParameterValueLength = 1_000;
 
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
     private readonly ToasterService _toaster = toaster;
@@ -28,6 +30,7 @@ public partial class ExecutionDetails(
     private readonly IHxMessageBoxService _confirmer = confirmer;
     private readonly IMediator _mediator = mediator;
     private readonly CancellationTokenSource _cts = new();
+    private readonly Dictionary<Guid, bool> _showFullParameterValues = [];
 
     private const int TimerIntervalSeconds = 10;
     private readonly System.Timers.Timer _timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };

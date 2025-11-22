@@ -40,8 +40,36 @@
                                     </div>
                                 </div>
                                 <div class="row mt-1">
-                                    <div class="col font-monospace">
-                                        @item.Value
+                                    <div class="col">
+                                        @{
+                                            var itemValue = item.Value?.ToString() ?? string.Empty;
+                                            var showFullParameterValue = _showFullParameterValues
+                                                .GetValueOrDefault(item.Step.StepId);
+                                        }
+                                        <pre>
+                                            <code style="white-space: pre-wrap;">
+                                                @if (showFullParameterValue || itemValue.Length <= TruncatedParameterValueLength)
+                                                {
+                                                    @itemValue
+                                                }
+                                                else
+                                                {
+                                                    @itemValue[..TruncatedParameterValueLength]
+                                                    <text>...</text>
+                                                }
+                                            </code>
+                                        </pre>
+                                        @if (!showFullParameterValue && itemValue.Length > TruncatedParameterValueLength)
+                                        {
+                                            <div class="mt-2">
+                                                <small>
+                                                    <span class="text-secondary text-decoration-underline cursor-pointer"
+                                                          @onclick="() => _showFullParameterValues[item.Step.StepId] = true">
+                                                        Show full-length value
+                                                    </span>
+                                                </small>
+                                            </div>
+                                        }
                                     </div>
                                 </div>
                             </div>
@@ -53,8 +81,34 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col font-monospace">
-                                    @_lineageParameter.ParameterValue.Value
+                                <div class="col">
+                                    @{
+                                        var endValueText = _lineageParameter.ParameterValue.Value?.ToString() ?? string.Empty;
+                                    }
+                                    <pre>
+                                        <code style="white-space: pre-wrap;">
+                                            @if (_showFullEndValue || endValueText.Length <= TruncatedParameterValueLength)
+                                            {
+                                                @endValueText
+                                            }
+                                            else
+                                            {
+                                                @endValueText[..TruncatedParameterValueLength]
+                                                <text>...</text>
+                                            }
+                                        </code>
+                                    </pre>
+                                    @if (!_showFullEndValue && endValueText.Length > TruncatedParameterValueLength)
+                                    {
+                                        <div class="mt-2">
+                                            <small>
+                                                <span class="text-secondary text-decoration-underline cursor-pointer"
+                                                      @onclick="() => _showFullEndValue = true">
+                                                    Show full-length value
+                                                </span>
+                                            </small>
+                                        </div>
+                                    }
                                 </div>
                             </div>
                         </li>
@@ -79,9 +133,14 @@
 </HxOffcanvas>
 
 @code {
+    private readonly Dictionary<Guid, bool> _showFullParameterValues = [];
+    
     private HxOffcanvas? _offcanvas;
     private ExecutionParameter? _lineageParameter;
     private IEnumerable<LineageItem>? _lineageItems;
+    private bool _showFullEndValue;
+    
+    private const int TruncatedParameterValueLength = 1_000;
 
     public async Task ShowAsync(ExecutionParameter parameter)
     {
@@ -105,7 +164,7 @@
             .Include($"{nameof(IHasStepExecutionParameters.StepExecutionParameters)}.{nameof(StepExecutionParameterBase.ExpressionParameters)}")
             .Include(e => ((SqlStepExecution)e).ResultCaptureJobParameter)
             .Include(e => e.StepExecutionAttempts)
-            .ToArrayAsync();
+            .ToArrayWithNoLockAsync();
         
         List<LineageItem> items = [];
         foreach (var step in stepExecutions)
