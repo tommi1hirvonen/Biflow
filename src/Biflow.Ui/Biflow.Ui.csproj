@@ -36,10 +36,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <_ContentIncludedByDefault Remove="wwwroot\css\bootstrap.custom.css" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Update="compilerconfig.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
     <Content Update="libman.json" CopyToOutputDirectory="Never" CopyToPublishDirectory="Never" />
   </ItemGroup>

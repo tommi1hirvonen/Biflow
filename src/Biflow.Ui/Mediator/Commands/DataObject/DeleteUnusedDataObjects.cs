@@ -1,10 +1,10 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.DataObject;
 
 internal record DeleteUnusedDataObjectsCommand : IRequest<DeleteUnusedDataObjectsResponse>;
 
-internal record DeleteUnusedDataObjectsResponse(IEnumerable<DataObject> DeletedDataObjects);
+internal record DeleteUnusedDataObjectsResponse(IEnumerable<Biflow.Core.Entities.DataObject> DeletedDataObjects);
 
 [UsedImplicitly]
 internal class DeleteUnusedDataObjectsCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)

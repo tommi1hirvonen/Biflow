@@ -1,4 +1,6 @@
-﻿namespace Biflow.Ui.Authentication;
+﻿using Biflow.Ui.Mediator.Queries.User;
+
+namespace Biflow.Ui.Authentication;
 
 internal class BuiltInAuthHandler(IMediator mediator) : IAuthHandler
 {

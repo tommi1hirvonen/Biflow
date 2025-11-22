@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Queries.Execution;
 
 public record StepExecutionsMonitoringQuery(DateTime FromDateTime, DateTime ToDateTime)
     : IRequest<StepExecutionsMonitoringQueryResponse>;

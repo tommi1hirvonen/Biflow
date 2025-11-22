@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.Dependency;
 
 internal record DeleteDependencyCommand(Guid StepId, Guid DependentOnStepId) : IRequest;
 
@@ -16,7 +16,7 @@ internal class DeleteDependencyCommandHandler(IDbContextFactory<AppDbContext> db
             .ExecuteDeleteAsync(cancellationToken);
         if (deletedRows == 0)
         {
-            throw new NotFoundException<Dependency>(
+            throw new NotFoundException<Biflow.Core.Entities.Dependency>(
                 ("StepId", request.StepId),
                 ("DependentOnStepId", request.DependentOnStepId));
         }

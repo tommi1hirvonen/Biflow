@@ -1,6 +1,6 @@
 ﻿using BC = BCrypt.Net.BCrypt;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Queries.User;
 
 public record UserAuthenticateQuery(string Username, string Password) : IRequest<UserAuthenticateQueryResponse>;
 

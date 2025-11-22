@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Queries.Execution;
 
 /// <summary>
 /// Alternative parallel query for <see cref="StepExecutionsMonitoringQuery"/>.

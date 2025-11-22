@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.Execution;
 
 public record DeleteExecutionCommand(Guid ExecutionId) : IRequest;
 

@@ -1,4 +1,4 @@
-﻿using Biflow.Ui.Shared;
+﻿using Biflow.Ui.Components.Shared;
 
 namespace Biflow.Ui.StateManagement;
 

@@ -1,3 +1,5 @@
+using Biflow.Ui.Mediator.Commands.User;
+
 namespace Biflow.Ui.Services;
 
 internal class EnsureAdminUser(

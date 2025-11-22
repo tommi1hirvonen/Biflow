@@ -1,6 +1,7 @@
 ﻿using System.DirectoryServices.Protocols;
 using System.Net;
 using System.Security.Authentication;
+using Biflow.Ui.Mediator.Queries.User;
 
 namespace Biflow.Ui.Authentication;
 

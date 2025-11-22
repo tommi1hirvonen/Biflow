@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.Extensions.Caching.Memory;
 using System.Security.Claims;
+using Biflow.Ui.Mediator.Queries.User;
 
 namespace Biflow.Ui.Authentication;
 

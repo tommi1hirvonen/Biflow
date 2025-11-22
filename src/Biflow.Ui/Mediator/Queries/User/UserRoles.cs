@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Queries.User;
 
 public record UserRolesQuery(string Username) : IRequest<UserRolesQueryResponse>;
 

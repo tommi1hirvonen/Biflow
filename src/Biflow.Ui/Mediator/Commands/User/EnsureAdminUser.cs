@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using BC = BCrypt.Net.BCrypt;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.User;
 
 /// <summary>
 /// Ensures there is a user with Admin role added to the system database.
@@ -18,7 +18,7 @@ internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbC
     public async Task Handle(EnsureAdminUserCommand request, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var user = new User
+        var user = new Biflow.Core.Entities.User
         {
             Username = request.Username,
             CreatedOn = DateTimeOffset.Now,

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Biflow.Ui.Mediator.Queries.User;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Biflow.Ui.Authentication;
 

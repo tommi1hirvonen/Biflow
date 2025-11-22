@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.AzureCredential;
 
 public record ClearAzureCredentialTokensCommand(Guid AzureCredentialId) : IRequest;
 

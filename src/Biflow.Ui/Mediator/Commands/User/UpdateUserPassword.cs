@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using BC = BCrypt.Net.BCrypt;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.User;
 
 internal record UpdateUserPasswordCommand(string Username, string OldPassword, string NewPassword) : IRequest;
 

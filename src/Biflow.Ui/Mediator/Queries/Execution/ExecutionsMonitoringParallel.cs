@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Queries.Execution;
 
 /// <summary>
 /// Alternative parallel query for <see cref="ExecutionsMonitoringQuery"/>.
@@ -23,7 +23,7 @@ internal class ExecutionsMonitoringParallelQueryHandler(IDbContextFactory<AppDbC
         // Generate list of query predicates.
         // The predicates are logically designed so that they do not produce duplicates
 
-        var predicates = Enumerable.Empty<Expression<Func<Execution, bool>>>()
+        var predicates = Enumerable.Empty<Expression<Func<Biflow.Core.Entities.Execution, bool>>>()
             .Append(e => e.CreatedOn <= request.ToDateTime && e.EndedOn >= request.FromDateTime);
 
         if (DateTime.Now >= request.FromDateTime && DateTime.Now <= request.ToDateTime)
@@ -58,7 +58,7 @@ internal class ExecutionsMonitoringParallelQueryHandler(IDbContextFactory<AppDbC
     }
 
     private async Task<ExecutionProjection[]> GetExecutionsAsync(
-        Expression<Func<Execution, bool>> predicate, CancellationToken cancellationToken)
+        Expression<Func<Biflow.Core.Entities.Execution, bool>> predicate, CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var query = context.Executions

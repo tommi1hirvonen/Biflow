@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.Execution;
 
 public record UpdateExecutionStatusCommand(Guid[] ExecutionIds, ExecutionStatus Status) : IRequest;
 

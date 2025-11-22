@@ -1,4 +1,6 @@
 using Biflow.Ui;
+using Biflow.Ui.Components;
+using Biflow.Ui.Services;
 using Biflow.Ui.TableEditor;
 using Dapper;
 using Microsoft.AspNetCore.Components.Server.Circuits;
@@ -6,7 +8,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Identity.Web;
 using Serilog;
 using System.Globalization;
-using Biflow.Ui.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

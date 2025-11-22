@@ -1,6 +1,6 @@
 ﻿using JetBrains.Annotations;
 
-namespace Biflow.Ui;
+namespace Biflow.Ui.Mediator.Commands.Dependency;
 
 internal record CreateDependencyCommand(Guid StepId, Guid DependentOnStepId, DependencyType DependencyType) : IRequest;
 
@@ -26,7 +26,7 @@ internal class CreateDependencyCommandHandler(IDbContextFactory<AppDbContext> db
             throw new NotFoundException<Step>(request.DependentOnStepId);
         }
 
-        var dependency = new Dependency
+        var dependency = new Biflow.Core.Entities.Dependency
         {
             StepId = request.StepId,
             DependantOnStepId = request.DependentOnStepId,
