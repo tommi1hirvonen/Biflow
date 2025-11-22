@@ -20,6 +20,7 @@
     <link href="@Assets["_content/Biflow.Ui.Components/defaults.css"]" rel="stylesheet" />
     <link href="@Assets["/css/bootstrap.custom.css"]" rel="stylesheet" />
     <link href="@Assets["BiflowUi.styles.css"]" rel="stylesheet" />
+    <ImportMap />
     <HeadOutlet @rendermode="PageRenderMode" />
 </head>
 <body class="bg-body">
@@ -44,6 +45,8 @@
         <button type="button" class="btn-close dismiss" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 
+    <ReconnectModal />
+
     <script src="@Assets["/lib/bootstrap/js/bootstrap.bundle.min.js"]"></script>
 
     @*Used to draw the dependencies between different steps.*@
@@ -63,7 +66,7 @@
     <script src="@Assets["/js/site.js"]"></script>
 
     @*Load Blazor scripts last to make sure any referenced JS functions have been loaded first.*@
-    <script src="_framework/blazor.web.js"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
 </body>
 </html>
 
