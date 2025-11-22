@@ -1,17 +1,16 @@
 ﻿using System.DirectoryServices.Protocols;
+using System.Net;
 using System.Security.Authentication;
 
 namespace Biflow.Ui.Authentication;
 
 internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator) : IAuthHandler
 {
-    private readonly IConfiguration _configuration = configuration;
-    private readonly IMediator _mediator = mediator;
     private readonly string[] _attributesToQuery = ["userPrincipalName"];
 
-    public async Task<IEnumerable<string>> AuthenticateUserInternalAsync(string username, string password)
+    public async Task<IReadOnlyList<string>> AuthenticateUserInternalAsync(string username, string password)
     {
-        var section = _configuration.GetSection("Ldap");
+        var section = configuration.GetSection("Ldap");
         var server = section.GetValue<string>("Server");
         var port = section.GetValue<int>("Port");
         var useSsl = section.GetValue<bool>("UseSsl");
@@ -27,7 +26,7 @@ internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator)
         var ldap = new LdapDirectoryIdentifier(server, port);
         using var connection = new LdapConnection(ldap);
         connection.AuthType = AuthType.Basic;
-        connection.Credential = new(username, password);
+        connection.Credential = new NetworkCredential(username, password);
         connection.SessionOptions.ProtocolVersion = 3;
         connection.SessionOptions.SecureSocketLayer = useSsl;
         try
@@ -56,12 +55,9 @@ internal class LdapAuthHandler(IConfiguration configuration, IMediator mediator)
             return [];
         }
 
-        var rolesResponse = await _mediator.SendAsync(new UserRolesQuery(username));
-        if (!rolesResponse.Roles.Any())
-        {
-            throw new AuthenticationException("User is not authorized to access this application");
-        }
-
-        return rolesResponse.Roles;
+        var rolesResponse = await mediator.SendAsync(new UserRolesQuery(username));
+        return !rolesResponse.Roles.Any()
+            ? throw new AuthenticationException("User is not authorized to access this application")
+            : rolesResponse.Roles;
     }
 }

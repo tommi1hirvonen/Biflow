@@ -4,14 +4,15 @@ namespace Biflow.Ui;
 
 public record UserAuthenticateQuery(string Username, string Password) : IRequest<UserAuthenticateQueryResponse>;
 
-public record UserAuthenticateQueryResponse(IEnumerable<string> Roles);
+public record UserAuthenticateQueryResponse(IReadOnlyList<string> Roles);
 
 internal class UserAuthenticateQueryHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ILogger<UserAuthenticateQueryHandler> logger)
     : IRequestHandler<UserAuthenticateQuery, UserAuthenticateQueryResponse>
 {
-    public async Task<UserAuthenticateQueryResponse> Handle(UserAuthenticateQuery request, CancellationToken cancellationToken)
+    public async Task<UserAuthenticateQueryResponse> Handle(UserAuthenticateQuery request,
+        CancellationToken cancellationToken)
     {
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         var result = await context.Users
@@ -26,22 +27,22 @@ internal class UserAuthenticateQueryHandler(
 
         if (hash is null || user is null)
         {
-            return new([]);
+            return new UserAuthenticateQueryResponse([]);
         }
 
         var auth = BC.Verify(request.Password, hash);
         if (!auth)
         {
-            return new([]);
+            return new UserAuthenticateQueryResponse([]);
         }
         
-        // Last login was under an hour ago.
+        // The last login was under an hour ago.
         if (user.LastLoginOn is { } lastLogin && DateTime.UtcNow - lastLogin < TimeSpan.FromHours(1))
         {
-            return new(user.Roles);
+            return new UserAuthenticateQueryResponse(user.Roles);
         }
         
-        // Update last login date and time.
+        // Update the last login date and time.
         try
         {
             user.LastLoginOn = DateTimeOffset.UtcNow;
@@ -52,6 +53,6 @@ internal class UserAuthenticateQueryHandler(
             logger.LogError(ex, "Error updating user last login date and time.");
         }
 
-        return new(user.Roles);
+        return new UserAuthenticateQueryResponse(user.Roles);
     }
 }

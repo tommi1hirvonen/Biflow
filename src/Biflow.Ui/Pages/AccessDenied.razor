@@ -1,0 +1,65 @@
+@page "/AccessDenied"
+
+@layout LoginLayout
+
+@attribute [ExcludeFromInteractiveRouting]
+@attribute [AllowAnonymous]
+
+@inject AuthenticationMethodResolver AuthenticationResolver
+@inject NavigationManager NavigationManager
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-10 col-md-7 col-xl-5 mx-auto pt-5">
+            <section>
+                <div class="card">
+                    <h5 class="card-header">Unauthorized</h5>
+                    <div class="card-body">
+                        @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
+                        {
+                            <p>Sorry, you are not authorized to access the site with this account.</p>
+                            <strong>@_username</strong>
+                            <div class="d-grid mt-4 mb-3">
+                                <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
+                                    <SvgIcon Icon="LucideIcon.LogOut" />
+                                    &nbsp;
+                                    Sign out
+                                </a>
+                            </div>
+                        }
+                        else if (AuthenticationResolver.AuthenticationMethod != AuthenticationMethod.Windows)
+                        {
+                            <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
+                            <strong>@_username</strong>
+                            <div class="d-grid mt-4 mb-3">
+                                <a class="btn btn-primary" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
+                                    <SvgIcon Icon="LucideIcon.LogOut" />
+                                    &nbsp;
+                                    Log out
+                                </a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    protected Task<AuthenticationState>? AuthState { get; set; }
+    
+    private string? _username;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthState is null)
+        {
+            throw new ApplicationException("Failed to get authentication state");
+        }
+        var state = await AuthState;
+        var identity = state.User.Identity;
+        _username = identity?.Name;
+    }
+}

@@ -17,7 +17,7 @@
     }
 </style>
 
-<AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}, {Roles.Operator}, {Roles.Viewer}")">
+<AuthorizeView>
     <Authorized>
         <ContextMenu />
         <div id="hx_message_box_host_container">
@@ -73,48 +73,6 @@
             </div>
         </div>
     </Authorized>
-    <NotAuthorized>
-        @if (!_redirecting)
-        {
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-10 col-md-7 col-xl-5 mx-auto pt-5">
-                        <section>
-                            <div class="card">
-                                <h5 class="card-header">Unauthorized</h5>
-                                <div class="card-body">
-                                    @if (AuthenticationResolver.AuthenticationMethod == AuthenticationMethod.AzureAd)
-                                    {
-                                        <p>Sorry, you are not authorized to access the site with this account.</p>
-                                        <strong>@_username</strong>
-                                        <div class="d-grid mt-4 mb-3">
-                                            <a class="btn btn-primary" href="MicrosoftIdentity/Account/SignOut">
-                                                <SvgIcon Icon="LucideIcon.LogOut" />
-                                                &nbsp;
-                                                Sign out
-                                            </a>
-                                        </div>
-                                    }
-                                    else if (AuthenticationResolver.AuthenticationMethod != AuthenticationMethod.Windows)
-                                    {
-                                        <p>Authorization failed most likely because the authentication cookie expired. Please try logging out and logging in again.</p>
-                                        <strong>@_username</strong>
-                                        <div class="d-grid mt-4 mb-3">
-                                            <a class="btn btn-primary" href="javascript:void(0)" @onclick="@(() => NavigationManager.NavigateTo("logout", forceLoad: true))">
-                                                <SvgIcon Icon="LucideIcon.LogOut" />
-                                                &nbsp;
-                                                Log out
-                                            </a>
-                                        </div>
-                                    }
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </div>
-        }
-    </NotAuthorized>
 </AuthorizeView>
 
 @code {
@@ -122,11 +80,9 @@
     protected Task<AuthenticationState>? AuthState { get; set; }
 
     private readonly UserState _userState = new();
-
-    private string? _username;
+    
     private bool _collapseSidebar = true;
     private RenderFragment? _serviceErrorMessage;
-    private bool _redirecting;
     private ExecuteMultipleModal? _executeMultipleModal;
     private StepExecutionMonitorsOffcanvas? _stepExecutionMonitorsOffcanvas;
 
@@ -141,14 +97,11 @@
 
         var state = await AuthState;
         var identity = state.User.Identity;
-        _username = identity?.Name;
 
         if (AuthenticationResolver.AuthenticationMethod is AuthenticationMethod.BuiltIn or AuthenticationMethod.Ldap)
         {
             if (identity is null || !identity.IsAuthenticated)
             {
-                _redirecting = true;
-
                 var redirectUrl = Uri.EscapeDataString(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
                 var url = string.IsNullOrEmpty(redirectUrl)
                     ? "login"

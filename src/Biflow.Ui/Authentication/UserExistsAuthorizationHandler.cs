@@ -4,33 +4,33 @@ using System.Security.Claims;
 
 namespace Biflow.Ui.Authentication;
 
-internal class WindowsAuthorizationHandler(IMemoryCache memoryCache, IMediator mediator)
+internal class UserExistsAuthorizationHandler(IMemoryCache memoryCache, IMediator mediator)
     : AuthorizationHandler<UserExistsRequirement>
 {
-    private readonly IMemoryCache _memoryCache = memoryCache;
-    private readonly IMediator _mediator = mediator;
-
     protected override async Task HandleRequirementAsync(
         AuthorizationHandlerContext context, UserExistsRequirement requirement)
     {
         var userName = context.User.Identity?.Name;
         if (userName is null)
         {
+            context.Fail();
             return;
         }
-        if (context.User.Claims.Any(c => c is { Type: ClaimTypes.Role, Issuer: "Biflow" }))
+        if (context.User.Claims.Any(c => c is { Type: ClaimTypes.Role, Issuer: AuthConstants.Issuer }))
         {
             context.Succeed(requirement);
             return;
         }
-        var exists = await _memoryCache.GetOrCreateAsync($"{userName}_Exists", entry =>
+        var exists = await memoryCache.GetOrCreateAsync($"{userName}_Exists", entry =>
         {
             entry.SlidingExpiration = TimeSpan.FromSeconds(5);
-            return UserExistsRequirement.UserExistsAsync(_mediator, userName);
+            return UserExistsRequirement.UserExistsAsync(mediator, userName);
         });
         if (exists)
         {
             context.Succeed(requirement);
+            return;
         }
+        context.Fail();
     }
 }

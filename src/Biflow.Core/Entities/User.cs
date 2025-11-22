@@ -19,7 +19,7 @@ public class User : IAuditable
     [DataType(DataType.EmailAddress)]
     public string? Email { get; set; }
 
-    public IEnumerable<string> Roles => _roles;
+    public IReadOnlyList<string> Roles => _roles;
 
     public bool AuthorizeAllJobs { get; set; }
 

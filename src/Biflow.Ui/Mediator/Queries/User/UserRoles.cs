@@ -1,9 +1,12 @@
-﻿namespace Biflow.Ui;
+﻿using JetBrains.Annotations;
+
+namespace Biflow.Ui;
 
 public record UserRolesQuery(string Username) : IRequest<UserRolesQueryResponse>;
 
-public record UserRolesQueryResponse(IEnumerable<string> Roles);
+public record UserRolesQueryResponse(IReadOnlyList<string> Roles);
 
+[UsedImplicitly]
 internal class UserRolesQueryHandler(
     IDbContextFactory<AppDbContext> dbContextFactory,
     ILogger<UserRolesQueryHandler> logger)
@@ -18,16 +21,16 @@ internal class UserRolesQueryHandler(
 
         if (user is null)
         {
-            return new([]);
+            return new UserRolesQueryResponse([]);
         }
 
-        // Last login was under an hour ago.
+        // The last login was under an hour ago.
         if (user.LastLoginOn is { } lastLogin && DateTime.UtcNow - lastLogin < TimeSpan.FromHours(1))
         {
-            return new(user.Roles);
+            return new UserRolesQueryResponse(user.Roles);
         }
         
-        // Update last login date and time.
+        // Update the last login date and time.
         try
         {
             user.LastLoginOn = DateTimeOffset.UtcNow;
@@ -38,6 +41,6 @@ internal class UserRolesQueryHandler(
             logger.LogError(ex, "Error updating user last login date and time.");
         }
 
-        return new(user.Roles);
+        return new UserRolesQueryResponse(user.Roles);
     }
 }

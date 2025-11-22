@@ -43,3 +43,6 @@
 @using Havit.Blazor.Components.Web.Bootstrap
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.Data.SqlClient
+
+@* Global authorization policy for all pages *@
+@attribute [Authorize(Policy = AuthConstants.GlobalAuthPolicy)]
