@@ -1,4 +1,3 @@
-using Biflow.Ui;
 using Biflow.Ui.Components;
 using Biflow.Ui.Services;
 using Biflow.Ui.TableEditor;
@@ -82,6 +81,7 @@ var localizationOptions = new RequestLocalizationOptions()
 
 app.UseRequestLocalization(localizationOptions);
 
+app.UseStatusCodePagesWithRedirects("/NotFound");
 app.MapStaticAssets();
 app.UseAntiforgery();
 app.UseCookiePolicy();
