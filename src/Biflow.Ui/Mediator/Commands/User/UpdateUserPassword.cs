@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui.Mediator.Commands.User;
 
@@ -18,13 +17,13 @@ internal class UpdateUserPasswordCommandHandler(IDbContextFactory<AppDbContext> 
             .FirstOrDefaultAsync(cancellationToken)
             ?? throw new ApplicationException("User not found");
         
-        var auth = BC.Verify(request.OldPassword, oldHash);
+        var auth = PasswordHasher.Verify(oldHash, request.OldPassword);
         if (!auth)
         {
             throw new ApplicationException("Incorrect old password");
         }
 
-        var newHash = BC.HashPassword(request.NewPassword);
+        var newHash = PasswordHasher.Hash(request.NewPassword);
         await context.Users
             .Where(u => u.Username == request.Username)
             .ExecuteUpdateAsync(updates => updates

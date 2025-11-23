@@ -1,5 +1,3 @@
-using BC = BCrypt.Net.BCrypt;
-
 namespace Biflow.Ui.Core;
 
 public record CreateUserCommand(
@@ -97,7 +95,8 @@ internal class CreateUserCommandHandler(
         {
             // Ensure password meets ComplexPasswordAttribute requirements
             request.EnsureDataAnnotationsValidated();
-            var hash = BC.HashPassword(request.Password);
+            ArgumentNullException.ThrowIfNull(request.Password);
+            var hash = PasswordHasher.Hash(request.Password);
             dbContext.Entry(user).Property("PasswordHash").CurrentValue = hash;
         }
         await dbContext.SaveChangesAsync(cancellationToken);

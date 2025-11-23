@@ -1,6 +1,4 @@
-﻿using BC = BCrypt.Net.BCrypt;
-
-namespace Biflow.Ui.Core;
+﻿namespace Biflow.Ui.Core;
 
 /// <summary>
 /// Update the password for an existing user. Should only be used when the authentication mode is BuiltIn.
@@ -21,7 +19,7 @@ internal class UpdateUserPasswordAdminCommandHandler(IDbContextFactory<AppDbCont
         // Ensure password meets ComplexPasswordAttribute requirements
         request.EnsureDataAnnotationsValidated();
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-        var newHash = BC.HashPassword(request.Password);
+        var newHash = PasswordHasher.Hash(request.Password);
         var affectedRows = await context.Users
             .Where(u => u.UserId == request.UserId)
             .ExecuteUpdateAsync(updates => updates

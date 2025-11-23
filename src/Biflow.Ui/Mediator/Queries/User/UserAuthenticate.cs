@@ -1,6 +1,4 @@
-﻿using BC = BCrypt.Net.BCrypt;
-
-namespace Biflow.Ui.Mediator.Queries.User;
+﻿namespace Biflow.Ui.Mediator.Queries.User;
 
 public record UserAuthenticateQuery(string Username, string Password) : IRequest<UserAuthenticateQueryResponse>;
 
@@ -30,7 +28,7 @@ internal class UserAuthenticateQueryHandler(
             return new UserAuthenticateQueryResponse([]);
         }
 
-        var auth = BC.Verify(request.Password, hash);
+        var auth = PasswordHasher.Verify(hash, request.Password);
         if (!auth)
         {
             return new UserAuthenticateQueryResponse([]);

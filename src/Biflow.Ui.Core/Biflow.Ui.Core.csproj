@@ -16,7 +16,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <PackageReference Include="BCrypt.Net-Next" />
     <PackageReference Include="CronExpressionDescriptor" />
     <PackageReference Include="FluentValidation" />
     <PackageReference Include="Scrutor" />

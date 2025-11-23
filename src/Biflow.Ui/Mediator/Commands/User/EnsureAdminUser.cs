@@ -1,5 +1,4 @@
 ﻿using JetBrains.Annotations;
-using BC = BCrypt.Net.BCrypt;
 
 namespace Biflow.Ui.Mediator.Commands.User;
 
@@ -28,7 +27,7 @@ internal class EnsureAdminUserCommandHandler(IDbContextFactory<AppDbContext> dbC
 
         var passwordHash = string.IsNullOrEmpty(request.Password)
             ? null
-            : BC.HashPassword(request.Password);
+            : PasswordHasher.Hash(request.Password);
 
         var affectedRows = await context.Users
             .Where(u => u.Username == request.Username)
