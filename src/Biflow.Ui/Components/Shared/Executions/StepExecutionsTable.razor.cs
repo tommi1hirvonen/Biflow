@@ -105,9 +105,11 @@ public partial class StepExecutionsTable(
 
     private async Task ToggleSelectedStepExecutionAsync(IStepExecutionProjection execution)
     {
-        // If the selected execution is the same that was previously selected, set to null
+        // If the selected execution is the same that was previously selected, set it to null
         // => hides the step execution details component.
-        if (_selectedStepExecution == execution)
+        // Use IsSameAs() to do comparison using ids instead of reference equality.
+        // If data in the parent components was reloaded, references might have changed.
+        if (_selectedStepExecution?.IsSameAs(execution) == true)
         {
             _selectedStepExecution = null;
             _detailStep = null;
