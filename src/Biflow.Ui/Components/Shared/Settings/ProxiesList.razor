@@ -211,7 +211,9 @@
             var command = new CreateProxyCommand(
                 proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
             var response = await Mediator.SendAsync(command);
-            _proxies?.Add(response);
+            // Update the proxy reference.
+            // The command handler updated the id of the response proxy to its actual value.
+            proxy = response;
         }
         else
         {
@@ -219,12 +221,13 @@
                 proxy.ProxyId, proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
             _ = await Mediator.SendAsync(command);
             _proxies?.RemoveAll(x => x.ProxyId == proxy.ProxyId);
-            _proxies?.Add(proxy);
         }
 
+        _proxies?.Add(proxy);
         _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Testing;
         StateHasChanged();
-        await RunConnectionTestAsync(proxy);
+        // Run the connection test asynchronously (no await) so the edit modal can close.
+        _ = RunConnectionTestAsync(proxy);
     }
     
     private async Task DeleteProxyAsync(Proxy proxy)
@@ -245,13 +248,11 @@
     {
         try
         {
+            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+            using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts.Token, timeoutCts.Token);
             var client = ProxyClientFactory.Create(proxy);
-            await client.TestConnectionAsync(_cts.Token);
+            await client.TestConnectionAsync(linkedCts.Token);
             _connectionTestStates[proxy.ProxyId] = ConnectionTestState.Running;
-        }
-        catch (OperationCanceledException)
-        {
-            return;
         }
         catch (HttpRequestException httpException) when (httpException.StatusCode == HttpStatusCode.Unauthorized)
         {
