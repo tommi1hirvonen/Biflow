@@ -39,7 +39,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.File" />
                     </div>
-                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExeFileName" rows="2"></InputTextArea>
+                    <InputTextArea class="form-control form-control-sm"
+                                   @bind-Value="Step.ExeFileName"
+                                   rows="2"
+                                   style="font-family: monospace;"></InputTextArea>
                 </div>
             </div>
         </div>
@@ -53,7 +56,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Command" />
                     </div>
-                    <InputTextArea class="form-control form-control-sm" @bind-Value="Step.ExeArguments" rows="2"></InputTextArea>
+                    <InputTextArea class="form-control form-control-sm"
+                                   @bind-Value="Step.ExeArguments"
+                                   rows="2"
+                                   style="font-family: monospace;"></InputTextArea>
                 </div>
                 <div class="form-text">
                     Arguments can be set dynamically during step execution using step parameters.
@@ -70,7 +76,10 @@
                     <div class="input-group-text">
                         <SvgIcon Icon="LucideIcon.Folder" />
                     </div>
-                    <InputText class="form-control form-control-sm" @bind-Value="Step.ExeWorkingDirectory"></InputText>
+                    <InputTextArea class="form-control form-control-sm"
+                                   @bind-Value="Step.ExeWorkingDirectory"
+                                   rows="2"
+                                   style="font-family: monospace;"></InputTextArea>
                 </div>
             </div>
         </div>
