@@ -18,6 +18,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
         ExeWorkingDirectory = other.ExeWorkingDirectory;
         ExeSuccessExitCode = other.ExeSuccessExitCode;
         RunAsCredentialId = other.RunAsCredentialId;
+        ProxyId = other.ProxyId;
         StepParameters = other.StepParameters
             .Select(p => new ExeStepParameter(p, this, targetJob))
             .ToList();
