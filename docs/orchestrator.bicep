@@ -14,9 +14,19 @@ param virtualMachineAdminUsername string = ''
 @secure() 
 param virtualMachineAdminPassword string = ''
 
+param uiEnvironmentName string = 'Environment Placeholder'
+param uiAuthenticationMethod string = 'BuiltIn' // { BuiltIn | AzureAd }
 param uiAdminUsername string = 'admin'
 @secure()
 param uiAdminPassword string = ''
+
+param uiAzureAdCallbackPath string = '/signin-oidc'
+param uiAzureAdClientId string = '00000000-0000-0000-0000-000000000000'
+@secure()
+param uiAzureAdClientSecret string = ''
+param uiAzureAdDomain string = 'contoso.com'
+param uiAzureAdInstance string = 'https://login.microsoftonline.com/'
+param uiAzureAdTenantId string = '00000000-0000-0000-0000-000000000000'
 
 
 // Application database
@@ -211,6 +221,7 @@ resource sqlServerResource 'Microsoft.Sql/servers@2023-08-01-preview' = {
       tenantId: tenantId
       azureADOnlyAuthentication: true
     }
+    minimalTlsVersion: '1.2'
   }
 }
 
@@ -471,7 +482,7 @@ resource schedulerWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlanResource.id
     siteConfig: {
       numberOfWorkers: 1
-      linuxFxVersion: 'DOTNETCORE|9.0'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: true
       publicNetworkAccess: 'Enabled'
       ipSecurityRestrictions: [
@@ -493,6 +504,7 @@ resource schedulerWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
       ipSecurityRestrictionsDefaultAction: 'Deny'
       websiteTimeZone: websiteTimeZone
     }
+    httpsOnly: true
     virtualNetworkSubnetId: backendSubnet.id
     keyVaultReferenceIdentity: managedIdentityResource.id
   }
@@ -512,7 +524,7 @@ resource uiWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlanResource.id
     siteConfig: {
       numberOfWorkers: 1
-      linuxFxVersion: 'DOTNETCORE|9.0'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: true
       publicNetworkAccess: 'Enabled'
       ipSecurityRestrictions: [
@@ -554,7 +566,7 @@ resource apiWebAppResource 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: appServicePlanResource.id
     siteConfig: {
       numberOfWorkers: 1
-      linuxFxVersion: 'DOTNETCORE|9.0'
+      linuxFxVersion: 'DOTNETCORE|10.0'
       alwaysOn: true
       publicNetworkAccess: 'Enabled'
       ipSecurityRestrictions: [
@@ -754,6 +766,7 @@ resource keyVaultSecretsUser 'Microsoft.Authorization/roleAssignments@2022-04-01
 // Key Vault Secrets
 
 var apiKeySecretName = 'orchestrator-api-key'
+var authClientSecretName = 'auth-client-secret'
 var uiAdminPasswordSecretName = 'ui-admin-password'
 
 resource serviceApiKeyResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
@@ -765,6 +778,18 @@ resource serviceApiKeyResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-pre
     }
     contentType: 'api key'
     value: serviceApiKey
+  }
+}
+
+resource authClientSecretResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-preview' = {
+  parent: keyVaultResource
+  name: authClientSecretName
+  properties: {
+    attributes: {
+      enabled: true
+    }
+    contentType: 'client secret'
+    value: uiAzureAdClientSecret
   }
 }
 
@@ -796,6 +821,7 @@ resource vmAdminPasswordResource 'Microsoft.KeyVault/vaults/secrets@2024-04-01-p
 
 var apiKeyReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${apiKeySecretName})'
 var uiAdminPasswordReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${uiAdminPasswordSecretName})'
+var clientSecretReference = '@Microsoft.KeyVault(VaultName=${keyVaultName};SecretName=${authClientSecretName})'
 
 var appDbConnectionString = 'Server=tcp:${sqlServerResource.properties.fullyQualifiedDomainName},1433;Initial Catalog=${sqlDbName};Authentication=Active Directory Managed Identity;User Id=${managedIdentityResource.properties.clientId};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
 
@@ -811,6 +837,7 @@ resource schedulerAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Executor__Type: 'WebApp'
     Executor__WebApp__ApiKey: apiKeyReference
     Executor__WebApp__Url: executionServiceUrl
+    WEBSITE_TIME_ZONE: websiteTimeZone
     APPINSIGHTS_INSTRUMENTATIONKEY: schedulerAppInsightsResource.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: schedulerAppInsightsResource.properties.ConnectionString
   }
@@ -826,9 +853,15 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
   properties: {
     AdminUser__Username: uiAdminUsername
     AdminUser__Password: uiAdminPasswordReference
-    Authentication: 'BuiltIn'
+    Authentication: uiAuthenticationMethod
+    AzureAd__CallbackPath: uiAzureAdCallbackPath
+    AzureAd__ClientId: uiAzureAdClientId
+    AzureAd__ClientSecret: clientSecretReference
+    AzureAd__Domain: uiAzureAdDomain
+    AzureAd__Instance: uiAzureAdInstance
+    AzureAd__TenantId: uiAzureAdTenantId
     ConnectionStrings__AppDbContext: appDbConnectionString
-    EnvironmentName: 'Environment Placeholder'
+    EnvironmentName: uiEnvironmentName
     Executor__SelfHosted__PollingIntervalMs: '5000'
     Executor__Type: 'WebApp'
     Executor__WebApp__ApiKey: apiKeyReference
@@ -836,6 +869,7 @@ resource uiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Scheduler__Type: 'WebApp'
     Scheduler__WebApp__ApiKey: apiKeyReference
     Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
+    WEBSITE_TIME_ZONE: websiteTimeZone
     APPINSIGHTS_INSTRUMENTATIONKEY: uiAppInsightsResource.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: uiAppInsightsResource.properties.ConnectionString
   }
@@ -858,6 +892,7 @@ resource apiAppSettings 'Microsoft.Web/sites/config@2022-09-01' = {
     Scheduler__Type: 'WebApp'
     Scheduler__WebApp__ApiKey: apiKeyReference
     Scheduler__WebApp__Url: 'https://${schedulerWebAppResource.properties.defaultHostName}'
+    WEBSITE_TIME_ZONE: websiteTimeZone
     APPINSIGHTS_INSTRUMENTATIONKEY: apiAppInsightsResource.properties.InstrumentationKey
     APPLICATIONINSIGHTS_CONNECTION_STRING: apiAppInsightsResource.properties.ConnectionString
   }
