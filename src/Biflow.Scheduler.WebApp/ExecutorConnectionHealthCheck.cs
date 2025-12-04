@@ -2,10 +2,18 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace Biflow.Scheduler.WebApp;
 
-public class ExecutorConnectionHealthCheck(IHttpClientFactory httpClientFactory) : IHealthCheck
+public class ExecutorConnectionHealthCheck : IHealthCheck
 {
-    private readonly HttpClient _httpClient = httpClientFactory.CreateClient("executor");
-    
+    private readonly HttpClient _httpClient;
+
+    public ExecutorConnectionHealthCheck(IHttpClientFactory httpClientFactory)
+    {
+        _httpClient = httpClientFactory.CreateClient("executor");
+        // Use a lower timeout than the default.
+        // This way the UI health check request doesn't time out before the scheduler health check timeouts.
+        _httpClient.Timeout = TimeSpan.FromSeconds(15);
+    }
+
     public async Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context,
         CancellationToken cancellationToken = default)
     {
