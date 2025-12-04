@@ -304,6 +304,9 @@ internal class ProxyExeStepExecutor : IStepExecutor
                     x => x.SetProperty(p => p.InfoMessages, _attempt.InfoMessages),
                     cancellationToken: cancellationToken);
         }
+        catch (OperationCanceledException)
+        {
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating output for step");
@@ -322,6 +325,9 @@ internal class ProxyExeStepExecutor : IStepExecutor
                 .ExecuteUpdateAsync(
                     x => x.SetProperty(p => p.ErrorMessages, _attempt.ErrorMessages),
                     cancellationToken: cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception ex)
         {
