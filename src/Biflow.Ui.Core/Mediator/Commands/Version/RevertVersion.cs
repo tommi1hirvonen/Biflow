@@ -193,7 +193,7 @@ internal class RevertVersionCommandHandler(
 
             var capturedManagedIdentities = await context.ManagedIdentityCredentials
                 .AsNoTracking()
-                .Select(c => new { c.AzureCredentialId, c.AzureCredentialName })
+                .Select(c => new { c.AzureCredentialId, c.AzureCredentialName, c.ClientId })
                 .ToArrayAsync(cancellationToken);
 
             var capturedDataFactories = await context.DataFactories
@@ -398,13 +398,22 @@ internal class RevertVersionCommandHandler(
             {
                 var match = capturedManagedIdentities.FirstOrDefault(c =>
                     c.AzureCredentialId == credential.AzureCredentialId);
-                if (match is not null) continue;
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without match
+                        // => make sure the managed identity client id is reset.
+                        credential.ClientId = null;
+                    }
+                    newIntegrations.Add((credential.GetType(), credential.AzureCredentialName ?? ""));
+                    continue;
+                }
                 if (request.RetainIntegrationProperties)
                 {
-                    // Potential environment transfer without match => make sure the managed identity client id.
-                    credential.ClientId = null;
+                    // Retain the previous managed identity client id value.
+                    credential.ClientId = match.ClientId;
                 }
-                newIntegrations.Add((credential.GetType(), credential.AzureCredentialName ?? ""));
             }
             
             foreach (var workspace in snapshot.DatabricksWorkspaces)
