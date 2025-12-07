@@ -17,6 +17,9 @@ public class Proxy
     [MaxLength(500), JsonSensitive]
     public string? ApiKey { get; set; }
     
+    [Range(0, int.MaxValue)]
+    public int MaxConcurrentExeSteps { get; set; }
+    
     [JsonIgnore]
     public IList<ExeStep> ExeSteps { get; } = new List<ExeStep>();
 }

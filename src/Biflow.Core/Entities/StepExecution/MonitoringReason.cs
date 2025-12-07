@@ -8,5 +8,6 @@ public enum MonitoringReason
     CommonTarget,
     CommonConnection,
     CommonFunctionApp,
-    CommonPipelineClient
+    CommonPipelineClient,
+    CommonProxy
 }

@@ -27,7 +27,7 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
             .ToDictionary(e => e, _ => new UserCancellationTokenSource());
 
         // If MaxParallelSteps was defined for the job, use that.
-        // Otherwise, default to int.MaxValue, i.e. practically no upper limit.
+        // Otherwise, default to int.MaxValue, i.e., practically no upper limit.
         var maxParallelStepsMain = execution.MaxParallelSteps > 0
             ? execution.MaxParallelSteps
             : int.MaxValue;
@@ -158,11 +158,11 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
     private static IEnumerable<IOrchestrationTracker> GenerateOrchestrationTrackers(StepExecution step)
     {
         // The order in which trackers are enumerated in OrchestrationObserver matters.
-        // 1. Check for duplicate executions of the step
+        // 1. Check for duplicate executions of step
         // 2. Check execution phases or dependencies or both, depending on the execution mode.
         // 3. Check whether potential target data objects are already being written to or
         // that their concurrency allows more steps to be executed.
-        // 4. Check integration specific concurrencies.
+        // 4. Check integration-specific concurrences.
         yield return new DuplicateExecutionTracker(step);
         switch (step.Execution.ExecutionMode)
         {
@@ -191,6 +191,9 @@ internal class JobOrchestrator : IJobOrchestrator, IStepExecutionListener
                 break;
             case PipelineStepExecution pipeline:
                 yield return new PipelineClientTracker(pipeline);
+                break;
+            case ExeStepExecution exe:
+                yield return new ProxyTracker(exe);
                 break;
         }
     }

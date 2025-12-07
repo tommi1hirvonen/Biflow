@@ -40,7 +40,7 @@ This document was generated with the help of AI.
       - Always present: `DuplicateExecutionTracker`.
       - Based on execution mode: `ExecutionPhaseTracker` and/or `DependencyTracker`.
       - Target/data-object synchronization: `TargetTracker`.
-      - Integration-specific trackers (e.g., `FunctionAppTracker`, `SqlConnectionTracker`, `PipelineClientTracker`).
+      - Integration-specific trackers (e.g., `FunctionAppTracker`, `SqlConnectionTracker`, `PipelineClientTracker`, `ProxyTracker`).
     - Each observer also receives a `CancellationContext` combining per-step user cancellation token and the service shutdown token.
   - Calls `IGlobalOrchestrator.RegisterStepsAndObserversAsync(context, observers, stepExecutionListener: this)`.
   - Implements `IStepExecutionListener` to manage concurrency gates for steps:

@@ -541,7 +541,7 @@ public class IntegrationsWriteEndpoints : IEndpoints
                 CancellationToken cancellationToken) =>
             {
                 var command = new CreateProxyCommand(
-                    dto.ProxyName, dto.ProxyUrl, dto.ApiKey);
+                    dto.ProxyName, dto.ProxyUrl, dto.ApiKey, dto.MaxConcurrentExeSteps);
                 var proxy = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetProxy",
                     new { proxyId = proxy.ProxyId });
@@ -558,7 +558,7 @@ public class IntegrationsWriteEndpoints : IEndpoints
                 IMediator mediator, CancellationToken cancellationToken) =>
             {
                 var command = new UpdateProxyCommand(
-                    proxyId, dto.ProxyName, dto.ProxyUrl, dto.ApiKey);
+                    proxyId, dto.ProxyName, dto.ProxyUrl, dto.ApiKey, dto.MaxConcurrentExeSteps);
                 var proxy = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(proxy);
             })

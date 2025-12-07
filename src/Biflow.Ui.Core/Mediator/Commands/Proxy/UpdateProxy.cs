@@ -7,7 +7,12 @@ namespace Biflow.Ui.Core;
 /// <param name="ProxyName"></param>
 /// <param name="ProxyUrl"></param>
 /// <param name="ApiKey">pass null to retain the previous ApiKey value, pass empty string to clear ApiKey value</param>
-public record UpdateProxyCommand(Guid ProxyId, string ProxyName, string ProxyUrl, string? ApiKey) : IRequest<Proxy>;
+public record UpdateProxyCommand(
+    Guid ProxyId,
+    string ProxyName,
+    string ProxyUrl,
+    string? ApiKey,
+    int MaxConcurrentExeSteps) : IRequest<Proxy>;
 
 [UsedImplicitly]
 internal class UpdateProxyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -22,6 +27,7 @@ internal class UpdateProxyCommandHandler(IDbContextFactory<AppDbContext> dbConte
             
         proxy.ProxyName = request.ProxyName;
         proxy.ProxyUrl = request.ProxyUrl;
+        proxy.MaxConcurrentExeSteps = request.MaxConcurrentExeSteps;
         if (request.ApiKey is { Length: 0 })
         {
             proxy.ApiKey = null;

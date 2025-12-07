@@ -209,7 +209,7 @@
         if (proxy.ProxyId == Guid.Empty)
         {
             var command = new CreateProxyCommand(
-                proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
+                proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey, proxy.MaxConcurrentExeSteps);
             var response = await Mediator.SendAsync(command);
             // Update the proxy reference.
             // The command handler updated the id of the response proxy to its actual value.
@@ -218,7 +218,7 @@
         else
         {
             var command = new UpdateProxyCommand(
-                proxy.ProxyId, proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey);
+                proxy.ProxyId, proxy.ProxyName, proxy.ProxyUrl, proxy.ApiKey, proxy.MaxConcurrentExeSteps);
             _ = await Mediator.SendAsync(command);
             _proxies?.RemoveAll(x => x.ProxyId == proxy.ProxyId);
         }

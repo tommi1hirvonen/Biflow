@@ -1,6 +1,10 @@
 namespace Biflow.Ui.Core;
 
-public record CreateProxyCommand(string ProxyName, string ProxyUrl, string? ApiKey) : IRequest<Proxy>;
+public record CreateProxyCommand(
+    string ProxyName,
+    string ProxyUrl,
+    string? ApiKey,
+    int MaxConcurrentExeSteps) : IRequest<Proxy>;
 
 [UsedImplicitly]
 internal class CreateProxyCommandHandler(IDbContextFactory<AppDbContext> dbContextFactory)
@@ -13,7 +17,8 @@ internal class CreateProxyCommandHandler(IDbContextFactory<AppDbContext> dbConte
         {
             ProxyName = request.ProxyName,
             ProxyUrl = request.ProxyUrl,
-            ApiKey = request.ApiKey
+            ApiKey = request.ApiKey,
+            MaxConcurrentExeSteps = request.MaxConcurrentExeSteps
         };
         proxy.EnsureDataAnnotationsValidated();
         dbContext.Proxies.Add(proxy);
