@@ -44,11 +44,11 @@ public class FabricWorkspaceClient
             _ => throw new ArgumentOutOfRangeException($"Unrecognized item type: {itemType}")
         };
         var url = $"{Endpoint}/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances";
-        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Add("Authorization", $"Bearer {accessToken.Token}");
         request.Headers.Add("Accept", "application/json");
         request.Content = new StringContent(content, Encoding.UTF8, "application/json");
-        var response = await _httpClient.SendAsync(request, cancellationToken);
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
