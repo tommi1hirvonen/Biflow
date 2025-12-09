@@ -42,7 +42,8 @@ internal class UpdateJobParametersCommandHandler(
 
         // Add parameters
         var parametersToAdd = request.Parameters
-            .Where(p1 => job.JobParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+            .Where(p1 => job.JobParameters.All(p2 => p2.ParameterId != p1.ParameterId))
+            .ToArray();
         foreach (var createParameter in parametersToAdd)
         {
             var jobParameter = new JobParameter

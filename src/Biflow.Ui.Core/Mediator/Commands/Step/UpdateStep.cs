@@ -137,7 +137,8 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
             
             // Add expression parameters
             var expressionParametersToAdd = updateParameter.ExpressionParameters
-                .Where(p1 => parameter.ExpressionParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+                .Where(p1 => parameter.ExpressionParameters.All(p2 => p2.ParameterId != p1.ParameterId))
+                .ToArray();
             foreach (var createExpressionParameter in expressionParametersToAdd)
             {
                 parameter.AddExpressionParameter(
@@ -148,7 +149,10 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
         
         // Add parameters
         var parametersToAdd = parameters
-            .Where(p1 => step.StepParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+            .Where(p1 => step.StepParameters.All(p2 => p2.ParameterId != p1.ParameterId))
+            .ToArray(); // Materialize the results. When multiple new parameters are added
+                        // the id comparison will not work correctly,
+                        // because multiple parameters will have an id value of Guid.Empty.
         foreach (var createParameter in parametersToAdd)
         {
             var parameter = parameterDelegate(createParameter);
@@ -258,7 +262,8 @@ public abstract class UpdateStepCommandHandler<TCommand, TStep>(
 
         // Add parameters
         var parametersToAdd = parameters
-            .Where(p1 => step.ExecutionConditionParameters.All(p2 => p2.ParameterId != p1.ParameterId));
+            .Where(p1 => step.ExecutionConditionParameters.All(p2 => p2.ParameterId != p1.ParameterId))
+            .ToArray();
         foreach (var createParameter in parametersToAdd)
         {
             step.ExecutionConditionParameters.Add(new ExecutionConditionParameter
