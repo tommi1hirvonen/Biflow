@@ -40,6 +40,8 @@ public class SqlStepExecution : StepExecution,
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<SqlStepExecutionParameter> StepExecutionParameters { get; } = new List<SqlStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Sql;
 
     public override SqlStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

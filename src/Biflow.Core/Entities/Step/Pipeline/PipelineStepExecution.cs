@@ -34,6 +34,8 @@ public class PipelineStepExecution : StepExecution,
 
     public IEnumerable<PipelineStepExecutionParameter> StepExecutionParameters { get; } = new List<PipelineStepExecutionParameter>();
 
+    public override DisplayStepType DisplayStepType => DisplayStepType.Pipeline;
+    
     public override PipelineStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

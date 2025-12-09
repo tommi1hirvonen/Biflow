@@ -60,6 +60,8 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [ValidateComplexType]
     [JsonInclude]
     public IList<ExeStepParameter> StepParameters { get; private set; } = new List<ExeStepParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Exe;
 
     public override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
 

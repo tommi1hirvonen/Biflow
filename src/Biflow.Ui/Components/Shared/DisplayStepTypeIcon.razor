@@ -1,0 +1,89 @@
+
+@switch (StepType)
+{
+    case DisplayStepType.AgentJob:
+        <SvgIcon Icon="LucideIcon.Server" />
+        break;
+    case DisplayStepType.Databricks:
+        <SvgIcon Icon="LucideIcon.Layers" />
+        break;
+    case DisplayStepType.DatabricksJob:
+        <SvgIcon Icon="LucideIcon.Workflow" />
+        break;
+    case DisplayStepType.DatabricksNotebook:
+        <SvgIcon Icon="LucideIcon.Notebook" />
+        break;
+    case DisplayStepType.DatabricksPipeline:
+        <SvgIcon Icon="LucideIcon.Pipeline" />
+        break;
+    case DisplayStepType.DatabricksPythonFile:
+        <SvgIcon Icon="LucideIcon.FileCode" />
+        break;
+    case DisplayStepType.Dataflow:
+        <SvgIcon Icon="LucideIcon.Workflow" />
+        break;
+    case DisplayStepType.Dataset:
+        <SvgIcon Icon="LucideIcon.FileBarChart2" />
+        break;
+    case DisplayStepType.Dbt:
+        <SvgIcon Icon="LucideIcon.Blocks" />
+        break;
+    case DisplayStepType.Email:
+        <SvgIcon Icon="LucideIcon.Mail" />
+        break;
+    case DisplayStepType.Exe:
+        <SvgIcon Icon="LucideIcon.Terminal" />
+        break;
+    case DisplayStepType.Fabric:
+        <SvgIcon Icon="FabricIcon.Fabric16Regular" />
+        break;
+    case DisplayStepType.FabricNotebook:
+        <SvgIcon Icon="LucideIcon.Notebook" />
+        break;
+    case DisplayStepType.FabricPipeline:
+        <SvgIcon Icon="LucideIcon.Pipeline" />
+        break;
+    case DisplayStepType.Function:
+        <SvgIcon Icon="LucideIcon.Zap" />
+        break;
+    case DisplayStepType.Http:
+        <SvgIcon Icon="LucideIcon.Globe" />
+        break;
+    case DisplayStepType.Job:
+        <SvgIcon Icon="LucideIcon.ClipboardList" />
+        break;
+    case DisplayStepType.Package:
+        <SvgIcon Icon="LucideIcon.Package" />
+        break;
+    case DisplayStepType.Pipeline:
+        <SvgIcon Icon="LucideIcon.Pipeline" />
+        break;
+    case DisplayStepType.Qlik:
+        <SvgIcon Icon="LucideIcon.FileChartPie" />
+        break;
+    case DisplayStepType.QlikAutomation:
+        <SvgIcon Icon="LucideIcon.Workflow" />
+        break;
+    case DisplayStepType.QlikApp:
+        <SvgIcon Icon="LucideIcon.FileChartPie" />
+        break;
+    case DisplayStepType.Scd:
+        <SvgIcon Icon="LucideIcon.Replace" />
+        break;
+    case DisplayStepType.Sql:
+        <SvgIcon Icon="LucideIcon.Code" />
+        break;
+    case DisplayStepType.Tabular:
+        <SvgIcon Icon="LucideIcon.Box" />
+        break;
+    case DisplayStepType.Unknown or null:
+        <SvgIcon Icon="LucideIcon.CircleHelp" />
+        break;
+    default:
+        <SvgIcon Icon="LucideIcon.CircleX" />
+        break;
+}
+
+@code {
+    [Parameter] public DisplayStepType? StepType { get; set; }
+}

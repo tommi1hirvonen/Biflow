@@ -36,6 +36,8 @@ public class EmailStepExecution : StepExecution,
     public string Body { get; private set; }
 
     public IEnumerable<EmailStepExecutionParameter> StepExecutionParameters { get; } = new List<EmailStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Email;
 
     public override EmailStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

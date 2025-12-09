@@ -23,6 +23,13 @@ public class QlikStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAt
     public Guid QlikCloudEnvironmentId { get; [UsedImplicitly] private set; }
 
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
+    
+    public override DisplayStepType DisplayStepType => QlikStepSettings switch
+    {
+        QlikAppReloadSettings => DisplayStepType.QlikApp,
+        QlikAutomationRunSettings => DisplayStepType.QlikAutomation,
+        _ => DisplayStepType.Qlik
+    };
 
     public override QlikStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

@@ -203,11 +203,11 @@
 
             @if (State.ShowSteps)
             {
-                <FilterDropdown TItem="(string StepName, StepType StepType)"
+                <FilterDropdown TItem="(string StepName, DisplayStepType StepType)"
                                 FilterSet="State.StepFilter"
                                 Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepPredicate).All(p => p(e)))
-                                   .Select(s => (s.StepName, s.StepType))
+                                   .Select(s => (s.StepName, s.DisplayStepType))
                                    .Distinct()
                                    .OrderBy(j => j)
                                    .AsEnumerable() ?? []"
@@ -218,15 +218,15 @@
                         Step
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item.StepType" />
+                        <DisplayStepTypeIcon StepType="item.StepType" />
                         @item.StepName
                     </ItemTemplate>
                 </FilterDropdown>
-                <FilterDropdown TItem="StepType"
+                <FilterDropdown TItem="DisplayStepType"
                                 FilterSet="State.StepTypeFilter"
                                 Items="_stepExecutions?
                                    .Where(e => State.StepExecutionPredicates.Where(p => p != State.StepTypePredicate).All(p => p(e)))
-                                   .Select(s => s.StepType)
+                                   .Select(s => s.DisplayStepType)
                                    .Distinct()
                                    .OrderBy(j => j)
                                    .AsEnumerable() ?? []"
@@ -236,7 +236,7 @@
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item" />
+                        <DisplayStepTypeIcon StepType="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>

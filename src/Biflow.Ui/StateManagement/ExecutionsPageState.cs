@@ -23,9 +23,9 @@ public class ExecutionsPageState
             StartTypePredicate
         ];
 
-        StepPredicate = e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.StepType));
+        StepPredicate = e => StepFilter.Count == 0 || StepFilter.Contains((e.StepName, e.DisplayStepType));
         StepStatusPredicate = e => StepStatusFilter.Count == 0 || StepStatusFilter.Contains(e.StepExecutionStatus);
-        StepTypePredicate = e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.StepType);
+        StepTypePredicate = e => StepTypeFilter.Count == 0 || StepTypeFilter.Contains(e.DisplayStepType);
         StepTagPredicate = e =>
             (StepTagFilterMode is FilterDropdownMode.Any && (StepTagFilter.Count == 0 || StepTagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
             || (StepTagFilterMode is FilterDropdownMode.All && StepTagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName)));
@@ -98,11 +98,11 @@ public class ExecutionsPageState
     
     public HashSet<string> JobFilter { get; } = [];
     
-    public HashSet<(string StepName, StepType StepType)> StepFilter { get; } = [];
+    public HashSet<(string StepName, DisplayStepType StepType)> StepFilter { get; } = [];
 
     public HashSet<ScheduleProjection> ScheduleFilter { get; } = [];
     
-    public HashSet<StepType> StepTypeFilter { get; } = [];
+    public HashSet<DisplayStepType> StepTypeFilter { get; } = [];
     
     public HashSet<TagProjection> StepTagFilter { get; } = [];
     

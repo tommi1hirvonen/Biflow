@@ -38,16 +38,16 @@
             </div>
             <div class="col-auto mt-3">
                 <HxButtonGroup>
-                    <FilterDropdown TItem="StepType"
+                    <FilterDropdown TItem="DisplayStepType"
                                     FilterSet="_stepTypeFilter"
-                                    Items="_builder?.Steps.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                    Items="_builder?.Steps.Select(s => s.DisplayStepType).Distinct().OrderBy(t => t).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
                             <SvgIcon Icon="LucideIcon.Wrench" />
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
-                            <StepTypeIcon StepType="item" />
+                            <DisplayStepTypeIcon StepType="item" />
                             @item.ToString()
                         </ItemTemplate>
                     </FilterDropdown>
@@ -204,7 +204,7 @@
                                 @onclick="() => Add(step)"
                                 title="@(step.IsEnabled ? null : "Step is disabled")">
                                 <td class="@(step.IsEnabled ? null : "text-secondary") align-middle">
-                                    <StepTypeIcon StepType="@step.StepType" />
+                                    <DisplayStepTypeIcon StepType="@step.DisplayStepType" />
                                     &nbsp;
                                     <HighlightableText Text="@step.StepName" PartToHighlight="@_stepNameFilter" />
                                 </td>
@@ -231,7 +231,7 @@
                         {
                             <tr class="cursor-pointer" @onclick="() => step.RemoveFromExecution()">
                                 <td>
-                                    <StepTypeIcon StepType="@step.StepType" />
+                                    <DisplayStepTypeIcon StepType="@step.DisplayStepType" />
                                     &nbsp;
                                     @step.StepName
                                 </td>
@@ -255,7 +255,7 @@
     
     [Parameter, EditorRequired] public Guid JobId { get; set; }
 
-    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<DisplayStepType> _stepTypeFilter = [];
     private readonly HashSet<StepExecutionStatus> _statusFilter = [];
     private readonly HashSet<ITag> _tagFilter = [];
 
@@ -285,7 +285,7 @@
     private IEnumerable<ExecutionBuilderStep> StepsAvailableToExecute => _builder?.Steps
         .Where(step => _stateFilter switch { StateFilter.Enabled => step.IsEnabled, StateFilter.Disabled => !step.IsEnabled, _ => true })
         .Where(step => step.StepName?.ContainsIgnoreCase(_stepNameFilter) == true) // Step name filter
-        .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+        .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.DisplayStepType)) // Filter based on step type
         .Where(step => _tagFilter.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Tag filter
         .Where(step =>
         {

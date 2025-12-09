@@ -43,6 +43,8 @@ public class TabularStep : Step, IHasTimeout
 
     [JsonIgnore]
     public AnalysisServicesConnection Connection { get; init; } = null!;
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Tabular;
 
     public override TabularStep Copy(Job? targetJob = null) => new(this, targetJob);
 

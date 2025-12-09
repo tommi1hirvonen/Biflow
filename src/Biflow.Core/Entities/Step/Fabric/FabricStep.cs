@@ -52,6 +52,13 @@ public class FabricStep : Step, IHasTimeout, IHasStepParameters<FabricStepParame
     [JsonInclude]
     public IList<FabricStepParameter> StepParameters { get; private set; } = new List<FabricStepParameter>();
     
+    public override DisplayStepType DisplayStepType => ItemType switch
+    {
+        FabricItemType.Notebook => DisplayStepType.FabricNotebook,
+        FabricItemType.DataPipeline => DisplayStepType.FabricPipeline,
+        _ => DisplayStepType.Fabric
+    };
+    
     public override FabricStep Copy(Job? targetJob = null) => new(this, targetJob);
 
     public override StepExecution ToStepExecution(Execution execution) => new FabricStepExecution(this, execution);

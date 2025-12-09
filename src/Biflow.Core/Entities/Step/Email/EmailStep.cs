@@ -40,6 +40,8 @@ public class EmailStep : Step, IHasStepParameters<EmailStepParameter>
         .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
         .ToList();
 
+    public override DisplayStepType DisplayStepType => DisplayStepType.Email;
+
     public override EmailStep Copy(Job? targetJob = null) => new(this, targetJob);
 
     public override StepExecution ToStepExecution(Execution execution) => new EmailStepExecution(this, execution);

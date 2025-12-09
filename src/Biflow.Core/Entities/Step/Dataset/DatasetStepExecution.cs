@@ -36,6 +36,8 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     
     [MaxLength(250)]
     public string? DatasetName { get; private set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Dataset;
 
     public override DatasetStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

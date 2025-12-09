@@ -58,7 +58,7 @@
                                 @job?.JobName
                             </td>
                             <td>
-                                <StepTypeIcon StepType="@step?.StepType" />
+                                <DisplayStepTypeIcon StepType="@step?.DisplayStepType" />
                                 @step?.StepName
                             </td>
                             <td>
@@ -118,13 +118,13 @@
                 </div>
             </div>
             <div class="col-auto">
-                <FilterDropdown FilterSet="_stepTypeFilter" Items="Steps?.Select(s => s.StepType).Distinct()" OnChange="StateHasChanged">
+                <FilterDropdown FilterSet="_stepTypeFilter" Items="Steps?.Select(s => s.DisplayStepType).Distinct()" OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="LucideIcon.Wrench" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item" />
+                        <DisplayStepTypeIcon StepType="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
@@ -165,7 +165,7 @@
                                 @foreach (var step in availableSteps)
                                 {
                                     <div class="ps-5 list-group-item list-group-item-action cursor-pointer" @onclick="() => AddSubscriptionAsync(step.StepId)">
-                                        <StepTypeIcon StepType="step.StepType" />
+                                        <DisplayStepTypeIcon StepType="step.DisplayStepType" />
                                         <HighlightableText Text="@step.StepName" PartToHighlight="@_stepSearchTerm" />
                                     </div>
                                 }
@@ -197,7 +197,7 @@
     public EventCallback OnSubscriptionCountChanged { get; set; }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<DisplayStepType> _stepTypeFilter = [];
     private readonly Dictionary<Guid, bool> _jobExpandState = [];
 
     private HxOffcanvas? _selectStepOffcanvas;
@@ -238,7 +238,7 @@
 
         return steps
             .Where(s => string.IsNullOrEmpty(_stepSearchTerm) || (s.StepName?.ContainsIgnoreCase(_stepSearchTerm) ?? false))
-            .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType))
+            .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.DisplayStepType))
             .Where(s => Subscriptions.All(sub => s.StepId != sub.StepId))
             .OrderBy(s => s, comparer)
             .ToArray();

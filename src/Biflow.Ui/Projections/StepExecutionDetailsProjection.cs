@@ -6,6 +6,7 @@ public record StepExecutionDetailsProjection(
     int RetryAttemptIndex,
     string StepName,
     StepType StepType,
+    DisplayStepType DisplayStepType,
     int ExecutionPhase,
     DateTimeOffset? StartedOn,
     DateTimeOffset? EndedOn,

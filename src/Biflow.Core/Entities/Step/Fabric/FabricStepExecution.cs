@@ -46,6 +46,13 @@ public class FabricStepExecution : StepExecution,
     public IEnumerable<FabricStepExecutionParameter> StepExecutionParameters { get; } =
         new List<FabricStepExecutionParameter>();
     
+    public override DisplayStepType DisplayStepType => ItemType switch
+    {
+        FabricItemType.Notebook => DisplayStepType.FabricNotebook,
+        FabricItemType.DataPipeline => DisplayStepType.FabricPipeline,
+        _ => DisplayStepType.Fabric
+    };
+    
     public override FabricStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

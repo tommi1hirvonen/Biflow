@@ -20,6 +20,8 @@ public class ScdStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
 
     public Guid ScdTableId { get; [UsedImplicitly] private set; }
     
+    public override DisplayStepType DisplayStepType => DisplayStepType.Scd;
+    
     public override ScdStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

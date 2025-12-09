@@ -30,6 +30,8 @@ public class DbtStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAtt
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public Guid DbtAccountId { get; [UsedImplicitly] private set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Dbt;
 
     public override DbtStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

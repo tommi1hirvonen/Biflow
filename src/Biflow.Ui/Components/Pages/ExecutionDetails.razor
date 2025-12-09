@@ -407,12 +407,12 @@
                 <span class="me-3">Filter</span>
 
                 <HxButtonGroup Size="ButtonGroupSize.Small">
-                    <FilterDropdown TItem="(string StepName, StepType StepType)"
+                    <FilterDropdown TItem="(string StepName, DisplayStepType StepType)"
                                     FilterSet="_stepFilter"
                                     Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible steps based on tag filter
                                         .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible steps based on step status filter
-                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible steps based on step type filter
-                                        .Select(s => (s.StepName, s.StepType)) // use the step's name if available since it may have been changed after the execution
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.DisplayStepType)) // Limit visible steps based on step type filter
+                                        .Select(s => (s.StepName, s.DisplayStepType)) // use the step's name if available since it may have been changed after the execution
                                         .Distinct().OrderBy(j => j).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged"
                                     IsSearchable="true">
@@ -421,31 +421,31 @@
                             Step
                         </TitleTemplate>
                         <ItemTemplate Context="item">
-                            <StepTypeIcon StepType="item.StepType"/>
+                            <DisplayStepTypeIcon StepType="item.StepType"/>
                             @item.StepName
                         </ItemTemplate>
                     </FilterDropdown>
-                    <FilterDropdown TItem="StepType"
+                    <FilterDropdown TItem="DisplayStepType"
                                     FilterSet="_stepTypeFilter"
                                     Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible step types based on tag filter
                                         .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible step types based on step status filter
-                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step types based on step filter
-                                        .Select(s => s.StepType).Distinct().OrderBy(j => j).AsEnumerable() ?? []"
+                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.DisplayStepType))) // Limit visible step types based on step filter
+                                        .Select(s => s.DisplayStepType).Distinct().OrderBy(j => j).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
                             <SvgIcon Icon="LucideIcon.Wrench"/>
                             Step type
                         </TitleTemplate>
                         <ItemTemplate Context="item">
-                            <StepTypeIcon StepType="item"/>
+                            <DisplayStepTypeIcon StepType="item"/>
                             @item.ToString()
                         </ItemTemplate>
                     </FilterDropdown>
                     <FilterDropdown TItem="StepExecutionStatus"
                                     FilterSet="_stepStatusFilter"
                                     Items="_steps?.Where(s => !_tagFilter.Any() || s.StepTags.Any(t1 => _tagFilter.Any(t2 => t1.TagId == t2.TagId))) // Limit visible step statuses based on tag filter
-                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible step statuses based on step filter
-                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible step statuses based on step type filter
+                                        .Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.DisplayStepType))) // Limit visible step statuses based on step filter
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.DisplayStepType)) // Limit visible step statuses based on step type filter
                                         .Select(e => e.StepExecutionStatus).Distinct().OrderBy(s => s).AsEnumerable() ?? []"
                                     OnChange="StateHasChanged">
                         <TitleTemplate>
@@ -458,8 +458,8 @@
                     </FilterDropdown>
                     <FilterDropdown TItem="TagProjection"
                                     FilterSet="_tagFilter"
-                                    Items="_steps?.Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.StepType))) // Limit visible tags based on step filter
-                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.StepType)) // Limit visible tags based on step type filter
+                                    Items="_steps?.Where(s => !_stepFilter.Any() || _stepFilter.Contains((s.StepName, s.DisplayStepType))) // Limit visible tags based on step filter
+                                        .Where(s => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(s.DisplayStepType)) // Limit visible tags based on step type filter
                                         .Where(s => !_stepStatusFilter.Any() || _stepStatusFilter.Contains(s.StepExecutionStatus)) // Limit visible tags based on step status filter
                                         .SelectMany(e => e.StepTags).Distinct().Order().AsEnumerable() ?? []"
                                     IdSelector="t => t.TagId.ToString()"

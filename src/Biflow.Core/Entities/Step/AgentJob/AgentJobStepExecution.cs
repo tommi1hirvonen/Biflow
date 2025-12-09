@@ -29,6 +29,8 @@ public class AgentJobStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
 
     [Required]
     public Guid ConnectionId { get; [UsedImplicitly] private set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.AgentJob;
 
     public override AgentJobStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

@@ -80,6 +80,11 @@ internal class StepExecutionsMonitoringParallelQueryHandler(IDbContextFactory<Ap
                 e.RetryAttemptIndex,
                 step.StepName ?? e.StepExecution.StepName,
                 e.StepType,
+                DisplayStepType.Parse(
+                    e.StepType,
+                    ((FabricStepExecution)e.StepExecution).ItemType,
+                    ((DatabricksStepExecution)e.StepExecution).DatabricksStepSettings,
+                    ((QlikStepExecution)e.StepExecution).QlikStepSettings),
                 e.StepExecution.ExecutionPhase,
                 e.StepExecution.Execution.CreatedOn,
                 e.StartedOn,

@@ -51,6 +51,8 @@ public class PackageStepExecution : StepExecution,
     public string PackagePath => PackageFolderName + "/" + PackageProjectName + "/" + PackageName;
 
     public IEnumerable<PackageStepExecutionParameter> StepExecutionParameters { get; } = new List<PackageStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Package;
 
     public override PackageStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

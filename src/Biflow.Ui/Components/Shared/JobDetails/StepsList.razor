@@ -117,16 +117,16 @@
         </div>
         <div class="col-auto mt-3">
             <HxButtonGroup Size="ButtonGroupSize.Small">
-                <FilterDropdown TItem="StepType"
+                <FilterDropdown TItem="DisplayStepType"
                                 FilterSet="_stepTypeFilter"
-                                Items="Steps?.Select(s => s.StepType).Distinct().OrderBy(t => t) ?? Enumerable.Empty<StepType>()"
+                                Items="Steps?.Select(s => s.DisplayStepType).Distinct().OrderBy(t => t).AsEnumerable() ?? []"
                                 OnChange="StateHasChanged">
                     <TitleTemplate>
                         <SvgIcon Icon="LucideIcon.Wrench" />
                         Step type
                     </TitleTemplate>
                     <ItemTemplate Context="item">
-                        <StepTypeIcon StepType="item" />
+                        <DisplayStepTypeIcon StepType="item" />
                         @item.ToString()
                     </ItemTemplate>
                 </FilterDropdown>
@@ -318,14 +318,14 @@
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">
                                         <a class="text-body" href="javascript:void(0)" @onclick="() => ShowEditModal(item)">
-                                            <StepTypeIcon StepType="@item.StepType" />
+                                            <DisplayStepTypeIcon StepType="@item.DisplayStepType" />
                                             &nbsp;
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@_stepNameFilter" />
                                         </a>
                                     </AuthorizeView>
                                     <AuthorizeView Roles="@($"{Roles.Operator}, {Roles.Viewer}")">
                                         <span>
-                                            <StepTypeIcon StepType="@item.StepType" />
+                                            <DisplayStepTypeIcon StepType="@item.DisplayStepType" />
                                             <HighlightableText Text="@item.StepName" PartToHighlight="@_stepNameFilter" />
                                         </span>
                                     </AuthorizeView>
@@ -553,7 +553,7 @@
                         </ChildContent>
                         <MenuContent>
                             <DropdownMenuHeader>
-                                <StepTypeIcon StepType="item.StepType" />
+                                <DisplayStepTypeIcon StepType="item.DisplayStepType" />
                                 @item.StepName
                             </DropdownMenuHeader>
                             <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.Editor}")">

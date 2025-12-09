@@ -9,6 +9,7 @@ public record StepProjection(
     string JobName,
     string? StepName,
     StepType StepType,
+    DisplayStepType DisplayStepType,
     int ExecutionPhase,
     bool IsEnabled,
     StepTag[] Tags,

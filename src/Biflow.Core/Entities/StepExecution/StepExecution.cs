@@ -75,6 +75,9 @@ public abstract class StepExecution(string stepName, StepType stepType)
     public string StepName { get; [UsedImplicitly] private set; } = stepName;
 
     public StepType StepType { get; } = stepType;
+    
+    [JsonIgnore]
+    public abstract DisplayStepType DisplayStepType { get; }
 
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; private set; }
 

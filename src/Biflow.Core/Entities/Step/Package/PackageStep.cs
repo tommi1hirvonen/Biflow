@@ -64,6 +64,8 @@ public class PackageStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParamet
     [ValidateComplexType]
     [JsonInclude]
     public IList<PackageStepParameter> StepParameters { get; private set; } = new List<PackageStepParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Package;
 
     public override StepExecution ToStepExecution(Execution execution) => new PackageStepExecution(this, execution);
 

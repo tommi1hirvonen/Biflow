@@ -47,6 +47,8 @@ public class HttpStepExecution : StepExecution,
     public bool DisableAsyncPattern { get; init; }
 
     public IEnumerable<HttpStepExecutionParameter> StepExecutionParameters { get; } = new List<HttpStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Http;
 
     public override HttpStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

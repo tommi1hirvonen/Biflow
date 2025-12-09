@@ -33,10 +33,10 @@ public partial class ExecutionDetails(
 
     private const int TimerIntervalSeconds = 10;
     private readonly System.Timers.Timer _timer = new(TimeSpan.FromSeconds(TimerIntervalSeconds)) { AutoReset = false };
-    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<DisplayStepType> _stepTypeFilter = [];
     private readonly HashSet<TagProjection> _tagFilter = [];
     private readonly HashSet<StepExecutionStatus> _stepStatusFilter = [];
-    private readonly HashSet<(string StepName, StepType StepType)> _stepFilter = [];
+    private readonly HashSet<(string StepName, DisplayStepType StepType)> _stepFilter = [];
     private FilterDropdownMode _tagFilterMode = FilterDropdownMode.Any;
     private Guid _prevExecutionId;
     private ExecutionDetailsProjection? _execution;
@@ -84,8 +84,8 @@ public partial class ExecutionDetails(
             (_tagFilterMode is FilterDropdownMode.Any && (_tagFilter.Count == 0 || _tagFilter.Any(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
             || (_tagFilterMode is FilterDropdownMode.All && _tagFilter.All(tag => e.StepTags.Any(t => t.TagName == tag.TagName))))
             .Where(e => _stepStatusFilter.Count == 0 || _stepStatusFilter.Contains(e.StepExecutionStatus))
-            .Where(e => _stepFilter.Count == 0 || _stepFilter.Contains((e.StepName, e.StepType)))
-            .Where(e => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(e.StepType));
+            .Where(e => _stepFilter.Count == 0 || _stepFilter.Contains((e.StepName, e.DisplayStepType)))
+            .Where(e => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(e.DisplayStepType));
         return _sortMode switch
         {
             StepExecutionSortMode.StepAsc => filtered?.OrderBy(e => e.StepName),
@@ -223,6 +223,11 @@ public partial class ExecutionDetails(
                         e.RetryAttemptIndex,
                         step.StepName ?? e.StepExecution.StepName,
                         e.StepType,
+                        DisplayStepType.Parse(
+                            e.StepType,
+                            ((FabricStepExecution)e.StepExecution).ItemType,
+                            ((DatabricksStepExecution)e.StepExecution).DatabricksStepSettings,
+                            ((QlikStepExecution)e.StepExecution).QlikStepSettings),
                         e.StepExecution.ExecutionPhase,
                         e.StartedOn,
                         e.EndedOn,

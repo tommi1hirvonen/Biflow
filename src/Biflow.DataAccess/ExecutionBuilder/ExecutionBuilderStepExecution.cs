@@ -23,6 +23,8 @@ public class ExecutionBuilderStepExecution
     public string StepName => _stepExecution.StepName;
 
     public StepType StepType => _stepExecution.StepType;
+    
+    public DisplayStepType DisplayStepType => _stepExecution.DisplayStepType;
 
     public int ExecutionPhase => _stepExecution.ExecutionPhase;
 

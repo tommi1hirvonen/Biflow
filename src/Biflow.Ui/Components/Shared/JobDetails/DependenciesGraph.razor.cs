@@ -91,6 +91,11 @@ public partial class DependenciesGraph(
                 s.Job.JobName,
                 s.StepName,
                 s.StepType,
+                DisplayStepType.Parse(
+                    s.StepType,
+                    ((FabricStep)s).ItemType,
+                    ((DatabricksStep)s).DatabricksStepSettings,
+                    ((QlikStep)s).QlikStepSettings),
                 s.ExecutionPhase,
                 s.IsEnabled,
                 s.Tags.ToArray(),

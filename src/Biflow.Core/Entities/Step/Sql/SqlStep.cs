@@ -79,6 +79,8 @@ public class SqlStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParameters<
     [ValidateComplexType]
     [JsonInclude]
     public IList<SqlStepParameter> StepParameters { get; private set; } = new List<SqlStepParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Sql;
 
     public override SqlStep Copy(Job? targetJob = null) => new(this, targetJob);
 

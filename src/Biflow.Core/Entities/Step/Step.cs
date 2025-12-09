@@ -95,6 +95,9 @@ public abstract class Step : IComparable, IAuditable
     public int ExecutionPhase { get; set; }
 
     public StepType StepType { get; }
+    
+    [JsonIgnore]
+    public abstract DisplayStepType DisplayStepType { get; }
 
     public DuplicateExecutionBehaviour DuplicateExecutionBehaviour { get; set; } = DuplicateExecutionBehaviour.Wait;
 

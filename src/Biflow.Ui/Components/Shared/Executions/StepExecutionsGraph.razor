@@ -75,7 +75,7 @@
                     return new GraphStep
                     {
                         StepId = e.StepId, OverlapId = overlapsWithSelf ? e.ExecutionId : Guid.Empty,
-                        StepName = e.StepName, StepType = e.StepType, StepTags = e.StepTags
+                        StepName = e.StepName, DisplayStepType = e.DisplayStepType, StepTags = e.StepTags
                     };
                 })
                 .ToList();
@@ -87,7 +87,7 @@
                                 <small>
                                     @group.Key.StepName
                                     &nbsp;
-                                    <StepTypeIcon StepType="group.Key.StepType"/>
+                                    <DisplayStepTypeIcon StepType="group.Key.DisplayStepType"/>
                                 </small>
                             </div>
                         </div>
@@ -123,7 +123,7 @@
                                 </ChildContent>
                                 <MenuContent>
                                     <DropdownMenuHeader>
-                                        <StepTypeIcon StepType="execution.StepType" />
+                                        <DisplayStepTypeIcon StepType="execution.DisplayStepType" />
                                         @execution.StepName
                                     </DropdownMenuHeader>
                                     <DropdownMenuItem @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(execution))">
@@ -355,7 +355,7 @@
         public required Guid StepId { get; init; }
         public required Guid OverlapId { get; init; }
         public required string StepName { get; init; }
-        public required StepType StepType { get; init; }
+        public required DisplayStepType DisplayStepType { get; init; }
         public required IReadOnlyCollection<ITag> StepTags { get; init; }
 
         public override bool Equals(object? obj) =>

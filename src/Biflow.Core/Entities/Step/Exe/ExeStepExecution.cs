@@ -52,6 +52,8 @@ public class ExeStepExecution : StepExecution,
     public string? RunAsUsername { get; private set; }
 
     public IEnumerable<ExeStepExecutionParameter> StepExecutionParameters { get; } = new List<ExeStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Exe;
 
     public override ExeStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

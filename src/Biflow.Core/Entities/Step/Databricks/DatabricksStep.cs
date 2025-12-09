@@ -36,10 +36,18 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     [JsonInclude]
     public IList<DatabricksStepParameter> StepParameters { get; private set; } = new List<DatabricksStepParameter>();
 
+    public override DisplayStepType DisplayStepType => DatabricksStepSettings switch
+    {
+        DbNotebookStepSettings => DisplayStepType.DatabricksNotebook,
+        DbPythonFileStepSettings => DisplayStepType.DatabricksPythonFile,
+        DbJobStepSettings => DisplayStepType.DatabricksJob,
+        DbPipelineStepSettings => DisplayStepType.DatabricksPipeline,
+        _ => DisplayStepType.Databricks
+    };
+
     public override DatabricksStep Copy(Job? targetJob = null) => new(this, targetJob);
 
     public override StepExecution ToStepExecution(Execution execution) => new DatabricksStepExecution(this, execution);
-
 
     // Convenience methods to change the Databricks step type while retaining common settings properties.
 

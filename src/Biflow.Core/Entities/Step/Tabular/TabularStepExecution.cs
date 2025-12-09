@@ -37,6 +37,8 @@ public class TabularStepExecution : StepExecution, IHasTimeout, IHasStepExecutio
 
     [Required]
     public Guid ConnectionId { get; [UsedImplicitly] private set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Tabular;
 
     public override TabularStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

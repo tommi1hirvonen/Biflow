@@ -24,7 +24,7 @@ public partial class StepsList(
     private readonly ToasterService _toaster = toaster;
     private readonly IHxMessageBoxService _confirmer = confirmer;
     private readonly IMediator _mediator = mediator;
-    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<DisplayStepType> _stepTypeFilter = [];
     private readonly Dictionary<StepType, IStepEditModal?> _stepEditModals = [];
     private readonly HashSet<StepTag> _tagsFilterSet = [];
 
@@ -53,7 +53,7 @@ public partial class StepsList(
         .Where(step =>
             (_tagsFilterMode is FilterDropdownMode.Any && (_tagsFilterSet.Count == 0 || _tagsFilterSet.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
             || (_tagsFilterMode is FilterDropdownMode.All && _tagsFilterSet.All(tag => step.Tags.Any(t => t.TagName == tag.TagName))))
-        .Where(step => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(step.StepType))
+        .Where(step => _stepTypeFilter.Count == 0 || _stepTypeFilter.Contains(step.DisplayStepType))
         .Where(step => _advancedFiltersOffcanvas?.EvaluatePredicates(step) ?? true)
         ?? [];
 

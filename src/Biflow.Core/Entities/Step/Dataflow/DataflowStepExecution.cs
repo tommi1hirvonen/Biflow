@@ -43,6 +43,8 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Dataflow;
 
     public override DataflowStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

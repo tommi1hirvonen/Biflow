@@ -14,6 +14,8 @@ public interface IStepExecutionProjection
     
     public StepType StepType { get; }
     
+    public DisplayStepType DisplayStepType { get; }
+    
     public DateTimeOffset? StartedOn { get; }
     
     public DateTimeOffset? EndedOn { get; }

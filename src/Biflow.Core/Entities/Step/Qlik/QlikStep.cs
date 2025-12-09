@@ -30,6 +30,13 @@ public class QlikStep : Step, IHasTimeout
     [Required]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
+    
+    public override DisplayStepType DisplayStepType => QlikStepSettings switch
+    {
+        QlikAppReloadSettings => DisplayStepType.QlikApp,
+        QlikAutomationRunSettings => DisplayStepType.QlikAutomation,
+        _ => DisplayStepType.Qlik
+    };
 
     public override QlikStep Copy(Job? targetJob = null) => new(this, targetJob);
 

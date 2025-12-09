@@ -46,6 +46,8 @@ public class FunctionStepExecution : StepExecution,
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }
 
     public IEnumerable<FunctionStepExecutionParameter> StepExecutionParameters { get; } = new List<FunctionStepExecutionParameter>();
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Function;
 
     public override FunctionStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {

@@ -209,7 +209,7 @@
                                     </div>
                                 </AuthorizeView>
                             }
-                            <StepTypeIcon StepType="item.StepType" />
+                            <DisplayStepTypeIcon StepType="item.DisplayStepType" />
                             &nbsp;
                             @item.StepName
                         </td>
@@ -245,7 +245,7 @@
                     </ChildContent>
                     <MenuContent>
                         <DropdownMenuHeader>
-                            <StepTypeIcon StepType="item.StepType" />
+                            <DisplayStepTypeIcon StepType="item.DisplayStepType" />
                             @item.StepName
                         </DropdownMenuHeader>
                         <DropdownMenuItem @onclick="async () => await StepExecutionMonitorsOffcanvas.LetAsync(x => x.ShowAsync(item))">

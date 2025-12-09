@@ -39,6 +39,8 @@ public class AgentJobStep : Step, IHasSqlConnection, IHasTimeout
     [JsonIgnore]
     SqlConnectionBase IHasSqlConnection.Connection => Connection;
 
+    public override DisplayStepType DisplayStepType => DisplayStepType.AgentJob;
+
     public override AgentJobStep Copy(Job? targetJob = null) => new(this, targetJob);
 
     public override StepExecution ToStepExecution(Execution execution) => new AgentJobStepExecution(this, execution);

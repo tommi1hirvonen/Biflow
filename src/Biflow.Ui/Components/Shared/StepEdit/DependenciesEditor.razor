@@ -38,16 +38,16 @@
                 </ItemTemplate>
             </FilterDropdown>
 
-            <FilterDropdown TItem="StepType"
+            <FilterDropdown TItem="DisplayStepType"
                             FilterSet="_stepTypeFilter"
-                            Items="Steps.Select(s => s.StepType).Distinct().OrderBy(t => t)"
+                            Items="Steps.Select(s => s.DisplayStepType).Distinct().OrderBy(t => t)"
                             OnChange="StateHasChanged">
                 <TitleTemplate>
                     <SvgIcon Icon="LucideIcon.Wrench" />
                     Step type
                 </TitleTemplate>
                 <ItemTemplate Context="item">
-                    <StepTypeIcon StepType="item" />
+                    <DisplayStepTypeIcon StepType="item" />
                     @item.ToString()
                 </ItemTemplate>
             </FilterDropdown>
@@ -90,7 +90,7 @@
                     {
                         <tr class="cursor-pointer" @onclick="() => AddDependency(step)">
                             <td class="align-middle small">
-                                <StepTypeIcon StepType="step.StepType" />
+                                <DisplayStepTypeIcon StepType="step.DisplayStepType" />
                                 <HighlightableText Text="@step.StepName" PartToHighlight="@_dependenciesFilterText" />
                                 @if (multiJobAvailable)
                                 {
@@ -133,7 +133,7 @@
                             var title = dependency.IsCandidateForRemoval ? "Dependency not found in source/target mapping" : dependency.IsNewAddition ? "New dependency" : null;
                             <tr>
                                 <td class="align-middle small">
-                                    <StepTypeIcon StepType="step.StepType" />
+                                    <DisplayStepTypeIcon StepType="step.DisplayStepType" />
                                     @step.StepName
                                     @if (externalDependencies)
                                     {
@@ -204,7 +204,7 @@
     
     private readonly HashSet<JobProjection> _jobFilter = [];
     private readonly HashSet<StepTag> _tagFilter = [];
-    private readonly HashSet<StepType> _stepTypeFilter = [];
+    private readonly HashSet<DisplayStepType> _stepTypeFilter = [];
 
     private Step? _previousStep;
     private string _dependenciesFilterText = string.Empty;
@@ -217,7 +217,7 @@
             .Where(step => !_jobFilter.Any() || _jobFilter.Any(j => step.JobId == j.JobId))
             .Where(step => step.StepId != Step?.StepId) // Exclude current step => step cannot depend on itself.
             .Where(step => step.StepName?.ContainsIgnoreCase(_dependenciesFilterText) == true) // Filter based on search filter.
-            .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.StepType)) // Filter based on step type
+            .Where(step => !_stepTypeFilter.Any() || _stepTypeFilter.Contains(step.DisplayStepType)) // Filter based on step type
             .Where(step => _tagFilter.Count == 0 || _tagFilter.Any(tag => step.Tags.Any(t => t.TagName == tag.TagName))) // Filter based on tags
             .Where(step => Step?.Dependencies.All(d => d.DependantOnStepId != step.StepId) ?? true) // Exclude steps which are already listed as dependencies
             .GroupBy(step => (step.JobId, step.JobName))

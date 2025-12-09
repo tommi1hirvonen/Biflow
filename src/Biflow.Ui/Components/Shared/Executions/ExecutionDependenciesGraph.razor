@@ -29,7 +29,7 @@ else
                            Placeholder="Filter step"
                            autocomplete="off">
                 <ItemTemplate Context="item">
-                    <StepTypeIcon StepType="item.StepType"/>
+                    <DisplayStepTypeIcon StepType="item.DisplayStepType"/>
                     @item.StepName
                 </ItemTemplate>
                 <EmptyTemplate>
@@ -126,7 +126,7 @@ else
         <ContextMenuTemplate Context="step">
             <li>
                 <h6 class="dropdown-header">
-                    <StepTypeIcon StepType="step.StepType" />
+                    <DisplayStepTypeIcon StepType="step.DisplayStepType" />
                     @step.StepName
                 </h6>
             </li>

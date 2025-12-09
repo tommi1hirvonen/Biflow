@@ -17,6 +17,8 @@ public class ExecutionBuilderStep
     public string? StepName => _step.StepName;
 
     public StepType StepType => _step.StepType;
+    
+    public DisplayStepType DisplayStepType => _step.DisplayStepType;
 
     public bool IsEnabled => _step.IsEnabled;
 

@@ -31,6 +31,15 @@ public class DatabricksStepExecution : StepExecution,
 
     public IEnumerable<DatabricksStepExecutionParameter> StepExecutionParameters { get; } = new List<DatabricksStepExecutionParameter>();
 
+    public override DisplayStepType DisplayStepType => DatabricksStepSettings switch
+    {
+        DbNotebookStepSettings => DisplayStepType.DatabricksNotebook,
+        DbPythonFileStepSettings => DisplayStepType.DatabricksPythonFile,
+        DbJobStepSettings => DisplayStepType.DatabricksJob,
+        DbPipelineStepSettings => DisplayStepType.DatabricksPipeline,
+        _ => DisplayStepType.Databricks
+    };
+    
     public override DatabricksStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

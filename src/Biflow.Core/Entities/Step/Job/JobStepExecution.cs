@@ -46,6 +46,8 @@ public class JobStepExecution : StepExecution,
     /// </summary>
     public IEnumerable<TagFilter> TagFilters => _tagFilters;
 
+    public override DisplayStepType DisplayStepType => DisplayStepType.Job;
+
     public override JobStepExecutionAttempt AddAttempt(StepExecutionStatus withStatus = default)
     {
         var previous = StepExecutionAttempts.MaxBy(x => x.RetryAttemptIndex);

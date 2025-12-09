@@ -42,6 +42,8 @@ public class DatasetStep : Step
 
     [JsonIgnore]
     public AzureCredential? AzureCredential { get; set; }
+    
+    public override DisplayStepType DisplayStepType => DisplayStepType.Dataset;
 
     public override DatasetStep Copy(Job? targetJob = null) => new(this, targetJob);
 
