@@ -6,6 +6,7 @@ namespace Biflow.Ui.Components.Shared.StepEditModal;
 
 public partial class FabricStepEditModal(
     ITokenService tokenService,
+    IHttpClientFactory httpClientFactory,
     IMediator mediator,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
@@ -170,7 +171,7 @@ public partial class FabricStepEditModal(
             StateHasChanged();
             var azureCredential = Integrations.AzureCredentials
                 .First(a => a.AzureCredentialId == step.AzureCredentialId);
-            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService);
+            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService, httpClientFactory);
             (step.WorkspaceName, step.ItemName) = 
                 (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 
                     await fabric.GetItemNameAsync(step.WorkspaceId, step.ItemId));

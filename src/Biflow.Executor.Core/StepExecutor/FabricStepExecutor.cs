@@ -22,7 +22,9 @@ internal class FabricStepExecutor(
         .PollingIntervalMs;
     private readonly FabricWorkspaceClient _client = step
         .GetAzureCredential()
-        ?.CreateFabricWorkspaceClient(serviceProvider.GetRequiredService<ITokenService>())
+        ?.CreateFabricWorkspaceClient(
+            serviceProvider.GetRequiredService<ITokenService>(),
+            serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     
@@ -47,12 +49,18 @@ internal class FabricStepExecutor(
             attempt.AddError(ex, "Error reading Fabric item parameters");
             return Result.Failure;
         }
-        
+
         Guid instanceId;
         try
         {
-            instanceId = await _client.StartOnDemandItemJobAsync(
+            (var success, instanceId, var responseContent) = await _client.StartOnDemandItemJobAsync(
                 step.WorkspaceId, step.ItemId, step.ItemType, parameters, cancellationToken);
+            if (!success)
+            {
+                attempt.AddError(new Exception("Failed to start on demand item job"));
+                attempt.AddError(responseContent);
+                return Result.Failure;
+            }
         }
         catch (Exception ex)
         {

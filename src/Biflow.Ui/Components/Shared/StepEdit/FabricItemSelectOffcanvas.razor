@@ -5,6 +5,7 @@
 @inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject ITokenService TokenService
+@inject IHttpClientFactory HttpClientFactory
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataflow">
     <BodyTemplate>
@@ -176,7 +177,7 @@
             var azureCredential = await context.AzureCredentials
                 .AsNoTracking()
                 .FirstAsync(r => r.AzureCredentialId == azureCredentialId);
-            var client = azureCredential.CreateFabricWorkspaceClient(TokenService);
+            var client = azureCredential.CreateFabricWorkspaceClient(TokenService, HttpClientFactory);
             _items = await client.GetItemsAsync();
             StateHasChanged();
         }

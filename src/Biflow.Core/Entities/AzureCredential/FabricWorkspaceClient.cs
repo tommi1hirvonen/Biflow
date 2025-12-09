@@ -1,43 +1,98 @@
+using System.Globalization;
+using System.Text;
+using Azure.Core;
 using Biflow.Core.Interfaces;
 using Microsoft.Fabric.Api;
 using Microsoft.Fabric.Api.Core.Models;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Biflow.Core.Entities;
 
 public class FabricWorkspaceClient
 {
-    private readonly FabricClient _fabric;
+    private const string Endpoint = "https://api.fabric.microsoft.com/v1";
     
-    public FabricWorkspaceClient(AzureCredential azureCredential, ITokenService tokenService)
+    private readonly FabricClient _fabric;
+    private readonly TokenCredential _credential;
+    private readonly HttpClient _httpClient;
+    
+    public FabricWorkspaceClient(
+        AzureCredential azureCredential,
+        ITokenService tokenService,
+        IHttpClientFactory httpClientFactory)
     {
         var credential = azureCredential.GetTokenServiceCredential(tokenService);
-        _fabric = new(credential);
+        _credential = credential;
+        _fabric = new FabricClient(credential);
+        _httpClient = httpClientFactory.CreateClient();
     }
     
-    public async Task<Guid> StartOnDemandItemJobAsync(
+    public async Task<(bool Success, Guid InstanceId, string? ResponseContent)> StartOnDemandItemJobAsync(
         Guid workspaceId,
         Guid itemId,
         FabricItemType itemType,
         IDictionary<string, object> parameters,
         CancellationToken cancellationToken)
     {
-        var request = parameters.Count > 0
-            ? new RunOnDemandItemJobRequest { ExecutionData = new { parameters } }
-            : null;
-        var jobType = itemType switch
+        var accessToken = await _credential.GetTokenAsync(
+            new TokenRequestContext([AzureCredential.FabricResourceUrl]),
+            cancellationToken);
+        var (jobType, content) = itemType switch
         {
-            FabricItemType.DataPipeline => "Pipeline",
-            FabricItemType.Notebook => "RunNotebook",
+            FabricItemType.DataPipeline => ("Pipeline", CreatePipelineRequestContent(parameters)),
+            FabricItemType.Notebook => ("RunNotebook", CreateNotebookRequestContent(parameters)),
             _ => throw new ArgumentOutOfRangeException($"Unrecognized item type: {itemType}")
         };
-        var response = await _fabric.Core.JobScheduler.RunOnDemandItemJobAsync(
-            workspaceId, itemId, jobType, request, cancellationToken);
-        if (!response.Headers.TryGetValue("Location", out var location))
+        var url = $"{Endpoint}/workspaces/{workspaceId}/items/{itemId}/jobs/{jobType}/instances";
+        var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Headers.Add("Authorization", $"Bearer {accessToken.Token}");
+        request.Headers.Add("Accept", "application/json");
+        request.Content = new StringContent(content, Encoding.UTF8, "application/json");
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return (false, Guid.Empty, responseContent);
+        }
+        if (response.Headers.Location is not { } uri)
         {
             throw new Exception("Location header was missing for on demand item job response");
         }
-        var instanceId = ParseInstanceIdFromLocation(location.AsSpan());
-        return instanceId;
+        var instanceId = ParseInstanceIdFromLocation(uri.AbsoluteUri.AsSpan());
+        return (true, instanceId, responseContent);
+    }
+
+    private static string CreatePipelineRequestContent(IDictionary<string, object> parameters)
+    {
+        if (parameters.Count == 0)
+            return "{}";
+        var executionData = new { executionData = new { parameters } };
+        return JsonSerializer.Serialize(executionData);
+    }
+    
+    private static string CreateNotebookRequestContent(IDictionary<string, object> parameters)
+    {
+        // Notebooks require parameters to be serialized differently compared to pipelines.
+        if (parameters.Count == 0)
+            return "{}";
+        var transformedParameters = parameters.ToDictionary(
+            p => p.Key,
+            p => new { value = TextFromValue(p.Value), type = TypeFromValue(p.Value) });
+        var executionData = new { executionData = new { parameters = transformedParameters } };
+        return JsonSerializer.Serialize(executionData);
+        string? TextFromValue(object value) => value switch
+        {
+            IFormattable formattable => formattable.ToString("G", CultureInfo.InvariantCulture),
+            _ => value.ToString()
+        };
+        // Allowed values for the type property are: int, float, bool, string
+        string TypeFromValue(object value) => value switch
+        {
+            short or int or long => "int",
+            float or double or decimal => "float",
+            bool => "bool",
+            _ => "string"
+        };
     }
     
     private static Guid ParseInstanceIdFromLocation(ReadOnlySpan<char> location)
@@ -63,11 +118,9 @@ public class FabricWorkspaceClient
     {
         var response = await _fabric.Core.JobScheduler.GetItemJobInstanceAsync(
             workspaceId, itemId, instanceId, cancellationToken);
-        if (!response.HasValue)
-        {
-            throw new Exception($"Failed to get pipeline run for {instanceId}, response value is missing");
-        }
-        return response.Value;
+        return response.HasValue
+            ? response.Value
+            : throw new Exception($"Failed to get pipeline run for {instanceId}, response value is missing");
     }
 
     public Task CancelItemJobInstanceAsync(
@@ -80,22 +133,18 @@ public class FabricWorkspaceClient
     public async Task<string> GetWorkspaceNameAsync(Guid workspaceId, CancellationToken cancellationToken = default)
     {
         var workspace = await _fabric.Core.Workspaces.GetWorkspaceAsync(workspaceId, cancellationToken);
-        if (workspace.HasValue)
-        {
-            return workspace.Value.DisplayName;
-        }
-        throw new Exception($"Workspace with id {workspaceId} not found");
+        return workspace.HasValue
+            ? workspace.Value.DisplayName
+            : throw new Exception($"Workspace with id {workspaceId} not found");
     }
 
     public async Task<string> GetItemNameAsync(
         Guid workspaceId, Guid itemId, CancellationToken cancellationToken = default)
     {
         var item = await _fabric.Core.Items.GetItemAsync(workspaceId, itemId, cancellationToken);
-        if (item.HasValue)
-        {
-            return item.Value.DisplayName;
-        }
-        throw new Exception($"Item with id {itemId} not found");
+        return item.HasValue
+            ? item.Value.DisplayName
+            : throw new Exception($"Item with id {itemId} not found");
     }
 
     public async Task<IReadOnlyList<FabricItemGroup>> GetItemsAsync(CancellationToken cancellationToken = default)
