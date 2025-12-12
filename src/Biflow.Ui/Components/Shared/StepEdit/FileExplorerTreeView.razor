@@ -12,6 +12,7 @@
         foreach (var node in RootNodes)
         {
             <FileExplorerFolderListGroupItem Folder="node"
+                                             ShowHidden="ShowHidden"
                                              SelectedFile="SelectedFile"
                                              FileExplorerDelegate="FileExplorerDelegate"
                                              OnFileSelected="OnFileSelected"
@@ -29,4 +30,6 @@
     [Parameter] public DirectoryItem? SelectedFile { get; set; }
     
     [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+    
+    [Parameter] public bool ShowHidden { get; set; }
 }

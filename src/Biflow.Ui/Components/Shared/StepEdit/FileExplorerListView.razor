@@ -69,7 +69,9 @@
         }
         else
         {
-            var nodes = RootNodes.Where(x => string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText));
+            var nodes = RootNodes
+                .Where(x => (!x.IsHidden || ShowHidden)
+                            && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
             foreach (var node in nodes)
             {
                 <FileExplorerListViewItem Item="node"
@@ -90,7 +92,9 @@
         }
         else
         {
-            var nodes = _currentItems.Where(x => string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText));
+            var nodes = _currentItems
+                .Where(x => (!x.IsHidden || ShowHidden)
+                            && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
             foreach (var node in nodes)
             {
                 <FileExplorerListViewItem Item="node"
@@ -112,6 +116,8 @@
     [Parameter] public DirectoryItem? SelectedFile { get; set; }
     
     [Parameter] public EventCallback<DirectoryItem> OnFileSelected { get; set; }
+    
+    [Parameter] public bool ShowHidden { get; set; }
 
     private readonly Stack<DirectoryItem> _breadCrumbs = [];
     private DirectoryItem? _currentFolder;

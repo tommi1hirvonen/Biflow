@@ -5,8 +5,8 @@
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Large" Title="Select file">
 
     <BodyTemplate>
-        <div class="row">
-            <div class="col">
+        <div class="row align-items-center">
+            <div class="col-auto">
                 <HxButtonToolbar>
                     <HxButtonGroup>
                         <HxButton Size="ButtonSize.Small" Color="ThemeColor.Secondary"
@@ -26,12 +26,21 @@
                     </HxButtonGroup>
                 </HxButtonToolbar>
             </div>
+            <div class="col-auto">
+                <div class="form-check mb-0">
+                    <input type="checkbox" class="form-check-input" id="show_hidden"
+                           checked=@_showHidden
+                           @onchange="args => _showHidden = (bool)args.Value!">
+                    <label class="form-check-label" for="show_hidden">Show hidden files and folders</label>
+                </div>
+            </div>
         </div>
         <div class="row mt-3">
             <div class="col">
                 @if (_viewType == ViewType.List)
                 {
                     <FileExplorerListView RootNodes="_rootNodes"
+                                          ShowHidden="_showHidden"
                                           FileExplorerDelegate="_fileExplorerDelegate"
                                           SelectedFile="_selectedFile"
                                           OnFileSelected="ToggleFile" />
@@ -39,6 +48,7 @@
                 else if (_viewType == ViewType.Tree)
                 {
                     <FileExplorerTreeView RootNodes="_rootNodes"
+                                          ShowHidden="_showHidden"
                                           FileExplorerDelegate="_fileExplorerDelegate"
                                           SelectedFile="_selectedFile"
                                           OnFileSelected="ToggleFile"/>
@@ -65,6 +75,7 @@
     private IReadOnlyList<DirectoryItem>? _rootNodes;
     private DirectoryItem? _selectedFile;
     private ViewType _viewType = ViewType.List;
+    private bool _showHidden;
     private FileExplorerDelegate _fileExplorerDelegate =
         (_, _) => Task.FromResult<IReadOnlyList<DirectoryItem>>([]);
     

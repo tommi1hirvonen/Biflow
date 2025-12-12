@@ -11,7 +11,8 @@
     <div class="list-group-item list-group-item-action cursor-pointer"
          @onclick="ToggleExpandedAsync">
         <div class="row">
-            <div class="col d-flex align-items-center small" style="padding-left: @(folderPadding)">
+            <div class="col d-flex align-items-center small @(Folder.IsHidden ? "text-muted" : null)"
+                 style="padding-left: @(folderPadding)">
                 @if (_expanded)
                 {
                     <SvgIcon Icon="LucideIcon.ChevronDown" />
@@ -38,10 +39,12 @@
         else
         {
             var folders = _items
-                .Where(x => x.Type == DirectoryItemType.Directory 
+                .Where(x => x.Type == DirectoryItemType.Directory
+                            && (!x.IsHidden || ShowHidden)
                             && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
             var files = _items
-                .Where(x => x.Type == DirectoryItemType.File 
+                .Where(x => x.Type == DirectoryItemType.File
+                            && (!x.IsHidden || ShowHidden)
                             && (string.IsNullOrEmpty(_filterText) || x.Name.ContainsIgnoreCase(_filterText)));
             var searchPadding = $"{(Depth - 0.2).ToString("F2", CultureInfo.InvariantCulture)}rem;";
             
@@ -63,7 +66,8 @@
             
             @foreach (var folder in folders)
             {
-                <FileExplorerFolderListGroupItem Folder="folder"
+                <FileExplorerFolderListGroupItem @key="folder"
+                                                 Folder="folder"
                                                  SelectedFile="SelectedFile"
                                                  FileExplorerDelegate="FileExplorerDelegate"
                                                  OnFileSelected="OnFileSelected"
@@ -73,10 +77,10 @@
             @foreach (var file in files)
             {
                 var filePadding = $"{(Depth + 1.4).ToString("F2", CultureInfo.InvariantCulture)}rem;";
-                <div class="list-group-item list-group-item-action small cursor-pointer @(file == SelectedFile ? "bg-body" : null)"
+                <div @key="file" class="list-group-item list-group-item-action small cursor-pointer @(file == SelectedFile ? "bg-body" : null)"
                      @onclick="() => OnFileSelected.InvokeAsync(file)">
                     <div class="row">
-                        <div class="col d-flex align-items-center @(file == SelectedFile ? "fw-bold" : null)"
+                        <div class="col d-flex align-items-center @(Folder.IsHidden ? "text-muted" : null) @(file == SelectedFile ? "fw-bold" : null)"
                              style="padding-left: @(filePadding)">
                             <SvgIcon Icon="LucideIcon.File" />
                             &nbsp;
@@ -102,6 +106,8 @@
     [Parameter] public string FilterText { get; set; } = "";
     
     [Parameter] public int ParentDepth { get; set; }
+    
+    [Parameter] public bool ShowHidden { get; set; }
     
     private IReadOnlyList<DirectoryItem>? _items;
     private bool _expanded;

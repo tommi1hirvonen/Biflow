@@ -9,7 +9,7 @@ public static class FileExplorer
             var drives = DriveInfo
                 .GetDrives()
                 .OrderBy(x => x.Name)
-                .Select(x => new DirectoryItem(x.Name, x.Name, DirectoryItemType.Drive))
+                .Select(x => new DirectoryItem(x.Name, x.Name, DirectoryItemType.Drive, false))
                 .ToArray();
             return drives;
         }
@@ -17,16 +17,22 @@ public static class FileExplorer
         var dirInfo = new DirectoryInfo(path);
         var subDirs = dirInfo
             .GetDirectories()
-            .Where(x => !x.Attributes.HasFlag(FileAttributes.Hidden))
             .OrderBy(x => x.Name)
-            .Select(x => new DirectoryItem(x.Name, x.FullName, DirectoryItemType.Directory))
+            .Select(x => new DirectoryItem(
+                x.Name,
+                x.FullName,
+                DirectoryItemType.Directory,
+                x.Attributes.HasFlag(FileAttributes.Hidden)))
             .ToArray();
         
         var files = dirInfo
             .GetFiles()
-            .Where(x => !x.Attributes.HasFlag(FileAttributes.Hidden))
             .OrderBy(x => x.Name)
-            .Select(x => new DirectoryItem(x.Name, x.FullName, DirectoryItemType.File))
+            .Select(x => new DirectoryItem(
+                x.Name,
+                x.FullName,
+                DirectoryItemType.File,
+                x.Attributes.HasFlag(FileAttributes.Hidden)))
             .ToArray();
         
         DirectoryItem[] items = [..subDirs, ..files];

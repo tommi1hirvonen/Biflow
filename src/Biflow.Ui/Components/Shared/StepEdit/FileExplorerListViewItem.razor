@@ -6,7 +6,7 @@
         <div class="list-group-item list-group-item-action cursor-pointer"
              @onclick="() => OnFolderSelected.InvokeAsync(Item)">
             <div class="row">
-                <div class="col d-flex align-items-center small">
+                <div class="col d-flex align-items-center small @(Item.IsHidden ? "text-muted" : null)">
                     <SvgIcon Icon="LucideIcon.Folder" />
                     &nbsp;
                     <HighlightableText Text="@Item.Name" PartToHighlight="@FilterText" />
@@ -18,7 +18,7 @@
         <div class="list-group-item list-group-item-action cursor-pointer @(Item == SelectedFile ? "bg-body" : null)"
              @onclick="() => OnFileSelected.InvokeAsync(Item)">
             <div class="row">
-                <div class="col d-flex align-items-center small @(Item == SelectedFile ? "fw-bold" : null)">
+                <div class="col d-flex align-items-center small @(Item.IsHidden ? "text-muted" : null) @(Item == SelectedFile ? "fw-bold" : null)">
                     <SvgIcon Icon="LucideIcon.File" />
                     &nbsp;
                     <HighlightableText Text="@Item.Name" PartToHighlight="@FilterText" />
