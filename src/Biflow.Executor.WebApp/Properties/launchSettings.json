@@ -9,12 +9,22 @@
     }
   },
   "profiles": {
-    "Biflow.Executor.WebApp": {
+    "http": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:4321",
+      "applicationUrl": "http://localhost:6543",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    },
+    "noBrowser": {
+      "commandName": "Project",
+      "dotnetRunMessages": true,
+      "launchBrowser": false,
+      "launchUrl": "swagger",
+      "applicationUrl": "http://localhost:6543",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
