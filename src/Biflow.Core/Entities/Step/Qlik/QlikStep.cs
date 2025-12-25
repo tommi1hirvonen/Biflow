@@ -31,6 +31,7 @@ public class QlikStep : Step, IHasTimeout
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => QlikStepSettings switch
     {
         QlikAppReloadSettings => DisplayStepType.QlikApp,

@@ -36,6 +36,7 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     [JsonInclude]
     public IList<DatabricksStepParameter> StepParameters { get; private set; } = new List<DatabricksStepParameter>();
 
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DatabricksStepSettings switch
     {
         DbNotebookStepSettings => DisplayStepType.DatabricksNotebook,

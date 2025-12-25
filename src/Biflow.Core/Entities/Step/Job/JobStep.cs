@@ -47,6 +47,7 @@ public class JobStep : Step, IHasStepParameters<JobStepParameter>, IHasTimeout
     [JsonInclude]
     public ICollection<StepTag> TagFilters { get; private set; } = new List<StepTag>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Job;
 
     public override JobStep Copy(Job? targetJob = null) => new(this, targetJob);

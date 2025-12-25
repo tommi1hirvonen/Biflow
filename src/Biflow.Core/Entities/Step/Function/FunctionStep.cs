@@ -65,6 +65,7 @@ public class FunctionStep : Step, IHasTimeout, IHasStepParameters<FunctionStepPa
     [JsonInclude]
     public IList<FunctionStepParameter> StepParameters { get; private set; } = new List<FunctionStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Function;
 
     public override StepExecution ToStepExecution(Execution execution) => new FunctionStepExecution(this, execution);

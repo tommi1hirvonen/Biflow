@@ -38,6 +38,7 @@ public class DbtStep : Step, IHasTimeout
     [JsonIgnore]
     public DbtAccount DbtAccount { get; set; } = null!;
 
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Dbt;
 
     public override DbtStep Copy(Job? targetJob = null) => new(this, targetJob);

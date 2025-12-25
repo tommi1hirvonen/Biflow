@@ -62,6 +62,7 @@ public class HttpStep : Step, IHasTimeout, IHasStepParameters<HttpStepParameter>
     [JsonInclude]
     public IList<HttpStepParameter> StepParameters { get; private set; } = new List<HttpStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Http;
 
     public override StepExecution ToStepExecution(Execution execution) => new HttpStepExecution(this, execution);

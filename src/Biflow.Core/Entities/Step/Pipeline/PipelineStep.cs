@@ -38,6 +38,7 @@ public class PipelineStep : Step, IHasTimeout, IHasStepParameters<PipelineStepPa
     [JsonInclude]
     public IList<PipelineStepParameter> StepParameters { get; private set; } = new List<PipelineStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Pipeline;
 
     public override PipelineStep Copy(Job? targetJob = null) => new(this, targetJob);

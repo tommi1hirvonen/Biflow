@@ -52,6 +52,7 @@ public class FabricStep : Step, IHasTimeout, IHasStepParameters<FabricStepParame
     [JsonInclude]
     public IList<FabricStepParameter> StepParameters { get; private set; } = new List<FabricStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => ItemType switch
     {
         FabricItemType.Notebook => DisplayStepType.FabricNotebook,

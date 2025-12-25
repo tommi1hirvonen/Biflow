@@ -48,6 +48,7 @@ public class DataflowStep : Step, IHasTimeout
     [JsonIgnore]
     public AzureCredential? AzureCredential { get; init; }
 
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Dataflow;
 
     public override DataflowStep Copy(Job? targetJob = null) => new(this, targetJob);

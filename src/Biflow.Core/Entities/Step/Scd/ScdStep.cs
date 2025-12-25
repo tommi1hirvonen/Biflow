@@ -36,6 +36,7 @@ public class ScdStep : Step, IHasTimeout, IHasSqlConnection
     [JsonIgnore, NotMapped]
     public Guid ConnectionId { get; set; }
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Scd;
 
     public override ScdStep Copy(Job? targetJob = null) => new(this, targetJob);

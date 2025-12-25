@@ -80,6 +80,7 @@ public class SqlStep : Step, IHasSqlConnection, IHasTimeout, IHasStepParameters<
     [JsonInclude]
     public IList<SqlStepParameter> StepParameters { get; private set; } = new List<SqlStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Sql;
 
     public override SqlStep Copy(Job? targetJob = null) => new(this, targetJob);

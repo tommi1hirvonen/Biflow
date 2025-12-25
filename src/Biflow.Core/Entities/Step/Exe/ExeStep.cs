@@ -61,6 +61,7 @@ public class ExeStep : Step, IHasTimeout, IHasStepParameters<ExeStepParameter>
     [JsonInclude]
     public IList<ExeStepParameter> StepParameters { get; private set; } = new List<ExeStepParameter>();
     
+    [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Exe;
 
     public override StepExecution ToStepExecution(Execution execution) => new ExeStepExecution(this, execution);
