@@ -28,17 +28,38 @@ internal class DataflowStepExecutor(
             serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     
+    private const int MaxGetDataflowIdRetries = 3;
     private const int MaxRefreshRetries = 3;
 
     public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
         var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
+        
+        // Get the dataflow id based on the dataflow name. Because of environment transfers of metadata,
+        // the dataflow id is not the preferred or primary way to identify dataflows.
+        // Dataflow ids differ for the "same" dataflow in different Power BI environments (or workspaces, in practice).
+        Guid dataflowId;
+        try
+        {
+            dataflowId = await GetDataflowIdWithRetriesAsync(cancellationToken);
+        }
+        catch (ArgumentNullException ex)
+        {
+            // GetDataflowIdWithRetriesAsync() throws ArgumentNullException if the dataflow id was not found.
+            attempt.AddWarning(ex, "No dataflow id was found for the specified name. Using stored dataflow id instead.");
+            dataflowId = Guid.Parse(step.DataflowId);
+        }
+        catch (Exception ex)
+        {
+            attempt.AddError(ex, "Error getting dataflow id");
+            return Result.Failure;
+        }
 
         // Start dataflow refresh.
         try
         {
-            await _client.RefreshDataflowAsync(_workspace.WorkspaceId, step.DataflowId, cancellationToken);
+            await _client.RefreshDataflowAsync(_workspace.WorkspaceId, dataflowId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -67,7 +88,8 @@ internal class DataflowStepExecutor(
             
             while (true)
             {
-                (var status, transaction) = await GetDataflowTransactionStatusWithRetriesAsync(linkedCts.Token);
+                (var status, transaction) = await GetDataflowTransactionStatusWithRetriesAsync(dataflowId,
+                    linkedCts.Token);
                 switch (status)
                 {
                     case DataflowRefreshStatus.Success:
@@ -116,9 +138,24 @@ internal class DataflowStepExecutor(
             return Result.Failure;
         }
     }
+    
+    private async Task<Guid> GetDataflowIdWithRetriesAsync(CancellationToken cancellationToken)
+    {
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxGetDataflowIdRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting dataflow id for name {itemName}",
+                step.ExecutionId, step, step.DataflowName));
+        var dataflowId = await policy.ExecuteAsync(cancellation =>
+                _client.GetDataflowIdAsync(_workspace.WorkspaceId, step.DataflowName, cancellation), cancellationToken)
+            ?? throw new ArgumentNullException(message: $"Dataflow id not found for name '{step.DataflowName}'",
+                innerException: null);
+        return dataflowId;
+    }
 
     private async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)>
-        GetDataflowTransactionStatusWithRetriesAsync(CancellationToken cancellationToken)
+        GetDataflowTransactionStatusWithRetriesAsync(Guid dataflowId, CancellationToken cancellationToken)
     {
         var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,
@@ -126,7 +163,7 @@ internal class DataflowStepExecutor(
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataflow transaction status", step.ExecutionId, step));
         return await policy.ExecuteAsync(cancellation =>
-            _client.GetDataflowTransactionStatusAsync(_workspace.WorkspaceId, step.DataflowId, cancellation),
+            _client.GetDataflowTransactionStatusAsync(_workspace.WorkspaceId, dataflowId, cancellation),
             cancellationToken);
     }
     

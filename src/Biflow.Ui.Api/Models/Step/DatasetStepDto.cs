@@ -5,5 +5,5 @@ public record DatasetStepDto : StepDto
 {
     public required Guid FabricWorkspaceId { get; init; }
     public required Guid DatasetId { get; init; }
-    public string? DatasetName { get; init; }
+    public required string DatasetName { get; init; }
 }

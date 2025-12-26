@@ -22,23 +22,23 @@ public class DataflowClient(
         return new PowerBIClient(credentials);
     }
 
-    public async Task RefreshDataflowAsync(Guid workspaceId, string dataflowId, CancellationToken cancellationToken)
+    public async Task RefreshDataflowAsync(Guid workspaceId, Guid dataflowId, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var refreshRequest = new RefreshRequest(NotifyOption.NoNotification);
-        await client.Dataflows.RefreshDataflowAsync(workspaceId, Guid.Parse(dataflowId), refreshRequest,
+        await client.Dataflows.RefreshDataflowAsync(workspaceId, dataflowId, refreshRequest,
             cancellationToken: cancellationToken);
     }
 
     public async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)> GetDataflowTransactionStatusAsync(
         Guid workspaceId,
-        string dataflowId,
+        Guid dataflowId,
         CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var transactions = await client.Dataflows.GetDataflowTransactionsAsync(
             workspaceId,
-            Guid.Parse(dataflowId),
+            dataflowId,
             cancellationToken);
         var transaction = transactions.Value.FirstOrDefault();
         var status = transaction?.Status switch
@@ -90,6 +90,16 @@ public class DataflowClient(
         var groups = await client.Groups.GetGroupsAsync(filter, top: 1, cancellationToken: cancellationToken);
         var group = groups.Value.First();
         return group.Name;
+    }
+    
+    public async Task<Guid?> GetDataflowIdAsync(Guid workspaceId, string dataflowName,
+        CancellationToken cancellationToken = default)
+    {
+        var client = await GetClientAsync();
+        var dataflows = await client.Dataflows.GetDataflowsAsync(workspaceId, cancellationToken);
+        return dataflows.Value
+            .FirstOrDefault(d => d.Name == dataflowName)
+            ?.ObjectId;
     }
 
     public async Task<string> GetDataflowNameAsync(Guid workspaceId, string dataflowId,

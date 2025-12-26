@@ -64,6 +64,16 @@ public class DatasetClient(AzureCredential azureCredential, ITokenService tokenS
         return group.Name;
     }
 
+    public async Task<string?> GetDatasetIdAsync(Guid workspaceId, string datasetName,
+        CancellationToken cancellationToken = default)
+    {
+        var client = await GetClientAsync();
+        var datasets = await client.Datasets.GetDatasetsInGroupAsync(workspaceId, cancellationToken);
+        return datasets.Value
+            .FirstOrDefault(d => d.Name == datasetName)
+            ?.Id;
+    }
+
     public async Task<string> GetDatasetNameAsync(Guid workspaceId, string datasetId,
         CancellationToken cancellationToken = default)
     {

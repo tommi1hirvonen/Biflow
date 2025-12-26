@@ -6,9 +6,11 @@ namespace Biflow.Core.Entities;
 
 public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<DataflowStepExecutionAttempt>
 {
-    public DataflowStepExecution(string stepName, string dataflowId) : base(stepName, StepType.Dataflow)
+    public DataflowStepExecution(string stepName, string dataflowId, string dataflowName)
+        : base(stepName, StepType.Dataflow)
     {
         DataflowId = dataflowId;
+        DataflowName = dataflowName;
     }
 
     public DataflowStepExecution(DataflowStep step, Execution execution) : base(step, execution)
@@ -28,7 +30,7 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     public string DataflowId { get; private set; }
     
     [MaxLength(250)]
-    public string? DataflowName { get; private set; }
+    public string DataflowName { get; private set; }
     
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; [UsedImplicitly] private set; }

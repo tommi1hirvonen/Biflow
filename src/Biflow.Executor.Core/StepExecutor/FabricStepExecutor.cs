@@ -65,10 +65,10 @@ internal class FabricStepExecutor(
         {
             itemId = await GetItemIdWithRetriesAsync(cancellationToken);
         }
-        catch (ArgumentNullException)
+        catch (ArgumentNullException ex)
         {
             // GetItemIdWithRetriesAsync() throws ArgumentNullException if the item id was not found.
-            attempt.AddWarning("No item id was found for the specified name. Using stored item id instead.");
+            attempt.AddWarning(ex, "No item id was found for the specified name. Using stored item id instead.");
             itemId = step.ItemId;
         }
         catch (Exception ex)
@@ -191,7 +191,8 @@ internal class FabricStepExecutor(
                 step.ItemName,
                 cancellation),
             cancellationToken)
-            ?? throw new ArgumentNullException(message: "Item was found but the id was null", innerException: null);
+            ?? throw new ArgumentNullException(message: $"Item id not found for name '{step.ItemName}'",
+                innerException: null);
         return itemId;
     }
     

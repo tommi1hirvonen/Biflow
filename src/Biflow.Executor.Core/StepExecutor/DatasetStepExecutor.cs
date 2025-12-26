@@ -11,6 +11,7 @@ internal class DatasetStepExecutor(
     DatasetStepExecution step,
     DatasetStepExecutionAttempt attempt) : IStepExecutor
 {
+    private const int MaxGetDatasetIdRetries = 3;
     private const int MaxRefreshRetries = 3;
     
     private readonly ILogger<DatasetStepExecutor> _logger = serviceProvider
@@ -32,11 +33,31 @@ internal class DatasetStepExecutor(
     {
         var cancellationToken = cancellationContext.CancellationToken;
         cancellationToken.ThrowIfCancellationRequested();
+        
+        // Get the dataset id based on the dataset name. Because of environment transfers of metadata,
+        // the dataset id is not the preferred or primary way to identify datasets.
+        // Dataset ids differ for the "same" dataset in different Power BI environments (or workspaces, in practice).
+        string datasetId;
+        try
+        {
+            datasetId = await GetDatasetIdWithRetriesAsync(cancellationToken);
+        }
+        catch (ArgumentNullException ex)
+        {
+            // GetDatasetIdWithRetriesAsync() throws ArgumentNullException if the dataset id was not found.
+            attempt.AddWarning(ex, "No dataset id was found for the specified name. Using stored dataset id instead.");
+            datasetId = step.DatasetId;
+        }
+        catch (Exception ex)
+        {
+            attempt.AddError(ex, "Error getting dataset id");
+            return Result.Failure;
+        }
 
         // Start dataset refresh.
         try
         {
-            await _client.RefreshDatasetAsync(_workspace.WorkspaceId, step.DatasetId, cancellationToken);
+            await _client.RefreshDatasetAsync(_workspace.WorkspaceId, datasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -56,7 +77,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await GetDatasetRefreshStatusWithRetriesAsync(_workspace.WorkspaceId, step.DatasetId,
+                var (status, refresh) = await GetDatasetRefreshStatusWithRetriesAsync(_workspace.WorkspaceId, datasetId,
                     cancellationToken);
                 switch (status)
                 {
@@ -89,6 +110,21 @@ internal class DatasetStepExecutor(
                 return Result.Failure;
             }
         }
+    }
+    
+    private async Task<string> GetDatasetIdWithRetriesAsync(CancellationToken cancellationToken)
+    {
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxGetDatasetIdRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting dataset id for name {itemName}",
+                step.ExecutionId, step, step.DatasetName));
+        var datasetId = await policy.ExecuteAsync(cancellation =>
+            _client.GetDatasetIdAsync(_workspace.WorkspaceId, step.DatasetName, cancellation), cancellationToken)
+                     ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{step.DatasetName}'",
+                         innerException: null);
+        return datasetId;
     }
     
     private async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusWithRetriesAsync(

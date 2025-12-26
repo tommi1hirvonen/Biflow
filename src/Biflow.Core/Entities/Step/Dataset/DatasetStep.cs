@@ -22,9 +22,10 @@ public class DatasetStep : Step
     [Required]
     [NotEmptyGuid]
     public string DatasetId { get; set; } = "";
-    
+
     [MaxLength(250)]
-    public string? DatasetName { get; set; }
+    [Required]
+    public string DatasetName { get; set; } = "";
 
     [Required]
     public Guid FabricWorkspaceId { get; set; }

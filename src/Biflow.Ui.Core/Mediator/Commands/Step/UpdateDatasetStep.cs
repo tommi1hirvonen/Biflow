@@ -4,7 +4,7 @@ public class UpdateDatasetStepCommand : UpdateStepCommand<DatasetStep>
 {
     public required Guid FabricWorkspaceId { get; init; }
     public required Guid DatasetId { get; init; }
-    public required string? DatasetName { get; init; }
+    public required string DatasetName { get; init; }
 }
 
 [UsedImplicitly]

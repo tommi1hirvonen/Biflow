@@ -6,9 +6,11 @@ namespace Biflow.Core.Entities;
 
 public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<DatasetStepExecutionAttempt>
 {
-    public DatasetStepExecution(string stepName, string datasetId) : base(stepName, StepType.Dataset)
+    public DatasetStepExecution(string stepName, string datasetId, string datasetName)
+        : base(stepName, StepType.Dataset)
     {
         DatasetId = datasetId;
+        DatasetName = datasetName;
     }
 
     public DatasetStepExecution(DatasetStep step, Execution execution) : base(step, execution)
@@ -23,10 +25,12 @@ public class DatasetStepExecution : StepExecution, IHasStepExecutionAttempts<Dat
     public Guid FabricWorkspaceId { get; [UsedImplicitly] private set; }
 
     [MaxLength(36)]
+    [Required]
     public string DatasetId { get; private set; }
     
     [MaxLength(250)]
-    public string? DatasetName { get; private set; }
+    [Required]
+    public string DatasetName { get; private set; }
     
     public override DisplayStepType DisplayStepType => DisplayStepType.Dataset;
 
