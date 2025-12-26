@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Biflow.Executor.Core.Cache;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.PowerBI.Api.Models;
@@ -20,6 +21,7 @@ internal class DatasetStepExecutor(
         .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
         .CurrentValue
         .PollingIntervalMs;
+    private readonly DatasetCache _cache = serviceProvider.GetRequiredService<DatasetCache>();
     private readonly FabricWorkspace _workspace = step
         .GetFabricWorkspace()
         ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
@@ -121,9 +123,10 @@ internal class DatasetStepExecutor(
                 "{ExecutionId} {Step} Error getting dataset id for name {itemName}",
                 step.ExecutionId, step, step.DatasetName));
         var datasetId = await policy.ExecuteAsync(cancellation =>
-            _client.GetDatasetIdAsync(_workspace.WorkspaceId, step.DatasetName, cancellation), cancellationToken)
-                     ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{step.DatasetName}'",
-                         innerException: null);
+            _cache.GetDatasetIdAsync(_client, step.ExecutionId, _workspace.WorkspaceId, step.DatasetName, cancellation),
+                cancellationToken)
+            ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{step.DatasetName}'",
+                innerException: null);
         return datasetId;
     }
     

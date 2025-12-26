@@ -1,3 +1,4 @@
+using Biflow.Executor.Core.Cache;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -17,6 +18,7 @@ internal class DataflowStepExecutor(
         .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
         .CurrentValue
         .PollingIntervalMs;
+    private readonly DataflowCache _cache = serviceProvider.GetRequiredService<DataflowCache>();
     private readonly FabricWorkspace _workspace = step
         .GetFabricWorkspace()
         ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
@@ -148,7 +150,8 @@ internal class DataflowStepExecutor(
                 "{ExecutionId} {Step} Error getting dataflow id for name {itemName}",
                 step.ExecutionId, step, step.DataflowName));
         var dataflowId = await policy.ExecuteAsync(cancellation =>
-                _client.GetDataflowIdAsync(_workspace.WorkspaceId, step.DataflowName, cancellation), cancellationToken)
+            _cache.GetDataflowIdAsync(_client, step.ExecutionId, _workspace.WorkspaceId, step.DataflowName,
+                cancellation), cancellationToken)
             ?? throw new ArgumentNullException(message: $"Dataflow id not found for name '{step.DataflowName}'",
                 innerException: null);
         return dataflowId;

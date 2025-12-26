@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Fabric.Api.Core.Models;
 
-namespace Biflow.Executor.Core;
+namespace Biflow.Executor.Core.Cache;
 
 /// <summary>
 /// Represents a caching mechanism for retrieving and storing Fabric item IDs in a memory cache.

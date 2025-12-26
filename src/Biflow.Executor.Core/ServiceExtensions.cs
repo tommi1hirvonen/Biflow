@@ -1,3 +1,4 @@
+using Biflow.Executor.Core.Cache;
 using Biflow.Executor.Core.ExecutionValidation;
 using Biflow.Executor.Core.JobExecutor;
 using Biflow.Executor.Core.JobOrchestrator;
@@ -64,6 +65,8 @@ public static class ServiceExtensions
         }
 
         services.AddSingleton<FabricItemCache>();
+        services.AddSingleton<DataflowCache>();
+        services.AddSingleton<DatasetCache>();
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IStepOrchestrator, StepOrchestrator>();
         services.AddSingleton<IStepExecutorProvider, StepExecutorProvider>();
