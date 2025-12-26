@@ -33,13 +33,16 @@
     <div class="col-auto">
         <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
                  CssClass="small py-2 mb-0"
-                 style="max-width: 40rem;">
+                 style="max-width: 50rem;">
             <div class="row g-3">
                 <div class="col-auto">
                     <SvgIcon Icon="LucideIcon.Info" />
                 </div>
                 <div class="col">
-                    PLACEHOLDER
+                    Add Fabric/Power BI workspaces to create Fabric, Dataflow and Dataset steps.
+                    These let you run Fabric pipelines and notebooks as well as Power BI dataset (semantic model) and dataflow (including Gen 2) refresh operations as part of your jobs.
+                    Workspaces added in settings can be mapped to different Fabric/Power BI workspaces in each environment (dev, test, prod).
+                    This simplifies environment transfers using version snapshots, since the workspace mapping in the target environment can be retained in the revert process.
                 </div>
             </div>
         </HxAlert>
