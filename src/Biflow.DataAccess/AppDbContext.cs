@@ -87,6 +87,7 @@ public class AppDbContext : DbContext
     public DbSet<Credential> Credentials => Set<Credential>();
     public DbSet<Proxy> Proxies => Set<Proxy>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
+    public DbSet<FabricWorkspace> FabricWorkspaces => Set<FabricWorkspace>();
     #endregion
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)

@@ -14,20 +14,21 @@ public class DatasetClient(AzureCredential azureCredential, ITokenService tokenS
         return new PowerBIClient(credentials);
     }
 
-    public async Task RefreshDatasetAsync(string workspaceId, string datasetId, CancellationToken cancellationToken)
+    public async Task RefreshDatasetAsync(Guid workspaceId, string datasetId, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
-        await client.Datasets.RefreshDatasetInGroupAsync(Guid.Parse(workspaceId), datasetId, cancellationToken: cancellationToken);
+        await client.Datasets.RefreshDatasetInGroupAsync(workspaceId, datasetId,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusAsync(
-        string workspaceId,
+        Guid workspaceId,
         string datasetId,
         CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var refreshes = await client.Datasets.GetRefreshHistoryInGroupAsync(
-            Guid.Parse(workspaceId),
+            workspaceId,
             datasetId,
             top: 1,
             cancellationToken);
@@ -43,21 +44,15 @@ public class DatasetClient(AzureCredential azureCredential, ITokenService tokenS
         return (status, refresh);
     }
 
-    public async Task<IEnumerable<DatasetGroup>> GetAllDatasetsAsync()
+    public async Task<IReadOnlyList<Dataset>> GetDatasetsAsync(Guid workspaceId,
+        CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
-        var groups = await client.Groups.GetGroupsAsync();
-        var datasetGroups = new List<DatasetGroup>();
-        foreach (var group in groups.Value)
-        {
-            var groupDatasets = await client.Datasets.GetDatasetsInGroupAsync(group.Id);
-            var datasets = groupDatasets.Value
-                .Select(d => new Dataset(group.Id.ToString(), group.Name, d.Id.ToString(), d.Name))
-                .ToArray();
-            var datasetGroup = new DatasetGroup(group.Id.ToString(), group.Name, datasets);
-            datasetGroups.Add(datasetGroup);
-        }
-        return datasetGroups;
+        var datasets = await client.Datasets.GetDatasetsInGroupAsync(workspaceId, cancellationToken);
+        return datasets.Value
+            .Select(d => new Dataset(workspaceId, d.Id, d.Name))
+            .OrderBy(x => x.DatasetName)
+            .ToArray();
     }
 
     public async Task<string> GetWorkspaceNameAsync(string workspaceId, CancellationToken cancellationToken = default)
@@ -69,11 +64,11 @@ public class DatasetClient(AzureCredential azureCredential, ITokenService tokenS
         return group.Name;
     }
 
-    public async Task<string> GetDatasetNameAsync(
-        string workspaceId, string datasetId, CancellationToken cancellationToken = default)
+    public async Task<string> GetDatasetNameAsync(Guid workspaceId, string datasetId,
+        CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
-        var dataset = await client.Datasets.GetDatasetInGroupAsync(Guid.Parse(workspaceId), datasetId, cancellationToken);
+        var dataset = await client.Datasets.GetDatasetInGroupAsync(workspaceId, datasetId, cancellationToken);
         return dataset.Name;
     }
 }

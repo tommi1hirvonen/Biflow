@@ -11,25 +11,11 @@ public class DatasetStep : Step
 
     private DatasetStep(DatasetStep other, Job? targetJob) : base(other, targetJob)
     {
-        AzureCredentialId = other.AzureCredentialId;
-        AzureCredential = other.AzureCredential;
-        WorkspaceId = other.WorkspaceId;
-        WorkspaceName = other.WorkspaceName;
+        FabricWorkspaceId = other.FabricWorkspaceId;
+        FabricWorkspace = other.FabricWorkspace;
         DatasetId = other.DatasetId;
         DatasetName = other.DatasetName;
     }
-
-    [Required]
-    public Guid AzureCredentialId { get; set; }
-
-    [MaxLength(36)]
-    [MinLength(36)]
-    [Required]
-    [NotEmptyGuid]
-    public string WorkspaceId { get; set; } = "";
-    
-    [MaxLength(250)]
-    public string? WorkspaceName { get; set; }
 
     [MaxLength(36)]
     [MinLength(36)]
@@ -40,8 +26,11 @@ public class DatasetStep : Step
     [MaxLength(250)]
     public string? DatasetName { get; set; }
 
+    [Required]
+    public Guid FabricWorkspaceId { get; set; }
+    
     [JsonIgnore]
-    public AzureCredential? AzureCredential { get; set; }
+    public FabricWorkspace? FabricWorkspace { get; set; }
     
     [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Dataset;

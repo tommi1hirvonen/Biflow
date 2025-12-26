@@ -213,7 +213,7 @@
     </HxDropdownToggleButton>
     <HxDropdownMenu>
         @{
-            Guid? azureCredentialId = Step is DatasetStep ds ? ds.AzureCredentialId : null;
+            Guid? fabricWorkspaceId = Step is DatasetStep ds ? ds.FabricWorkspaceId : null;
             Guid? qlikClientId = Step is QlikStep qlik ? qlik.QlikCloudEnvironmentId : null;
             Guid? tabularConnectionId = Step is TabularStep tabular ? tabular.ConnectionId : null;
         }
@@ -225,7 +225,7 @@
             <SvgIcon Icon="LucideIcon.Box" />
             Add tabular
         </HxDropdownItem>
-        <HxDropdownItem OnClick="() => _datasetOffcanvas.LetAsync(x => x.ShowAsync(azureCredentialId))">
+        <HxDropdownItem OnClick="() => _datasetOffcanvas.LetAsync(x => x.ShowAsync(fabricWorkspaceId))">
             <SvgIcon Icon="LucideIcon.FileBarChart2" />
             Add dataset
         </HxDropdownItem>
@@ -249,8 +249,8 @@
                            OnDbObjectSelected="OnDbObjectSelectedAsync"/>
 
 <DatasetSelectOffcanvas @ref="_datasetOffcanvas"
-                        AzureCredentials="Integrations.AzureCredentials"
-                        AllowAzureCredentialChange
+                        FabricWorkspaces="Integrations.FabricWorkspaces"
+                        AllowWorkspaceChange
                         OnDatasetSelected="OnDatasetSelected"/>
 
 <AppSelectOffcanvas @ref="_appOffcanvas"
@@ -485,7 +485,7 @@
     private void OnDatasetSelected(Dataset dataset)
     {
         _newObject ??= new DataObject();
-        _newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.GroupName, dataset.DatasetName);
+        _newObject.ObjectUri = DataObject.CreateDatasetUri(dataset.DatasetName);
         StateHasChanged();
     }
 

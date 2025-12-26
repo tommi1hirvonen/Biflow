@@ -1,7 +1,6 @@
 @inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ITokenService TokenService
-@inject IHttpClientFactory HttpClientFactory
+@inject DataflowClientFactory ClientFactory
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataflow">
     <BodyTemplate>
@@ -30,67 +29,28 @@
                     else if (!_dataflows.Any())
                     {
                         <div class="list-group-item small">
-                            No workspaces
+                            No dataflows
                         </div>
                     }
                     else
                     {
-                        var filteredGroups = _dataflows
-                            .Where(g => string.IsNullOrEmpty(_filterText) ||
-                                        g.Dataflows.Any(d => d.DataflowName.ContainsIgnoreCase(_filterText)))
-                            .OrderBy(d => d.Name)
+                        var dataflows = _dataflows
+                            .Where(x => string.IsNullOrEmpty(_filterText) ||
+                                        x.DataflowName.ContainsIgnoreCase(_filterText))
+                            .OrderBy(x => x.DataflowName)
                             .ToArray();
-                        if (filteredGroups.Length == 0)
+                        foreach (var dataflow in dataflows)
                         {
-                            <div class="list-group-item small">
-                                No matching results
-                            </div>
-                        }
-                        foreach (var group in filteredGroups)
-                        {
-                            var dataflows = group.Dataflows
-                                .Where(x => string.IsNullOrEmpty(_filterText) ||
-                                            x.DataflowName.ContainsIgnoreCase(_filterText))
-                                .OrderBy(x => x.DataflowName)
-                                .ToArray();
-                            var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _expandedStates[group] = !expanded">
+                            <div class="list-group-item list-group-item-action cursor-pointer @(dataflow == _selectedDataflow ? "fw-bold bg-body" : null)"
+                                 @onclick="() => _selectedDataflow = dataflow">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
-                                        @if (expanded)
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronDown" />
-                                        }
-                                        else
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronRight" />
-                                        }
+                                        <SvgIcon Icon="LucideIcon.Workflow" />
                                         &nbsp;
-                                        <SvgIcon Icon="LucideIcon.Folder" />
-                                        &nbsp;
-                                        @group.Name
-                                        <span class="ms-auto badge rounded-pill @(dataflows.Length > 0 ? "bg-primary" : "bg-secondary")">
-                                            @dataflows.Length
-                                        </span>
+                                        <HighlightableText Text="@dataflow.DataflowName" PartToHighlight="@_filterText" />
                                     </div>
                                 </div>
                             </div>
-                            @if (expanded)
-                            {
-                                foreach (var dataflow in dataflows)
-                                {
-                                    <div class="list-group-item list-group-item-action cursor-pointer @(dataflow == _selectedDataflow ? "fw-bold bg-body" : null)"
-                                         @onclick="() => _selectedDataflow = dataflow">
-                                        <div class="row">
-                                            <div class="col d-flex align-items-center ps-5 small">
-                                                <SvgIcon Icon="LucideIcon.Workflow" />
-                                                &nbsp;
-                                                <HighlightableText Text="@dataflow.DataflowName" PartToHighlight="@_filterText" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
                         }
                     }
                 </div>
@@ -103,7 +63,9 @@
                   Enabled="_selectedDataflow is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
@@ -114,10 +76,8 @@
     [Parameter]
     public EventCallback<Dataflow> OnDataflowSelected { get; set; }
 
-    private readonly Dictionary<DataflowGroup, bool> _expandedStates = [];
-
     private HxOffcanvas? _offcanvas;
-    private IEnumerable<DataflowGroup>? _dataflows;
+    private IReadOnlyList<Dataflow>? _dataflows;
     private Dataflow? _selectedDataflow;
     private string _filterText = "";
 
@@ -131,21 +91,23 @@
         await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
-    public async Task ShowAsync(Guid azureCredentialId)
+    public async Task ShowAsync(Guid fabricWorkspaceId)
     {
         _filterText = "";
         _dataflows = null;
         _selectedDataflow = null;
-        _expandedStates.Clear();
         await _offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            var azureCredential = await context.AzureCredentials
-                .AsNoTracking()
-                .FirstAsync(r => r.AzureCredentialId == azureCredentialId);
-            var client = azureCredential.CreateDataflowClient(TokenService, HttpClientFactory);
-            _dataflows = await client.GetAllDataflowsAsync();
+            var fabricWorkspace = await context.FabricWorkspaces
+                .AsNoTrackingWithIdentityResolution()
+                .Include(x => x.AzureCredential)
+                .FirstAsync(x => x.FabricWorkspaceId == fabricWorkspaceId);
+            var azureCredential = fabricWorkspace.AzureCredential;
+            ArgumentNullException.ThrowIfNull(azureCredential);
+            var client = ClientFactory.Create(azureCredential);
+            _dataflows = await client.GetDataflowsAsync(fabricWorkspace.WorkspaceId);
             StateHasChanged();
         }
         catch (Exception ex)
@@ -153,5 +115,4 @@
             Toaster.AddError("Error reading dataflows", ex.Message);
         }
     }
-
 }

@@ -1,22 +1,22 @@
 ﻿@inject ToasterService Toaster
 @inject IDbContextFactory<AppDbContext> DbContextFactory
-@inject ITokenService TokenService
+@inject DatasetClientFactory ClientFactory
 
 <HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataset">
     <BodyTemplate>
-        @if (AllowAzureCredentialChange)
+        @if (AllowWorkspaceChange)
         {
             <div class="row mb-3 align-items-end">
                 <div class="col">
-                    <label class="form-label">Azure credential</label>
+                    <label class="form-label">Fabric workspace</label>
                     <div class="input-group input-group-sm">
                         <div class="input-group-text">
                             <SvgIcon Icon="LucideIcon.Globe" />
                         </div>
-                        <select class="form-select form-select-sm" @bind="_azureCredentialId">
-                            @foreach (var azureCredential in AzureCredentials ?? [])
+                        <select class="form-select form-select-sm" @bind="_fabricWorkspaceId">
+                            @foreach (var fabricWorkspace in FabricWorkspaces ?? [])
                             {
-                                <option value="@azureCredential.AzureCredentialId">@azureCredential.AzureCredentialName</option>
+                                <option value="@fabricWorkspace.FabricWorkspaceId">@fabricWorkspace.FabricWorkspaceName</option>
                             }
                         </select>
                     </div>
@@ -40,7 +40,7 @@
             </div>
         </div>
         @{
-            var style = AllowAzureCredentialChange
+            var style = AllowWorkspaceChange
                 ? "height: calc(100vh - 290px); overflow-y: scroll;"
                 : "height: calc(100vh - 210px); overflow-y: scroll;";
         }
@@ -56,64 +56,27 @@
                     else if (!_datasets.Any())
                     {
                         <div class="list-group-item small">
-                            No workspaces
+                            No datasets
                         </div>
                     }
                     else
                     {
-                        var filteredGroups = _datasets
-                            .Where(g => string.IsNullOrEmpty(_filterText) || g.Datasets.Any(d => d.DatasetName.ContainsIgnoreCase(_filterText)))
-                            .OrderBy(d => d.Name)
+                        var datasets = _datasets
+                            .Where(d => string.IsNullOrEmpty(_filterText) || d.DatasetName.ContainsIgnoreCase(_filterText))
+                            .OrderBy(d => d.DatasetName)
                             .ToArray();
-                        if (filteredGroups.Length == 0)
+                        
+                        foreach (var dataset in datasets)
                         {
-                            <div class="list-group-item small">
-                                No matching results
-                            </div>
-                        }
-                        foreach (var group in filteredGroups)
-                        {
-                            var datasets = group.Datasets
-                                .Where(d => string.IsNullOrEmpty(_filterText) || d.DatasetName.ContainsIgnoreCase(_filterText))
-                                .OrderBy(d => d.DatasetName)
-                                .ToArray();
-                            var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _expandedStates[group] = !expanded">
+                            <div class="list-group-item list-group-item-action cursor-pointer @(dataset == _selectedDataset ? "fw-bold bg-body" : null)" @onclick="() => _selectedDataset = dataset">
                                 <div class="row">
                                     <div class="col d-flex align-items-center small">
-                                        @if (expanded)
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronDown" />
-                                        }
-                                        else
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronRight" />
-                                        }
+                                        <SvgIcon Icon="LucideIcon.FileBarChart2" />
                                         &nbsp;
-                                        <SvgIcon Icon="LucideIcon.Folder" />
-                                        &nbsp;
-                                        @group.Name
-                                        <span class="ms-auto badge rounded-pill @(datasets.Length > 0 ? "bg-primary" : "bg-secondary")">
-                                            @datasets.Length
-                                        </span>
+                                        <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@_filterText" />
                                     </div>
                                 </div>
                             </div>
-                            @if (expanded)
-                            {
-                                foreach (var dataset in datasets)
-                                {
-                                    <div class="list-group-item list-group-item-action cursor-pointer @(dataset == _selectedDataset ? "fw-bold bg-body" : null)" @onclick="() => _selectedDataset = dataset">
-                                        <div class="row">
-                                            <div class="col d-flex align-items-center ps-5 small">
-                                                <SvgIcon Icon="LucideIcon.FileBarChart2" />
-                                                &nbsp;
-                                                <HighlightableText Text="@dataset.DatasetName" PartToHighlight="@_filterText" />
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
                         }
                     }
                 </div>
@@ -126,25 +89,25 @@
                   Enabled="_selectedDataset is not null">
             Select
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _offcanvas.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
     </FooterTemplate>
 </HxOffcanvas>
 
 @code {
     [Parameter]
-    public IEnumerable<AzureCredential>? AzureCredentials { get; set; }
+    public IEnumerable<FabricWorkspace>? FabricWorkspaces { get; set; }
 
     [Parameter]
     public EventCallback<Dataset> OnDatasetSelected { get; set; }
 
     [Parameter]
-    public bool AllowAzureCredentialChange { get; set; }
+    public bool AllowWorkspaceChange { get; set; }
 
-    private readonly Dictionary<DatasetGroup, bool> _expandedStates = [];
-
-    private Guid _azureCredentialId;
+    private Guid _fabricWorkspaceId;
     private HxOffcanvas? _offcanvas;
-    private IEnumerable<DatasetGroup>? _datasets;
+    private IReadOnlyList<Dataset>? _datasets;
     private Dataset? _selectedDataset;
     private string _filterText = "";
 
@@ -158,21 +121,21 @@
         await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
-    public async Task ShowAsync(Guid? azureCredentialId = null)
+    public async Task ShowAsync(Guid? fabricWorkspaceId = null)
     {
         _filterText = "";
-        if (azureCredentialId is { } id)
+        if (fabricWorkspaceId is { } id)
         {
-            _azureCredentialId = id;
+            _fabricWorkspaceId = id;
         }
         else
         {
-            _azureCredentialId = AzureCredentials?.FirstOrDefault()?.AzureCredentialId ?? Guid.Empty;
+            _fabricWorkspaceId = FabricWorkspaces?.FirstOrDefault()?.FabricWorkspaceId ?? Guid.Empty;
         }
 
-        if (_azureCredentialId == Guid.Empty)
+        if (_fabricWorkspaceId == Guid.Empty)
         {
-            Toaster.AddWarning("No Azure credentials found");
+            Toaster.AddWarning("No Fabric workspaces found");
             return;
         }
 
@@ -184,15 +147,17 @@
     {
         _datasets = null;
         _selectedDataset = null;
-        _expandedStates.Clear();
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            var azureCredential = await context.AzureCredentials
-                .AsNoTracking()
-                .FirstAsync(r => r.AzureCredentialId == _azureCredentialId);
-            var client = azureCredential.CreateDatasetClient(TokenService);
-            _datasets = await client.GetAllDatasetsAsync();
+            var fabricWorkspace = await context.FabricWorkspaces
+                .AsNoTrackingWithIdentityResolution()
+                .Include(x => x.AzureCredential)
+                .FirstAsync(x => x.FabricWorkspaceId == _fabricWorkspaceId);
+            var azureCredential = fabricWorkspace.AzureCredential;
+            ArgumentNullException.ThrowIfNull(azureCredential);
+            var client = ClientFactory.Create(azureCredential);
+            _datasets = await client.GetDatasetsAsync(fabricWorkspace.WorkspaceId);
             StateHasChanged();
         }
         catch (Exception ex)
@@ -200,5 +165,4 @@
             Toaster.AddError("Error reading datasets", ex.Message);
         }
     }
-
 }

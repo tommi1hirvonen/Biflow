@@ -2,9 +2,7 @@ namespace Biflow.Ui.Core;
 
 public class UpdateDatasetStepCommand : UpdateStepCommand<DatasetStep>
 {
-    public required Guid AzureCredentialId { get; init; }
-    public required Guid WorkspaceId { get; init; }
-    public required string? WorkspaceName { get; init; }
+    public required Guid FabricWorkspaceId { get; init; }
     public required Guid DatasetId { get; init; }
     public required string? DatasetName { get; init; }
 }
@@ -30,15 +28,14 @@ internal class UpdateDatasetStepCommandHandler(
     protected override async Task UpdateTypeSpecificPropertiesAsync(DatasetStep step, UpdateDatasetStepCommand request,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        // Check that the Azure credential exists.
-        if (!await dbContext.AzureCredentials
-                .AnyAsync(x => x.AzureCredentialId == request.AzureCredentialId, cancellationToken))
+        // Check that the Fabric workspace exists.
+        if (!await dbContext.FabricWorkspaces
+                .AnyAsync(x => x.FabricWorkspaceId == request.FabricWorkspaceId, cancellationToken))
         {
-            throw new NotFoundException<AzureCredential>(request.AzureCredentialId);
+            throw new NotFoundException<FabricWorkspace>(request.FabricWorkspaceId);
         }
         
-        step.WorkspaceId = request.WorkspaceId.ToString();
-        step.WorkspaceName = request.WorkspaceName;
+        step.FabricWorkspaceId = request.FabricWorkspaceId;
         step.DatasetId = request.DatasetId.ToString();
         step.DatasetName = request.DatasetName;
     }

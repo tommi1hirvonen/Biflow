@@ -6,17 +6,14 @@ namespace Biflow.Core.Entities;
 
 public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecutionAttempts<DataflowStepExecutionAttempt>
 {
-    public DataflowStepExecution(string stepName, string workspaceId, string dataflowId) : base(stepName, StepType.Dataflow)
+    public DataflowStepExecution(string stepName, string dataflowId) : base(stepName, StepType.Dataflow)
     {
-        WorkspaceId = workspaceId;
         DataflowId = dataflowId;
     }
 
     public DataflowStepExecution(DataflowStep step, Execution execution) : base(step, execution)
     {
-        AzureCredentialId = step.AzureCredentialId;
-        WorkspaceId = step.WorkspaceId;
-        WorkspaceName = step.WorkspaceName;
+        FabricWorkspaceId = step.FabricWorkspaceId;
         DataflowId = step.DataflowId;
         DataflowName = step.DataflowName;
         TimeoutMinutes = step.TimeoutMinutes;
@@ -24,15 +21,7 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
         AddAttempt(new DataflowStepExecutionAttempt(this));
     }
 
-    [Required]
-    public Guid AzureCredentialId { get; [UsedImplicitly] private set; }
-
-    [MinLength(36)]
-    [MaxLength(36)]
-    public string WorkspaceId { get; private set; }
-    
-    [MaxLength(250)]
-    public string? WorkspaceName { get; private set; }
+    public Guid FabricWorkspaceId { get; [UsedImplicitly] private set; }
 
     [MinLength(36)]
     [MaxLength(36)]
@@ -59,28 +48,28 @@ public class DataflowStepExecution : StepExecution, IHasTimeout, IHasStepExecuti
     }
 
     /// <summary>
-    /// Get the <see cref="AzureCredential"/> entity associated with this <see cref="StepExecution"/>.
-    /// The method <see cref="SetAzureCredential(AzureCredential?)"/> will need to have been called first for the <see cref="AzureCredential"/> to be available.
+    /// Get the <see cref="FabricWorkspace"/> entity associated with this <see cref="StepExecution"/>.
+    /// The method <see cref="SetFabricWorkspace(FabricWorkspace?)"/> will need to have been called first for the <see cref="FabricWorkspace"/> to be available.
     /// </summary>
-    /// <returns><see cref="AzureCredential"/> if it was previously set using <see cref="SetAzureCredential(AzureCredential?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
-    public AzureCredential? GetAzureCredential() => _azureCredential;
+    /// <returns><see cref="FabricWorkspace"/> if it was previously set using <see cref="SetFabricWorkspace(FabricWorkspace?)"/> with a non-null object; <see langword="null"/> otherwise.</returns>
+    public FabricWorkspace? GetFabricWorkspace() => _fabricWorkspace;
 
     /// <summary>
-    /// Set the private <see cref="AzureCredential"/> object used for containing a possible app registration reference.
-    /// It can be later accessed using <see cref="GetAzureCredential"/>.
+    /// Set the private <see cref="FabricWorkspace"/> object used for containing a possible Fabric workspace reference.
+    /// It can be later accessed using <see cref="GetFabricWorkspace"/>.
     /// </summary>
-    /// <param name="azureCredential"><see cref="AzureCredential"/> reference to store.
-    /// The AzureCredentialIds are compared and the value is set only if the ids match.</param>
-    public void SetAzureCredential(AzureCredential? azureCredential)
+    /// <param name="fabricWorkspace"><see cref="FabricWorkspace"/> reference to store.
+    /// The FabricWorkspaceIds are compared and the value is set only if the ids match.</param>
+    public void SetFabricWorkspace(FabricWorkspace? fabricWorkspace)
     {
-        if (azureCredential?.AzureCredentialId == AzureCredentialId)
+        if (fabricWorkspace?.FabricWorkspaceId == FabricWorkspaceId)
         {
-            _azureCredential = azureCredential;
+            _fabricWorkspace = fabricWorkspace;
         }
     }
 
-    // Use a field excluded from the EF model to store the Azure credential reference.
+    // Use a field excluded from the EF model to store the Fabric workspace reference.
     // This is to avoid generating a foreign key constraint on the ExecutionStep table caused by a navigation property.
     // Make it private with public method access so that it is not used in EF Include method calls by accident.
-    private AzureCredential? _azureCredential;
+    private FabricWorkspace? _fabricWorkspace;
 }

@@ -21,7 +21,7 @@ public partial class DatasetStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
+            FabricWorkspaceId = Integrations.FabricWorkspaces.First().FabricWorkspaceId
         };
     
     protected override Task<DatasetStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -57,9 +57,7 @@ public partial class DatasetStepEditModal(
             RetryIntervalMinutes = step.RetryIntervalMinutes,
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = Guid.Parse(step.WorkspaceId),
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             DatasetId = Guid.Parse(step.DatasetId),
             DatasetName = step.DatasetName,
             Dependencies = dependencies,
@@ -100,9 +98,7 @@ public partial class DatasetStepEditModal(
             RetryIntervalMinutes = step.RetryIntervalMinutes,
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = Guid.Parse(step.WorkspaceId),
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             DatasetId = Guid.Parse(step.DatasetId),
             DatasetName = step.DatasetName,
             Dependencies = dependencies,
@@ -121,7 +117,7 @@ public partial class DatasetStepEditModal(
 
     protected override async Task OnModalShownAsync(DatasetStep step)
     {
-        if (string.IsNullOrEmpty(step.WorkspaceId) || string.IsNullOrEmpty(step.DatasetId))
+        if (string.IsNullOrEmpty(step.DatasetId))
         {
             return;
         }
@@ -129,11 +125,12 @@ public partial class DatasetStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = Integrations.AzureCredentials.First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var fabricWorkspace = Integrations.FabricWorkspaces
+                .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
+            var azureCredential = fabricWorkspace.AzureCredential;
+            ArgumentNullException.ThrowIfNull(azureCredential);
             var datasetClient = azureCredential.CreateDatasetClient(tokenService);
-            (step.WorkspaceName, step.DatasetName) =
-                (await datasetClient.GetWorkspaceNameAsync(step.WorkspaceId),
-                    await datasetClient.GetDatasetNameAsync(step.WorkspaceId, step.DatasetId));
+            step.DatasetName = await datasetClient.GetDatasetNameAsync(fabricWorkspace.WorkspaceId, step.DatasetId);
         }
         catch (Exception ex)
         {
@@ -147,11 +144,11 @@ public partial class DatasetStepEditModal(
     }
     
     private Task OpenDatasetSelectOffcanvas() =>
-        _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.AzureCredentialId));
+        _datasetSelectOffcanvas.LetAsync(x => x.ShowAsync(Step?.FabricWorkspaceId));
 
     private void OnDatasetSelected(Dataset dataset)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.WorkspaceId, Step.WorkspaceName, Step.DatasetId, Step.DatasetName) = dataset;
+        (_, Step.DatasetId, Step.DatasetName) = dataset;
     }
 }

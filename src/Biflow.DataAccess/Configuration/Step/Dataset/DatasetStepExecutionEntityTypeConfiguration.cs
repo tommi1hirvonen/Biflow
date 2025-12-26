@@ -4,10 +4,8 @@ public class DatasetStepExecutionEntityTypeConfiguration : IEntityTypeConfigurat
 {
     public void Configure(EntityTypeBuilder<DatasetStepExecution> builder)
     {
-        builder.Property(p => p.AzureCredentialId).HasColumnName("AzureCredentialId");
-        builder.Property(p => p.WorkspaceId).HasColumnName("DatasetGroupId").IsUnicode(false);
+        builder.Property(p => p.FabricWorkspaceId).HasColumnName("FabricWorkspaceId");
         builder.Property(p => p.DatasetId).HasColumnName("DatasetId").IsUnicode(false);
-        builder.Property(p => p.WorkspaceName).HasColumnName("DatasetGroupName");
         builder.Property(p => p.DatasetName).HasColumnName("DatasetName");
     }
 }

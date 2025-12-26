@@ -44,11 +44,10 @@ public partial class DataObject : IDataObject
         return $"table://{server}/{database}/{schema}/{table}";
     }
 
-    public static string CreateDatasetUri(string workspaceName, string datasetName)
+    public static string CreateDatasetUri(string datasetName)
     {
-        workspaceName = NonAsciiCharsRegex.Replace(workspaceName, Replacement);
         datasetName = NonAsciiCharsRegex.Replace(datasetName, Replacement);
-        return $"pbi://{workspaceName}/{datasetName}";
+        return $"pbi://{datasetName}";
     }
 
     public static string CreateTabularUri(string server, string model, string? table, string? partition)

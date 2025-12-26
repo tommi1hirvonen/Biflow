@@ -8,7 +8,7 @@ public record IntegrationsContainer
         MsSqlConnections = [],
         AnalysisServicesConnections = [],
         PipelineClients = [],
-        AzureCredentials = [],
+        FabricWorkspaces = [],
         FunctionApps = [],
         QlikCloudClients = [],
         DatabricksWorkspaces = [],
@@ -22,7 +22,7 @@ public record IntegrationsContainer
     public required List<MsSqlConnection> MsSqlConnections { get; init; }
     public required List<AnalysisServicesConnection> AnalysisServicesConnections { get; init; }
     public required List<PipelineClient> PipelineClients { get; init; }
-    public required List<AzureCredential> AzureCredentials { get; init; }
+    public required List<FabricWorkspace> FabricWorkspaces { get; init; }
     public required List<FunctionApp> FunctionApps { get; init; }
     public required List<QlikCloudEnvironment> QlikCloudClients { get; init; }
     public required List<DatabricksWorkspace> DatabricksWorkspaces { get; init; }

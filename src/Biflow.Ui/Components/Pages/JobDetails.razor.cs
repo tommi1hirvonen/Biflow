@@ -117,9 +117,10 @@ public partial class JobDetails(
             .AsNoTracking()
             .OrderBy(df => df.PipelineClientName)
             .ToListAsync(_cts.Token);
-        var azureCredentials = await context.AzureCredentials
+        var fabricWorkspaces = await context.FabricWorkspaces
             .AsNoTracking()
-            .OrderBy(app => app.AzureCredentialName)
+            .Include(w => w.AzureCredential)
+            .OrderBy(w => w.FabricWorkspaceName)
             .ToListAsync(_cts.Token);
         var functionApps = await context.FunctionApps
             .AsNoTracking()
@@ -157,7 +158,7 @@ public partial class JobDetails(
             MsSqlConnections = msSqlConnections,
             AnalysisServicesConnections = asConnections,
             PipelineClients = pipelineClients,
-            AzureCredentials = azureCredentials,
+            FabricWorkspaces = fabricWorkspaces,
             FunctionApps = functionApps,
             QlikCloudClients = qlikCloudClients,
             DatabricksWorkspaces = databricksWorkspaces,

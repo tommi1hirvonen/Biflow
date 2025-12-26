@@ -151,19 +151,19 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)tabular.ConnectionId : false }
                 into tabular_
             from tabular in tabular_.DefaultIfEmpty()
-            join dataset in context.AzureCredentials
-                on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).AzureCredentialId : true }
-                equals new { Id = includeEndpoint ? (object?)dataset.AzureCredentialId : false }
+            join dataset in context.FabricWorkspaces.Include(f => f.AzureCredential)
+                on new { Id = includeEndpoint ? (object?)((DatasetStepExecution)stepExec).FabricWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)dataset.FabricWorkspaceId : false }
                 into dataset_
             from dataset in dataset_.DefaultIfEmpty()
-            join dataflow in context.AzureCredentials
-                on new { Id = includeEndpoint ? (object?)((DataflowStepExecution)stepExec).AzureCredentialId : true }
-                equals new { Id = includeEndpoint ? (object?)dataflow.AzureCredentialId : false }
+            join dataflow in context.FabricWorkspaces.Include(f => f.AzureCredential)
+                on new { Id = includeEndpoint ? (object?)((DataflowStepExecution)stepExec).FabricWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)dataflow.FabricWorkspaceId : false }
                 into dataflow_
             from dataflow in dataflow_.DefaultIfEmpty()
-            join fabric in context.AzureCredentials
-                on new { Id = includeEndpoint ? (object?)((FabricStepExecution)stepExec).AzureCredentialId : true }
-                equals new { Id = includeEndpoint ? (object?)fabric.AzureCredentialId : false }
+            join fabric in context.FabricWorkspaces.Include(f => f.AzureCredential)
+                on new { Id = includeEndpoint ? (object?)((FabricStepExecution)stepExec).FabricWorkspaceId : true }
+                equals new { Id = includeEndpoint ? (object?)fabric.FabricWorkspaceId : false }
                 into fabric_
             from fabric in fabric_.DefaultIfEmpty()
             join function in context.FunctionApps
@@ -251,13 +251,13 @@ public static class Extensions
                     tabular.SetConnection(step.TabularStepConnection);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.SetAzureCredential(step.DatasetStepAzureCredential);
+                    dataset.SetFabricWorkspace(step.DatasetStepWorkspace);
                     break;
                 case DataflowStepExecution dataflow:
-                    dataflow.SetAzureCredential(step.DataflowStepAzureCredential);
+                    dataflow.SetFabricWorkspace(step.DataflowStepWorkspace);
                     break;
                 case FabricStepExecution fabric:
-                    fabric.SetAzureCredential(step.FabricStepAzureCredential);
+                    fabric.SetFabricWorkspace(step.FabricStepWorkspace);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.FunctionStepApp);
@@ -294,9 +294,9 @@ file record StepExecutionProjection(
     MsSqlConnection? PackageStepConnection,
     MsSqlConnection? AgentJobStepConnection,
     AnalysisServicesConnection? TabularStepConnection,
-    AzureCredential? DatasetStepAzureCredential,
-    AzureCredential? DataflowStepAzureCredential,
-    AzureCredential? FabricStepAzureCredential,
+    FabricWorkspace? DatasetStepWorkspace,
+    FabricWorkspace? DataflowStepWorkspace,
+    FabricWorkspace? FabricStepWorkspace,
     FunctionApp? FunctionStepApp,
     PipelineClient? PipelineStepClient,
     QlikCloudEnvironment? QlikStepClient,

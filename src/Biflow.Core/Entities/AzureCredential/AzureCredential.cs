@@ -20,9 +20,9 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     public string AzureCredentialName { get; set; } = "";
     
     public AzureCredentialType AzureCredentialType { get; init; } = azureCredentialType;
-
+    
     [JsonIgnore]
-    public IEnumerable<DatasetStep> Steps { get; } = new List<DatasetStep>();
+    public IEnumerable<FabricWorkspace> FabricWorkspaces { get; } = new List<FabricWorkspace>();
 
     [JsonIgnore]
     public IEnumerable<PipelineClient> PipelineClients { get; } = new List<PipelineClient>();

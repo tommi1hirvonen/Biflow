@@ -3,9 +3,7 @@ namespace Biflow.Ui.Core;
 public class CreateDataflowStepCommand : CreateStepCommand<DataflowStep>
 {
     public required double TimeoutMinutes { get; init; }
-    public required Guid AzureCredentialId { get; init; }
-    public required Guid WorkspaceId { get; init; }
-    public required string? WorkspaceName { get; init; }
+    public required Guid FabricWorkspaceId { get; init; }
     public required Guid DataflowId { get; init; }
     public required string? DataflowName { get; init; }
 }
@@ -19,11 +17,11 @@ internal class CreateDataflowStepCommandHandler(
     protected override async Task<DataflowStep> CreateStepAsync(CreateDataflowStepCommand request,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        // Check that the Azure credential exists.
-        if (!await dbContext.AzureCredentials
-                .AnyAsync(x => x.AzureCredentialId == request.AzureCredentialId, cancellationToken))
+        // Check that the Fabric workspace exists.
+        if (!await dbContext.FabricWorkspaces
+                .AnyAsync(x => x.FabricWorkspaceId == request.FabricWorkspaceId, cancellationToken))
         {
-            throw new NotFoundException<AzureCredential>(request.AzureCredentialId);
+            throw new NotFoundException<FabricWorkspace>(request.FabricWorkspaceId);
         }
 
         var step = new DataflowStep
@@ -39,9 +37,7 @@ internal class CreateDataflowStepCommandHandler(
             ExecutionConditionExpression = new EvaluationExpression
                 { Expression = request.ExecutionConditionExpression },
             TimeoutMinutes = request.TimeoutMinutes,
-            AzureCredentialId = request.AzureCredentialId,
-            WorkspaceId = request.WorkspaceId.ToString(),
-            WorkspaceName = request.WorkspaceName,
+            FabricWorkspaceId = request.FabricWorkspaceId,
             DataflowId = request.DataflowId.ToString(),
             DataflowName = request.DataflowName
         };

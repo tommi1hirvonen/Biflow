@@ -96,6 +96,13 @@ public class DatabaseFixture : IAsyncLifetime
                 TenantId = "some-tenant-id"
             };
 
+            var fabricWorkspace = new FabricWorkspace
+            {
+                AzureCredential = azureCredential,
+                FabricWorkspaceName = "Test Fabric Workspace",
+                WorkspaceId = Guid.Empty
+            };
+
             var dataFactory = new DataFactory
             {
                 AzureCredential = azureCredential,
@@ -460,47 +467,54 @@ public class DatabaseFixture : IAsyncLifetime
             {
                 StepName = "Test step 15",
                 ExecutionPhase = 65,
-                AzureCredential = azureCredential,
-                WorkspaceId = "some-workspace-id",
+                FabricWorkspace = fabricWorkspace,
                 DatasetId = "some-dataset-id"
             };
-
-            var step16 = new EmailStep
+            
+            var step16 = new DataflowStep
             {
                 StepName = "Test step 16",
+                ExecutionPhase = 65,
+                FabricWorkspace = fabricWorkspace,
+                DataflowId = "some-dataflow-id"
+            };
+
+            var step17 = new EmailStep
+            {
+                StepName = "Test step 17",
                 Recipients = "recipient@test.com",
                 Subject = "This is a test email",
                 Body = "This is a test email"
             };
 
-            var step17 = new ExeStep
+            var step18 = new ExeStep
             {
-                StepName = "Test step 17",
+                StepName = "Test step 18",
                 ExeFileName = "dotnet",
                 ExeArguments = "--version",
                 ExeSuccessExitCode = 0,
                 ExeWorkingDirectory = @"C:\"
             };
 
-            var step18 = new PackageStep
+            var step19 = new PackageStep
             {
-                StepName = "Test step 18",
+                StepName = "Test step 19",
                 Connection = sqlConnection,
                 PackageFolderName = "TestFolder",
                 PackageProjectName = "TestProject",
                 PackageName = "TestPackage.dtsx"
             };
 
-            var step19 = new ExeStep
+            var step20 = new ExeStep
             {
-                StepName = "Test step 19",
+                StepName = "Test step 20",
                 ExeFileName = "dotnet",
                 ExeArguments = "--version",
                 ExeSuccessExitCode = 0,
                 RunAsCredential = credential
             };
 
-            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18, step19]);
+            job2.Steps.AddRange([step5, step6, step7, step8, step9, step10, step11, step12, step13, step14, step15, step16, step17, step18, step19, step20]);
             #endregion
 
             #region SCHEDULES

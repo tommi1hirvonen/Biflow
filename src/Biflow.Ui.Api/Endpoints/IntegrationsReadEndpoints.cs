@@ -162,6 +162,35 @@ public abstract class IntegrationsReadEndpoints : IEndpoints
             .WithDescription("Get dbt account by id. Sensitive API token will be replaced with an empty value.")
             .WithName("GetDbtAccount");
         
+        group.MapGet("/fabricworkspaces", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
+                await dbContext.FabricWorkspaces
+                    .AsNoTracking()
+                    .OrderBy(f => f.FabricWorkspaceId)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .Produces<FabricWorkspace[]>()
+            .WithSummary("Get all Fabric workspaces")
+            .WithDescription("Get all Fabric workspaces")
+            .WithName("GetFabricWorkspaces");
+        
+        group.MapGet("/fabricworkspaces/{fabricWorkspaceId:guid}",
+                async (ServiceDbContext dbContext, Guid fabricWorkspaceId, CancellationToken cancellationToken) =>
+                {
+                    var workspace = await dbContext.FabricWorkspaces
+                        .AsNoTracking()
+                        .FirstOrDefaultAsync(f => f.FabricWorkspaceId == fabricWorkspaceId, cancellationToken);
+                    if (workspace is null)
+                    {
+                        throw new NotFoundException<FabricWorkspace>(fabricWorkspaceId);
+                    }
+                    return Results.Ok(workspace);
+                })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<FabricWorkspace>()
+            .WithSummary("Get Fabric workspace by id")
+            .WithDescription("Get Fabric workspace by id.")
+            .WithName("GetFabricWorkspace");
+        
         group.MapGet("/functionapps", async (ServiceDbContext dbContext, CancellationToken cancellationToken) => 
                 await dbContext.FunctionApps
                     .AsNoTracking()

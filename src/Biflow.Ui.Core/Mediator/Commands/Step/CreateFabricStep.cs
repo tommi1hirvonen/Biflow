@@ -3,12 +3,10 @@ namespace Biflow.Ui.Core;
 public class CreateFabricStepCommand : CreateStepCommand<FabricStep>
 {
     public required double TimeoutMinutes { get; init; }
-    public required Guid WorkspaceId { get; init; }
-    public required string? WorkspaceName { get; init; }
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
-    public required string? ItemName { get; init; }
-    public required Guid AzureCredentialId { get; init; }
+    public required string ItemName { get; init; }
+    public required Guid FabricWorkspaceId { get; init; }
     public required CreateStepParameter[] Parameters { get; init; }
 }
 
@@ -21,11 +19,11 @@ internal class CreateFabricStepCommandHandler(
     protected override async Task<FabricStep> CreateStepAsync(
         CreateFabricStepCommand request, AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        // Check that the Azure credential exists.
-        if (!await dbContext.AzureCredentials
-                .AnyAsync(x => x.AzureCredentialId == request.AzureCredentialId, cancellationToken))
+        // Check that the Fabric workspace exists.
+        if (!await dbContext.FabricWorkspaces
+                .AnyAsync(x => x.FabricWorkspaceId == request.FabricWorkspaceId, cancellationToken))
         {
-            throw new NotFoundException<AzureCredential>(request.AzureCredentialId);
+            throw new NotFoundException<FabricWorkspace>(request.FabricWorkspaceId);
         }
         
         var step = new FabricStep
@@ -41,12 +39,10 @@ internal class CreateFabricStepCommandHandler(
             ExecutionConditionExpression = new EvaluationExpression
                 { Expression = request.ExecutionConditionExpression },
             TimeoutMinutes = request.TimeoutMinutes,
-            WorkspaceId = request.WorkspaceId,
-            WorkspaceName = request.WorkspaceName,
             ItemType = request.ItemType,
             ItemId = request.ItemId,
             ItemName = request.ItemName,
-            AzureCredentialId = request.AzureCredentialId
+            FabricWorkspaceId = request.FabricWorkspaceId
         };
         
         foreach (var createParameter in request.Parameters)

@@ -4,6 +4,8 @@ using Azure.Core;
 using Biflow.Core.Interfaces;
 using Microsoft.Fabric.Api;
 using Microsoft.Fabric.Api.Core.Models;
+using Microsoft.Fabric.Api.DataPipeline.Models;
+using Microsoft.Fabric.Api.Notebook.Models;
 using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Biflow.Core.Entities;
@@ -138,8 +140,8 @@ public class FabricWorkspaceClient
             : throw new Exception($"Workspace with id {workspaceId} not found");
     }
 
-    public async Task<string> GetItemNameAsync(
-        Guid workspaceId, Guid itemId, CancellationToken cancellationToken = default)
+    public async Task<string> GetItemNameAsync(Guid workspaceId, Guid itemId,
+        CancellationToken cancellationToken = default)
     {
         var item = await _fabric.Core.Items.GetItemAsync(workspaceId, itemId, cancellationToken);
         return item.HasValue
@@ -154,27 +156,45 @@ public class FabricWorkspaceClient
             .ListWorkspacesAsync(cancellationToken: cancellationToken)
             .ToListAsync(cancellationToken);
         var tasks = workspaces
-            .Select(ws => GetItemsAsync(ws.Id, ws.DisplayName, cancellationToken))
+            .Select(async ws =>
+            {
+                var items = await GetItemsAsync(ws.Id, cancellationToken);
+                var group = new FabricItemGroup(ws.Id, ws.DisplayName, items);
+                return group;
+            })
             .ToArray();
         var groups = await Task.WhenAll(tasks);
         groups.SortBy(g => g.WorkspaceName);
         return groups;
     }
 
-    private async Task<FabricItemGroup> GetItemsAsync(
-        Guid workspaceId, string workspaceName, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<Item>> GetItemsAsync(Guid workspaceId,
+        CancellationToken cancellationToken = default)
     {
         // Load pipelines and notebooks in parallel.
-        var pipelinesTask = _fabric.DataPipeline.Items
-            .ListDataPipelinesAsync(workspaceId, cancellationToken: cancellationToken)
-            .ToListAsync(cancellationToken);
-        var notebooksTask = _fabric.Notebook.Items
-            .ListNotebooksAsync(workspaceId, cancellationToken: cancellationToken)
-            .ToListAsync(cancellationToken);
+        var pipelinesTask = GetPipelinesAsync(workspaceId, cancellationToken);
+        var notebooksTask = GetNotebooksAsync(workspaceId, cancellationToken);
         var pipelines = await pipelinesTask;
         var notebooks = await notebooksTask;
         var items = pipelines.Concat<Item>(notebooks).OrderBy(x => x.DisplayName).ToArray();
-        var group = new FabricItemGroup(workspaceId, workspaceName, items);
-        return group;
+        return items;
+    }
+
+    public async Task<IReadOnlyList<Notebook>> GetNotebooksAsync(Guid workspaceId,
+        CancellationToken cancellationToken = default)
+    {
+        var notebooks = await _fabric.Notebook.Items
+            .ListNotebooksAsync(workspaceId, cancellationToken: cancellationToken)
+            .ToListAsync(cancellationToken);
+        return notebooks;
+    }
+
+    public async Task<IReadOnlyList<DataPipeline>> GetPipelinesAsync(Guid workspaceId,
+        CancellationToken cancellationToken = default)
+    {
+        var pipelines = await _fabric.DataPipeline.Items
+            .ListDataPipelinesAsync(workspaceId, cancellationToken: cancellationToken)
+            .ToListAsync(cancellationToken);
+        return pipelines;
     }
 }

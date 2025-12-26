@@ -7,6 +7,7 @@ global using Biflow.Ui.Components.Shared;
 global using Biflow.Ui.Core;
 global using Biflow.Ui.Projections;
 global using Biflow.Ui.StateManagement;
+global using Biflow.Ui.ViewModels;
 global using Havit.Blazor.Components.Web;
 global using Havit.Blazor.Components.Web.Bootstrap;
 global using Microsoft.AspNetCore.Components;

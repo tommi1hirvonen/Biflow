@@ -12,26 +12,12 @@ public class DataflowStep : Step, IHasTimeout
 
     private DataflowStep(DataflowStep other, Job? targetJob) : base(other, targetJob)
     {
-        AzureCredentialId = other.AzureCredentialId;
-        AzureCredential = other.AzureCredential;
-        WorkspaceId = other.WorkspaceId;
-        WorkspaceName = other.WorkspaceName;
+        FabricWorkspaceId = other.FabricWorkspaceId;
+        FabricWorkspace = other.FabricWorkspace;
         DataflowId = other.DataflowId;
         DataflowName = other.DataflowName;
         TimeoutMinutes = other.TimeoutMinutes;
     }
-
-    [Required]
-    public Guid AzureCredentialId { get; set; }
-
-    [MaxLength(36)]
-    [MinLength(36)]
-    [Required]
-    [NotEmptyGuid]
-    public string WorkspaceId { get; set; } = "";
-    
-    [MaxLength(250)]
-    public string? WorkspaceName { get; set; }
 
     [MaxLength(36)]
     [MinLength(36)]
@@ -45,8 +31,11 @@ public class DataflowStep : Step, IHasTimeout
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
 
+    [Required]
+    public Guid FabricWorkspaceId { get; set; }
+    
     [JsonIgnore]
-    public AzureCredential? AzureCredential { get; init; }
+    public FabricWorkspace? FabricWorkspace { get; set; }
 
     [JsonIgnore]
     public override DisplayStepType DisplayStepType => DisplayStepType.Dataflow;

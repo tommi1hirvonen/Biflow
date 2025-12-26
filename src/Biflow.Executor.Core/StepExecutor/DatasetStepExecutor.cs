@@ -19,8 +19,12 @@ internal class DatasetStepExecutor(
         .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
         .CurrentValue
         .PollingIntervalMs;
+    private readonly FabricWorkspace _workspace = step
+        .GetFabricWorkspace()
+        ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
     private readonly DatasetClient _client = step
-        .GetAzureCredential()
+        .GetFabricWorkspace()
+        ?.AzureCredential
         ?.CreateDatasetClient(serviceProvider.GetRequiredService<ITokenService>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
 
@@ -32,7 +36,7 @@ internal class DatasetStepExecutor(
         // Start dataset refresh.
         try
         {
-            await _client.RefreshDatasetAsync(step.WorkspaceId, step.DatasetId, cancellationToken);
+            await _client.RefreshDatasetAsync(_workspace.WorkspaceId, step.DatasetId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -52,7 +56,7 @@ internal class DatasetStepExecutor(
         {
             try
             {
-                var (status, refresh) = await GetDatasetRefreshStatusWithRetriesAsync(step.WorkspaceId, step.DatasetId,
+                var (status, refresh) = await GetDatasetRefreshStatusWithRetriesAsync(_workspace.WorkspaceId, step.DatasetId,
                     cancellationToken);
                 switch (status)
                 {
@@ -88,7 +92,7 @@ internal class DatasetStepExecutor(
     }
     
     private async Task<(DatasetRefreshStatus? Status, Refresh? Refresh)> GetDatasetRefreshStatusWithRetriesAsync(
-        string workspaceId, string datasetId, CancellationToken cancellationToken)
+        Guid workspaceId, string datasetId, CancellationToken cancellationToken)
     {
         var retryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(
             retryCount: MaxRefreshRetries,

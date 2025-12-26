@@ -99,12 +99,8 @@
                                     break;
                                 case DatasetStep dataset:
                                     <tr>
-                                        <td>Workspace id</td>
-                                        <td>@dataset.WorkspaceId</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Workspace name</td>
-                                        <td>@dataset.WorkspaceName</td>
+                                        <td>Power BI workspace id (internal)</td>
+                                        <td>@dataset.FabricWorkspaceId</td>
                                     </tr>
                                     <tr>
                                         <td>Dataset id</td>
@@ -117,12 +113,8 @@
                                     break;
                                 case DataflowStep dataflow:
                                     <tr>
-                                        <td>Workspace id</td>
-                                        <td>@dataflow.WorkspaceId</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Workspace name</td>
-                                        <td>@dataflow.WorkspaceName</td>
+                                        <td>Fabric workspace id (internal)</td>
+                                        <td>@dataflow.FabricWorkspaceId</td>
                                     </tr>
                                     <tr>
                                         <td>Dataflow id</td>
@@ -135,12 +127,8 @@
                                     break;
                                 case FabricStep fabric:
                                     <tr>
-                                        <td>Fabric workspace id</td>
-                                        <td>@fabric.WorkspaceId</td>
-                                    </tr>
-                                    <tr>
-                                        <td>Fabric workspace name</td>
-                                        <td>@fabric.WorkspaceName</td>
+                                        <td>Fabric/Power BI workspace id (internal)</td>
+                                        <td>@fabric.FabricWorkspaceId</td>
                                     </tr>
                                     <tr>
                                         <td>Item name</td>

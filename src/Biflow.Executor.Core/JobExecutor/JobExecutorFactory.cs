@@ -44,11 +44,11 @@ internal class JobExecutorFactory(
             from agent in agent_.DefaultIfEmpty()
             join tabular in context.AnalysisServicesConnections.Include(c => c.Credential) on ((TabularStepExecution)step).ConnectionId equals tabular.ConnectionId into tabular_
             from tabular in tabular_.DefaultIfEmpty()
-            join dataset in context.AzureCredentials on ((DatasetStepExecution)step).AzureCredentialId equals dataset.AzureCredentialId into dataset_
+            join dataset in context.FabricWorkspaces.Include(f => f.AzureCredential) on ((DatasetStepExecution)step).FabricWorkspaceId equals dataset.FabricWorkspaceId into dataset_
             from dataset in dataset_.DefaultIfEmpty()
-            join dataflow in context.AzureCredentials on ((DataflowStepExecution)step).AzureCredentialId equals dataflow.AzureCredentialId into dataflow_
+            join dataflow in context.FabricWorkspaces.Include(f => f.AzureCredential) on ((DataflowStepExecution)step).FabricWorkspaceId equals dataflow.FabricWorkspaceId into dataflow_
             from dataflow in dataflow_.DefaultIfEmpty()
-            join fabric in context.AzureCredentials on ((FabricStepExecution)step).AzureCredentialId equals fabric.AzureCredentialId into fabric_
+            join fabric in context.FabricWorkspaces.Include(f => f.AzureCredential) on ((FabricStepExecution)step).FabricWorkspaceId equals fabric.FabricWorkspaceId into fabric_
             from fabric in fabric_.DefaultIfEmpty()
             join function in context.FunctionApps on ((FunctionStepExecution)step).FunctionAppId equals function.FunctionAppId into function_
             from function in function_.DefaultIfEmpty()
@@ -106,13 +106,13 @@ internal class JobExecutorFactory(
                     tabular.SetConnection(step.tabular);
                     break;
                 case DatasetStepExecution dataset:
-                    dataset.SetAzureCredential(step.dataset);
+                    dataset.SetFabricWorkspace(step.dataset);
                     break;
                 case DataflowStepExecution dataflow:
-                    dataflow.SetAzureCredential(step.dataflow);
+                    dataflow.SetFabricWorkspace(step.dataflow);
                     break;
                 case FabricStepExecution fabric:
-                    fabric.SetAzureCredential(step.fabric);
+                    fabric.SetFabricWorkspace(step.fabric);
                     break;
                 case FunctionStepExecution function:
                     function.SetApp(step.function);

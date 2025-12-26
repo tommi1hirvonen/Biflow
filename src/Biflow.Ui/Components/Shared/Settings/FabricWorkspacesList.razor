@@ -1,0 +1,174 @@
+@implements IDisposable
+
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ToasterService Toaster
+@inject IMediator Mediator
+@inject ThemeService ThemeService
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+
+    tr:hover a {
+        text-decoration: underline;
+    }
+</style>
+
+<PageTitle>Data Factories | Biflow</PageTitle>
+
+@if (_azureCredentials is not null && !_azureCredentials.Any())
+{
+    <div class="row">
+        <div class="col">
+            <HxAlert Color="ThemeColor.Warning" CssClass="small py-2">
+                No Azure credentials were added.
+                Create an <a class="alert-link" href="settings/integrations/azurecredentials">Azure credential</a> in order to add Fabric workspaces.
+            </HxAlert>
+        </div>
+    </div>
+}
+
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    PLACEHOLDER
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  Enabled="_fabricWorkspaces is not null && _azureCredentials is not null && _azureCredentials.Any()"
+                  @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+            Add Fabric workspace
+        </HxButton>
+    </div>
+</div>
+
+<div class="card pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>
+                    Name
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (_fabricWorkspaces is null)
+            {
+                <tr><td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+            }
+            else if (_fabricWorkspaces.Count == 0)
+            {
+                <tr><td colspan="2">No Fabric workspaces</td></tr>
+            }
+            else
+            {
+                @foreach (var fabricWorkspace in _fabricWorkspaces.OrderBy(x => x.FabricWorkspaceName))
+                {
+                    <tr>
+                        <td class="align-middle">
+                            @fabricWorkspace.FabricWorkspaceName
+                        </td>
+                        <td class="align-middle">
+                            <HxButtonGroup>
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(fabricWorkspace.FabricWorkspaceId))">
+                                    <SvgIcon Icon="LucideIcon.Pen" />
+                                </HxButton>
+                                <HxDropdownButtonGroup>
+                                    <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                        <SvgIcon Icon="LucideIcon.Trash2" />
+                                    </HxDropdownToggleButton>
+                                    <HxDropdownMenu>
+                                        <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                        <HxDropdownItem @onclick="() => DeleteFabricWorkspaceAsync(fabricWorkspace)">
+                                            Confirm
+                                        </HxDropdownItem>
+                                    </HxDropdownMenu>
+                                </HxDropdownButtonGroup>
+                            </HxButtonGroup>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<FabricWorkspaceEditModal @ref="_editModal"
+                          AzureCredentials="_azureCredentials"
+                          OnFabricWorkspaceSubmit="OnFabricWorkspaceSubmit" />
+
+@code {
+    private FabricWorkspaceEditModal? _editModal;
+    private List<FabricWorkspace>? _fabricWorkspaces;
+    private List<AzureCredential>? _azureCredentials;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = await DbFactory.CreateDbContextAsync();
+        _fabricWorkspaces = await context.FabricWorkspaces
+            .AsNoTrackingWithIdentityResolution()
+            .OrderBy(x => x.FabricWorkspaceName)
+            .ToListAsync();
+        _azureCredentials = await context.AzureCredentials
+            .AsNoTracking()
+            .OrderBy(ar => ar.AzureCredentialName)
+            .ToListAsync();
+    }
+
+    private async Task DeleteFabricWorkspaceAsync(FabricWorkspace fabricWorkspace)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeleteFabricWorkspaceCommand(fabricWorkspace.FabricWorkspaceId));
+            _fabricWorkspaces?.Remove(fabricWorkspace);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting Fabric workspace", message);
+        }
+    }
+
+    private async Task OnFabricWorkspaceSubmit(FabricWorkspaceViewModel viewModel)
+    {
+        if (viewModel.FabricWorkspaceId == Guid.Empty)
+        {
+            var command = new CreateFabricWorkspaceCommand(
+                FabricWorkspaceName: viewModel.FabricWorkspaceName,
+                WorkspaceId: Guid.Parse(viewModel.WorkspaceId),
+                AzureCredentialId: viewModel.AzureCredentialId);
+            var response = await Mediator.SendAsync(command);
+            _fabricWorkspaces?.Add(response);
+        }
+        else
+        {
+            var command = new UpdateFabricWorkspaceCommand(
+                FabricWorkspaceId: viewModel.FabricWorkspaceId,
+                FabricWorkspaceName: viewModel.FabricWorkspaceName,
+                WorkspaceId: Guid.Parse(viewModel.WorkspaceId),
+                AzureCredentialId: viewModel.AzureCredentialId);
+            var fabricWorkspace = await Mediator.SendAsync(command);
+            _fabricWorkspaces?.RemoveAll(x => x.FabricWorkspaceId == viewModel.FabricWorkspaceId);
+            _fabricWorkspaces?.Add(fabricWorkspace);
+        }
+        StateHasChanged();
+    }
+}

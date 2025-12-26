@@ -271,16 +271,10 @@
                 break;
             case DatasetStepExecution dataset:
                 <dt class="col-sm-3">
-                    Workspace id
+                    Power BI workspace id (internal)
                 </dt>
                 <dd class="col-sm-9">
-                    @dataset.WorkspaceId
-                </dd>
-                <dt class="col-sm-3">
-                    Workspace name
-                </dt>
-                <dd class="col-sm-9">
-                    @dataset.WorkspaceName
+                    @dataset.FabricWorkspaceId
                 </dd>
                 <dt class="col-sm-3">
                     Dataset id
@@ -294,25 +288,13 @@
                 <dd class="col-sm-9">
                     @dataset.DatasetName
                 </dd>
-                <dt class="col-sm-3">
-                    Azure credential id
-                </dt>
-                <dd class="col-sm-9">
-                    @dataset.AzureCredentialId
-                </dd>
                 break;
             case DataflowStepExecution dataflow:
                 <dt class="col-sm-3">
-                    Workspace id
+                    Fabric workspace id (internal)
                 </dt>
                 <dd class="col-sm-9">
-                    @dataflow.WorkspaceId
-                </dd>
-                <dt class="col-sm-3">
-                    Workspace name
-                </dt>
-                <dd class="col-sm-9">
-                    @dataflow.WorkspaceName
+                    @dataflow.FabricWorkspaceId
                 </dd>
                 <dt class="col-sm-3">
                     Dataflow id
@@ -326,25 +308,13 @@
                 <dd class="col-sm-9">
                     @dataflow.DataflowName
                 </dd>
-                <dt class="col-sm-3">
-                    Azure credential id
-                </dt>
-                <dd class="col-sm-9">
-                    @dataflow.AzureCredentialId
-                </dd>
                 break;
             case FabricStepExecution fabric:
                 <dt class="col-sm-3">
-                    Fabric workspace id
+                    Fabric workspace id (internal)
                 </dt>
                 <dd class="col-sm-9">
-                    @fabric.WorkspaceId
-                </dd>
-                <dt class="col-sm-3">
-                    Fabric workspace name
-                </dt>
-                <dd class="col-sm-9">
-                    @fabric.WorkspaceName
+                    @fabric.FabricWorkspaceId
                 </dd>
                 <dt class="col-sm-3">
                     Item name

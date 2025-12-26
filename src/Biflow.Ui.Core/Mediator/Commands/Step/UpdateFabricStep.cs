@@ -3,12 +3,10 @@ namespace Biflow.Ui.Core;
 public class UpdateFabricStepCommand : UpdateStepCommand<FabricStep>
 {
     public required double TimeoutMinutes { get; init; }
-    public required Guid WorkspaceId { get; init; }
-    public required string? WorkspaceName { get; init; }
     public required FabricItemType ItemType { get; init; }
     public required Guid ItemId { get; init; }
-    public required string? ItemName { get; init; }
-    public required Guid AzureCredentialId { get; init; }
+    public required string ItemName { get; init; }
+    public required Guid FabricWorkspaceId { get; init; }
     public required UpdateStepParameter[] Parameters { get; init; }
 }
 
@@ -37,20 +35,18 @@ internal class UpdateFabricStepCommandHandler(
     protected override async Task UpdateTypeSpecificPropertiesAsync(FabricStep step, UpdateFabricStepCommand request,
         AppDbContext dbContext, CancellationToken cancellationToken)
     {
-        // Check that the Azure credential exists.
-        if (!await dbContext.AzureCredentials
-                .AnyAsync(x => x.AzureCredentialId == request.AzureCredentialId, cancellationToken))
+        // Check that the Fabric workspace exists.
+        if (!await dbContext.FabricWorkspaces
+                .AnyAsync(x => x.FabricWorkspaceId == request.FabricWorkspaceId, cancellationToken))
         {
-            throw new NotFoundException<AzureCredential>(request.AzureCredentialId);
+            throw new NotFoundException<FabricWorkspace>(request.FabricWorkspaceId);
         }
         
         step.TimeoutMinutes = request.TimeoutMinutes;
-        step.WorkspaceId = request.WorkspaceId;
-        step.WorkspaceName = request.WorkspaceName;
         step.ItemType = request.ItemType;
         step.ItemId = request.ItemId;
         step.ItemName = request.ItemName;
-        step.AzureCredentialId = request.AzureCredentialId;
+        step.FabricWorkspaceId = request.FabricWorkspaceId;
         
         await SynchronizeParametersAsync<FabricStepParameter, UpdateStepParameter>(
             step,

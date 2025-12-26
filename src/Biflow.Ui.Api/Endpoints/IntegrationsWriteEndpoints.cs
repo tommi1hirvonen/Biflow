@@ -368,6 +368,48 @@ public class IntegrationsWriteEndpoints : IEndpoints
         
         #endregion
         
+        #region Fabric workspaces
+        
+        group.MapPost("/fabricworkspaces",
+            async (FabricWorkspaceDto dto, IMediator mediator, LinkGenerator linker, HttpContext ctx,
+                CancellationToken cancellationToken) =>
+            {
+                var command = new CreateFabricWorkspaceCommand(
+                    FabricWorkspaceName: dto.FabricWorkspaceName,
+                    WorkspaceId: dto.WorkspaceId,
+                    AzureCredentialId: dto.AzureCredentialId);
+                var workspace = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetFabricWorkspace",
+                    new { fabricWorkspaceId = workspace.FabricWorkspaceId });
+                return Results.Created(url, workspace);
+            })
+            .ProducesValidationProblem()
+            .Produces<DataFactory>()
+            .WithSummary("Create Fabric workspace")
+            .WithDescription("Create a new Fabric workspace")
+            .WithName("CreateFabricWorkspace");
+        
+        group.MapPut("/fabricworkspaces/{fabricWorkspaceId:guid}",
+            async (Guid fabricWorkspaceId, FabricWorkspaceDto dto,
+                IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdateFabricWorkspaceCommand(
+                    FabricWorkspaceId: fabricWorkspaceId, 
+                    FabricWorkspaceName: dto.FabricWorkspaceName,
+                    WorkspaceId: dto.WorkspaceId,
+                    AzureCredentialId: dto.AzureCredentialId);
+                var dataFactory = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(dataFactory);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<FabricWorkspace>()
+            .WithSummary("Update Fabric workspace")
+            .WithDescription("Update an existing Fabric workspace")
+            .WithName("UpdateFabricWorkspace");
+        
+        #endregion
+        
         #region Function Apps
         
         group.MapPost("/functionapps",

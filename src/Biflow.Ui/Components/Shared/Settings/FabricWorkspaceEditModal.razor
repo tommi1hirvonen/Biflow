@@ -1,0 +1,156 @@
+@inject IDbContextFactory<AppDbContext> DbFactory
+@inject ToasterService Toaster
+@inject IJSRuntime Js
+@inject FabricWorkspaceClientFactory ClientFactory
+
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnClosed="() => _connectionTestSuccess = null"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@(_viewModel?.FabricWorkspaceId == Guid.Empty ? "New Fabric workspace" : "Edit " + _viewModel?.FabricWorkspaceName)">
+    <BodyTemplate>
+        @if (_viewModel is not null)
+        {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+            <EditForm Model="_viewModel" id="fabric_workspace_edit_form" OnValidSubmit="SubmitSynapseAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">Fabric workspace name</label>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_viewModel.FabricWorkspaceName"></InputText>
+                            </div>
+                        </div>
+
+                        <div class=" row mt-3">
+                            <div class="col-lg-6">
+                                <label class="form-label">Azure credential</label>
+                                <InputSelect class="form-select" @bind-Value="_viewModel.AzureCredentialId">
+                                    @foreach (var app in AzureCredentials ?? Enumerable.Empty<AzureCredential>())
+                                    {
+                                        <option value="@app.AzureCredentialId">@app.AzureCredentialName</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-lg">
+                                <label class="form-label">Workspace ID</label>
+                                <InputText class="form-control" @bind-Value="_viewModel.WorkspaceId"></InputText>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" @onclick="TestConnection" Enabled="!_testingConnection">
+                                    Test connection
+                                </HxButton>
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col">
+                                @if (_connectionTestSuccess == true)
+                                {
+                                    <span class="badge bg-success">Success</span>
+                                }
+                                else if (_connectionTestSuccess == false)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                            </div>
+                        </div>
+                        
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="fabric_workspace_edit_form" Color="ThemeColor.Success">@(_viewModel?.FabricWorkspaceId == Guid.Empty ? "Create" : "Save")</HxSubmit>
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">Cancel</HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<FabricWorkspaceViewModel> OnFabricWorkspaceSubmit { get; set; }
+
+    [Parameter]
+    public List<AzureCredential>? AzureCredentials { get; set; }
+
+    private InputText? _nameInput;
+    private FabricWorkspaceViewModel? _viewModel;
+    private HxModal? _modal;
+    private bool? _connectionTestSuccess;
+    private bool _testingConnection;
+
+    private async Task SubmitSynapseAsync()
+    {
+        await OnFabricWorkspaceSubmit.InvokeAsync(_viewModel);
+        await _modal.LetAsync(x => x.HideAsync());
+    }
+
+    private async Task TestConnection()
+    {
+        _connectionTestSuccess = null;
+        _testingConnection = true;
+        try
+        {
+            ArgumentNullException.ThrowIfNull(_viewModel);
+            var azureCredential = AzureCredentials
+                ?.First(ar => ar.AzureCredentialId == _viewModel.AzureCredentialId)
+                ?? throw new ArgumentException("Azure credential cannot be null");
+            var client = ClientFactory.Create(azureCredential);
+            var workspaceId = Guid.Parse(_viewModel.WorkspaceId);
+            _ = await client.GetWorkspaceNameAsync(workspaceId);
+            _connectionTestSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            _connectionTestSuccess = false;
+            Toaster.AddError("Connection test failed", ex.Message);
+        }
+        _testingConnection = false;
+    }
+
+    public async Task ShowAsync(Guid fabricWorkspaceId)
+    {
+        ArgumentNullException.ThrowIfNull(AzureCredentials);
+        _viewModel = null;
+        await _modal.LetAsync(x => x.ShowAsync());
+        if (fabricWorkspaceId != Guid.Empty)
+        {
+            await using var context = await DbFactory.CreateDbContextAsync();
+            var fabricWorkspace = await context.FabricWorkspaces
+                .AsNoTracking()
+                .FirstAsync(x => x.FabricWorkspaceId == fabricWorkspaceId);
+            _viewModel = FabricWorkspaceViewModel.FromEntity(fabricWorkspace);
+        }
+        else
+        {
+            _viewModel = new FabricWorkspaceViewModel
+            {
+                FabricWorkspaceId = Guid.Empty,
+                FabricWorkspaceName = "",
+                WorkspaceId = "",
+                AzureCredentialId = AzureCredentials.First().AzureCredentialId
+            };
+        }
+        _connectionTestSuccess = null;
+        _testingConnection = false;
+    }
+
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+}

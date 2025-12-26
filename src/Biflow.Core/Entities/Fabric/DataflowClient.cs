@@ -22,22 +22,22 @@ public class DataflowClient(
         return new PowerBIClient(credentials);
     }
 
-    public async Task RefreshDataflowAsync(string workspaceId, string dataflowId, CancellationToken cancellationToken)
+    public async Task RefreshDataflowAsync(Guid workspaceId, string dataflowId, CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var refreshRequest = new RefreshRequest(NotifyOption.NoNotification);
-        await client.Dataflows.RefreshDataflowAsync(
-            Guid.Parse(workspaceId), Guid.Parse(dataflowId), refreshRequest, cancellationToken: cancellationToken);
+        await client.Dataflows.RefreshDataflowAsync(workspaceId, Guid.Parse(dataflowId), refreshRequest,
+            cancellationToken: cancellationToken);
     }
 
     public async Task<(DataflowRefreshStatus Status, DataflowTransaction Transaction)> GetDataflowTransactionStatusAsync(
-        string workspaceId,
+        Guid workspaceId,
         string dataflowId,
         CancellationToken cancellationToken)
     {
         var client = await GetClientAsync();
         var transactions = await client.Dataflows.GetDataflowTransactionsAsync(
-            Guid.Parse(workspaceId),
+            workspaceId,
             Guid.Parse(dataflowId),
             cancellationToken);
         var transaction = transactions.Value.FirstOrDefault();
@@ -45,15 +45,15 @@ public class DataflowClient(
         {
             "InProgress" => DataflowRefreshStatus.InProgress,
             "Success" => DataflowRefreshStatus.Success,
-            "Failed" => DataflowRefreshStatus.Failed,
+            "Failed" or "22" => DataflowRefreshStatus.Failed,
             "Cancelled" => DataflowRefreshStatus.Cancelled,
             _ => throw new ApplicationException($"Unrecognized transaction status {transaction?.Status}")
         };
         return (status, transaction);
     }
 
-    public async Task CancelDataflowRefreshAsync(
-        string workspaceId, DataflowTransaction transaction, CancellationToken cancellationToken = default)
+    public async Task CancelDataflowRefreshAsync(Guid workspaceId, DataflowTransaction transaction,
+        CancellationToken cancellationToken = default)
     {
         // Call the dataflow transaction cancel endpoint manually, since the MS .NET library does not do it correctly.
         // It assumes the transaction id to be provided to the API is a Guid where in fact it's not.
@@ -72,21 +72,15 @@ public class DataflowClient(
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<IReadOnlyList<DataflowGroup>> GetAllDataflowsAsync()
+    public async Task<IReadOnlyList<Dataflow>> GetDataflowsAsync(Guid workspaceId,
+        CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
-        var groups = await client.Groups.GetGroupsAsync();
-        var dataflowGroups = new List<DataflowGroup>();
-        foreach (var group in groups.Value)
-        {
-            var groupDataflows = await client.Dataflows.GetDataflowsAsync(group.Id);
-            var dataflows = groupDataflows.Value
-                .Select(f => new Dataflow(group.Id.ToString(), group.Name, f.ObjectId.ToString(), f.Name))
-                .ToArray();
-            var dataflowGroup = new DataflowGroup(group.Id.ToString(), group.Name, dataflows);
-            dataflowGroups.Add(dataflowGroup);
-        }
-        return dataflowGroups;
+        var dataflows = await client.Dataflows.GetDataflowsAsync(workspaceId, cancellationToken);
+        return dataflows.Value
+            .Select(f => new Dataflow(workspaceId, f.ObjectId, f.Name))
+            .OrderBy(x => x.DataflowName)
+            .ToArray();
     }
 
     public async Task<string> GetWorkspaceNameAsync(string workspaceId, CancellationToken cancellationToken = default)
@@ -98,12 +92,12 @@ public class DataflowClient(
         return group.Name;
     }
 
-    public async Task<string> GetDataflowNameAsync(
-        string workspaceId, string dataflowId, CancellationToken cancellationToken = default)
+    public async Task<string> GetDataflowNameAsync(Guid workspaceId, string dataflowId,
+        CancellationToken cancellationToken = default)
     {
         var client = await GetClientAsync();
-        await using var stream = await client.Dataflows.GetDataflowAsync(
-            Guid.Parse(workspaceId), Guid.Parse(dataflowId), cancellationToken);
+        await using var stream = await client.Dataflows.GetDataflowAsync(workspaceId, Guid.Parse(dataflowId),
+            cancellationToken);
         var definition = JsonSerializer.Deserialize<DataflowDefinition>(stream);
         ArgumentNullException.ThrowIfNull(definition);
         return definition.Name;

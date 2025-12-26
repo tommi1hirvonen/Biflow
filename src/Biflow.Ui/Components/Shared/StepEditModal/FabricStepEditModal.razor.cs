@@ -24,7 +24,7 @@ public partial class FabricStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
+            FabricWorkspaceId = Integrations.FabricWorkspaces.First().FabricWorkspaceId
         };
 
     protected override Task<FabricStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -77,9 +77,7 @@ public partial class FabricStepEditModal(
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
             TimeoutMinutes = step.TimeoutMinutes,
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = step.WorkspaceId,
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             ItemType = step.ItemType,
             ItemId = step.ItemId,
             ItemName = step.ItemName,
@@ -138,9 +136,7 @@ public partial class FabricStepEditModal(
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
             TimeoutMinutes = step.TimeoutMinutes,
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = step.WorkspaceId,
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             ItemType = step.ItemType,
             ItemId = step.ItemId,
             ItemName = step.ItemName,
@@ -161,7 +157,7 @@ public partial class FabricStepEditModal(
     
     protected override async Task OnModalShownAsync(FabricStep step)
     {
-        if (step.WorkspaceId == Guid.Empty || step.ItemId == Guid.Empty)
+        if (step.ItemId == Guid.Empty)
         {
             return;
         }
@@ -169,16 +165,16 @@ public partial class FabricStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = Integrations.AzureCredentials
-                .First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var fabricWorkspace = Integrations.FabricWorkspaces
+                .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
+            var azureCredential = fabricWorkspace.AzureCredential;
+            ArgumentNullException.ThrowIfNull(azureCredential);
             var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService, httpClientFactory);
-            (step.WorkspaceName, step.ItemName) = 
-                (await fabric.GetWorkspaceNameAsync(step.WorkspaceId), 
-                    await fabric.GetItemNameAsync(step.WorkspaceId, step.ItemId));
+            step.ItemName = await fabric.GetItemNameAsync(fabricWorkspace.WorkspaceId, step.ItemId);
         }
         catch (Exception ex)
         {
-            Toaster.AddError("Error getting names from API", ex.Message);
+            Toaster.AddError("Error getting item name from API", ex.Message);
         }
         finally
         {
@@ -190,19 +186,17 @@ public partial class FabricStepEditModal(
     private Task OpenItemSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        return _offcanvas.LetAsync(x => x.ShowAsync(Step.AzureCredentialId));   
+        return _offcanvas.LetAsync(x => x.ShowAsync(Step.FabricWorkspaceId));   
     }
 
     private void OnItemSelected(FabricItemSelectedResult result)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        var (workspaceId, workspaceName, item) = result;
+        var item = result.Item;
         if (!item.Id.HasValue)
         {
-            throw new ArgumentNullException(nameof(item.Id));
+            throw new ArgumentNullException(message: "ID of the selected item was null", innerException: null);
         }
-        Step.WorkspaceId = workspaceId;
-        Step.WorkspaceName = workspaceName;
         switch (item)
         {
             case DataPipeline:

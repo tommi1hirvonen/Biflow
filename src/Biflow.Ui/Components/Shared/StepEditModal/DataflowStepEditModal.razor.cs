@@ -22,7 +22,7 @@ public partial class DataflowStepEditModal(
             Job = job,
             RetryAttempts = 0,
             RetryIntervalMinutes = 0,
-            AzureCredentialId = Integrations.AzureCredentials.First().AzureCredentialId
+            FabricWorkspaceId = Integrations.FabricWorkspaces.First().FabricWorkspaceId
         };
 
     protected override Task<DataflowStep> GetExistingStepAsync(AppDbContext context, Guid stepId) =>
@@ -59,9 +59,7 @@ public partial class DataflowStepEditModal(
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
             TimeoutMinutes = step.TimeoutMinutes,
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = Guid.Parse(step.WorkspaceId),
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             DataflowId = Guid.Parse(step.DataflowId),
             DataflowName = step.DataflowName,
             Dependencies = dependencies,
@@ -103,9 +101,7 @@ public partial class DataflowStepEditModal(
             ExecutionConditionExpression = step.ExecutionConditionExpression.Expression,
             StepTagIds = step.Tags.Select(t => t.TagId).ToArray(),
             TimeoutMinutes = step.TimeoutMinutes,
-            AzureCredentialId = step.AzureCredentialId,
-            WorkspaceId = Guid.Parse(step.WorkspaceId),
-            WorkspaceName = step.WorkspaceName,
+            FabricWorkspaceId = step.FabricWorkspaceId,
             DataflowId = Guid.Parse(step.DataflowId),
             DataflowName = step.DataflowName,
             Dependencies = dependencies,
@@ -124,7 +120,7 @@ public partial class DataflowStepEditModal(
 
     protected override async Task OnModalShownAsync(DataflowStep step)
     {
-        if (string.IsNullOrEmpty(step.WorkspaceId) || string.IsNullOrEmpty(step.DataflowId))
+        if (string.IsNullOrEmpty(step.DataflowId))
         {
             return;
         }
@@ -132,12 +128,12 @@ public partial class DataflowStepEditModal(
         {
             _loading = true;
             StateHasChanged();
-            var azureCredential = Integrations.AzureCredentials
-                .First(a => a.AzureCredentialId == step.AzureCredentialId);
+            var fabricWorkspace = Integrations.FabricWorkspaces
+                .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
+            var azureCredential = fabricWorkspace.AzureCredential;
+            ArgumentNullException.ThrowIfNull(azureCredential);
             var dataflowClient = azureCredential.CreateDataflowClient(tokenService, httpClientFactory);
-            (step.WorkspaceName, step.DataflowName) =
-                (await dataflowClient.GetWorkspaceNameAsync(step.WorkspaceId),
-                    await dataflowClient.GetDataflowNameAsync(step.WorkspaceId, step.DataflowId));
+            step.DataflowName = await dataflowClient.GetDataflowNameAsync(fabricWorkspace.WorkspaceId, step.DataflowId);
         }
         catch (Exception ex)
         {
@@ -153,12 +149,13 @@ public partial class DataflowStepEditModal(
     private Task OpenDataflowSelectOffcanvas()
     {
         ArgumentNullException.ThrowIfNull(Step);
-        return _dataflowSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.AzureCredentialId));   
+        return _dataflowSelectOffcanvas.LetAsync(x => x.ShowAsync(Step.FabricWorkspaceId));   
     }
 
     private void OnDataflowSelected(Dataflow dataflow)
     {
         ArgumentNullException.ThrowIfNull(Step);
-        (Step.WorkspaceId, Step.WorkspaceName, Step.DataflowId, Step.DataflowName) = dataflow;
+        var (_, dataflowId, dataflowName) = dataflow;
+        (Step.DataflowId, Step.DataflowName) = (dataflowId.ToString(), dataflowName);
     }
 }

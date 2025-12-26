@@ -17,8 +17,12 @@ internal class DataflowStepExecutor(
         .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
         .CurrentValue
         .PollingIntervalMs;
+    private readonly FabricWorkspace _workspace = step
+        .GetFabricWorkspace()
+        ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
     private readonly DataflowClient _client = step
-        .GetAzureCredential()
+        .GetFabricWorkspace()
+        ?.AzureCredential
         ?.CreateDataflowClient(
             serviceProvider.GetRequiredService<ITokenService>(),
             serviceProvider.GetRequiredService<IHttpClientFactory>())
@@ -34,7 +38,7 @@ internal class DataflowStepExecutor(
         // Start dataflow refresh.
         try
         {
-            await _client.RefreshDataflowAsync(step.WorkspaceId, step.DataflowId, cancellationToken);
+            await _client.RefreshDataflowAsync(_workspace.WorkspaceId, step.DataflowId, cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -122,7 +126,7 @@ internal class DataflowStepExecutor(
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataflow transaction status", step.ExecutionId, step));
         return await policy.ExecuteAsync(cancellation =>
-            _client.GetDataflowTransactionStatusAsync(step.WorkspaceId, step.DataflowId, cancellation),
+            _client.GetDataflowTransactionStatusAsync(_workspace.WorkspaceId, step.DataflowId, cancellation),
             cancellationToken);
     }
     
@@ -132,7 +136,7 @@ internal class DataflowStepExecutor(
             step.ExecutionId, step, transaction.Id);
         try
         {
-            await _client.CancelDataflowRefreshAsync(step.WorkspaceId, transaction);
+            await _client.CancelDataflowRefreshAsync(_workspace.WorkspaceId, transaction);
         }
         catch (Exception ex)
         {

@@ -7,7 +7,7 @@
 @inject ITokenService TokenService
 @inject IHttpClientFactory HttpClientFactory
 
-<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select dataflow">
+<HxOffcanvas @ref="_offcanvas" Size="OffcanvasSize.Regular" Title="Select item">
     <BodyTemplate>
         <div class="row">
             <div class="col">
@@ -43,79 +43,39 @@
                     else if (!_items.Any())
                     {
                         <div class="list-group-item small">
-                            No workspaces
+                            No items
                         </div>
                     }
                     else
                     {
-                        var filteredGroups = _items
-                            .Where(g => string.IsNullOrEmpty(_filterText) ||
-                                        g.Items.Any(d => d.DisplayName.ContainsIgnoreCase(_filterText)))
-                            .Where(g => _itemTypeFilter.Count == 0 ||
-                                        g.Items.Any(d => _itemTypeFilter.Contains(d.Type)))
-                            .OrderBy(d => d.WorkspaceName)
+                        var items = _items
+                            .Where(x => string.IsNullOrEmpty(_filterText) ||
+                                        x.DisplayName.ContainsIgnoreCase(_filterText))
+                            .Where(x => _itemTypeFilter.Count == 0 || _itemTypeFilter.Contains(x.Type))
+                            .OrderBy(x => x.DisplayName)
                             .ToArray();
-                        if (filteredGroups.Length == 0)
+                        
+                        foreach (var item in items)
                         {
-                            <div class="list-group-item small">
-                                No matching results
-                            </div>
-                        }
-                        foreach (var group in filteredGroups)
-                        {
-                            var items = group.Items
-                                .Where(x => string.IsNullOrEmpty(_filterText) ||
-                                            x.DisplayName.ContainsIgnoreCase(_filterText))
-                                .Where(x => _itemTypeFilter.Count == 0 || _itemTypeFilter.Contains(x.Type))
-                                .OrderBy(x => x.DisplayName)
-                                .ToArray();
-                            var expanded = !string.IsNullOrEmpty(_filterText) || _expandedStates.GetValueOrDefault(group);
-                            <div class="list-group-item list-group-item-action cursor-pointer" @onclick="() => _expandedStates[group] = !expanded">
-                                <div class="row">
-                                    <div class="col d-flex align-items-center small">
-                                        @if (expanded)
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronDown" />
-                                        }
-                                        else
-                                        {
-                                            <SvgIcon Icon="LucideIcon.ChevronRight" />
-                                        }
+                            var icon = item switch
+                            {
+                                DataPipeline => LucideIcon.Pipeline,
+                                Notebook => LucideIcon.Notebook,
+                                _ => LucideIcon.CircleHelp
+                            };
+                            <div class="list-group-item list-group-item-action cursor-pointer @(item == _selectedItem?.Item ? "fw-bold bg-body" : null)"
+                                 @onclick="() => SelectItem(item)">
+                                <div class="row justify-content-between small">
+                                    <div class="col d-flex align-items-center">
+                                        <SvgIcon Icon="icon" />
                                         &nbsp;
-                                        <SvgIcon Icon="LucideIcon.Folder" />
-                                        &nbsp;
-                                        @group.WorkspaceName
-                                        <span class="ms-auto badge rounded-pill @(items.Length > 0 ? "bg-primary" : "bg-secondary")">
-                                            @items.Length
-                                        </span>
+                                        <HighlightableText Text="@item.DisplayName" PartToHighlight="@_filterText" />
+                                    </div>
+                                    <div class="col-auto d-flex align-items-center">
+                                        @item.Type.ToString()
                                     </div>
                                 </div>
                             </div>
-                            @if (expanded)
-                            {
-                                foreach (var item in items)
-                                {
-                                    var icon = item switch
-                                    {
-                                        DataPipeline => LucideIcon.Pipeline,
-                                        Notebook => LucideIcon.Notebook,
-                                        _ => LucideIcon.CircleHelp
-                                    };
-                                    <div class="list-group-item list-group-item-action cursor-pointer @(item == _selectedItem?.Item ? "fw-bold bg-body" : null)"
-                                         @onclick="() => SelectItem(group.WorkspaceId, group.WorkspaceName, item)">
-                                        <div class="row justify-content-between small">
-                                            <div class="col d-flex align-items-center">
-                                                <SvgIcon Icon="icon" />
-                                                &nbsp;
-                                                <HighlightableText Text="@item.DisplayName" PartToHighlight="@_filterText" />
-                                            </div>
-                                            <div class="col-auto d-flex align-items-center">
-                                                @item.Type.ToString()
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            }
                         }
                     }
                 </div>
@@ -134,18 +94,13 @@
 
 @code {
     [Parameter]
-    public IEnumerable<AzureCredential>? AzureCredentials { get; set; }
-
-    [Parameter]
     public EventCallback<FabricItemSelectedResult> OnItemSelected { get; set; }
     
     private static readonly ItemType[] ItemTypes = [ItemType.DataPipeline, ItemType.Notebook];
     private readonly HashSet<ItemType> _itemTypeFilter = [];
 
-    private readonly Dictionary<FabricItemGroup, bool> _expandedStates = [];
-
     private HxOffcanvas? _offcanvas;
-    private IEnumerable<FabricItemGroup>? _items;
+    private IReadOnlyList<Item>? _items;
     private FabricItemSelectedResult? _selectedItem;
     private string _filterText = "";
 
@@ -159,26 +114,27 @@
         await _offcanvas.LetAsync(x => x.HideAsync());
     }
 
-    private void SelectItem(Guid workspaceId, string workspaceName, Item item)
+    private void SelectItem(Item item)
     {
-        _selectedItem = new(workspaceId, workspaceName, item);
+        _selectedItem = new(item);
     }
 
-    public async Task ShowAsync(Guid azureCredentialId)
+    public async Task ShowAsync(Guid fabricWorkspaceId)
     {
         _filterText = "";
         _items = null;
         _selectedItem = null;
-        _expandedStates.Clear();
         await _offcanvas.LetAsync(x => x.ShowAsync());
         try
         {
             await using var context = await DbContextFactory.CreateDbContextAsync();
-            var azureCredential = await context.AzureCredentials
+            var workspace = await context.FabricWorkspaces
                 .AsNoTracking()
-                .FirstAsync(r => r.AzureCredentialId == azureCredentialId);
-            var client = azureCredential.CreateFabricWorkspaceClient(TokenService, HttpClientFactory);
-            _items = await client.GetItemsAsync();
+                .Include(x => x.AzureCredential)
+                .FirstAsync(x => x.FabricWorkspaceId == fabricWorkspaceId);
+            var client = workspace.AzureCredential?.CreateFabricWorkspaceClient(TokenService, HttpClientFactory);
+            ArgumentNullException.ThrowIfNull(client);
+            _items = await client.GetItemsAsync(workspace.WorkspaceId);
             StateHasChanged();
         }
         catch (Exception ex)
@@ -186,5 +142,4 @@
             Toaster.AddError("Error reading Fabric items", ex.Message);
         }
     }
-
 }

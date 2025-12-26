@@ -12,41 +12,34 @@ public class FabricStep : Step, IHasTimeout, IHasStepParameters<FabricStepParame
     private FabricStep(FabricStep other, Job? targetJob) : base(other, targetJob)
     {
         TimeoutMinutes = other.TimeoutMinutes;
-        WorkspaceId = other.WorkspaceId;
-        WorkspaceName = other.WorkspaceName;
         ItemType = other.ItemType;
         ItemId = other.ItemId;
         ItemName = other.ItemName;
-        AzureCredentialId = other.AzureCredentialId;
-        AzureCredential = other.AzureCredential;
+        FabricWorkspaceId = other.FabricWorkspaceId;
+        FabricWorkspace = other.FabricWorkspace;
         StepParameters = other.StepParameters
             .Select(p => new FabricStepParameter(p, this, targetJob))
             .ToList();
     }
-    
-    [Required]
-    public Guid WorkspaceId { get; set; }
-    
-    [MaxLength(250)]
-    public string? WorkspaceName { get; set; }
     
     public FabricItemType ItemType { get; set; }
     
     [Required]
     public Guid ItemId { get; set; }
     
+    [Required]
     [MaxLength(250)]
-    public string? ItemName { get; set; }
+    public string ItemName { get; set; } = string.Empty;
     
     [Required]
     [Range(0, 2880)] // 48 hours
     public double TimeoutMinutes { get; set; }
     
     [Required]
-    public Guid AzureCredentialId { get; set; }
+    public Guid FabricWorkspaceId { get; set; }
     
     [JsonIgnore]
-    public AzureCredential? AzureCredential { get; set; }
+    public FabricWorkspace? FabricWorkspace { get; set; }
     
     [ValidateComplexType]
     [JsonInclude]

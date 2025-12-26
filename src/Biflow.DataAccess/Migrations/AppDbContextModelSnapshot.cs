@@ -576,6 +576,28 @@ namespace Biflow.DataAccess.Migrations
                     b.ToTable("ExecutionParameter", "app");
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.FabricWorkspace", b =>
+                {
+                    b.Property<Guid>("WorkspaceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AzureCredentialId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("FabricWorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FabricWorkspaceName")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.HasKey("WorkspaceId");
+
+                    b.ToTable("FabricWorkspace", "app");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.FunctionApp", b =>
                 {
                     b.Property<Guid>("FunctionAppId")
@@ -1939,11 +1961,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
 
-                    b.Property<Guid>("AzureCredentialId")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
-
                     b.Property<string>("DataflowId")
                         .IsRequired()
                         .HasMaxLength(36)
@@ -1956,22 +1973,15 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DataflowName");
 
+                    b.Property<Guid>("FabricWorkspaceId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("FabricWorkspaceId");
+
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("WorkspaceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("DataflowGroupId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("DataflowGroupName");
 
                     b.HasDiscriminator().HasValue("Dataflow");
                 });
@@ -1979,11 +1989,6 @@ namespace Biflow.DataAccess.Migrations
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
-
-                    b.Property<Guid>("AzureCredentialId")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
 
                     b.Property<string>("DatasetId")
                         .IsRequired()
@@ -1997,17 +2002,10 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DatasetName");
 
-                    b.Property<string>("WorkspaceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("DatasetGroupId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("DatasetGroupName");
+                    b.Property<Guid>("FabricWorkspaceId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("FabricWorkspaceId");
 
                     b.HasDiscriminator().HasValue("Dataset");
                 });
@@ -2119,16 +2117,17 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.Step");
 
-                    b.Property<Guid>("AzureCredentialId")
+                    b.Property<Guid>("FabricWorkspaceId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
+                        .HasColumnName("FabricWorkspaceId");
 
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("FabricItemId");
 
                     b.Property<string>("ItemName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("FabricItemName");
@@ -2144,15 +2143,6 @@ namespace Biflow.DataAccess.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("FabricWorkspaceId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("FabricWorkspaceName");
 
                     b.HasDiscriminator().HasValue("Fabric");
                 });
@@ -2456,11 +2446,6 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
 
-                    b.Property<Guid>("AzureCredentialId")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
-
                     b.Property<string>("DataflowId")
                         .IsRequired()
                         .HasMaxLength(36)
@@ -2473,22 +2458,15 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DataflowName");
 
+                    b.Property<Guid>("FabricWorkspaceId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("FabricWorkspaceId");
+
                     b.Property<double>("TimeoutMinutes")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<string>("WorkspaceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("DataflowGroupId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("DataflowGroupName");
 
                     b.HasDiscriminator().HasValue("Dataflow");
                 });
@@ -2496,11 +2474,6 @@ namespace Biflow.DataAccess.Migrations
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStepExecution", b =>
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
-
-                    b.Property<Guid>("AzureCredentialId")
-                        .ValueGeneratedOnUpdateSometimes()
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
 
                     b.Property<string>("DatasetId")
                         .IsRequired()
@@ -2514,17 +2487,10 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DatasetName");
 
-                    b.Property<string>("WorkspaceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(36)")
-                        .HasColumnName("DatasetGroupId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)")
-                        .HasColumnName("DatasetGroupName");
+                    b.Property<Guid>("FabricWorkspaceId")
+                        .ValueGeneratedOnUpdateSometimes()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("FabricWorkspaceId");
 
                     b.HasDiscriminator().HasValue("Dataset");
                 });
@@ -2641,16 +2607,17 @@ namespace Biflow.DataAccess.Migrations
                 {
                     b.HasBaseType("Biflow.Core.Entities.StepExecution");
 
-                    b.Property<Guid>("AzureCredentialId")
+                    b.Property<Guid>("FabricWorkspaceId")
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("AzureCredentialId");
+                        .HasColumnName("FabricWorkspaceId");
 
                     b.Property<Guid>("ItemId")
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("FabricItemId");
 
                     b.Property<string>("ItemName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("FabricItemName");
@@ -2666,14 +2633,6 @@ namespace Biflow.DataAccess.Migrations
                         .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("float")
                         .HasColumnName("TimeoutMinutes");
-
-                    b.Property<Guid>("WorkspaceId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("FabricWorkspaceId");
-
-                    b.Property<string>("WorkspaceName")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("FabricWorkspaceName");
 
                     b.HasDiscriminator().HasValue("Fabric");
                 });
@@ -3488,6 +3447,16 @@ namespace Biflow.DataAccess.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Biflow.Core.Entities.FabricWorkspace", b =>
+                {
+                    b.HasOne("Biflow.Core.Entities.AzureCredential", "AzureCredential")
+                        .WithMany("FabricWorkspaces")
+                        .HasForeignKey("AzureCredentialId")
+                        .IsRequired();
+
+                    b.Navigation("AzureCredential");
+                });
+
             modelBuilder.Entity("Biflow.Core.Entities.FunctionApp", b =>
                 {
                     b.HasOne("Biflow.Core.Entities.AzureCredential", "AzureCredential")
@@ -3997,22 +3966,22 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.DataflowStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.AzureCredential", "AzureCredential")
-                        .WithMany()
-                        .HasForeignKey("AzureCredentialId")
+                    b.HasOne("Biflow.Core.Entities.FabricWorkspace", "FabricWorkspace")
+                        .WithMany("DataflowSteps")
+                        .HasForeignKey("FabricWorkspaceId")
                         .IsRequired();
 
-                    b.Navigation("AzureCredential");
+                    b.Navigation("FabricWorkspace");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DatasetStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.AzureCredential", "AzureCredential")
-                        .WithMany("Steps")
-                        .HasForeignKey("AzureCredentialId")
+                    b.HasOne("Biflow.Core.Entities.FabricWorkspace", "FabricWorkspace")
+                        .WithMany("DatasetSteps")
+                        .HasForeignKey("FabricWorkspaceId")
                         .IsRequired();
 
-                    b.Navigation("AzureCredential");
+                    b.Navigation("FabricWorkspace");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.DbtStep", b =>
@@ -4042,12 +4011,12 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.FabricStep", b =>
                 {
-                    b.HasOne("Biflow.Core.Entities.AzureCredential", "AzureCredential")
-                        .WithMany()
-                        .HasForeignKey("AzureCredentialId")
+                    b.HasOne("Biflow.Core.Entities.FabricWorkspace", "FabricWorkspace")
+                        .WithMany("FabricSteps")
+                        .HasForeignKey("FabricWorkspaceId")
                         .IsRequired();
 
-                    b.Navigation("AzureCredential");
+                    b.Navigation("FabricWorkspace");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.FunctionStep", b =>
@@ -4438,11 +4407,11 @@ namespace Biflow.DataAccess.Migrations
 
                     b.Navigation("BlobStorageClients");
 
+                    b.Navigation("FabricWorkspaces");
+
                     b.Navigation("FunctionApps");
 
                     b.Navigation("PipelineClients");
-
-                    b.Navigation("Steps");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.Credential", b =>
@@ -4494,6 +4463,15 @@ namespace Biflow.DataAccess.Migrations
                     b.Navigation("StepExecutionParameterExpressionParameters");
 
                     b.Navigation("StepExecutionParameters");
+                });
+
+            modelBuilder.Entity("Biflow.Core.Entities.FabricWorkspace", b =>
+                {
+                    b.Navigation("DataflowSteps");
+
+                    b.Navigation("DatasetSteps");
+
+                    b.Navigation("FabricSteps");
                 });
 
             modelBuilder.Entity("Biflow.Core.Entities.FunctionApp", b =>

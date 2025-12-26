@@ -65,6 +65,13 @@
                     </NavLink>
                 </li>
                 <li class="nav-item">
+                    <NavLink class="nav-link" href="settings/integrations/fabricworkspaces">
+                        <SvgIcon Icon="LucideIcon.Users" />
+                        &nbsp;
+                        Fabric/Power BI workspaces
+                    </NavLink>
+                </li>
+                <li class="nav-item">
                     <NavLink class="nav-link" href="settings/integrations/datafactory">
                         <SvgIcon Icon="LucideIcon.Factory" />
                         &nbsp;
@@ -196,6 +203,9 @@
                         break;
                     case "azurecredentials":
                         <AzureCredentialsList />
+                        break;
+                    case "fabricworkspaces":
+                        <FabricWorkspacesList />
                         break;
                     case "datafactory":
                         <DataFactoriesList />

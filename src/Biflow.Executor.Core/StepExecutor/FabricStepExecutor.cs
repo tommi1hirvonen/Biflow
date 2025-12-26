@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,18 +17,24 @@ internal class FabricStepExecutor(
         .GetRequiredService<ILogger<FabricStepExecutor>>();
     private readonly IDbContextFactory<ExecutorDbContext> _dbContextFactory = serviceProvider
         .GetRequiredService<IDbContextFactory<ExecutorDbContext>>();
+    private readonly FabricItemCache _cache = serviceProvider.GetRequiredService<FabricItemCache>();
     private readonly int _pollingIntervalMs = serviceProvider
         .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
         .CurrentValue
         .PollingIntervalMs;
+    private readonly FabricWorkspace _workspace = step
+        .GetFabricWorkspace()
+        ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
     private readonly FabricWorkspaceClient _client = step
-        .GetAzureCredential()
+        .GetFabricWorkspace()
+        ?.AzureCredential
         ?.CreateFabricWorkspaceClient(
             serviceProvider.GetRequiredService<ITokenService>(),
             serviceProvider.GetRequiredService<IHttpClientFactory>())
         ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
     private readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
     
+    private const int MaxGetItemIdRetries = 3;
     private const int MaxRefreshRetries = 3;
     
     public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
@@ -49,12 +56,32 @@ internal class FabricStepExecutor(
             attempt.AddError(ex, "Error reading Fabric item parameters");
             return Result.Failure;
         }
-
+        
+        // Get the item id based on the item name. Because of environment transfers of metadata, the item id is not
+        // the preferred or primary way to identify items.
+        // Item ids differ for the "same" item in different Fabric environments (or workspaces, in practice).
+        Guid itemId;
+        try
+        {
+            itemId = await GetItemIdWithRetriesAsync(cancellationToken);
+        }
+        catch (ArgumentNullException)
+        {
+            // GetItemIdWithRetriesAsync() throws ArgumentNullException if the item id was not found.
+            attempt.AddWarning("No item id was found for the specified name. Using stored item id instead.");
+            itemId = step.ItemId;
+        }
+        catch (Exception ex)
+        {
+            attempt.AddError(ex, "Error getting item id");
+            return Result.Failure;
+        }
+        
         Guid instanceId;
         try
         {
             (var success, instanceId, var responseContent) = await _client.StartOnDemandItemJobAsync(
-                step.WorkspaceId, step.ItemId, step.ItemType, parameters, cancellationToken);
+                _workspace.WorkspaceId, itemId, step.ItemType, parameters, cancellationToken);
             if (!success)
             {
                 attempt.AddError(new Exception("Failed to start on demand item job"));
@@ -69,7 +96,7 @@ internal class FabricStepExecutor(
                 "{ExecutionId} {Step} Error creating item job instance for workspace id {WorkspaceId} and item {ItemId}",
                 step.ExecutionId,
                 step,
-                step.WorkspaceId,
+                _workspace.WorkspaceId,
                 step.ItemId);
             attempt.AddError(ex, "Error starting item job instance");
             return Result.Failure;
@@ -106,7 +133,7 @@ internal class FabricStepExecutor(
             {
                 await Task.Delay(_pollingIntervalMs, linkedCts.Token);
                 
-                instance = await GetItemJobInstanceWithRetriesAsync(instanceId, linkedCts.Token);
+                instance = await GetItemJobInstanceWithRetriesAsync(itemId, instanceId, linkedCts.Token);
                 
                 if (instance.Status is null ||
                     instance.Status == Status.NotStarted ||
@@ -120,7 +147,7 @@ internal class FabricStepExecutor(
         }
         catch (OperationCanceledException ex)
         {
-            await CancelAsync(instanceId);
+            await CancelAsync(itemId, instanceId);
             if (timeoutCts.IsCancellationRequested)
             {
                 attempt.AddError(ex, "Step execution timed out");
@@ -146,8 +173,29 @@ internal class FabricStepExecutor(
         attempt.AddError(instance.FailureReason.Message);
         return Result.Failure;
     }
+
+    private async Task<Guid> GetItemIdWithRetriesAsync(CancellationToken cancellationToken)
+    {
+        var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
+            retryCount: MaxGetItemIdRetries,
+            sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
+            onRetry: (ex, _) => _logger.LogWarning(ex,
+                "{ExecutionId} {Step} Error getting item id for name {itemName}",
+                step.ExecutionId, step, step.ItemName));
+        var itemId = await policy.ExecuteAsync(cancellation =>
+            _cache.GetItemIdAsync(
+                _client,
+                step.ExecutionId,
+                _workspace.WorkspaceId,
+                step.ItemType,
+                step.ItemName,
+                cancellation),
+            cancellationToken)
+            ?? throw new ArgumentNullException(message: "Item was found but the id was null", innerException: null);
+        return itemId;
+    }
     
-    private async Task<ItemJobInstance> GetItemJobInstanceWithRetriesAsync(Guid instanceId,
+    private async Task<ItemJobInstance> GetItemJobInstanceWithRetriesAsync(Guid itemId, Guid instanceId,
         CancellationToken cancellationToken)
     {
         var policy = Policy.Handle<Exception>().WaitAndRetryAsync(
@@ -157,16 +205,16 @@ internal class FabricStepExecutor(
                 "{ExecutionId} {Step} Error getting item job instance for instance id {instanceId}",
                 step.ExecutionId, step, instanceId));
         return await policy.ExecuteAsync(cancellation =>
-            _client.GetItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId, cancellation), cancellationToken);
+            _client.GetItemJobInstanceAsync(_workspace.WorkspaceId, itemId, instanceId, cancellation), cancellationToken);
     }
     
-    private async Task CancelAsync(Guid instanceId)
+    private async Task CancelAsync(Guid itemId, Guid instanceId)
     {
         _logger.LogInformation("{ExecutionId} {Step} Stopping item job instance id {instanceId}",
             step.ExecutionId, step, instanceId);
         try
         {
-            await _client.CancelItemJobInstanceAsync(step.WorkspaceId, step.ItemId, instanceId);
+            await _client.CancelItemJobInstanceAsync(_workspace.WorkspaceId, itemId, instanceId);
         }
         catch (Exception ex)
         {
