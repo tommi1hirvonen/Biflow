@@ -7,29 +7,36 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class DatasetStepExecutor(
-    IServiceProvider serviceProvider,
-    DatasetStepExecution step,
-    DatasetStepExecutionAttempt attempt) : IStepExecutor
+internal class DatasetStepExecutor : IStepExecutor
 {
     private const int MaxGetDatasetIdRetries = 3;
     private const int MaxRefreshRetries = 3;
     
-    private readonly ILogger<DatasetStepExecutor> _logger = serviceProvider
-        .GetRequiredService<ILogger<DatasetStepExecutor>>();
-    private readonly int _pollingIntervalMs = serviceProvider
-        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
-        .CurrentValue
-        .PollingIntervalMs;
-    private readonly DatasetCache _cache = serviceProvider.GetRequiredService<DatasetCache>();
-    private readonly FabricWorkspace _workspace = step
-        .GetFabricWorkspace()
-        ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
-    private readonly DatasetClient _client = step
-        .GetFabricWorkspace()
-        ?.AzureCredential
-        ?.CreateDatasetClient(serviceProvider.GetRequiredService<ITokenService>())
-        ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
+    private readonly ILogger<DatasetStepExecutor> _logger;
+    private readonly int _pollingIntervalMs;
+    private readonly DatasetCache _cache;
+    private readonly FabricWorkspace _workspace;
+    private readonly DatasetClient _client;
+    private readonly DatasetStepExecution _step;
+    private readonly DatasetStepExecutionAttempt _attempt;
+
+    public DatasetStepExecutor(IServiceProvider serviceProvider,
+        DatasetStepExecution step,
+        DatasetStepExecutionAttempt attempt)
+    {
+        _step = step;
+        _attempt = attempt;
+        _logger = serviceProvider.GetRequiredService<ILogger<DatasetStepExecutor>>();
+        _pollingIntervalMs = serviceProvider.GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+            .CurrentValue
+            .PollingIntervalMs;
+        _cache = serviceProvider.GetRequiredService<DatasetCache>();
+        _workspace = step.GetFabricWorkspace()
+            ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
+        var credential = _workspace.AzureCredential
+            ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
+        _client = serviceProvider.GetRequiredService<DatasetClientFactory>().Create(credential);
+    }
 
     public async Task<Result> ExecuteAsync(OrchestrationContext context, CancellationContext cancellationContext)
     {
@@ -47,12 +54,12 @@ internal class DatasetStepExecutor(
         catch (ArgumentNullException ex)
         {
             // GetDatasetIdWithRetriesAsync() throws ArgumentNullException if the dataset id was not found.
-            attempt.AddWarning(ex, "No dataset id was found for the specified name. Using stored dataset id instead.");
-            datasetId = step.DatasetId;
+            _attempt.AddWarning(ex, "No dataset id was found for the specified name. Using stored dataset id instead.");
+            datasetId = _step.DatasetId;
         }
         catch (Exception ex)
         {
-            attempt.AddError(ex, "Error getting dataset id");
+            _attempt.AddError(ex, "Error getting dataset id");
             return Result.Failure;
         }
 
@@ -68,7 +75,7 @@ internal class DatasetStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting dataset refresh");
-            attempt.AddError(ex, "Error starting dataset refresh operation");
+            _attempt.AddError(ex, "Error starting dataset refresh operation");
             return Result.Failure;
         }
 
@@ -86,7 +93,7 @@ internal class DatasetStepExecutor(
                     case DatasetRefreshStatus.Completed:
                         return Result.Success;
                     case DatasetRefreshStatus.Failed or DatasetRefreshStatus.Disabled:
-                        attempt.AddError(refresh?.ServiceExceptionJson);
+                        _attempt.AddError(refresh?.ServiceExceptionJson);
                         return Result.Failure;
                     default:
                         await Task.Delay(_pollingIntervalMs, cancellationToken);
@@ -98,17 +105,17 @@ internal class DatasetStepExecutor(
                 // If the token was canceled, report the result as 'Cancel'.
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    attempt.AddWarning(ex);
+                    _attempt.AddWarning(ex);
                     return Result.Cancel;
                 }
                 // If not, report the error. This means the step was not canceled, but instead the DatasetClient's
                 // underlying HttpClient might have timed out.
-                attempt.AddError(ex);
+                _attempt.AddError(ex);
                 return Result.Failure;
             }
             catch (Exception ex)
             {
-                attempt.AddError(ex, "Error getting dataset refresh status");
+                _attempt.AddError(ex, "Error getting dataset refresh status");
                 return Result.Failure;
             }
         }
@@ -121,11 +128,11 @@ internal class DatasetStepExecutor(
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataset id for name {itemName}",
-                step.ExecutionId, step, step.DatasetName));
+                _step.ExecutionId, _step, _step.DatasetName));
         var datasetId = await policy.ExecuteAsync(cancellation =>
-            _cache.GetDatasetIdAsync(_client, step.ExecutionId, _workspace.WorkspaceId, step.DatasetName, cancellation),
+            _cache.GetDatasetIdAsync(_client, _step.ExecutionId, _workspace.WorkspaceId, _step.DatasetName, cancellation),
                 cancellationToken)
-            ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{step.DatasetName}'",
+            ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{_step.DatasetName}'",
                 innerException: null);
         return datasetId;
     }
@@ -137,7 +144,7 @@ internal class DatasetStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
             onRetry: (ex, _) => _logger.LogWarning(ex,
-                "{ExecutionId} {Step} Error getting dataset refresh status", step.ExecutionId, step));
+                "{ExecutionId} {Step} Error getting dataset refresh status", _step.ExecutionId, _step));
         return await retryPolicy.ExecuteAsync(cancellation =>
             _client.GetDatasetRefreshStatusAsync(workspaceId, datasetId, cancellation), cancellationToken);
     }

@@ -44,14 +44,6 @@ public abstract class AzureCredential(AzureCredentialType azureCredentialType)
     
     public TokenCredential GetTokenServiceCredential(ITokenService tokenService) =>
         new AzureTokenCredential(tokenService, this);
-    
-    public DatasetClient CreateDatasetClient(ITokenService tokenService) => new(this, tokenService);
-    
-    public DataflowClient CreateDataflowClient(ITokenService tokenService, IHttpClientFactory httpClientFactory) =>
-        new(this, tokenService, httpClientFactory);
-    
-    public FabricWorkspaceClient CreateFabricWorkspaceClient(
-        ITokenService tokenService, IHttpClientFactory httpClientFactory) => new(this, tokenService, httpClientFactory);
 
     public async Task TestConnection(CancellationToken cancellationToken = default)
     {

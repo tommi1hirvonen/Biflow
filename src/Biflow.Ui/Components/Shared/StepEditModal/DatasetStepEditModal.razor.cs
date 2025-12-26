@@ -3,7 +3,7 @@
 namespace Biflow.Ui.Components.Shared.StepEditModal;
 
 public partial class DatasetStepEditModal(
-    ITokenService tokenService,
+    DatasetClientFactory clientFactory,
     IMediator mediator,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
@@ -129,7 +129,7 @@ public partial class DatasetStepEditModal(
                 .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
             var azureCredential = fabricWorkspace.AzureCredential;
             ArgumentNullException.ThrowIfNull(azureCredential);
-            var datasetClient = azureCredential.CreateDatasetClient(tokenService);
+            var datasetClient = clientFactory.Create(azureCredential);
             step.DatasetName = await datasetClient.GetDatasetNameAsync(fabricWorkspace.WorkspaceId, step.DatasetId);
         }
         catch (Exception ex)

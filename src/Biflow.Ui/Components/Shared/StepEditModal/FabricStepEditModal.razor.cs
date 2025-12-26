@@ -5,8 +5,7 @@ using Microsoft.Fabric.Api.Notebook.Models;
 namespace Biflow.Ui.Components.Shared.StepEditModal;
 
 public partial class FabricStepEditModal(
-    ITokenService tokenService,
-    IHttpClientFactory httpClientFactory,
+    FabricWorkspaceClientFactory clientFactory,
     IMediator mediator,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
@@ -169,7 +168,7 @@ public partial class FabricStepEditModal(
                 .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
             var azureCredential = fabricWorkspace.AzureCredential;
             ArgumentNullException.ThrowIfNull(azureCredential);
-            var fabric = azureCredential.CreateFabricWorkspaceClient(tokenService, httpClientFactory);
+            var fabric = clientFactory.Create(azureCredential);
             step.ItemName = await fabric.GetItemNameAsync(fabricWorkspace.WorkspaceId, step.ItemId);
         }
         catch (Exception ex)

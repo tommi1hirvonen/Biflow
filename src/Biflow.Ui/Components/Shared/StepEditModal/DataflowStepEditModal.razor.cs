@@ -3,8 +3,7 @@ using Biflow.Ui.Components.Shared.StepEdit;
 namespace Biflow.Ui.Components.Shared.StepEditModal;
 
 public partial class DataflowStepEditModal(
-    ITokenService tokenService,
-    IHttpClientFactory httpClientFactory,
+    DataflowClientFactory clientFactory,
     IMediator mediator,
     ToasterService toaster,
     IDbContextFactory<AppDbContext> dbContextFactory)
@@ -132,7 +131,7 @@ public partial class DataflowStepEditModal(
                 .First(w => w.FabricWorkspaceId == step.FabricWorkspaceId);
             var azureCredential = fabricWorkspace.AzureCredential;
             ArgumentNullException.ThrowIfNull(azureCredential);
-            var dataflowClient = azureCredential.CreateDataflowClient(tokenService, httpClientFactory);
+            var dataflowClient = clientFactory.Create(azureCredential);
             step.DataflowName = await dataflowClient.GetDataflowNameAsync(fabricWorkspace.WorkspaceId, step.DataflowId);
         }
         catch (Exception ex)

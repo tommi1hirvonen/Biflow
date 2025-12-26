@@ -7,29 +7,34 @@ using Polly;
 
 namespace Biflow.Executor.Core.StepExecutor;
 
-internal class DataflowStepExecutor(
-    IServiceProvider serviceProvider,
-    DataflowStepExecution step,
-    DataflowStepExecutionAttempt attempt) : IStepExecutor
+internal class DataflowStepExecutor : IStepExecutor
 {
-    private readonly ILogger<DataflowStepExecutor> _logger = serviceProvider
-        .GetRequiredService<ILogger<DataflowStepExecutor>>();
-    private readonly int _pollingIntervalMs = serviceProvider
-        .GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
-        .CurrentValue
-        .PollingIntervalMs;
-    private readonly DataflowCache _cache = serviceProvider.GetRequiredService<DataflowCache>();
-    private readonly FabricWorkspace _workspace = step
-        .GetFabricWorkspace()
-        ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
-    private readonly DataflowClient _client = step
-        .GetFabricWorkspace()
-        ?.AzureCredential
-        ?.CreateDataflowClient(
-            serviceProvider.GetRequiredService<ITokenService>(),
-            serviceProvider.GetRequiredService<IHttpClientFactory>())
-        ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
-    
+    private readonly ILogger<DataflowStepExecutor> _logger;
+    private readonly int _pollingIntervalMs;
+    private readonly DataflowCache _cache;
+    private readonly FabricWorkspace _workspace;
+    private readonly DataflowClient _client;
+    private readonly DataflowStepExecution _step;
+    private readonly DataflowStepExecutionAttempt _attempt;
+
+    public DataflowStepExecutor(IServiceProvider serviceProvider,
+        DataflowStepExecution step,
+        DataflowStepExecutionAttempt attempt)
+    {
+        _step = step;
+        _attempt = attempt;
+        _logger = serviceProvider.GetRequiredService<ILogger<DataflowStepExecutor>>();
+        _pollingIntervalMs = serviceProvider.GetRequiredService<IOptionsMonitor<ExecutionOptions>>()
+            .CurrentValue
+            .PollingIntervalMs;
+        _cache = serviceProvider.GetRequiredService<DataflowCache>();
+        _workspace = step.GetFabricWorkspace()
+            ?? throw new ArgumentNullException(message: "Fabric workspace was null", innerException: null);
+        var credential = _workspace.AzureCredential
+            ?? throw new ArgumentNullException(message: "Azure credential was null", innerException: null);
+        _client = serviceProvider.GetRequiredService<DataflowClientFactory>().Create(credential);
+    }
+
     private const int MaxGetDataflowIdRetries = 3;
     private const int MaxRefreshRetries = 3;
 
@@ -49,12 +54,12 @@ internal class DataflowStepExecutor(
         catch (ArgumentNullException ex)
         {
             // GetDataflowIdWithRetriesAsync() throws ArgumentNullException if the dataflow id was not found.
-            attempt.AddWarning(ex, "No dataflow id was found for the specified name. Using stored dataflow id instead.");
-            dataflowId = Guid.Parse(step.DataflowId);
+            _attempt.AddWarning(ex, "No dataflow id was found for the specified name. Using stored dataflow id instead.");
+            dataflowId = Guid.Parse(_step.DataflowId);
         }
         catch (Exception ex)
         {
-            attempt.AddError(ex, "Error getting dataflow id");
+            _attempt.AddError(ex, "Error getting dataflow id");
             return Result.Failure;
         }
 
@@ -70,14 +75,14 @@ internal class DataflowStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error starting dataflow refresh");
-            attempt.AddError(ex, "Error starting dataflow refresh operation");
+            _attempt.AddError(ex, "Error starting dataflow refresh operation");
             return Result.Failure;
         }
         
         // Initialize timeout cancellation token source already here
         // so that we can start the countdown immediately after the refresh was started.
-        using var timeoutCts = step.TimeoutMinutes > 0
-            ? new CancellationTokenSource(TimeSpan.FromMinutes(step.TimeoutMinutes))
+        using var timeoutCts = _step.TimeoutMinutes > 0
+            ? new CancellationTokenSource(TimeSpan.FromMinutes(_step.TimeoutMinutes))
             : new CancellationTokenSource();
 
         using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
@@ -95,11 +100,11 @@ internal class DataflowStepExecutor(
                 switch (status)
                 {
                     case DataflowRefreshStatus.Success:
-                        attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
+                        _attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
                         return Result.Success;
                     case DataflowRefreshStatus.Failed or DataflowRefreshStatus.Cancelled:
-                        attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
-                        attempt.AddError($"Dataflow transaction reported status: {status}");
+                        _attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
+                        _attempt.AddError($"Dataflow transaction reported status: {status}");
                         return Result.Failure;
                     default:
                         await Task.Delay(_pollingIntervalMs, linkedCts.Token);
@@ -111,32 +116,32 @@ internal class DataflowStepExecutor(
         {
             if (transaction is not null)
             {
-                attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
+                _attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
                 await CancelAsync(transaction);
             }
             if (timeoutCts.IsCancellationRequested)
             {
-                attempt.AddError(ex, "Step execution timed out");
+                _attempt.AddError(ex, "Step execution timed out");
                 return Result.Failure;
             }
             // If the linked token was canceled, report result as 'Cancel'.
             if (linkedCts.Token.IsCancellationRequested)
             {
-                attempt.AddWarning(ex);
+                _attempt.AddWarning(ex);
                 return Result.Cancel;
             }
             // If not, report error. This means the step was not canceled, but instead the DataflowClient's
             // underlying HttpClient might have timed out.
-            attempt.AddError(ex);
+            _attempt.AddError(ex);
             return Result.Failure;
         }
         catch (Exception ex)
         {
             if (transaction is not null)
             {
-                attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
+                _attempt.AddOutput($"Dataflow transaction id: {transaction.Id}");
             }
-            attempt.AddError(ex, "Error getting dataflow refresh status");
+            _attempt.AddError(ex, "Error getting dataflow refresh status");
             return Result.Failure;
         }
     }
@@ -148,11 +153,11 @@ internal class DataflowStepExecutor(
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataflow id for name {itemName}",
-                step.ExecutionId, step, step.DataflowName));
+                _step.ExecutionId, _step, _step.DataflowName));
         var dataflowId = await policy.ExecuteAsync(cancellation =>
-            _cache.GetDataflowIdAsync(_client, step.ExecutionId, _workspace.WorkspaceId, step.DataflowName,
+            _cache.GetDataflowIdAsync(_client, _step.ExecutionId, _workspace.WorkspaceId, _step.DataflowName,
                 cancellation), cancellationToken)
-            ?? throw new ArgumentNullException(message: $"Dataflow id not found for name '{step.DataflowName}'",
+            ?? throw new ArgumentNullException(message: $"Dataflow id not found for name '{_step.DataflowName}'",
                 innerException: null);
         return dataflowId;
     }
@@ -164,7 +169,7 @@ internal class DataflowStepExecutor(
             retryCount: MaxRefreshRetries,
             sleepDurationProvider: retryCount => TimeSpan.FromMilliseconds(_pollingIntervalMs * retryCount),
             onRetry: (ex, _) => _logger.LogWarning(ex,
-                "{ExecutionId} {Step} Error getting dataflow transaction status", step.ExecutionId, step));
+                "{ExecutionId} {Step} Error getting dataflow transaction status", _step.ExecutionId, _step));
         return await policy.ExecuteAsync(cancellation =>
             _client.GetDataflowTransactionStatusAsync(_workspace.WorkspaceId, dataflowId, cancellation),
             cancellationToken);
@@ -173,7 +178,7 @@ internal class DataflowStepExecutor(
     private async Task CancelAsync(DataflowTransaction transaction)
     {
         _logger.LogInformation("{ExecutionId} {Step} Stopping dataflow transaction id {transactionId}",
-            step.ExecutionId, step, transaction.Id);
+            _step.ExecutionId, _step, transaction.Id);
         try
         {
             await _client.CancelDataflowRefreshAsync(_workspace.WorkspaceId, transaction);
@@ -181,8 +186,8 @@ internal class DataflowStepExecutor(
         catch (Exception ex)
         {
             _logger.LogError(ex, "{ExecutionId} {Step} Error stopping dataflow transaction id {transactionId}",
-                step.ExecutionId, step, transaction.Id);
-            attempt.AddWarning(ex, $"Error stopping dataflow transaction id {transaction.Id}");
+                _step.ExecutionId, _step, transaction.Id);
+            _attempt.AddWarning(ex, $"Error stopping dataflow transaction id {transaction.Id}");
         }
     }
 }
