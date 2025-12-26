@@ -179,6 +179,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             Credentials = fixture.Credentials,
             Proxies = fixture.Proxies,
             AzureCredentials = fixture.AzureCredentials,
+            FabricWorkspaces = fixture.FabricWorkspaces,
             PipelineClients = fixture.PipelineClients,
             FunctionApps = fixture.FunctionApps,
             QlikCloudEnvironments = fixture.QlikCloudClients,

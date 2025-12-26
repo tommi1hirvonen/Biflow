@@ -40,6 +40,7 @@ public class EnvironmentSnapshot
     public required Credential[] Credentials { get; init; }
     public required Proxy[] Proxies { get; init; }
     public required AzureCredential[] AzureCredentials { get; init; }
+    public required FabricWorkspace[] FabricWorkspaces { get; init; }
     public required PipelineClient[] PipelineClients { get; init; }
     public required FunctionApp[] FunctionApps { get; init; }
     public required QlikCloudEnvironment[] QlikCloudEnvironments { get; init; }

@@ -196,6 +196,11 @@ internal class RevertVersionCommandHandler(
                 .Select(c => new { c.AzureCredentialId, c.AzureCredentialName, c.ClientId })
                 .ToArrayAsync(cancellationToken);
 
+            var capturedFabricWorkspaces = await context.FabricWorkspaces
+                .AsNoTracking()
+                .Select(x => new { x.FabricWorkspaceId, x.FabricWorkspaceName, x.WorkspaceId })
+                .ToArrayAsync(cancellationToken);
+
             var capturedDataFactories = await context.DataFactories
                 .AsNoTracking()
                 .Select(x => new
@@ -413,6 +418,28 @@ internal class RevertVersionCommandHandler(
                 {
                     // Retain the previous managed identity client id value.
                     credential.ClientId = match.ClientId;
+                }
+            }
+
+            foreach (var workspace in snapshot.FabricWorkspaces)
+            {
+                var match = capturedFabricWorkspaces.FirstOrDefault(x =>
+                    x.FabricWorkspaceId == workspace.FabricWorkspaceId);
+                if (match is null)
+                {
+                    if (request.RetainIntegrationProperties)
+                    {
+                        // Potential environment transfer without a match
+                        // => make sure the workspace id is reset.
+                        workspace.WorkspaceId = Guid.Empty;
+                    }
+                    newIntegrations.Add((workspace.GetType(), workspace.FabricWorkspaceName));
+                    continue;
+                }
+                if (request.RetainIntegrationProperties)
+                {
+                    // Retain the previous workspace id value
+                    workspace.WorkspaceId = match.WorkspaceId;
                 }
             }
             
@@ -673,6 +700,7 @@ internal class RevertVersionCommandHandler(
             await context.DbtAccounts.ExecuteDeleteAsync(cancellationToken);
             await context.BlobStorageClients.ExecuteDeleteAsync(cancellationToken);
             await context.Credentials.ExecuteDeleteAsync(cancellationToken);
+            await context.FabricWorkspaces.ExecuteDeleteAsync(cancellationToken);
             await context.AzureCredentials.ExecuteDeleteAsync(cancellationToken);
 
             
@@ -683,7 +711,7 @@ internal class RevertVersionCommandHandler(
 
             context.Credentials.AddRange(snapshot.Credentials);
             context.AzureCredentials.AddRange(snapshot.AzureCredentials);
-
+            context.FabricWorkspaces.AddRange(snapshot.FabricWorkspaces);
             context.SqlConnections.AddRange(snapshot.SqlConnections);
             context.AnalysisServicesConnections.AddRange(snapshot.AnalysisServicesConnections);
             context.PipelineClients.AddRange(snapshot.PipelineClients);

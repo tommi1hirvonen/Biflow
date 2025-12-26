@@ -15,6 +15,7 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
     public Credential[] Credentials { get; private set; } = [];
     public Proxy[] Proxies { get; private set; } = [];
     public AzureCredential[] AzureCredentials { get; private set; } = [];
+    public FabricWorkspace[] FabricWorkspaces { get; private set; } = [];
     public PipelineClient[] PipelineClients { get; private set; } = [];
     public FunctionApp[] FunctionApps { get; private set; } = [];
     public QlikCloudEnvironment[] QlikCloudClients { get; private set; } = [];
@@ -57,6 +58,10 @@ public class SerializationTestsFixture(DatabaseFixture fixture) : IAsyncLifetime
         AzureCredentials = await context.AzureCredentials
             .AsNoTracking()
             .OrderBy(a => a.AzureCredentialId)
+            .ToArrayAsync();
+        FabricWorkspaces = await context.FabricWorkspaces
+            .AsNoTracking()
+            .OrderBy(w => w.FabricWorkspaceId)
             .ToArrayAsync();
         PipelineClients = await context.PipelineClients
             .AsNoTracking()

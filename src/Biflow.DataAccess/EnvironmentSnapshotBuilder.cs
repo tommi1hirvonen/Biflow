@@ -23,6 +23,9 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
         var azureCredentials = await context.AzureCredentials
             .OrderBy(a => a.AzureCredentialId)
             .ToArrayAsync();
+        var fabricWorkspaces = await context.FabricWorkspaces
+            .OrderBy(w => w.FabricWorkspaceId)
+            .ToArrayAsync();
         var pipelineClients = await context.PipelineClients
             .OrderBy(p => p.PipelineClientId)
             .ToArrayAsync();
@@ -95,6 +98,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             Credentials = credentials,
             Proxies = proxies,
             AzureCredentials = azureCredentials,
+            FabricWorkspaces = fabricWorkspaces,
             PipelineClients = pipelineClients,
             FunctionApps = functionApps,
             QlikCloudEnvironments = qlikCloudClients,
