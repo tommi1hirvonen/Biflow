@@ -14,7 +14,7 @@ var executorApi = builder
 executorApi.WithUrl($"{executorApi.GetEndpoint("http")}/swagger", "Swagger");
 
 var schedulerApi = builder
-    .AddProject<Projects.Biflow_Scheduler_WebApp>("schedulerapi")
+    .AddProject<Projects.Biflow_Scheduler_WebApp>("schedulerapi", options => options.LaunchProfileName = "noBrowser")
     .WithHttpHealthCheck("/health")
     .WithReference(appDbContext)
     .WithReference(executorApi);
