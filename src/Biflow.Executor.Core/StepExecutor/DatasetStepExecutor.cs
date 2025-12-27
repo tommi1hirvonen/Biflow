@@ -129,9 +129,10 @@ internal class DatasetStepExecutor : IStepExecutor
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataset id for name {itemName}",
                 _step.ExecutionId, _step, _step.DatasetName));
+        var concurrencyKey = new DatasetCacheConcurrencyKey(_step.ExecutionId, _workspace.WorkspaceId);
+        var cacheKey = new DatasetCacheKey(_step.ExecutionId, _workspace.WorkspaceId, _step.DatasetName);
         var datasetId = await policy.ExecuteAsync(cancellation =>
-            _cache.GetDatasetIdAsync(_client, _step.ExecutionId, _workspace.WorkspaceId, _step.DatasetName, cancellation),
-                cancellationToken)
+            _cache.GetAsync(_client, concurrencyKey, cacheKey, cancellation), cancellationToken)
             ?? throw new ArgumentNullException(message: $"Dataset id not found for name '{_step.DatasetName}'",
                 innerException: null);
         return datasetId;

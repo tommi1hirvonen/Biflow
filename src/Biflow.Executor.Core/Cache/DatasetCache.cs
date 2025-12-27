@@ -2,50 +2,37 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Biflow.Executor.Core.Cache;
 
+[UsedImplicitly]
+internal readonly record struct DatasetCacheConcurrencyKey(Guid ExecutionId, Guid WorkspaceId);
+
+[UsedImplicitly]
+internal readonly record struct DatasetCacheKey(Guid ExecutionId, Guid WorkspaceId, string DatasetName);
+
 /// <summary>
-/// Represents a caching mechanism for retrieving and storing dataset IDs in a memory cache.
-/// Handles synchronized access across multiple executions and workspaces.
+/// A cache for Power BI dataset IDs
 /// </summary>
-public class DatasetCache(IMemoryCache cache)
+/// <param name="cache">The cache used to store dataset IDs</param>
+/// <remarks>
+/// Inherits from <see cref="AsyncLookupCache{TConcurrencyKey, TCacheKey, TCacheValue, TClient}"/>
+/// to manage concurrency in such a way that
+/// fetching dataset IDs for a given workspace during the same job execution is serialized.
+/// The assumption is that during a single execution,
+/// dataset names are unlikely to change and thus caching is safe to do for performance reasons.
+/// </remarks>
+internal sealed class DatasetCache(IMemoryCache cache)
+    : AsyncLookupCache<DatasetCacheConcurrencyKey, DatasetCacheKey, string?, DatasetClient>(cache)
 {
-    // TODO Handle multiple executions and workspaces at once.
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
-    public async Task<string?> GetDatasetIdAsync(
-        DatasetClient client,
-        Guid executionId,
-        Guid workspaceId,
-        string datasetName,
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(60);
+
+    /// <inheritdoc />
+    protected override async ValueTask PopulateCacheAsync(DatasetClient client, DatasetCacheKey key,
         CancellationToken cancellationToken)
     {
-        var cacheKey = CacheKey(executionId, workspaceId, datasetName);
-        if (cache.TryGetValue(cacheKey, out string? cachedDatasetId))
+        var datasets = await client.GetDatasetsAsync(key.WorkspaceId, cancellationToken);
+        foreach (var dataset in datasets)
         {
-            return cachedDatasetId;
-        }
-        
-        await _semaphore.WaitAsync(cancellationToken);
-        try
-        {
-            var datasets = await client.GetDatasetsAsync(workspaceId, cancellationToken);
-            string? datasetId = null;
-            foreach (var dataset in datasets)
-            {
-                var key = CacheKey(executionId, workspaceId, dataset.DatasetName);
-                cache.Set(key, dataset.DatasetId, TimeSpan.FromMinutes(60));
-                if (dataset.DatasetName == datasetName)
-                {
-                    datasetId = dataset.DatasetId;
-                }
-            }
-            return datasetId;
-        }
-        finally
-        {
-            _semaphore.Release();
+            var cacheKey = key with { DatasetName = dataset.DatasetName };
+            Cache(cacheKey, dataset.DatasetId, CacheDuration);
         }
     }
-    
-    private static string CacheKey(Guid executionId, Guid workspaceId, string datasetName) =>
-        $"{executionId}__{workspaceId}__dataset__{datasetName}";
 }

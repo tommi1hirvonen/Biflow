@@ -154,9 +154,10 @@ internal class DataflowStepExecutor : IStepExecutor
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting dataflow id for name {itemName}",
                 _step.ExecutionId, _step, _step.DataflowName));
+        var concurrencyKey = new DataflowCacheConcurrencyKey(_step.ExecutionId, _workspace.WorkspaceId);
+        var cacheKey = new DataflowCacheKey(_step.ExecutionId, _workspace.WorkspaceId, _step.DataflowName);
         var dataflowId = await policy.ExecuteAsync(cancellation =>
-            _cache.GetDataflowIdAsync(_client, _step.ExecutionId, _workspace.WorkspaceId, _step.DataflowName,
-                cancellation), cancellationToken)
+            _cache.GetAsync(_client, concurrencyKey, cacheKey, cancellation), cancellationToken)
             ?? throw new ArgumentNullException(message: $"Dataflow id not found for name '{_step.DataflowName}'",
                 innerException: null);
         return dataflowId;

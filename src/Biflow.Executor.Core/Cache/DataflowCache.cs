@@ -2,50 +2,37 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Biflow.Executor.Core.Cache;
 
+[UsedImplicitly]
+internal readonly record struct DataflowCacheConcurrencyKey(Guid ExecutionId, Guid WorkspaceId);
+
+[UsedImplicitly]
+internal readonly record struct DataflowCacheKey(Guid ExecutionId, Guid WorkspaceId, string DataflowName);
+
 /// <summary>
-/// Represents a caching mechanism for retrieving and storing dataflow IDs in a memory cache.
-/// Handles synchronized access across multiple executions and workspaces.
+/// A cache for dataflow IDs
 /// </summary>
-public class DataflowCache(IMemoryCache cache)
+/// <param name="cache">The cache used to store dataflow IDs</param>
+/// <remarks>
+/// Inherits from <see cref="AsyncLookupCache{TConcurrencyKey, TCacheKey, TCacheValue, TClient}"/>
+/// to manage concurrency in such a way that
+/// fetching dataflow IDs for a given workspace during the same job execution is serialized.
+/// The assumption is that during a single execution,
+/// dataflow names are unlikely to change and thus caching is safe to do for performance reasons.
+/// </remarks>
+internal sealed class DataflowCache(IMemoryCache cache) :
+    AsyncLookupCache<DataflowCacheConcurrencyKey, DataflowCacheKey, Guid?, DataflowClient>(cache)
 {
-    // TODO Handle multiple executions and workspaces at once.
-    private readonly SemaphoreSlim _semaphore = new(1, 1);
-    
-    public async Task<Guid?> GetDataflowIdAsync(
-        DataflowClient client,
-        Guid executionId,
-        Guid workspaceId,
-        string dataflowName,
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(60);
+
+    /// <inheritdoc />
+    protected override async ValueTask PopulateCacheAsync(DataflowClient client, DataflowCacheKey key,
         CancellationToken cancellationToken)
     {
-        var cacheKey = CacheKey(executionId, workspaceId, dataflowName);
-        if (cache.TryGetValue(cacheKey, out Guid cachedDataflowId))
+        var dataflows = await client.GetDataflowsAsync(key.WorkspaceId, cancellationToken);
+        foreach (var dataflow in dataflows)
         {
-            return cachedDataflowId;
-        }
-        
-        await _semaphore.WaitAsync(cancellationToken);
-        try
-        {
-            var dataflows = await client.GetDataflowsAsync(workspaceId, cancellationToken);
-            Guid? dataflowId = null;
-            foreach (var dataflow in dataflows)
-            {
-                var key = CacheKey(executionId, workspaceId, dataflow.DataflowName);
-                cache.Set(key, dataflow.DataflowId, TimeSpan.FromMinutes(60));
-                if (dataflow.DataflowName == dataflowName)
-                {
-                    dataflowId = dataflow.DataflowId;
-                }
-            }
-            return dataflowId;
-        }
-        finally
-        {
-            _semaphore.Release();
+            var cacheKey = key with { DataflowName = dataflow.DataflowName };
+            Cache(cacheKey, dataflow.DataflowId, CacheDuration);
         }
     }
-    
-    private static string CacheKey(Guid executionId, Guid workspaceId, string dataflowName) =>
-        $"{executionId}__{workspaceId}__dataflow__{dataflowName}";
 }

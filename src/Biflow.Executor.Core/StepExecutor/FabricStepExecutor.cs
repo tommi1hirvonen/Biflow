@@ -187,15 +187,11 @@ internal class FabricStepExecutor : IStepExecutor
             onRetry: (ex, _) => _logger.LogWarning(ex,
                 "{ExecutionId} {Step} Error getting item id for name {itemName}",
                 _step.ExecutionId, _step, _step.ItemName));
+        var concurrencyKey = new FabricItemCacheConcurrencyKey(_step.ExecutionId, _workspace.WorkspaceId, _step.ItemType);
+        var cacheKey = new FabricItemCacheKey(_step.ExecutionId, _workspace.WorkspaceId,
+            _step.ItemType, _step.ItemName);
         var itemId = await policy.ExecuteAsync(cancellation =>
-            _cache.GetItemIdAsync(
-                _client,
-                _step.ExecutionId,
-                _workspace.WorkspaceId,
-                _step.ItemType,
-                _step.ItemName,
-                cancellation),
-            cancellationToken)
+            _cache.GetAsync(_client, concurrencyKey, cacheKey, cancellation), cancellationToken)
             ?? throw new ArgumentNullException(message: $"Item id not found for name '{_step.ItemName}'",
                 innerException: null);
         return itemId;
