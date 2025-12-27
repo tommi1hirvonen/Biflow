@@ -45,7 +45,13 @@
         
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Item</label>
+                <label class="form-label mb-lg-0">
+                    Item
+                    <HxPopover Trigger="PopoverTrigger.Hover"
+                               Content="@ItemPopoverContent">
+                        <SvgIcon Icon="LucideIcon.Info" />
+                    </HxPopover>
+                </label>
             </div>
             <div class="col-md-6 d-inline">
                 <div class="d-flex align-items-center position-relative">

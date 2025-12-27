@@ -11,6 +11,12 @@ public partial class DataflowStepEditModal(
 {
     internal override string FormId => "dataflow_step_edit_form";
     
+    private const string DataflowPopoverContent =
+        "Dataflows are primarily run using the dataflow name. " +
+        "If no matching dataflow is found based on the name, the dataflow id used. " +
+        "This allows the same metadata to function across environments (workspaces) " +
+        "when dataflow names are kept the same.";
+    
     private DataflowSelectOffcanvas? _dataflowSelectOffcanvas;
     private bool _loading;
 

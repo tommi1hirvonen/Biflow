@@ -13,6 +13,12 @@ public partial class FabricStepEditModal(
 {
     internal override string FormId => "fabric_step_edit_form";
 
+    private const string ItemPopoverContent = 
+        "Fabric items are primarily run using the item name. " +
+        "If no matching item is found based on the name, the item id used. " +
+        "This allows the same metadata to function across environments (workspaces) " +
+        "when item names are kept the same.";
+
     private FabricItemSelectOffcanvas? _offcanvas;
     private bool _loading;
 

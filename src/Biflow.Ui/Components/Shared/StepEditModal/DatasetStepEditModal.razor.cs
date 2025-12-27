@@ -10,6 +10,12 @@ public partial class DatasetStepEditModal(
     : StepEditModal<DatasetStep>(mediator, toaster, dbContextFactory)
 {
     internal override string FormId => "dataset_step_edit_form";
+    
+    private const string DatasetPopoverContent =
+        "Datasets are primarily run using the dataset name. " +
+        "If no matching dataset is found based on the name, the dataset id used. " +
+        "This allows the same metadata to function across environments (workspaces) " +
+        "when dataset names are kept the same.";
 
     private DatasetSelectOffcanvas? _datasetSelectOffcanvas;
     private bool _loading;

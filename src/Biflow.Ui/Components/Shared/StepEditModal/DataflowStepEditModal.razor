@@ -43,7 +43,13 @@
 
         <div class="row mt-3">
             <div class="col-md-4 d-md-flex justify-content-end">
-                <label class="form-label mb-lg-0">Dataflow</label>
+                <label class="form-label mb-lg-0">
+                    Dataflow
+                    <HxPopover Trigger="PopoverTrigger.Hover"
+                               Content="@DataflowPopoverContent">
+                        <SvgIcon Icon="LucideIcon.Info" />
+                    </HxPopover>
+                </label>
             </div>
             <div class="col-md-6">
                 <div class="d-flex align-items-center position-relative">
