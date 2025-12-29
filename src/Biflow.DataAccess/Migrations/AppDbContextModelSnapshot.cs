@@ -578,14 +578,11 @@ namespace Biflow.DataAccess.Migrations
 
             modelBuilder.Entity("Biflow.Core.Entities.FabricWorkspace", b =>
                 {
-                    b.Property<Guid>("WorkspaceId")
+                    b.Property<Guid>("FabricWorkspaceId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("AzureCredentialId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("FabricWorkspaceId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("FabricWorkspaceName")
@@ -593,7 +590,10 @@ namespace Biflow.DataAccess.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.HasKey("WorkspaceId");
+                    b.Property<Guid>("WorkspaceId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("FabricWorkspaceId");
 
                     b.ToTable("FabricWorkspace", "app");
                 });
@@ -1969,6 +1969,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("DataflowId");
 
                     b.Property<string>("DataflowName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DataflowName");
@@ -1998,6 +1999,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("DatasetId");
 
                     b.Property<string>("DatasetName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DatasetName");
@@ -2454,6 +2456,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("DataflowId");
 
                     b.Property<string>("DataflowName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DataflowName");
@@ -2483,6 +2486,7 @@ namespace Biflow.DataAccess.Migrations
                         .HasColumnName("DatasetId");
 
                     b.Property<string>("DatasetName")
+                        .IsRequired()
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)")
                         .HasColumnName("DatasetName");
