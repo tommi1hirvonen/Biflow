@@ -1,16 +1,11 @@
 namespace Biflow.Core.Entities;
 
-internal enum FilterOperator
-{
-    Eq, Ne, Lt, Lte, Gt, Gte
-}
-
 internal static class FilterParser
 {
     public static IJsonPathFilter Parse(string expression)
     {
         var tokens = FilterTokenizer.Tokenize(expression);
-        int index = 0;
+        var index = 0;
 
         var result = ParseOr(tokens, ref index, expression);
 

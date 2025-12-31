@@ -4,8 +4,7 @@ namespace Biflow.Core.Entities;
 
 internal sealed class PropertyComparisonFilter(
     IEnumerable<string> propertyPath,
-    Func<JsonNode?, bool> predicate)
-    : IJsonPathFilter
+    Func<JsonNode?, bool> predicate) : IJsonPathFilter
 {
     private readonly string[] _propertyPath = propertyPath.ToArray();
 

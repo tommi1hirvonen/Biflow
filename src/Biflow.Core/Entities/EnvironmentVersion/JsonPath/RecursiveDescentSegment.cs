@@ -6,11 +6,7 @@ internal sealed class RecursiveDescentSegment : IJsonPathSegment
 {
     public IEnumerable<JsonNode?> Evaluate(IEnumerable<JsonNode?> input)
     {
-        foreach (var node in input)
-        {
-            foreach (var descendant in Traverse(node))
-                yield return descendant;
-        }
+        return input.SelectMany(Traverse);
     }
 
     private static IEnumerable<JsonNode?> Traverse(JsonNode? node)

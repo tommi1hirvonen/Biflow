@@ -6,12 +6,11 @@ internal static class JsonPathValueResolver
 {
     public static JsonNode? Resolve(JsonNode node, IReadOnlyList<string> path)
     {
-        JsonNode? current = node;
+        var current = node;
 
         foreach (var segment in path)
         {
-            if (current is JsonObject obj &&
-                obj.TryGetPropertyValue(segment, out var value))
+            if (current is JsonObject obj && obj.TryGetPropertyValue(segment, out var value))
             {
                 current = value;
             }

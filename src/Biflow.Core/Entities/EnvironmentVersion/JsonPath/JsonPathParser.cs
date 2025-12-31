@@ -9,7 +9,7 @@ internal static class JsonPathParser
     public static List<IJsonPathSegment> Parse(string path, JsonNode root)
     {
         var segments = new List<IJsonPathSegment>();
-        int i = 0;
+        var i = 0;
 
         if (path[i] == '$')
         {
@@ -29,7 +29,7 @@ internal static class JsonPathParser
                 else
                 {
                     i++;
-                    int start = i;
+                    var start = i;
                     while (i < path.Length && (char.IsLetterOrDigit(path[i]) || ValidPathChars.Contains(path[i])))
                         i++;
 
@@ -43,22 +43,22 @@ internal static class JsonPathParser
             }
             else if (path[i] == '[')
             {
-                if (path.Substring(i).StartsWith("[*]"))
+                if (path[i..].StartsWith("[*]"))
                 {
                     segments.Add(new WildcardSegment());
                     i += 3;
                 }
-                else if (path.Substring(i).StartsWith("[?("))
+                else if (path[i..].StartsWith("[?("))
                 {
-                    int start = i + 3;
-                    int end = path.IndexOf(")]", start, StringComparison.Ordinal);
+                    var start = i + 3;
+                    var end = path.IndexOf(")]", start, StringComparison.Ordinal);
                     if (end < 0)
                         throw new JsonPathParseException("Unclosed filter",
                             new TextSpan(start, path.Length - start),
                             path);
 
-                    string expr = path[start..end];
-                    var filter = FilterParser.Parse(expr);
+                    var expression = path[start..end];
+                    var filter = FilterParser.Parse(expression);
 
                     segments.Add(new FilterSegment(filter));
                     i = end + 2;

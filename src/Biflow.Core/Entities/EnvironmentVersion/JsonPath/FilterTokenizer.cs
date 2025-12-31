@@ -5,7 +5,7 @@ internal static class FilterTokenizer
     public static List<FilterToken> Tokenize(string input)
     {
         var tokens = new List<FilterToken>();
-        int i = 0;
+        var i = 0;
 
         while (i < input.Length)
         {
@@ -15,34 +15,34 @@ internal static class FilterTokenizer
                 continue;
             }
 
-            if (input.Substring(i).StartsWith("&&"))
+            if (input[i..].StartsWith("&&"))
             {
-                tokens.Add(new(FilterTokenType.And, "&&", new TextSpan(i, 2)));
+                tokens.Add(new FilterToken(FilterTokenType.And, "&&", new TextSpan(i, 2)));
                 i += 2;
             }
-            else if (input.Substring(i).StartsWith("||"))
+            else if (input[i..].StartsWith("||"))
             {
-                tokens.Add(new(FilterTokenType.Or, "||", new TextSpan(i, 2)));
+                tokens.Add(new FilterToken(FilterTokenType.Or, "||", new TextSpan(i, 2)));
                 i += 2;
             }
-            else if (input.Substring(i).StartsWith("!="))
+            else if (input[i..].StartsWith("!="))
             {
                 // Let comparison parser handle !=
                 ReadComparison(input, ref i, tokens);
             }
             else if (input[i] == '!')
             {
-                tokens.Add(new(FilterTokenType.Not, "!", new TextSpan(i, 1)));
+                tokens.Add(new FilterToken(FilterTokenType.Not, "!", new TextSpan(i, 1)));
                 i++;
             }
             else if (input[i] == '(')
             {
-                tokens.Add(new(FilterTokenType.LParen, "(", new TextSpan(i, 1)));
+                tokens.Add(new FilterToken(FilterTokenType.LParen, "(", new TextSpan(i, 1)));
                 i++;
             }
             else if (input[i] == ')')
             {
-                tokens.Add(new(FilterTokenType.RParen, ")", new TextSpan(i, 1)));
+                tokens.Add(new FilterToken(FilterTokenType.RParen, ")", new TextSpan(i, 1)));
                 i++;
             }
             else
@@ -65,23 +65,20 @@ internal static class FilterTokenizer
             if (input[i] == ')') break;
 
             if (depth == 0 &&
-                (input.Substring(i).StartsWith("&&") ||
-                 input.Substring(i).StartsWith("||")))
+                (input[i..].StartsWith("&&") ||
+                 input[i..].StartsWith("||")))
                 break;
 
-            if (depth == 0 && input[i] == '!' && !input.Substring(i).StartsWith("!="))
+            if (depth == 0 && input[i] == '!' && !input[i..].StartsWith("!="))
                 break;
 
             i++;
         }
         
         // ... scan forward
-        int length = i - start;
+        var length = i - start;
 
-        tokens.Add(new FilterToken(
-            FilterTokenType.Comparison,
-            input[start..i].Trim(),
-            new TextSpan(start, length)));
+        tokens.Add(new FilterToken(FilterTokenType.Comparison, input[start..i].Trim(), new TextSpan(start, length)));
     }
 }
 

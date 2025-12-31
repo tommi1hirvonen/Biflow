@@ -13,13 +13,13 @@ internal static class SimpleComparisonParser
                 new TextSpan(0, expression.Length),
                 expression);
 
-        int opIndex = FindOperator(expression, out var op);
+        var opIndex = FindOperator(expression, out var op);
 
-        var left = expression.Substring(2, opIndex - 2).Trim();
+        var left = expression[2..opIndex].Trim();
         var right = expression[(opIndex + OperatorLength(op))..].Trim();
 
         var path = left.Split('.', StringSplitOptions.RemoveEmptyEntries);
-        object literal = ParseLiteral(right);
+        var literal = ParseLiteral(right);
 
         return new PropertyComparisonFilter(
             path,
@@ -32,9 +32,9 @@ internal static class SimpleComparisonParser
         if (node is not JsonValue value)
             return false;
 
-        if (literal is decimal d && value.TryGetValue(out decimal n))
+        return literal switch
         {
-            return op switch
+            decimal d when value.TryGetValue(out decimal n) => op switch
             {
                 FilterOperator.Eq => n == d,
                 FilterOperator.Ne => n != d,
@@ -43,30 +43,21 @@ internal static class SimpleComparisonParser
                 FilterOperator.Gt => n > d,
                 FilterOperator.Gte => n >= d,
                 _ => false
-            };
-        }
-
-        if (literal is string s && value.TryGetValue(out string? v))
-        {
-            return op switch
+            },
+            string s when value.TryGetValue(out string? v) => op switch
             {
                 FilterOperator.Eq => v == s,
                 FilterOperator.Ne => v != s,
                 _ => false
-            };
-        }
-
-        if (literal is bool b && value.TryGetValue(out bool vb))
-        {
-            return op switch
+            },
+            bool b when value.TryGetValue(out bool vb) => op switch
             {
                 FilterOperator.Eq => vb == b,
                 FilterOperator.Ne => vb != b,
                 _ => false
-            };
-        }
-
-        return false;
+            },
+            _ => false
+        };
     }
 
     private static int FindOperator(string expr, out FilterOperator op)
@@ -83,7 +74,7 @@ internal static class SimpleComparisonParser
 
         foreach (var kv in operators)
         {
-            int idx = expr.IndexOf(kv.Key, StringComparison.Ordinal);
+            var idx = expr.IndexOf(kv.Key, StringComparison.Ordinal);
             if (idx > 0)
             {
                 op = kv.Value;
