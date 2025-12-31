@@ -4,6 +4,8 @@ namespace Biflow.Core.Entities;
 
 internal static class JsonPathParser
 {
+    private static readonly char[] ValidPathChars = ['_', '-', '$'];
+    
     public static List<IJsonPathSegment> Parse(string path, JsonNode root)
     {
         var segments = new List<IJsonPathSegment>();
@@ -28,7 +30,7 @@ internal static class JsonPathParser
                 {
                     i++;
                     int start = i;
-                    while (i < path.Length && (char.IsLetterOrDigit(path[i]) || path[i] == '_'))
+                    while (i < path.Length && (char.IsLetterOrDigit(path[i]) || ValidPathChars.Contains(path[i])))
                         i++;
 
                     segments.Add(new ChildSegment(path[start..i]));
