@@ -141,7 +141,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                 var command = new CreatePropertyTranslationSetCommand(dto.PropertyTranslationSetName);
                 var translationSet = await mediator.SendAsync(command, cancellationToken);
                 var url = linker.GetUriByName(ctx, "GetPropertyTranslationSet",
-                    new { translationSetId = translationSet.PropertyTranslationSetId });
+                    new { propertyTranslationSetId = translationSet.PropertyTranslationSetId });
                 return Results.Created(url, translationSet);
             })
             .ProducesValidationProblem()
