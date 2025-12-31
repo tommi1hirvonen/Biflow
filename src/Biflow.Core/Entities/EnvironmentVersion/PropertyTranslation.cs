@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Biflow.Core.Interfaces;
@@ -16,13 +17,13 @@ public class PropertyTranslation : IAuditable
     /// <summary>
     /// Value used to sort the translations before applying them. Lower values are applied first.
     /// </summary>
-    public int Order { get; set; } = 0;
+    public int Order { get; set; }
     
     [Required]
     public string PropertyPath { get; set; } = "";
     
     /// <summary>
-    /// String representation of the old value.
+    /// String representation of the old value. If empty, the translation will be applied to any value.
     /// </summary>
     public string OldValue { get; set; } = "";
     
@@ -72,14 +73,38 @@ public class PropertyTranslation : IAuditable
             var evaluator = new JsonPathEvaluator(segments);
             foreach (var node in evaluator.Evaluate(root))
             {
-                if (node is null) continue;
-                // TODO Handle exact matches and data types correctly.
+                if (node is null)
+                {
+                    continue;
+                }
+                
                 var oldValue = node.ToJsonString();
                 if (oldValue.StartsWith('"') && oldValue.EndsWith('"'))
                 {
                     oldValue = oldValue[1..^1];
                 }
-                var newValue = oldValue.Replace(translation.OldValue, translation.NewValue.Value?.ToString());
+                
+                // If exact match is enabled and the old value doesn't match the translation, skip the translation.
+                if (translation.ExactMatch && oldValue != translation.OldValue)
+                {
+                    continue;
+                }
+                
+                // Handle formatting based on the datatype of the new value.
+                var replacement = translation.NewValue.Value switch
+                {
+                    DateTime dt => dt.ToString("o", CultureInfo.InvariantCulture),
+                    DateTimeOffset dto => dto.ToString("o", CultureInfo.InvariantCulture),
+                    IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
+                    bool b => b.ToString().ToLowerInvariant(),
+                    string s => s,
+                    { } other => other.ToString(),
+                    _ => null
+                };
+                var newValue = string.IsNullOrEmpty(translation.OldValue) // null/empty string => match any value
+                    ? replacement
+                    : oldValue.Replace(translation.OldValue, replacement);
+                
                 node.ReplaceWith(JsonValue.Create(newValue));
             }
         }
