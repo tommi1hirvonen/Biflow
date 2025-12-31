@@ -56,7 +56,7 @@ public class PropertyTranslation : IAuditable
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
-        //Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     public static string ApplyTranslations(string json, IReadOnlyList<PropertyTranslation> propertyTranslations)

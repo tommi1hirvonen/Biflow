@@ -17,7 +17,8 @@ public class EnvironmentSnapshot
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
             Modifiers = { JsonModifiers.SensitiveModifier }
-        }
+        },
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     public static readonly JsonSerializerOptions JsonSerializerOptions = new()
@@ -28,7 +29,8 @@ public class EnvironmentSnapshot
         TypeInfoResolver = new DefaultJsonTypeInfoResolver
         {
             Modifiers = { JsonModifiers.SensitiveModifier }
-        }
+        },
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
     };
 
     public required Job[] Jobs { get; init; }
