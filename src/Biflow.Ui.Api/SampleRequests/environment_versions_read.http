@@ -13,6 +13,11 @@ x-api-key: {{apiKey}}
 GET {{baseUrl}}/environmentversions/21/snapshot?referencesPreserved=true
 x-api-key: {{apiKey}}
 
+### Current environment version snapshot
+
+GET {{baseUrl}}/environmentversions/current/snapshot?referencesPreserved=true&propertyTranslationSetId=707a2317-a997-47aa-fd72-08de4781b141
+x-api-key: {{apiKey}}
+
 ### Property translation sets
 
 GET {{baseUrl}}/environmentversions/propertytranslationsets

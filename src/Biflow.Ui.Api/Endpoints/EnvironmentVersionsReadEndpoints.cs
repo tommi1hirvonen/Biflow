@@ -79,6 +79,45 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                              "that can be used for reverting to a version.")
             .WithName("GetEnvironmentVersionSnapshot");
         
+        group.MapGet("/current/snapshot",
+            async (HttpContext httpContext,
+                EnvironmentSnapshotBuilder builder,
+                ServiceDbContext dbContext,
+                CancellationToken cancellationToken,
+                [FromQuery] bool referencesPreserved,
+                [FromQuery] Guid? propertyTranslationSetId = null) =>
+            {
+                var snapshot = await builder.CreateAsync(cancellationToken);
+                IReadOnlyList<PropertyTranslation> propertyTranslations;
+                if (propertyTranslationSetId is { } id)
+                {
+                    if (!await dbContext.PropertyTranslationSets
+                            .AnyAsync(s => s.PropertyTranslationSetId == id, cancellationToken))
+                    {
+                        throw new NotFoundException<PropertyTranslationSet>(id);
+                    }
+                    propertyTranslations = await dbContext.PropertyTranslations
+                        .AsNoTrackingWithIdentityResolution()
+                        .Where(t => t.PropertyTranslationSetId == id)
+                        .ToArrayAsync(cancellationToken);
+                }
+                else
+                {
+                    propertyTranslations = [];
+                }
+                var json = snapshot.ToJson(referencesPreserved, propertyTranslations);
+                httpContext.Response.ContentType = "application/json";
+                return json;
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<EnvironmentSnapshot>()
+            .WithSummary("Get current environment snapshot")
+            .WithDescription("Get current environment snapshot. " +
+                             "Use the referencesPreserved query parameter to return a variant of the snapshot " +
+                             "that can be used for reverting to a version. " +
+                             "Use the propertyTranslationSetId query parameter to optionally apply property translations")
+            .WithName("GetCurrentEnvironmentSnapshot");
+        
         group.MapGet("/propertytranslationsets", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
                 await dbContext.PropertyTranslationSets
                     .AsNoTracking()
