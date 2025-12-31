@@ -39,7 +39,13 @@
                                 <table class="table table-sm">
                                     <thead>
                                     <tr>
-                                        <th>JSON path(s)</th>
+                                        <th>
+                                            JSON path(s)
+                                            &nbsp;
+                                            <span class="cursor-pointer text-body-emphasis" @onclick="() => _jsonPathHelpOffcanvas.LetAsync(x => x.ShowAsync())">
+                                                <SvgIcon Icon="LucideIcon.CircleHelp" />
+                                            </span>
+                                        </th>
                                         <th></th>
                                     </tr>
                                     </thead>
@@ -136,6 +142,8 @@
     </FooterTemplate>
 </HxModal>
 
+<JsonPathHelpOffcanvas @ref="_jsonPathHelpOffcanvas" />
+
 @code {
     [Parameter]
     public EventCallback<PropertyTranslation> OnSubmit { get; set; }
@@ -143,6 +151,7 @@
     private HxModal? _modal;
     private InputText? _nameInput;
     private PropertyTranslation? _translation;
+    private JsonPathHelpOffcanvas? _jsonPathHelpOffcanvas;
     
     private ParameterValueType ValueType => _translation?.NewValue.ValueType ?? ParameterValueType.Empty;
 

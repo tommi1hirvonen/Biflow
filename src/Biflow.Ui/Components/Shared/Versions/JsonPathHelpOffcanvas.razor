@@ -1,0 +1,306 @@
+<HxOffcanvas @ref="_offcanvas" Backdrop="OffcanvasBackdrop.False" Size="OffcanvasSize.Large">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col">
+                <h3>JSONPath support</h3>
+
+                <p>
+                  Property translations support a <strong>small, practical subset of JSONPath</strong> geared toward:
+                </p>
+                <ul>
+                  <li>navigating objects by property name,</li>
+                  <li>walking “all descendants”,</li>
+                  <li>selecting “all children”,</li>
+                  <li>filtering collections with basic boolean/comparison logic.</li>
+                </ul>
+
+                <p>
+                  It is <strong>not a full JSONPath specification implementation</strong>.
+                  The sections below describe exactly what you can use.
+                </p>
+
+                <hr />
+
+                <h4>1) Path basics</h4>
+
+                <h5>Root: <code>$</code></h5>
+                <p>You can start a path with <code>$</code> to refer to the document root.</p>
+
+                <ul>
+                  <li><span class="ok">✅ Supported:</span> <code>$</code></li>
+                  <li><span class="ok">✅ Supported:</span> <code>$.something</code></li>
+                  <li><span class="ok">ℹ️</span> In practice, many usages work the same with or without the leading <code>$</code>, but <code>$</code> is the intended root marker.</li>
+                </ul>
+
+                <pre><code>$.settings
+$.environment.version</code></pre>
+
+                <hr />
+
+                <h4>2) Child property access: <code>.name</code></h4>
+
+                <h5>Syntax</h5>
+                <p>Use a dot followed by a property name:</p>
+                <pre><code>$.a.b.c</code></pre>
+
+                <h5>Allowed property name characters</h5>
+                <p>
+                  Property names in this JSONPath variant are “identifier-like” and may contain:
+                </p>
+                <ul>
+                  <li>letters (<code>A-Z</code>, <code>a-z</code>)</li>
+                  <li>digits (<code>0-9</code>)</li>
+                  <li>underscore (<code>_</code>)</li>
+                  <li>hyphen (<code>-</code>)</li>
+                  <li>dollar sign (<code>$</code>)</li>
+                </ul>
+
+                <p>Examples:</p>
+                <pre><code>$.build_1
+$.build-info
+$.meta$data</code></pre>
+
+                <h5>Important limitations</h5>
+                <ul>
+                  <li><span class="no">❌</span> No bracket-quoted property access like <code>['prop name']</code></li>
+                  <li><span class="no">❌</span> No escaping for special characters</li>
+                  <li><span class="no">❌</span> Property names with spaces or punctuation (other than <code>_ - $</code>) cannot be addressed</li>
+                </ul>
+
+                <p>So a JSON property like <code>"build info"</code> cannot be referenced with this parser.</p>
+
+                <hr />
+
+                <h4>3) Wildcards (all children): <code>*</code> and <code>[*]</code></h4>
+
+                <p>Wildcards select <strong>all immediate children</strong> of the current node(s):</p>
+                <ul>
+                  <li>If the current node is an <strong>object</strong>: wildcard yields all property values</li>
+                  <li>If the current node is an <strong>array</strong>: wildcard yields all items</li>
+                  <li>If the current node is a primitive: yields nothing</li>
+                </ul>
+
+                <h5>Supported forms</h5>
+                <ul>
+                  <li><span class="ok">✅</span> <code>*</code> (as its own segment)</li>
+                  <li><span class="ok">✅</span> <code>[*]</code> (bracket wildcard)</li>
+                </ul>
+
+                <p>Examples:</p>
+                <pre><code>$.items[*]
+$.items.*
+$.*.name</code></pre>
+
+                <h5>Limitations</h5>
+                <ul>
+                  <li><span class="no">❌</span> No array slicing like <code>[1:5]</code></li>
+                  <li><span class="no">❌</span> No unions like <code>['a','b']</code> or <code>[0,1]</code></li>
+                  <li><span class="no">❌</span> No single index selection like <code>[0]</code></li>
+                </ul>
+
+                <hr />
+
+                <h4>4) Recursive descent (all descendants): <code>..</code></h4>
+
+                <p>
+                  <code>..</code> walks the tree depth-first and yields:
+                </p>
+                <ul>
+                  <li>the current node itself, and</li>
+                  <li>all descendant nodes under it (through objects and arrays)</li>
+                </ul>
+
+                <h5>Syntax</h5>
+                <pre><code>$..name
+$..*</code></pre>
+
+                <h5>What it’s good for</h5>
+                <p>Finding a property anywhere in a nested structure:</p>
+                <pre><code>$..connectionString</code></pre>
+
+                <div class="note">
+                  <p style="margin:0;">
+                    <strong>Note:</strong> This is a structural traversal. There are <strong>no additional JSONPath “scan” operators</strong> beyond <code>..</code>.
+                    Used together with <code>.property</code> or <code>*</code>, you can “search then select”.
+                  </p>
+                </div>
+
+                <hr />
+
+                <h4>5) Filters: <code>[?( ... )]</code></h4>
+
+                <p>Filters allow you to keep only nodes matching a condition.</p>
+
+                <h5>Syntax</h5>
+                <pre><code>[?( &lt;expression&gt; )]</code></pre>
+
+                <h5>Expression model (what you can write)</h5>
+                <p>A filter expression can be built from:</p>
+                <ul>
+                  <li><strong>comparisons</strong> (see below),</li>
+                  <li>combined using:
+                    <ul>
+                      <li><code>&amp;&amp;</code> (AND)</li>
+                      <li><code>||</code> (OR)</li>
+                      <li><code>!</code> (NOT)</li>
+                      <li>parentheses <code>(</code> <code>)</code> for grouping</li>
+                    </ul>
+                  </li>
+                </ul>
+
+                <p>Example:</p>
+                <pre><code>$.items[?(@@.enabled == true &amp;&amp; @@.name contains 'prod')]</code></pre>
+
+                <hr />
+
+                <h4>6) Supported comparison form inside filters</h4>
+
+                <p>A comparison must have this shape:</p>
+                <pre><code>@@.&lt;propertyPath&gt; &lt;operator&gt; &lt;literal&gt;</code></pre>
+
+                <h5>Left-hand side: <code>@@.&lt;propertyPath&gt;</code></h5>
+                <ul>
+                  <li>Must start with <code>@@.</code></li>
+                  <li>The property path is <strong>dot-separated</strong> (e.g., <code>@@.a.b.c</code>)</li>
+                  <li>Each segment behaves like the normal <code>.name</code> rule (identifier-like)</li>
+                </ul>
+
+                <p>Examples:</p>
+                <pre><code>@@.name
+@@.metadata.version
+@@.build-info.number</code></pre>
+
+                <h5>Operators</h5>
+                <p>Supported operators are:</p>
+                <ul>
+                  <li>Equality / inequality:
+                    <ul>
+                      <li><code>==</code></li>
+                      <li><code>!=</code></li>
+                    </ul>
+                  </li>
+                  <li>Numeric comparisons:
+                    <ul>
+                      <li><code>&lt;</code></li>
+                      <li><code>&lt;=</code></li>
+                      <li><code>&gt;</code></li>
+                      <li><code>&gt;=</code></li>
+                    </ul>
+                  </li>
+                  <li>Text/collection contains:
+                    <ul>
+                      <li><code>contains</code> (keyword)</li>
+                    </ul>
+                  </li>
+                </ul>
+
+                <p>Examples:</p>
+                <pre><code>@@.version &gt;= 3
+@@.name == 'prod'
+@@.name contains 'prod'</code></pre>
+
+                <h5>Literals (right-hand side)</h5>
+                <p>Supported literals are:</p>
+                <ol>
+                  <li><strong>Strings</strong>: <strong>single quotes only</strong>
+                    <pre><code>'prod'
+'v1.2.3'</code></pre>
+                  </li>
+                  <li><strong>Booleans</strong>
+                    <pre><code>true
+false</code></pre>
+                  </li>
+                  <li><strong>Numbers</strong>
+                    <p>Parsed as decimal numbers (typical examples: <code>1</code>, <code>2.5</code>, <code>-10</code>)</p>
+                  </li>
+                </ol>
+
+                <p>If the literal is not one of these forms, the filter won’t parse.</p>
+
+                <hr />
+
+                <h4>7) What <code>contains</code> means here</h4>
+
+                <p><code>contains</code> behaves as:</p>
+                <ul>
+                  <li>If the left side evaluates to a <strong>string</strong>: checks if it contains the right-side string (case-sensitive, ordinal)
+                    <ul>
+                      <li>Example: <code>@@.name contains 'prod'</code></li>
+                    </ul>
+                  </li>
+                  <li>If the left side evaluates to an <strong>array</strong>: checks whether the array contains an element equal to the literal
+                    <ul>
+                      <li>Works for string/number/bool literals</li>
+                      <li>Example: <code>@@.tags contains 'critical'</code></li>
+                    </ul>
+                  </li>
+                </ul>
+
+                <p>Notes:</p>
+                <ul>
+                  <li><span class="no">❌</span> No regex / pattern matching</li>
+                  <li><span class="no">❌</span> No case-insensitive mode</li>
+                  <li><span class="no">❌</span> No “contains” with objects or complex literals</li>
+                </ul>
+
+              <hr/>
+
+              <h4>8) Common examples</h4>
+
+              <h5>Get a nested property</h5>
+              <pre><code>$.environment.version</code></pre>
+
+              <h5>Get all items in an array</h5>
+              <pre><code>$.items[*]</code></pre>
+
+              <h5>Get all descendant nodes and then pick a property</h5>
+              <pre><code>$..name</code></pre>
+
+              <h5>Filter by boolean</h5>
+              <pre><code>$.items[?(@@.enabled == true)]</code></pre>
+
+              <h5>Filter by numeric comparison</h5>
+              <pre><code>$.items[?(@@.priority &gt;= 10)]</code></pre>
+
+              <h5>Filter by substring</h5>
+              <pre><code>$.items[?(@@.name contains 'prod')]</code></pre>
+
+              <h5>Combine conditions</h5>
+              <pre><code>$.items[?(@@.enabled == true &amp;&amp; (@@.name contains 'prod' || @@.name contains 'stage'))]</code></pre>
+
+              <hr/>
+
+              <h4>9) Not supported ❌</h4>
+
+              <p>If you’re familiar with “full” JSONPath implementations, these are <strong>not available</strong> here:
+              </p>
+
+              <ul>
+                <li>Array indexing: <code>[0]</code></li>
+                <li>Array slicing: <code>[1:10]</code></li>
+                <li>Unions: <code>[0,1]</code>, <code>['a','b']</code></li>
+                <li>Quoted property access: <code>['prop name']</code></li>
+                <li>Escaped characters in property names</li>
+                <li>Functions like <code>length()</code>, <code>min()</code>, etc.</li>
+                <li>Existence checks like <code>?(@@.name)</code> (comparisons are required)</li>
+                <li>Comparing against <code>null</code> (no <code>null</code> literal)</li>
+                <li>Comparing one property to another (right-hand side must be a literal)</li>
+                <li>Regex operators (<code>=~</code>) or similar</li>
+              </ul>
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+      <HxButton Color="ThemeColor.Secondary"
+                Spinner="false"
+                OnClick="() => _offcanvas.LetAsync(x => x.HideAsync())">
+        Close
+      </HxButton>
+    </FooterTemplate>
+</HxOffcanvas>
+
+@code {
+    private HxOffcanvas? _offcanvas;
+
+    public Task ShowAsync() => _offcanvas.LetAsync(x => x.ShowAsync());
+}
