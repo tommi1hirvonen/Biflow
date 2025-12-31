@@ -29,6 +29,18 @@ internal static class SimpleComparisonParser
 
     private static bool Compare(JsonNode? node, FilterOperator op, object literal)
     {
+        // Handle 'contains' operator for arrays
+        if (op == FilterOperator.Contains && node is JsonArray array)
+        {
+            return literal switch
+            {
+                string s => array.Any(item => item is JsonValue v && v.TryGetValue(out string? str) && str == s),
+                decimal d => array.Any(item => item is JsonValue v && v.TryGetValue(out decimal num) && num == d),
+                bool b => array.Any(item => item is JsonValue v && v.TryGetValue(out bool boolVal) && boolVal == b),
+                _ => false
+            };
+        }
+
         if (node is not JsonValue value)
             return false;
 
@@ -48,6 +60,7 @@ internal static class SimpleComparisonParser
             {
                 FilterOperator.Eq => v == s,
                 FilterOperator.Ne => v != s,
+                FilterOperator.Contains => v.Contains(s, StringComparison.Ordinal),
                 _ => false
             },
             bool b when value.TryGetValue(out bool vb) => op switch
@@ -64,6 +77,7 @@ internal static class SimpleComparisonParser
     {
         var operators = new Dictionary<string, FilterOperator>
         {
+            ["contains"] = FilterOperator.Contains,
             ["=="] = FilterOperator.Eq,
             ["!="] = FilterOperator.Ne,
             ["<="] = FilterOperator.Lte,
@@ -82,7 +96,7 @@ internal static class SimpleComparisonParser
             }
         }
 
-        throw new JsonPathParseException("Expected comparison operator (==, !=, <, <=, >, >=)",
+        throw new JsonPathParseException("Expected comparison operator (==, !=, <, <=, >, >=, contains)",
             new TextSpan(0, expr.Length),
             expr);
 
@@ -91,7 +105,9 @@ internal static class SimpleComparisonParser
     private static int OperatorLength(FilterOperator op) =>
         op switch
         {
+            FilterOperator.Contains => 8,
             FilterOperator.Eq or FilterOperator.Ne => 2,
+            FilterOperator.Lte or FilterOperator.Gte => 2,
             _ => 1
         };
 
