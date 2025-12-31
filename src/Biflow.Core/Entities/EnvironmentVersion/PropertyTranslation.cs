@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Interfaces;
 
@@ -42,6 +43,7 @@ public class PropertyTranslation : IAuditable
     
     public Guid PropertyTranslationSetId { get; init; }
 
+    [JsonIgnore]
     public PropertyTranslationSet PropertyTranslationSet { get; init; } = null!;
     
     public DateTimeOffset CreatedOn { get; set; }
