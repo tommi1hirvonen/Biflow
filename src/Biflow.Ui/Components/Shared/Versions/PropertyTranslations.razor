@@ -5,21 +5,12 @@
 
 <h5>@PropertyTranslationSetName</h5>
 
-<div class="row mt-3">
+<div class="row mt-3 align-items-center">
     <div class="col-auto">
         <a class="btn btn-sm btn-auto" href="versions/propertytranslations">
             <SvgIcon Icon="LucideIcon.MoveLeft" />
             Back to translation sets
         </a>
-    </div>
-    <div class="col-auto">
-        <div class="form-check form-switch">
-            <input type="checkbox"
-                   class="form-check-input"
-                   id="preview_enabled_toggle"
-                   checked=@_previewEnabled @onchange="TogglePreviewAsync">
-            <label class="form-check-label" for="preview_enabled_toggle">Preview</label>
-        </div>
     </div>
     @if (!_previewEnabled)
     {
@@ -30,6 +21,39 @@
             </HxButton>
         </div>
     }
+    else
+    {
+        <div class="col-auto ms-auto">
+            <div class="input-group input-group-sm">
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto"
+                          @onclick="() => _diffEditor.LetAsync(x => x.GotoPreviousDiffAsync())"
+                          Spinner="false">
+                    <SvgIcon Icon="LucideIcon.ChevronUp" />
+                </HxButton>
+                <div class="input-group-text">
+                    Navigate diffs
+                </div>
+                <HxButton Size="ButtonSize.Small"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto"
+                          @onclick="() => _diffEditor.LetAsync(x => x.GotoNextDiffAsync())"
+                          Spinner="false">
+                    <SvgIcon Icon="LucideIcon.ChevronDown" />
+                </HxButton>
+            </div>
+        </div>
+    }
+    <div class="col-auto @(_previewEnabled ? null : "ms-auto")">
+        <div class="form-check form-switch mb-0">
+            <input type="checkbox"
+                   class="form-check-input"
+                   id="preview_enabled_toggle"
+                   checked=@_previewEnabled @onchange="TogglePreviewAsync">
+            <label class="form-check-label" for="preview_enabled_toggle">Preview</label>
+        </div>
+    </div>
 </div>
 
 <div class="card pt-2 my-4 @(_previewEnabled ? "d-none" : null)">
@@ -105,7 +129,7 @@
 
 <div class="row my-4 @(_previewEnabled ? "null" : "d-none")">
     <div class="col">
-        <CodeDiffEditor @ref="_diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
+        <CodeDiffEditor @ref="_diffEditor" InitialHeight="calc(100vh - 300px)" FontSize="12" />
     </div>
 </div>
 
@@ -203,7 +227,7 @@
             }
             catch (Exception ex)
             {
-                Toaster.AddError("Error generating preview", ex.Message);
+                Toaster.AddError("Error generating preview", ex.ToString());
             }
         }
     }
