@@ -23,9 +23,11 @@ internal class UpdatePropertyTranslationCommandHandler(IDbContextFactory<AppDbCo
         propertyTranslation.PropertyTranslationName = request.PropertyTranslationName;
         propertyTranslation.Order = request.Order;
         propertyTranslation.PropertyPath = request.PropertyPath;
-        propertyTranslation.OldValue = request.OldValue;
-        propertyTranslation.ExactMatch = request.ExactMatch;
         propertyTranslation.NewValue = request.NewValue;
+        // OldValue is only effective for string values.
+        propertyTranslation.OldValue = request.NewValue.ValueType is ParameterValueType.String ? request.OldValue : "";
+        // ExactMatch is only effective for string values.
+        propertyTranslation.ExactMatch = request.NewValue.ValueType is ParameterValueType.String && request.ExactMatch;
         propertyTranslation.EnsureDataAnnotationsValidated();
         await dbContext.SaveChangesAsync(cancellationToken);
         return propertyTranslation;

@@ -30,9 +30,11 @@ internal class CreatePropertyTranslationCommandHandler(IDbContextFactory<AppDbCo
             PropertyTranslationName = request.PropertyTranslationName,
             Order = request.Order,
             PropertyPath = request.PropertyPath,
-            OldValue = request.OldValue,
-            ExactMatch = request.ExactMatch,
-            NewValue = request.NewValue
+            NewValue = request.NewValue,
+            // OldValue is only effective for string values.
+            OldValue = request.NewValue.ValueType is ParameterValueType.String ? request.OldValue : "",
+            // ExactMatch is only effective for string values.
+            ExactMatch = request.NewValue.ValueType is ParameterValueType.String && request.ExactMatch
         };
         propertyTranslation.EnsureDataAnnotationsValidated();
         dbContext.PropertyTranslations.Add(propertyTranslation);
