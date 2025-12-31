@@ -78,5 +78,62 @@ public abstract class EnvironmentVersionsReadEndpoints : IEndpoints
                              "Use the referencesPreserved query parameter to return a variant of the snapshot " +
                              "that can be used for reverting to a version.")
             .WithName("GetEnvironmentVersionSnapshot");
+        
+        group.MapGet("/propertytranslationsets", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+                await dbContext.PropertyTranslationSets
+                    .AsNoTracking()
+                    .Include(s => s.PropertyTranslations)
+                    .OrderBy(s => s.PropertyTranslationSetName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .Produces<PropertyTranslationSet[]>()
+            .WithSummary("Get all property translation sets")
+            .WithDescription("Get all property translation sets")
+            .WithName("GetPropertyTranslationSets");
+
+        group.MapGet("/propertytranslationsets/{propertyTranslationSetId:guid}",
+            async (ServiceDbContext dbContext, Guid propertyTranslationSetId, CancellationToken cancellationToken) =>
+            {
+                var set = await dbContext.PropertyTranslationSets
+                    .AsNoTracking()
+                    .Include(s => s.PropertyTranslations)
+                    .FirstOrDefaultAsync(s => s.PropertyTranslationSetId == propertyTranslationSetId, cancellationToken);
+                if (set is null)
+                {
+                    throw new NotFoundException<PropertyTranslationSet>(propertyTranslationSetId);
+                }
+                return Results.Ok(set);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<PropertyTranslationSet>()
+            .WithSummary("Get property translation set by id")
+            .WithDescription("Get property translation set by id")
+            .WithName("GetPropertyTranslationSet");
+
+        group.MapGet("/propertytranslations", async (ServiceDbContext dbContext, CancellationToken cancellationToken) =>
+                await dbContext.PropertyTranslations
+                    .AsNoTracking()
+                    .OrderBy(t => t.PropertyTranslationName)
+                    .ToArrayAsync(cancellationToken)
+            )
+            .Produces<PropertyTranslation[]>()
+            .WithSummary("Get all property translations")
+            .WithDescription("Get all property translations")
+            .WithName("GetPropertyTranslations");
+
+        group.MapGet("/propertytranslations/{propertyTranslationId:guid}",
+            async (ServiceDbContext dbContext, Guid propertyTranslationId, CancellationToken cancellationToken) =>
+            {
+                var translation = await dbContext.PropertyTranslations
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(t => t.PropertyTranslationId == propertyTranslationId, cancellationToken)
+                    ?? throw new NotFoundException<PropertyTranslation>(propertyTranslationId);
+                return Results.Ok(translation);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<PropertyTranslation>()
+            .WithSummary("Get property translation by id")
+            .WithDescription("Get property translation by id")
+            .WithName("GetPropertyTranslation");
     }
 }

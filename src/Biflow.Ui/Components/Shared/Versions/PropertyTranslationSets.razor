@@ -1,0 +1,139 @@
+@implements IDisposable
+
+@inject ThemeService ThemeService
+@inject IMediator Mediator
+@inject ToasterService Toaster
+
+<style>
+    tr a {
+        text-decoration: none;
+    }
+
+    tr:hover a {
+        text-decoration: underline;
+    }
+</style>
+
+<div class="row flex-row-reverse justify-content-between align-items-end g-3">
+    <div class="col-auto">
+        <HxAlert Color="ThemeService.CurrentTheme == Theme.Light ? ThemeColor.Light : ThemeColor.Dark"
+                 CssClass="small py-2 mb-0"
+                 style="max-width: 40rem;">
+            <div class="row g-3">
+                <div class="col-auto">
+                    <SvgIcon Icon="LucideIcon.Info" />
+                </div>
+                <div class="col">
+                    Property translation sets can be applied when generating environment snapshots.
+                    They can be used to replace arbitrary JSON property values.
+                    This is convenient when transferring metadata from one environment to another.
+                </div>
+            </div>
+        </HxAlert>
+    </div>
+    <div class="col-auto">
+        <HxButton Color="ThemeColor.Success"
+                  @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty))">
+            Add translation set
+        </HxButton>
+    </div>
+</div>
+
+<div class="card pt-2 my-4">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>
+                Name
+            </th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (Sets.Count == 0)
+        {
+            <tr><td colspan="2">No translation sets</td></tr>
+        }
+        else
+        {
+            @foreach (var set in Sets)
+            {
+                <tr>
+                    <td class="align-middle">
+                        <a href="versions/propertytranslations/@set.PropertyTranslationSetId" class="text-body">
+                            @set.PropertyTranslationSetName
+                        </a>
+                    </td>
+                    <td class="align-middle">
+                        <HxButtonGroup>
+                            <HxButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="edit" @onclick="() => _editModal.LetAsync(x => x.ShowAsync(set.PropertyTranslationSetId))">
+                                <SvgIcon Icon="LucideIcon.Pen" />
+                            </HxButton>
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" Color="ThemeColor.None" CssClass="btn-auto" aria-label="delete">
+                                    <SvgIcon Icon="LucideIcon.Trash2" />
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                    <HxDropdownItem @onclick="() => DeleteTranslationSetAsync(set)">Confirm</HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+
+<PropertyTranslationSetEditModal @ref="_editModal"
+                                 OnSubmit="OnTranslationSetSubmitAsync" />
+
+@code {
+    [Parameter]
+    public List<PropertyTranslationSet> Sets { get; set; } = [];
+
+    private PropertyTranslationSetEditModal? _editModal;
+    
+    protected override void OnInitialized() => ThemeService.OnThemeChanged += OnThemeChanged;
+    
+    public void Dispose() => ThemeService.OnThemeChanged -= OnThemeChanged;
+    
+    private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
+    
+    private async Task DeleteTranslationSetAsync(PropertyTranslationSet set)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeletePropertyTranslationSetCommand(set.PropertyTranslationSetId));
+            Sets.Remove(set);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting set", message);
+        }
+    }
+
+    private async Task OnTranslationSetSubmitAsync(PropertyTranslationSet set)
+    {
+        if (set.PropertyTranslationSetId == Guid.Empty)
+        {
+            var command = new CreatePropertyTranslationSetCommand(set.PropertyTranslationSetName);
+            var response = await Mediator.SendAsync(command);
+            Sets.Add(response);
+            Sets.SortBy(x => x.PropertyTranslationSetName);
+        }
+        else
+        {
+            var command = new UpdatePropertyTranslationSetCommand(set.PropertyTranslationSetId,
+                set.PropertyTranslationSetName);
+            _ = await Mediator.SendAsync(command);
+            Sets.RemoveAll(x => x.PropertyTranslationSetId == set.PropertyTranslationSetId);
+            Sets.Add(set);
+            Sets.SortBy(x => x.PropertyTranslationSetName);
+        }
+        StateHasChanged();
+    }
+}

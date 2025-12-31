@@ -88,6 +88,8 @@ public class AppDbContext : DbContext
     public DbSet<Proxy> Proxies => Set<Proxy>();
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
     public DbSet<FabricWorkspace> FabricWorkspaces => Set<FabricWorkspace>();
+    public DbSet<PropertyTranslation> PropertyTranslations => Set<PropertyTranslation>();
+    public DbSet<PropertyTranslationSet> PropertyTranslationSets => Set<PropertyTranslationSet>();
     #endregion
 
     protected virtual void ConfigureSqlServer(SqlServerDbContextOptionsBuilder options)

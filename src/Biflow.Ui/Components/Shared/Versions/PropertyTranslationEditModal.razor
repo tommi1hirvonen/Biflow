@@ -1,0 +1,147 @@
+@inject IJSRuntime Js
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+
+@{
+    var title = _translation?.PropertyTranslationSetId == Guid.Empty
+        ? "New translation"
+        : "Edit " + _translation?.PropertyTranslationName;
+}
+
+<HxModal @ref="_modal"
+         Size="ModalSize.Large"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@title">
+    <BodyTemplate>
+        @if (_translation is not null)
+        {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+            <EditForm Model="_translation" id="translation_edit_form" OnValidSubmit="SubmitAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">Translation name</label>
+                                <InputText @ref="_nameInput" class="form-control"
+                                           @bind-Value="_translation.PropertyTranslationName"></InputText>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Order</label>
+                                <InputNumber class="form-control" @bind-Value="_translation.Order"></InputNumber>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">JSON path</label>
+                                <InputText class="form-control" @bind-Value="_translation.PropertyPath"></InputText>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">Old value</label>
+                                <InputText class="form-control" @bind-Value="_translation.OldValue"></InputText>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="translation_exact_match"
+                                           checked=@_translation.ExactMatch @bind-value="_translation.ExactMatch">
+                                    <label class="form-label" for="translation_exact_match">Exact match</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <label class="form-label">New value</label>
+                                <div class="input-group">
+                                    <div class="input-group-text">
+                                        Type
+                                    </div>
+                                    <InputSelect class="form-select form-select-sm" style="max-width: 8rem;"
+                                                 @bind-Value:set="SetType"
+                                                 @bind-Value:get="ValueType">
+                                        @foreach (var type in Enum.GetValues(typeof(ParameterValueType)))
+                                        {
+                                            <option>@type</option>
+                                        }
+                                    </InputSelect>
+                                    <div class="input-group-text">
+                                        Value
+                                    </div>
+                                    <TranslationValueEditor Translation="_translation"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="translation_edit_form"
+                  Color="ThemeColor.Success">
+            @(_translation?.PropertyTranslationSetId == Guid.Empty ? "Create" : "Save")
+        </HxSubmit>
+        <HxButton Color="ThemeColor.Secondary"
+                  Spinner="false"
+                  @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<PropertyTranslation> OnSubmit { get; set; }
+    
+    private HxModal? _modal;
+    private InputText? _nameInput;
+    private PropertyTranslation? _translation;
+    
+    private ParameterValueType ValueType => _translation?.NewValue.ValueType ?? ParameterValueType.Empty;
+
+    public async Task ShowAsync(Guid translationId, Guid propertyTranslationSetId)
+    {
+        _translation = null;
+        await _modal.LetAsync(x => x.ShowAsync());
+        if (translationId != Guid.Empty)
+        {
+            await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+            _translation = await dbContext.PropertyTranslations
+                .AsNoTrackingWithIdentityResolution()
+                .FirstAsync(x => x.PropertyTranslationId == translationId);
+        }
+        else
+        {
+            _translation = new PropertyTranslation
+            {
+                PropertyTranslationSetId = propertyTranslationSetId
+            };
+        }
+    }
+    
+    private void SetType(ParameterValueType type)
+    {
+        _translation?.NewValue = Biflow.Core.Entities.ParameterValue.DefaultValue(type);
+    }
+
+    private async Task SubmitAsync()
+    {
+        await OnSubmit.InvokeAsync(_translation);
+        await _modal.LetAsync(x => x.HideAsync());
+    }
+    
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+}

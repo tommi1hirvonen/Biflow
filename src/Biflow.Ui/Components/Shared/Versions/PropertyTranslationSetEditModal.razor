@@ -1,0 +1,87 @@
+@inject IJSRuntime Js
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+
+@{
+    var title = _translationSet?.PropertyTranslationSetId == Guid.Empty
+        ? "New translation set"
+        : "Edit " + _translationSet?.PropertyTranslationSetName;
+}
+
+<HxModal @ref="_modal"
+         Size="ModalSize.Regular"
+         OnShown="() => _nameInput?.Element?.FocusAsync()"
+         Title="@title">
+    <BodyTemplate>
+        @if (_translationSet is not null)
+        {
+            <NavigationLock ConfirmExternalNavigation OnBeforeInternalNavigation="OnBeforeInternalNavigation" />
+            <EditForm Model="_translationSet" id="translation_set_edit_form" OnValidSubmit="SubmitAsync">
+                <div class="row">
+                    <div class="col mx-3">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+
+                        <div class="row">
+                            <div class="col">
+                                <label class="form-label">Translation set name</label>
+                                <InputText @ref="_nameInput" class="form-control" @bind-Value="_translationSet.PropertyTranslationSetName"></InputText>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </EditForm>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <HxSubmit form="translation_set_edit_form"
+                  Color="ThemeColor.Success">
+            @(_translationSet?.PropertyTranslationSetId == Guid.Empty ? "Create" : "Save")
+        </HxSubmit>
+        <HxButton Color="ThemeColor.Secondary"
+                  Spinner="false"
+                  @onclick="async () => await _modal.LetAsync(x => x.HideAsync())">
+            Cancel
+        </HxButton>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    [Parameter]
+    public EventCallback<PropertyTranslationSet> OnSubmit { get; set; }
+    
+    private HxModal? _modal;
+    private InputText? _nameInput;
+    private PropertyTranslationSet? _translationSet;
+
+    public async Task ShowAsync(Guid translationSetId)
+    {
+        _translationSet = null;
+        await _modal.LetAsync(x => x.ShowAsync());
+        if (translationSetId != Guid.Empty)
+        {
+            await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+            _translationSet = await dbContext.PropertyTranslationSets
+                .AsNoTrackingWithIdentityResolution()
+                .FirstAsync(x => x.PropertyTranslationSetId == translationSetId);
+        }
+        else
+        {
+            _translationSet = new PropertyTranslationSet();
+        }
+    }
+
+    private async Task SubmitAsync()
+    {
+        await OnSubmit.InvokeAsync(_translationSet);
+        await _modal.LetAsync(x => x.HideAsync());
+    }
+    
+    private async Task OnBeforeInternalNavigation(LocationChangingContext context)
+    {
+        var confirmed = await Js.InvokeAsync<bool>("confirm", "Discard unsaved changes?");
+        if (!confirmed)
+        {
+            context.PreventNavigation();
+        }
+    }
+}

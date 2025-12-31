@@ -115,13 +115,25 @@ else
             await using var context = await DbContextFactory.CreateDbContextAsync();
             var sourceVersion = _sourceVersionId switch
             {
-                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !_simplifiedJson),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == _sourceVersionId).Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
+                // TODO Handle property translations
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(
+                    preserveReferences: !_simplifiedJson,
+                    propertyTranslations: []),
+                _ => await context.EnvironmentVersions
+                    .Where(v => v.VersionId == _sourceVersionId)
+                    .Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved)
+                    .FirstOrDefaultAsync()
             };
             var targetVersion = _targetVersionId switch
             {
-                0 => (await SnapshotBuilder.CreateAsync()).ToJson(preserveReferences: !_simplifiedJson),
-                _ => await context.EnvironmentVersions.Where(v => v.VersionId == _targetVersionId).Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved).FirstOrDefaultAsync()
+                // TODO Handle property translations
+                0 => (await SnapshotBuilder.CreateAsync()).ToJson(
+                    preserveReferences: !_simplifiedJson,
+                    propertyTranslations: []),
+                _ => await context.EnvironmentVersions
+                    .Where(v => v.VersionId == _targetVersionId)
+                    .Select(v => _simplifiedJson ? v.Snapshot : v.SnapshotWithReferencesPreserved)
+                    .FirstOrDefaultAsync()
             };
             await _diffEditor.LetAsync(x => x.SetDiffEditor(sourceVersion, targetVersion, "json"));
         }

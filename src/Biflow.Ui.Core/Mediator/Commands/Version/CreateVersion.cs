@@ -2,7 +2,7 @@ using Biflow.Ui.Core.Projection;
 
 namespace Biflow.Ui.Core;
 
-public record CreateVersionCommand(string? Description) : IRequest<VersionProjection>;
+public record CreateVersionCommand(string? Description, Guid? PropertyTranslationSetId) : IRequest<VersionProjection>;
 
 [UsedImplicitly]
 internal class CreateVersionCommandHandler(
@@ -14,10 +14,18 @@ internal class CreateVersionCommandHandler(
     {
         var username = userService.Username;
         var snapshot = await snapshotBuilder.CreateAsync();
+        IReadOnlyList<PropertyTranslation> propertyTranslations;
+        await using (var ctx = await dbContextFactory.CreateDbContextAsync(cancellationToken))
+        {
+            propertyTranslations = await ctx.PropertyTranslations
+                .Where(t => t.PropertyTranslationSetId == request.PropertyTranslationSetId)
+                .OrderBy(t => t.Order)
+                .ToArrayAsync(cancellationToken);
+        }
         var version = new EnvironmentVersion
         {
-            Snapshot = snapshot.ToJson(preserveReferences: false),
-            SnapshotWithReferencesPreserved = snapshot.ToJson(preserveReferences: true),
+            Snapshot = snapshot.ToJson(preserveReferences: false, propertyTranslations),
+            SnapshotWithReferencesPreserved = snapshot.ToJson(preserveReferences: true, propertyTranslations),
             Description = request.Description,
             CreatedOn = DateTimeOffset.Now,
             CreatedBy = username
@@ -25,6 +33,6 @@ internal class CreateVersionCommandHandler(
         await using var context = await dbContextFactory.CreateDbContextAsync(cancellationToken);
         context.EnvironmentVersions.Add(version);
         await context.SaveChangesAsync(cancellationToken);
-        return new(version.VersionId, version.Description, version.CreatedOn, version.CreatedBy);
+        return new VersionProjection(version.VersionId, version.Description, version.CreatedOn, version.CreatedBy);
     }
 }

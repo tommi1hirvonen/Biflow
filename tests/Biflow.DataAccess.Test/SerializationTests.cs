@@ -193,7 +193,7 @@ public class SerializationTests(SerializationTestsFixture fixture) : IClassFixtu
             DataTables = fixture.DataTables,
             DataTableCategories = fixture.DataTableCategories
         };
-        var json = snapshot.ToJson(preserveReferences: true);
+        var json = snapshot.ToJson(preserveReferences: true, propertyTranslations: []);
         var items = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
         Assert.NotNull(items);
         Assert.NotEmpty(items.Jobs);

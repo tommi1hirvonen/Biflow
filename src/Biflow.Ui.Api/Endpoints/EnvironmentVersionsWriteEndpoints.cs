@@ -20,7 +20,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
         group.MapPost("",
             async ([FromBody] EnvironmentVersionDto model, IMediator mediator, CancellationToken cancellationToken) =>
             {
-                var command = new CreateVersionCommand(model.Description);
+                var command = new CreateVersionCommand(model.Description, model.PropertyTranslationSetId);
                 var version = await mediator.SendAsync(command, cancellationToken);
                 return Results.Ok(version);
             })
@@ -108,7 +108,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                 VersionRevertJobDictionary statuses) =>
             {
                 using var reader = new StreamReader(httpContext.Request.Body);
-                var json = await reader.ReadToEndAsync(); 
+                var json = await reader.ReadToEndAsync();
                 // Assume referencesPreserved = true, because only then is reverting of the snapshot supported.
                 var snapshot = EnvironmentSnapshot.FromJson(json, referencesPreserved: true);
                 ArgumentNullException.ThrowIfNull(snapshot);
@@ -122,7 +122,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                         statusCode: StatusCodes.Status409Conflict);
                 }
                 statuses[job.Id] = new VersionRevertJobState(VersionRevertJobStatus.Queued, []);
-                var url = linker.GetUriByName(httpContext, "GetRevertStatus", new { id = job.Id }); 
+                var url = linker.GetUriByName(httpContext, "GetRevertStatus", new { id = job.Id });
                 return Results.Accepted(url, new VersionRevertResponse(job.Id, VersionRevertJobStatus.Queued, []));
             })
             .Accepts<string>("application/json")
@@ -134,5 +134,106 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                              "The process is asynchronous and a response is returned immediately. " +
                              "Query the status endpoint to get the process status with the returned id.")
             .WithName("RevertEnvironmentVersion");
+
+        group.MapPost("/propertytranslationsets", async (PropertyTranslationSetDto dto, IMediator mediator,
+            LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreatePropertyTranslationSetCommand(dto.PropertyTranslationSetName);
+                var translationSet = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetPropertyTranslationSet",
+                    new { translationSetId = translationSet.PropertyTranslationSetId });
+                return Results.Created(url, translationSet);
+            })
+            .ProducesValidationProblem()
+            .Produces<PropertyTranslationSet>()
+            .WithSummary("Create property translation set")
+            .WithDescription("Create a new property translation set")
+            .WithName("CreatePropertyTranslationSet");
+
+        group.MapPut("/propertytranslationsets/{translationSetId:guid}", async (Guid translationSetId,
+            PropertyTranslationSetDto dto, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdatePropertyTranslationSetCommand(
+                    translationSetId,
+                    dto.PropertyTranslationSetName);
+                var translationSet = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(translationSet);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<PropertyTranslationSet>()
+            .WithSummary("Update property translation set")
+            .WithDescription("Update an existing property translation set")
+            .WithName("UpdatePropertyTranslationSet");
+
+        group.MapDelete("/propertytranslationsets/{translationSetId:guid}", async (Guid translationSetId,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeletePropertyTranslationSetCommand(translationSetId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete property translation set")
+            .WithDescription("Delete a property translation set. Translations in this set are also deleted.")
+            .WithName("DeletePropertyTranslationSet");
+
+        group.MapPost("/propertytranslations", async (PropertyTranslationDto dto, IMediator mediator,
+            LinkGenerator linker, HttpContext ctx, CancellationToken cancellationToken) =>
+            {
+                var command = new CreatePropertyTranslationCommand(
+                    dto.PropertyTranslationSetId,
+                    dto.PropertyTranslationName,
+                    dto.Order,
+                    dto.PropertyPath,
+                    dto.OldValue,
+                    dto.ExactMatch,
+                    dto.NewValue);
+                var translation = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetPropertyTranslation",
+                    new { translationId = translation.PropertyTranslationId });
+                return Results.Created(url, translation);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<PropertyTranslation>()
+            .WithSummary("Create property translation")
+            .WithDescription("Create a new property translation")
+            .WithName("CreatePropertyTranslation");
+
+        group.MapPut("/propertytranslations/{translationId:guid}", async (Guid translationId,
+            PropertyTranslationDto dto, IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new UpdatePropertyTranslationCommand(
+                    translationId,
+                    dto.PropertyTranslationName,
+                    dto.Order,
+                    dto.PropertyPath,
+                    dto.OldValue,
+                    dto.ExactMatch,
+                    dto.NewValue);
+                var translation = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(translation);
+            })
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces<PropertyTranslation>()
+            .WithSummary("Update property translation")
+            .WithDescription("Update an existing property translation")
+            .WithName("UpdatePropertyTranslation");
+
+        group.MapDelete("/propertytranslations/{translationId:guid}", async (Guid translationId,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var command = new DeletePropertyTranslationCommand(translationId);
+                await mediator.SendAsync(command, cancellationToken);
+                return Results.NoContent();
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .Produces(StatusCodes.Status204NoContent)
+            .WithSummary("Delete property translation")
+            .WithDescription("Delete a property translation")
+            .WithName("DeletePropertyTranslation");
     }
 }

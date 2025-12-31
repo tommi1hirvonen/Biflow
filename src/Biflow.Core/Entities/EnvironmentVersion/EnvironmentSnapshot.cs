@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Converters;
@@ -50,10 +51,15 @@ public class EnvironmentSnapshot
 
     public required MasterDataTableCategory[] DataTableCategories { get; init; }
     public required MasterDataTable[] DataTables { get; init; }
+    
+    public string ToJson(bool preserveReferences) => ToJson(preserveReferences, []);
 
-    public string ToJson(bool preserveReferences) =>
-        JsonSerializer.Serialize(this,
+    public string ToJson(bool preserveReferences, IReadOnlyList<PropertyTranslation> propertyTranslations)
+    {
+        var json = JsonSerializer.Serialize(this,
             options: preserveReferences ? JsonSerializerOptionsPreserveReferences : JsonSerializerOptions);
+        return PropertyTranslation.ApplyTranslations(json, propertyTranslations);
+    }
 
     public static EnvironmentSnapshot? FromJson(string json, bool referencesPreserved) =>
         JsonSerializer.Deserialize<EnvironmentSnapshot>(json,

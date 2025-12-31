@@ -184,15 +184,32 @@
     <BodyTemplate>
         <div class="row">
             <div class="col">
-                <textarea @ref="_textInput" class="form-control form-control-sm" @bind="_description" rows="5" placeholder="Version description"></textarea>
+                <textarea @ref="_textInput" class="form-control form-control-sm"
+                            @bind="_description" rows="5" placeholder="Version description"></textarea>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col-auto">
+                <label class="form-label">Property translation set</label>
+                <select class="form-select form-select-sm"
+                        @bind="_propertyTranslationSetId">
+                    <option value="">None</option>
+                    @if (PropertyTranslationSets != null)
+                    {
+                        foreach (var set in PropertyTranslationSets)
+                        {
+                            <option value="@set.PropertyTranslationSetId">@set.PropertyTranslationSetName</option>
+                        }
+                    }
+                </select>
             </div>
         </div>
     </BodyTemplate>
     <FooterTemplate>
-        <HxButton Color="ThemeColor.Success" OnClick="CreateVersionAsync">
+        <HxButton Color="ThemeColor.Success" OnClick="() => CreateVersionAsync(_propertyTranslationSetId)">
             Save
         </HxButton>
-        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="() => _createModal.LetAsync(x => x.HideAsync())">
+        <HxButton Color="ThemeColor.Secondary" Spinner="false" OnClick="CloseModal">
             Cancel
         </HxButton>
     </FooterTemplate>
@@ -202,6 +219,7 @@
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
     [Parameter] public IList<VersionProjection>? Versions { get; set; }
+    [Parameter] public IList<PropertyTranslationSet>? PropertyTranslationSets { get; set; }
 
     private ElementReference _textInput;
     private Paginator<VersionProjection>? _paginator;
@@ -209,6 +227,7 @@
     private EnvironmentVersion? _detailsVersion;
     private HxModal? _createModal;
     private string? _description;
+    private Guid? _propertyTranslationSetId;
     private bool _simplifiedJson = true; // inverse of whether to show JSON with references preserved
 
     protected override void OnInitialized()
@@ -218,20 +237,27 @@
 
     private void OnThemeChanged(Theme theme, bool isAuto) => StateHasChanged();
 
-    private async Task CreateVersionAsync()
+    private async Task CreateVersionAsync(Guid? propertyTranslationSetId)
     {
         try
         {
-            var command = new CreateVersionCommand(_description);
+            var command = new CreateVersionCommand(_description, propertyTranslationSetId);
             var version = await Mediator.SendAsync(command);
             await _createModal.LetAsync(x => x.HideAsync());
             _description = null;
             Versions?.Insert(0, version);
+            _propertyTranslationSetId = null;
         }
         catch (Exception ex)
         {
             Toaster.AddError("Error creating version", ex.Message);
         }
+    }
+
+    private Task CloseModal()
+    {
+        _propertyTranslationSetId = null;
+        return _createModal.LetAsync(x => x.HideAsync());
     }
 
     private async Task OpenDetailsAsync(int versionId)

@@ -1,0 +1,90 @@
+@using ParameterValue = Biflow.Core.Entities.ParameterValue
+
+@switch (Translation?.NewValue.ValueType)
+{
+    case ParameterValueType.Boolean:
+        <InputSelectBoolean class="form-select"
+                            @bind-Value:get="ValueBoolean"
+                            @bind-Value:set="v => SetValue(v, ParameterValueType.Boolean)">
+            <option value="true">True</option>
+            <option value="false">False</option>
+        </InputSelectBoolean>
+        break;
+    case ParameterValueType.DateTime:
+        <InputDate class="form-control"
+                   Type="InputDateType.DateTimeLocal"
+                   @bind-Value:get="ValueDateTime"
+                   @bind-Value:set="v => SetValue(v, ParameterValueType.DateTime)" />
+        break;
+    case ParameterValueType.Decimal:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueDecimal"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Decimal)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.Double:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueDouble"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Double)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.Int16:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueInt16"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Int16)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.Int32:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueInt32"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Int32)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.Int64:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueInt64"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Int64)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.Single:
+        <InputNumber class="form-control"
+                     @bind-Value:get="ValueFloat"
+                     @bind-Value:set="v => SetValue(v, ParameterValueType.Single)"
+                     placeholder="null" />
+        break;
+    case ParameterValueType.String:
+        <InputText class="form-control"
+                   @bind-Value:get="ValueString"
+                   @bind-Value:set="v => SetValue(v, ParameterValueType.String)"
+                   placeholder="null" />
+        break;
+    case ParameterValueType.Empty:
+        <input type="text"
+               class="form-control"
+               disabled
+               placeholder="null" />
+        break;
+    case null:
+        break;
+    default:
+        throw new ArgumentOutOfRangeException($"Unhandled parameter value type {Translation.NewValue.ValueType}");
+}
+
+@code {
+    [Parameter] public PropertyTranslation? Translation { get; set; }
+
+    private bool ValueBoolean => Translation?.NewValue.GetValueOrDefault<bool>() ?? false;
+    private DateTime? ValueDateTime => Translation?.NewValue.GetValueOrDefault<DateTime?>();
+    private decimal? ValueDecimal => Translation?.NewValue.GetValueOrDefault<decimal?>();
+    private double? ValueDouble => Translation?.NewValue.GetValueOrDefault<double?>();
+    private short? ValueInt16 => Translation?.NewValue.GetValueOrDefault<short?>();
+    private int? ValueInt32 => Translation?.NewValue.GetValueOrDefault<int?>();
+    private long? ValueInt64 => Translation?.NewValue.GetValueOrDefault<long?>();
+    private float? ValueFloat => Translation?.NewValue.GetValueOrDefault<float?>();
+    private string ValueString => Translation?.NewValue.GetValueOrDefault<string>() ?? "";
+
+    private void SetValue(object? value, ParameterValueType type)
+    {
+        Translation?.NewValue = new ParameterValue(value, type);
+    }
+}

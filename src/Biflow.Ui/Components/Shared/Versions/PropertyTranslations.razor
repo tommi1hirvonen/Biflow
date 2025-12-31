@@ -1,0 +1,210 @@
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject IMediator Mediator
+@inject ToasterService Toaster
+@inject EnvironmentSnapshotBuilder SnapshotBuilder
+
+<h5>@PropertyTranslationSetName</h5>
+
+<div class="row mt-3">
+    <div class="col-auto">
+        <a class="btn btn-sm btn-auto" href="versions/propertytranslations">
+            <SvgIcon Icon="LucideIcon.MoveLeft" />
+            Back to translation sets
+        </a>
+    </div>
+    <div class="col-auto">
+        <div class="form-check form-switch">
+            <input type="checkbox"
+                   class="form-check-input"
+                   id="preview_enabled_toggle"
+                   checked=@_previewEnabled @onchange="TogglePreviewAsync">
+            <label class="form-check-label" for="preview_enabled_toggle">Preview</label>
+        </div>
+    </div>
+    @if (!_previewEnabled)
+    {
+        <div class="col-auto">
+            <HxButton Color="ThemeColor.Success" Size="ButtonSize.Small"
+                      @onclick="() => _editModal.LetAsync(x => x.ShowAsync(Guid.Empty, PropertyTranslationSetId))">
+                Add translation
+            </HxButton>
+        </div>
+    }
+</div>
+
+<div class="card pt-2 my-4 @(_previewEnabled ? "d-none" : null)">
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>Name</th>
+            <th>Order</th>
+            <th>JSON path</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        @if (_propertyTranslations is null)
+        {
+            <tr>
+                <td colspan="4">
+                    <HxSpinner Color="ThemeColor.Secondary" Size="SpinnerSize.Small" />
+                </td>
+            </tr>
+        }
+        else if (_propertyTranslations.Count == 0)
+        {
+            <tr><td colspan="4">No translations</td></tr>
+        }
+        else
+        {
+            @foreach (var translation in _propertyTranslations
+                          .OrderBy(x => x.Order)
+                          .ThenBy(x => x.PropertyTranslationName))
+            {
+                <tr>
+                    <td class="align-middle">
+                        @translation.PropertyTranslationName
+                    </td>
+                    <td class="align-middle">
+                        @translation.Order
+                    </td>
+                    <td class="align-middle">
+                        @translation.PropertyPath
+                    </td>
+                    <td class="align-middle">
+                        <HxButtonGroup>
+                            <HxButton Size="ButtonSize.Small"
+                                      Color="ThemeColor.None"
+                                      CssClass="btn-auto"
+                                      aria-label="edit"
+                                      @onclick="() => _editModal.LetAsync(x => x.ShowAsync(translation.PropertyTranslationId, translation.PropertyTranslationSetId))">
+                                <SvgIcon Icon="LucideIcon.Pen"/>
+                            </HxButton>
+                            <HxDropdownButtonGroup>
+                                <HxDropdownToggleButton Size="ButtonSize.Small" 
+                                                        Color="ThemeColor.None"
+                                                        CssClass="btn-auto"
+                                                        aria-label="delete">
+                                    <SvgIcon Icon="LucideIcon.Trash2"/>
+                                </HxDropdownToggleButton>
+                                <HxDropdownMenu>
+                                    <HxDropdownHeader>Delete?</HxDropdownHeader>
+                                    <HxDropdownItem @onclick="() => DeleteTranslationAsync(translation)">
+                                        Confirm
+                                    </HxDropdownItem>
+                                </HxDropdownMenu>
+                            </HxDropdownButtonGroup>
+                        </HxButtonGroup>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="row my-4 @(_previewEnabled ? "null" : "d-none")">
+    <div class="col">
+        <CodeDiffEditor @ref="_diffEditor" InitialHeight="calc(100vh - 250px)" FontSize="12" />
+    </div>
+</div>
+
+<PropertyTranslationEditModal @ref="_editModal" OnSubmit="OnTranslationSubmitAsync" />
+
+@code {
+    [Parameter]
+    public Guid PropertyTranslationSetId { get; set; }
+    
+    [Parameter]
+    public string? PropertyTranslationSetName { get; set; }
+    
+    private Guid _previousPropertyTranslationSetId;
+    private List<PropertyTranslation>? _propertyTranslations;
+    private PropertyTranslationEditModal? _editModal;
+    private bool _previewEnabled;
+    private CodeDiffEditor? _diffEditor;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (PropertyTranslationSetId == _previousPropertyTranslationSetId)
+        {
+            return;
+        }
+        _previousPropertyTranslationSetId = PropertyTranslationSetId;
+        await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+        _propertyTranslations = await dbContext.PropertyTranslations
+            .Where(x => x.PropertyTranslationSetId == PropertyTranslationSetId)
+            .ToListAsync();
+    }
+    
+    private async Task DeleteTranslationAsync(PropertyTranslation translation)
+    {
+        try
+        {
+            await Mediator.SendAsync(new DeletePropertyTranslationCommand(translation.PropertyTranslationId));
+            _propertyTranslations?.Remove(translation);
+        }
+        catch (Exception ex)
+        {
+            var message = ex.InnerException?.Message ?? ex.Message;
+            Toaster.AddError("Error deleting translation", message);
+        }
+    }
+
+    private async Task OnTranslationSubmitAsync(PropertyTranslation translation)
+    {
+        if (translation.PropertyTranslationId == Guid.Empty)
+        {
+            var command = new CreatePropertyTranslationCommand(
+                translation.PropertyTranslationSetId,
+                translation.PropertyTranslationName,
+                translation.Order,
+                translation.PropertyPath,
+                translation.OldValue,
+                translation.ExactMatch,
+                translation.NewValue);
+            var response = await Mediator.SendAsync(command);
+            _propertyTranslations?.Add(response);
+        }
+        else
+        {
+            var command = new UpdatePropertyTranslationCommand(
+                translation.PropertyTranslationId,
+                translation.PropertyTranslationName,
+                translation.Order,
+                translation.PropertyPath,
+                translation.OldValue,
+                translation.ExactMatch,
+                translation.NewValue);
+            _ = await Mediator.SendAsync(command);
+            _propertyTranslations?.RemoveAll(x => x.PropertyTranslationId == translation.PropertyTranslationId);
+            _propertyTranslations?.Add(translation);
+        }
+        StateHasChanged();
+    }
+
+    private async Task TogglePreviewAsync(ChangeEventArgs e)
+    {
+        _previewEnabled = (bool)e.Value!;
+        if (_previewEnabled)
+        {
+            try
+            {
+                ArgumentNullException.ThrowIfNull(_propertyTranslations);
+                ArgumentNullException.ThrowIfNull(_diffEditor);
+                var snapshot = await SnapshotBuilder.CreateAsync();
+                var originalJson = snapshot.ToJson(preserveReferences: false);
+                var translations = _propertyTranslations
+                    .OrderBy(x => x.Order)
+                    .ThenBy(x => x.PropertyTranslationName)
+                    .ToArray();
+                var translatedJson = PropertyTranslation.ApplyTranslations(originalJson, translations);
+                await _diffEditor.SetDiffEditor(originalJson, translatedJson, "json");
+            }
+            catch (Exception ex)
+            {
+                Toaster.AddError("Error generating preview", ex.Message);
+            }
+        }
+    }
+}

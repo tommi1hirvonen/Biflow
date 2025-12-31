@@ -1,8 +1,10 @@
 ﻿@page "/versions/{Page?}/{VersionId:int?}"
+@page "/versions/propertytranslations/{PropertyTranslationSetId:guid?}"
 
 @attribute [Authorize(Roles = $"{Roles.Admin}, {Roles.VersionManager}, {Roles.Editor}")]
 
 @inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject NavigationManager NavigationManager
 
 <PageTitle>Versions | Biflow</PageTitle>
 
@@ -26,6 +28,12 @@
                     </NavLink>
                 </li>
                 <li class="nav-item" role="presentation">
+                    <NavLink class="nav-link" href="versions/propertytranslations">
+                        <SvgIcon Icon="LucideIcon.Replace" />
+                        Property translations
+                    </NavLink>
+                </li>
+                <li class="nav-item" role="presentation">
                     <NavLink class="nav-link" href="versions/help">
                         <SvgIcon Icon="LucideIcon.CircleHelp" />
                         Help
@@ -36,28 +44,45 @@
     </div>
 }
 
-
-@switch (Page)
+@if (CurrentPage.StartsWith("versions/propertytranslations", StringComparison.OrdinalIgnoreCase))
 {
-    case null:
-        <VersionsList Versions="_versions" />
-        break;
-    case "compare":
-        <VersionsCompare Versions="_versions" InitialSourceVersionId="VersionId" />
-        break;
-    case "help":
-        <VersionsHelp />
-        break;
-    case "revert":
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-            <VersionRevert VersionId="VersionId" />
-        </AuthorizeView>
-        break;
-    case "revertjson":
-        <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
-            <VersionRevertJson />
-        </AuthorizeView>
-        break;
+    if (PropertyTranslationSetId is { } id)
+    {
+        var setName = _propertyTranslationSets
+            ?.FirstOrDefault(x => x.PropertyTranslationSetId == id)
+            ?.PropertyTranslationSetName;
+        <PropertyTranslations PropertyTranslationSetId="id" PropertyTranslationSetName="@setName" />    
+    }
+    else
+    {
+        <PropertyTranslationSets Sets="_propertyTranslationSets" />
+    }
+    
+}
+else
+{
+    switch (Page)
+    {
+        case null:
+            <VersionsList Versions="_versions" PropertyTranslationSets="_propertyTranslationSets" />
+            break;
+        case "compare":
+            <VersionsCompare Versions="_versions" InitialSourceVersionId="VersionId" />
+            break;
+        case "help":
+            <VersionsHelp />
+            break;
+        case "revert":
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+                <VersionRevert VersionId="VersionId" />
+            </AuthorizeView>
+            break;
+        case "revertjson":
+            <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
+                <VersionRevertJson />
+            </AuthorizeView>
+            break;
+    }
 }
 
 @code {
@@ -65,7 +90,12 @@
 
     [Parameter] public int? VersionId { get; set; }
 
+    [Parameter] public Guid? PropertyTranslationSetId { get; set; }
+
     private IList<VersionProjection>? _versions;
+    private List<PropertyTranslationSet>? _propertyTranslationSets;
+
+    private string CurrentPage => NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
 
     protected override async Task OnInitializedAsync()
     {
@@ -73,6 +103,9 @@
         _versions = await context.EnvironmentVersions
             .OrderByDescending(v => v.VersionId)
             .Select(v => new VersionProjection(v.VersionId, v.Description, v.CreatedOn, v.CreatedBy))
+            .ToListAsync();
+        _propertyTranslationSets = await context.PropertyTranslationSets
+            .OrderBy(x => x.PropertyTranslationSetName)
             .ToListAsync();
     }
 }
