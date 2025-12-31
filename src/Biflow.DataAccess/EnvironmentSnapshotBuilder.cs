@@ -4,46 +4,46 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
 {
     private readonly IDbContextFactory<AppDbContext> _dbContextFactory = dbContextFactory;
 
-    public async Task<EnvironmentSnapshot> CreateAsync()
+    public async Task<EnvironmentSnapshot> CreateAsync(CancellationToken cancellationToken = default)
     {
-        await using var context = await _dbContextFactory.CreateDbContextAsync();
+        await using var context = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var sqlConnections = await context.SqlConnections
             .OrderBy(c => c.ConnectionId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var asConnections = await context.AnalysisServicesConnections
             .OrderBy(c => c.ConnectionId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var credentials = await context.Credentials
             .OrderBy(c => c.Username)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var proxies = await context.Proxies
             .OrderBy(p => p.ProxyId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var azureCredentials = await context.AzureCredentials
             .OrderBy(a => a.AzureCredentialId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var fabricWorkspaces = await context.FabricWorkspaces
             .OrderBy(w => w.FabricWorkspaceId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var pipelineClients = await context.PipelineClients
             .OrderBy(p => p.PipelineClientId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var functionApps = await context.FunctionApps
             .OrderBy(f => f.FunctionAppId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var qlikCloudClients = await context.QlikCloudEnvironments
             .OrderBy(q => q.QlikCloudEnvironmentId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var blobStorageClients = await context.BlobStorageClients
             .OrderBy(b => b.BlobStorageClientId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var databricksWorkspaces = await context.DatabricksWorkspaces
             .OrderBy(w => w.WorkspaceId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var dbtAccounts = await context.DbtAccounts
             .OrderBy(a => a.DbtAccountId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
 
         var jobs = await context.Jobs
@@ -51,7 +51,7 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .Include(j => j.JobConcurrencies.OrderBy(c => c.StepType))
             .Include(j => j.Tags.OrderBy(t => t.TagId))
             .OrderBy(j => j.JobId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
         // Load steps and schedules separately in order to be able to sort their navigation collections.
         // Because change tracking on the DbContext is enabled, the steps and schedules navigation collections
@@ -66,30 +66,30 @@ public class EnvironmentSnapshotBuilder(IDbContextFactory<AppDbContext> dbContex
             .Include(s => s.Tags.OrderBy(t => t.TagId))
             .Include(s => s.ExecutionConditionParameters.OrderBy(p => p.ParameterId))
             .OrderBy(s => s.JobId).ThenBy(s => s.StepId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         _ = await context.Schedules
             .Include(s => s.TagFilter.OrderBy(t => t.TagId))
             .Include(s => s.Tags.OrderBy(t => t.TagId))
             .OrderBy(s => s.JobId).ThenBy(s => s.ScheduleId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
         var tags = await context.Tags
             .OrderBy(t => t.TagId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var dataObjects = await context.DataObjects
             .OrderBy(d => d.ObjectId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var scdTables = await context.ScdTables
             .OrderBy(t => t.ScdTableId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
         var dataTables = await context.MasterDataTables
             .Include(t => t.Lookups.OrderBy(l => l.LookupId))
             .OrderBy(t => t.DataTableId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
         var dataTableCategories = await context.MasterDataTableCategories
             .OrderBy(c => c.CategoryId)
-            .ToArrayAsync();
+            .ToArrayAsync(cancellationToken);
 
         var snapshot = new EnvironmentSnapshot
         {
