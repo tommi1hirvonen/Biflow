@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Serialization.Metadata;
 using Biflow.Core.Interfaces;
 
 namespace Biflow.Core.Entities;
@@ -57,7 +57,8 @@ public class PropertyTranslation : IAuditable
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         WriteIndented = true,
-        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
     public static string ApplyTranslations(string json, IReadOnlyList<PropertyTranslation> propertyTranslations)
@@ -77,35 +78,34 @@ public class PropertyTranslation : IAuditable
                 {
                     continue;
                 }
-                
-                var oldValue = node.ToJsonString();
-                if (oldValue.StartsWith('"') && oldValue.EndsWith('"'))
+
+                // For string values, handle partial replacements. For other types, replace the entire value.
+                if (translation.NewValue.Value is string stringValue)
                 {
-                    oldValue = oldValue[1..^1];
+                    var oldValue = node.ToJsonString();
+                    // Trim quotes left by ToJsonString() from the old value if present
+                    if (oldValue.StartsWith('"') && oldValue.EndsWith('"'))
+                    {
+                        oldValue = oldValue[1..^1];
+                    }
+                
+                    // If exact match is enabled and the old value doesn't match the translation, skip the translation.
+                    if (translation.ExactMatch && oldValue != translation.OldValue)
+                    {
+                        continue;
+                    }
+                    
+                    var newValue = string.IsNullOrEmpty(translation.OldValue) // empty value => match any string
+                        ? stringValue
+                        : oldValue.Replace(translation.OldValue, stringValue);
+                    node.ReplaceWith(JsonValue.Create(newValue));
                 }
-                
-                // If exact match is enabled and the old value doesn't match the translation, skip the translation.
-                if (translation.ExactMatch && oldValue != translation.OldValue)
+                else
                 {
-                    continue;
+                    // For non-string types (number, bool, date, etc.), pass the typed value directly
+                    // so JsonValue.Create preserves the correct JSON representation without quotes
+                    node.ReplaceWith(JsonValue.Create(translation.NewValue.Value));
                 }
-                
-                // Handle formatting based on the datatype of the new value.
-                var replacement = translation.NewValue.Value switch
-                {
-                    DateTime dt => dt.ToString("o", CultureInfo.InvariantCulture),
-                    DateTimeOffset dto => dto.ToString("o", CultureInfo.InvariantCulture),
-                    IFormattable f => f.ToString(null, CultureInfo.InvariantCulture),
-                    bool b => b.ToString().ToLowerInvariant(),
-                    string s => s,
-                    { } other => other.ToString(),
-                    _ => null
-                };
-                var newValue = string.IsNullOrEmpty(translation.OldValue) // null/empty string => match any value
-                    ? replacement
-                    : oldValue.Replace(translation.OldValue, replacement);
-                
-                node.ReplaceWith(JsonValue.Create(newValue));
             }
         }
         return root.ToJsonString(JsonSerializerOptions);
