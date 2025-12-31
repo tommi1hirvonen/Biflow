@@ -12,3 +12,23 @@ x-api-key: {{apiKey}}
 
 GET {{baseUrl}}/environmentversions/21/snapshot?referencesPreserved=true
 x-api-key: {{apiKey}}
+
+### Property translation sets
+
+GET {{baseUrl}}/environmentversions/propertytranslationsets
+x-api-key: {{apiKey}}
+
+### Property translation set by id
+
+GET {{baseUrl}}/environmentversions/propertytranslationsets/707a2317-a997-47aa-fd72-08de4781b141
+x-api-key: {{apiKey}}
+
+### Property translations
+
+GET {{baseUrl}}/environmentversions/propertytranslations
+x-api-key: {{apiKey}}
+
+### Property translation by id
+
+GET {{baseUrl}}/environmentversions/propertytranslations/54311a63-125b-4360-bbf4-08de478e1177
+x-api-key: {{apiKey}}

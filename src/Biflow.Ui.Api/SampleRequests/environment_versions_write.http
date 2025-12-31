@@ -27,3 +27,72 @@ Content-Type: application/json
 {
   
 }
+
+### Create property translation set
+
+POST {{baseUrl}}/environmentversions/propertytranslationsets
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "propertyTranslationSetName": "Test translation set"
+}
+
+### Update property translation set
+
+PUT {{baseUrl}}/environmentversions/propertytranslationsets/920028d0-8701-4f87-e202-08de486fb202
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "propertyTranslationSetName": "Test translation set 2"
+}
+
+### Delete property translation set
+
+DELETE {{baseUrl}}/environmentversions/propertytranslationsets/920028d0-8701-4f87-e202-08de486fb202
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+### Create property translation
+
+POST {{baseUrl}}/environmentversions/propertytranslations
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "propertyTranslationSetId": "920028d0-8701-4f87-e202-08de486fb202",
+  "propertyTranslationName": "Replace function URL",
+  "order": 0,
+  "propertyPath": "$.jobs[*].steps[*].functionUrl",
+  "oldValue": "prod",
+  "exactMatch": false,
+  "newValue": {
+    "valueType": "String",
+    "valueString": "dev"
+  }
+}
+
+### Update property translation
+
+PUT {{baseUrl}}/environmentversions/propertytranslations/835521eb-7536-43b6-6753-08de487087f0
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+  "propertyTranslationSetId": "920028d0-8701-4f87-e202-08de486fb202",
+  "propertyTranslationName": "Replace function URL 2",
+  "order": 0,
+  "propertyPath": "$.jobs[*].steps[*].functionUrl",
+  "oldValue": "prod",
+  "exactMatch": false,
+  "newValue": {
+    "valueType": "String",
+    "valueString": "test"
+  }
+}
+
+### Delete property translation
+
+DELETE {{baseUrl}}/environmentversions/propertytranslations/835521eb-7536-43b6-6753-08de487087f0
+x-api-key: {{apiKey}}
