@@ -44,13 +44,24 @@
                 </HxButton>
             </div>
         </div>
+        <div class="col-auto">
+            <div class="form-check mb-0">
+                <input type="checkbox"
+                       class="form-check-input"
+                       id="preview_preserve_references"
+                       checked=@_previewEnabled @onchange="e => TogglePreviewAsync(true, (bool)e.Value!)">
+                <label class="form-check-label" for="preview_preserve_references">
+                    Preserve references
+                </label>
+            </div>
+        </div>
     }
     <div class="col-auto @(_previewEnabled ? null : "ms-auto")">
         <div class="form-check form-switch mb-0">
             <input type="checkbox"
                    class="form-check-input"
                    id="preview_enabled_toggle"
-                   checked=@_previewEnabled @onchange="TogglePreviewAsync">
+                   checked=@_previewEnabled @onchange="e => TogglePreviewAsync((bool)e.Value!, _previewPreserveReferences)">
             <label class="form-check-label" for="preview_enabled_toggle">Preview</label>
         </div>
     </div>
@@ -146,6 +157,7 @@
     private List<PropertyTranslation>? _propertyTranslations;
     private PropertyTranslationEditModal? _editModal;
     private bool _previewEnabled;
+    private bool _previewPreserveReferences = true;
     private CodeDiffEditor? _diffEditor;
 
     protected override async Task OnParametersSetAsync()
@@ -207,9 +219,10 @@
         StateHasChanged();
     }
 
-    private async Task TogglePreviewAsync(ChangeEventArgs e)
+    private async Task TogglePreviewAsync(bool enabled, bool preserveReferences)
     {
-        _previewEnabled = (bool)e.Value!;
+        _previewEnabled = enabled;
+        _previewPreserveReferences = preserveReferences;
         if (_previewEnabled)
         {
             try
@@ -217,7 +230,7 @@
                 ArgumentNullException.ThrowIfNull(_propertyTranslations);
                 ArgumentNullException.ThrowIfNull(_diffEditor);
                 var snapshot = await SnapshotBuilder.CreateAsync();
-                var originalJson = snapshot.ToJson(preserveReferences: false);
+                var originalJson = snapshot.ToJson(preserveReferences: _previewPreserveReferences);
                 var translations = _propertyTranslations
                     .OrderBy(x => x.Order)
                     .ThenBy(x => x.PropertyTranslationName)
