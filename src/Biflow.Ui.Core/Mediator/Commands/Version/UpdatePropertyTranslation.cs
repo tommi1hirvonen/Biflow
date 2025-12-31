@@ -4,7 +4,7 @@ public record UpdatePropertyTranslationCommand(
     Guid PropertyTranslationId,
     string PropertyTranslationName,
     int Order,
-    string PropertyPath,
+    IReadOnlyList<string> PropertyPaths,
     string OldValue,
     bool ExactMatch,
     ParameterValue NewValue) : IRequest<PropertyTranslation>;
@@ -22,7 +22,8 @@ internal class UpdatePropertyTranslationCommandHandler(IDbContextFactory<AppDbCo
             ?? throw new NotFoundException<PropertyTranslation>(request.PropertyTranslationId);
         propertyTranslation.PropertyTranslationName = request.PropertyTranslationName;
         propertyTranslation.Order = request.Order;
-        propertyTranslation.PropertyPath = request.PropertyPath;
+        propertyTranslation.PropertyPaths.Clear();
+        propertyTranslation.PropertyPaths.AddRange(request.PropertyPaths);
         propertyTranslation.NewValue = request.NewValue;
         // OldValue is only effective for string values.
         propertyTranslation.OldValue = request.NewValue.ValueType is ParameterValueType.String ? request.OldValue : "";

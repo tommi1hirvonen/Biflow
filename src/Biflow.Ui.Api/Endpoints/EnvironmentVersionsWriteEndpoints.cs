@@ -186,7 +186,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                     dto.PropertyTranslationSetId,
                     dto.PropertyTranslationName,
                     dto.Order,
-                    dto.PropertyPath,
+                    dto.PropertyPaths,
                     dto.OldValue,
                     dto.ExactMatch,
                     dto.NewValue);
@@ -209,7 +209,7 @@ public abstract class EnvironmentVersionsWriteEndpoints : IEndpoints
                     translationId,
                     dto.PropertyTranslationName,
                     dto.Order,
-                    dto.PropertyPath,
+                    dto.PropertyPaths,
                     dto.OldValue,
                     dto.ExactMatch,
                     dto.NewValue);

@@ -4,7 +4,7 @@ public record CreatePropertyTranslationCommand(
     Guid PropertyTranslationSetId,
     string PropertyTranslationName,
     int Order,
-    string PropertyPath,
+    IReadOnlyList<string> PropertyPaths,
     string OldValue,
     bool ExactMatch,
     ParameterValue NewValue) : IRequest<PropertyTranslation>;
@@ -29,7 +29,7 @@ internal class CreatePropertyTranslationCommandHandler(IDbContextFactory<AppDbCo
             PropertyTranslationSetId = request.PropertyTranslationSetId,
             PropertyTranslationName = request.PropertyTranslationName,
             Order = request.Order,
-            PropertyPath = request.PropertyPath,
+            PropertyPaths = request.PropertyPaths.ToList(),
             NewValue = request.NewValue,
             // OldValue is only effective for string values.
             OldValue = request.NewValue.ValueType is ParameterValueType.String ? request.OldValue : "",

@@ -961,8 +961,10 @@ namespace Biflow.DataAccess.Migrations
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
-                    b.Property<string>("PropertyPath")
+                    b.PrimitiveCollection<string>("PropertyPaths")
                         .IsRequired()
+                        .HasMaxLength(-1)
+                        .IsUnicode(true)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PropertyTranslationName")

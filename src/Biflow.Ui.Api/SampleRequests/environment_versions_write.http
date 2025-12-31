@@ -64,7 +64,9 @@ Content-Type: application/json
   "propertyTranslationSetId": "920028d0-8701-4f87-e202-08de486fb202",
   "propertyTranslationName": "Replace function URL",
   "order": 0,
-  "propertyPath": "$.jobs[*].steps[*].functionUrl",
+  "propertyPaths": [
+    "$.jobs[*].steps.$values[*].functionUrl"
+  ],
   "oldValue": "prod",
   "exactMatch": false,
   "newValue": {
@@ -83,7 +85,10 @@ Content-Type: application/json
   "propertyTranslationSetId": "920028d0-8701-4f87-e202-08de486fb202",
   "propertyTranslationName": "Replace function URL 2",
   "order": 0,
-  "propertyPath": "$.jobs[*].steps[*].functionUrl",
+  "propertyPaths": [
+    "$.jobs[*].steps[*].functionUrl",
+    "$.jobs[*].steps.$values[*].functionUrl"
+  ],
   "oldValue": "prod",
   "exactMatch": false,
   "newValue": {

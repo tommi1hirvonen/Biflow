@@ -31,13 +31,50 @@
                         <div class="row mt-3">
                             <div class="col">
                                 <label class="form-label">Order</label>
-                                <InputNumber class="form-control" @bind-Value="_translation.Order"></InputNumber>
+                                <InputNumber class="form-control" style="max-width: 10rem;" @bind-Value="_translation.Order"></InputNumber>
                             </div>
                         </div>
                         <div class="row mt-3">
                             <div class="col">
-                                <label class="form-label">JSON path</label>
-                                <InputText class="form-control" @bind-Value="_translation.PropertyPath"></InputText>
+                                <table class="table table-sm">
+                                    <thead>
+                                    <tr>
+                                        <th>JSON path(s)</th>
+                                        <th></th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach (var i in Enumerable.Range(0, _translation.PropertyPaths.Count))
+                                    {
+                                        <tr>
+                                            <td class="align-middle">
+                                                <input class="form-control font-monospace"
+                                                       type="text"
+                                                       style="font-size: 11pt;"
+                                                       @bind="_translation.PropertyPaths[i]" />
+                                            </td>
+                                            <td class="align-middle text-end">
+                                                <HxButton Color="ThemeColor.None"
+                                                          CssClass="btn-auto"
+                                                          OnClick="() => _translation.PropertyPaths.RemoveAt(i)">
+                                                    <SvgIcon Icon="LucideIcon.Delete" />
+                                                </HxButton>
+                                            </td>
+                                        </tr>
+                                    }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <HxButton Size="ButtonSize.Small"
+                                          Color="ThemeColor.None"
+                                          CssClass="btn-auto"
+                                          OnClick="() => _translation.PropertyPaths.Add(string.Empty)">
+                                    <SvgIcon Icon="LucideIcon.Plus" />
+                                    Add path
+                                </HxButton>
                             </div>
                         </div>
                         <div class="row mt-3">
@@ -68,6 +105,7 @@
                                 <div class="col">
                                     <label class="form-label">Old value</label>
                                     <InputText class="form-control" placeholder="Any value" @bind-Value="_translation.OldValue"></InputText>
+                                    <span class="form-text">Provide an optional substring to be matched and replaced with the new value in the JSON property path(s).</span>
                                 </div>
                             </div>
                             <div class="row mt-3">

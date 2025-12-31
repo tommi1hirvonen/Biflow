@@ -32,7 +32,7 @@ namespace Biflow.DataAccess.Migrations
                     PropertyTranslationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PropertyTranslationName = table.Column<string>(type: "nvarchar(250)", maxLength: 250, nullable: false),
                     Order = table.Column<int>(type: "int", nullable: false),
-                    PropertyPath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PropertyPaths = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     OldValue = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ExactMatch = table.Column<bool>(type: "bit", nullable: false),
                     NewValue = table.Column<string>(type: "nvarchar(max)", nullable: false),

@@ -7,6 +7,9 @@ public class PropertyTranslationEntityTypeConfiguration : IEntityTypeConfigurati
     public void Configure(EntityTypeBuilder<PropertyTranslation> builder)
     {
         builder.ToTable("PropertyTranslation").HasKey(x => x.PropertyTranslationId);
+        builder.PrimitiveCollection(p => p.PropertyPaths)
+            .HasMaxLength(-1)
+            .IsUnicode();;
         builder.Property(p => p.NewValue).HasConversion(
             from => JsonSerializer.Serialize(from, null as JsonSerializerOptions),
             to => JsonSerializer.Deserialize<ParameterValue?>(to, null as JsonSerializerOptions) ?? new ParameterValue());

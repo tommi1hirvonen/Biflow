@@ -20,8 +20,7 @@ public class PropertyTranslation : IAuditable
     /// </summary>
     public int Order { get; set; }
     
-    [Required]
-    public string PropertyPath { get; set; } = "";
+    public List<string> PropertyPaths { get; init; } = [""];
     
     /// <summary>
     /// String representation of the old value. If empty, the translation will be applied to any value.
@@ -70,17 +69,14 @@ public class PropertyTranslation : IAuditable
         
         var root = JsonNode.Parse(json);
         ArgumentNullException.ThrowIfNull(root);
-        foreach (var translation in propertyTranslations.OrderBy(x => x.Order))
+        foreach (var translation in propertyTranslations.OrderBy(x => x.Order).ThenBy(x => x.PropertyTranslationName))
         {
-            var segments = JsonPathParser.Parse(translation.PropertyPath, root);
-            var evaluator = new JsonPathEvaluator(segments);
-            foreach (var node in evaluator.Evaluate(root))
+            var nodes = translation.PropertyPaths
+                .Select(path => JsonPathParser.Parse(path, root))
+                .Select(segments => new JsonPathEvaluator(segments)).SelectMany(evaluator => evaluator.Evaluate(root))
+                .OfType<JsonNode>();
+            foreach (var node in nodes)
             {
-                if (node is null)
-                {
-                    continue;
-                }
-
                 // For string values, handle partial replacements. For other types, replace the entire value.
                 if (translation.NewValue.Value is string stringValue)
                 {

@@ -1,3 +1,4 @@
+@using System.Text.Encodings.Web
 @inject IDbContextFactory<AppDbContext> DbContextFactory
 @inject IMediator Mediator
 @inject ToasterService Toaster
@@ -73,7 +74,7 @@
         <tr>
             <th>Name</th>
             <th>Order</th>
-            <th>JSON path</th>
+            <th>JSON path(s)</th>
             <th></th>
         </tr>
         </thead>
@@ -103,8 +104,15 @@
                     <td class="align-middle">
                         @translation.Order
                     </td>
-                    <td class="align-middle">
-                        @translation.PropertyPath
+                    <td class="align-middle small font-monospace">
+                        @foreach (var i in Enumerable.Range(0, translation.PropertyPaths.Count))
+                        {
+                            <span>@translation.PropertyPaths[i]</span>
+                            @if (i < translation.PropertyPaths.Count - 1)
+                            {
+                                <br/>
+                            }
+                        }
                     </td>
                     <td class="align-middle">
                         <HxButtonGroup>
@@ -195,7 +203,7 @@
                 translation.PropertyTranslationSetId,
                 translation.PropertyTranslationName,
                 translation.Order,
-                translation.PropertyPath,
+                translation.PropertyPaths,
                 translation.OldValue,
                 translation.ExactMatch,
                 translation.NewValue);
@@ -208,7 +216,7 @@
                 translation.PropertyTranslationId,
                 translation.PropertyTranslationName,
                 translation.Order,
-                translation.PropertyPath,
+                translation.PropertyPaths,
                 translation.OldValue,
                 translation.ExactMatch,
                 translation.NewValue);
