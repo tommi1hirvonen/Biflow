@@ -16,6 +16,18 @@
                    @bind-Value:get="ValueDateTime"
                    @bind-Value:set="v => SetValue(v, ParameterValueType.DateTime)" />
         break;
+    case ParameterValueType.DateTimeOffset:
+        // Handle DateTimeOffset by using separate inputs for the DateTime and Offset parts.
+        <InputDate class="form-control"
+                   Type="InputDateType.DateTimeLocal"
+                   @bind-Value:get="ValueDateTimeOffset"
+                   @bind-Value:set="SetDateTimeOffset" />
+        <div class="input-group-text">Offset</div>
+        <InputNumber class="form-control"
+                     style="max-width: 4rem;"
+                     @bind-Value:get="Offset"
+                     @bind-Value:set="SetOffset"></InputNumber>
+        break;
     case ParameterValueType.Decimal:
         <InputNumber class="form-control"
                      @bind-Value:get="ValueDecimal"
@@ -75,6 +87,13 @@
 
     private bool ValueBoolean => Translation?.NewValue.GetValueOrDefault<bool>() ?? false;
     private DateTime? ValueDateTime => Translation?.NewValue.GetValueOrDefault<DateTime?>();
+    
+    // Convert the DateTimeOffset to a DateTime for the input control.
+    private DateTime ValueDateTimeOffset => 
+        Translation?.NewValue.GetValueOrDefault<DateTimeOffset?>()?.DateTime ?? DateTime.MinValue;
+    private double Offset =>
+        Translation?.NewValue.GetValueOrDefault<DateTimeOffset?>()?.Offset.TotalHours ?? 0;
+    
     private decimal? ValueDecimal => Translation?.NewValue.GetValueOrDefault<decimal?>();
     private double? ValueDouble => Translation?.NewValue.GetValueOrDefault<double?>();
     private short? ValueInt16 => Translation?.NewValue.GetValueOrDefault<short?>();
@@ -86,5 +105,21 @@
     private void SetValue(object? value, ParameterValueType type)
     {
         Translation?.NewValue = new ParameterValue(value, type);
+    }
+
+    private void SetDateTimeOffset(DateTime dt)
+    {
+        var timeSpan = TimeSpan.FromHours(Offset);
+        var dateTime = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
+        var value = new DateTimeOffset(dateTime.Ticks, timeSpan);
+        SetValue(value, ParameterValueType.DateTimeOffset);
+    }
+
+    private void SetOffset(double offset)
+    {
+        var dto = Translation?.NewValue.GetValueOrDefault<DateTimeOffset?>() ?? DateTimeOffset.MinValue;
+        var timeSpan = TimeSpan.FromHours(offset);
+        var value = dto.ToOffset(timeSpan);
+        SetValue(value, ParameterValueType.DateTimeOffset);
     }
 }

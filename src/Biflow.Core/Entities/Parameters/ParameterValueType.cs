@@ -5,6 +5,7 @@ public enum ParameterValueType
     Empty,
     Boolean,
     DateTime,
+    DateTimeOffset,
     Decimal,
     Double,
     Int16,

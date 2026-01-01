@@ -16,6 +16,10 @@ public struct ParameterValue
                 ValueDateTime = b;
                 ValueType = ParameterValueType.DateTime;
                 break;
+            case DateTimeOffset dto:
+				ValueDateTimeOffset = dto;
+				ValueType = ParameterValueType.DateTimeOffset;
+	            break;
             case decimal b:
                 ValueDecimal = b;
                 ValueType = ParameterValueType.Decimal;
@@ -56,6 +60,7 @@ public struct ParameterValue
         ParameterValueType.Empty => null,
         ParameterValueType.Boolean => ValueBoolean,
         ParameterValueType.DateTime => ValueDateTime,
+        ParameterValueType.DateTimeOffset => ValueDateTimeOffset,
         ParameterValueType.Decimal => ValueDecimal,
         ParameterValueType.Double => ValueDouble,
         ParameterValueType.Int16 => ValueInt16,
@@ -77,6 +82,10 @@ public struct ParameterValue
     [JsonInclude]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     private DateTime? ValueDateTime { get; set; }
+    
+    [JsonInclude]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    private DateTimeOffset? ValueDateTimeOffset { get; set; }
 
     [JsonInclude]
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
@@ -117,6 +126,7 @@ public struct ParameterValue
         ParameterValueType.Empty => new(),
         ParameterValueType.Boolean => new(false),
         ParameterValueType.DateTime => new(DateTime.MinValue),
+        ParameterValueType.DateTimeOffset => new(DateTimeOffset.MinValue),
         ParameterValueType.Decimal => new(0.0m),
         ParameterValueType.Double => new(0.0d),
         ParameterValueType.Int16 => new((short)0),
@@ -133,6 +143,7 @@ public struct ParameterValue
         {
             (ParameterValueType.Boolean, bool b) => (new(b), true),
             (ParameterValueType.DateTime, DateTime d) => (new(d), true),
+            (ParameterValueType.DateTimeOffset, DateTimeOffset dto) => (new(dto), true),
             (ParameterValueType.Decimal, decimal d) => (new(d), true),
             (ParameterValueType.Double, double d) => (new(d), true),
             (ParameterValueType.Int16, short s) => (new(s), true),
