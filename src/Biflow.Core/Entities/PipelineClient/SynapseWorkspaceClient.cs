@@ -59,10 +59,12 @@ internal class SynapseWorkspaceClient(SynapseWorkspace synapse, ITokenService to
         });
     }
 
-    public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters,
+	    CancellationToken cancellationToken)
     {
         var pipelineClient = new SynapsePipelineClient(synapse.SynapseEndpoint, _tokenCredential);
-        var response = await pipelineClient.CreatePipelineRunAsync(pipelineName, parameters: parameters, cancellationToken: cancellationToken);
+        var response = await pipelineClient.CreatePipelineRunAsync(pipelineName, parameters: parameters,
+	        cancellationToken: cancellationToken);
         return response.Value.RunId;
     }
 }

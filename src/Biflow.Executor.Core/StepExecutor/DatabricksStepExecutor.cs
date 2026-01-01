@@ -37,7 +37,7 @@ internal class DatabricksStepExecutor(
         {
             parameters = step.StepExecutionParameters
                 .Where(p => p.ParameterValue.Value is not null)
-                .ToDictionary(key => key.ParameterName, value => value.ParameterValue.Value!.ToString()!);
+                .ToDictionary(key => key.ParameterName, value => value.ParameterValue.ToString());
         }
         catch (Exception ex)
         {

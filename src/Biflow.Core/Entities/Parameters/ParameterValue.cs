@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Globalization;
+using System.Text.Json.Serialization;
 
 namespace Biflow.Core.Entities;
 
@@ -155,4 +156,12 @@ public struct ParameterValue
         };
         return success;
     }
+    
+    public override string ToString() => Value switch
+    {
+	    DateTime dt => dt.ToString("o", CultureInfo.InvariantCulture),
+	    DateTimeOffset dto => dto.ToString("o", CultureInfo.InvariantCulture),
+	    IFormattable formattable => formattable.ToString("G", CultureInfo.InvariantCulture),
+	    _ => Value?.ToString() ?? ""
+    };
 }

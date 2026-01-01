@@ -79,22 +79,21 @@ public class FabricWorkspaceClient
             return "{}";
         var transformedParameters = parameters.ToDictionary(
             p => p.Key,
-            p => new { value = TextFromValue(p.Value), type = TypeFromValue(p.Value) });
+            p => new
+            {
+	            // Use ToString() formatting of ParameterValue for correct serialization
+	            value = new ParameterValue(p.Value).ToString(),
+	            // Allowed values for the type property are: int, float, bool, string
+	            type = p.Value switch
+	            {
+		            short or int or long => "int",
+		            float or double or decimal => "float",
+		            bool => "bool",
+		            _ => "string"
+	            }
+            });
         var executionData = new { executionData = new { parameters = transformedParameters } };
         return JsonSerializer.Serialize(executionData);
-        string? TextFromValue(object value) => value switch
-        {
-            IFormattable formattable => formattable.ToString("G", CultureInfo.InvariantCulture),
-            _ => value.ToString()
-        };
-        // Allowed values for the type property are: int, float, bool, string
-        string TypeFromValue(object value) => value switch
-        {
-            short or int or long => "int",
-            float or double or decimal => "float",
-            bool => "bool",
-            _ => "string"
-        };
     }
     
     private static Guid ParseInstanceIdFromLocation(ReadOnlySpan<char> location)

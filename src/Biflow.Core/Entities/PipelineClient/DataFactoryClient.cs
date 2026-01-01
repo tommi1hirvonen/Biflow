@@ -22,13 +22,14 @@ internal class DataFactoryClient : IPipelineClient
         _dataFactoryResource = _armClient.GetDataFactoryResource(identifier);
     }
 
-    public async Task<string> StartPipelineRunAsync(
-        string pipelineName, IDictionary<string, object> parameters, CancellationToken cancellationToken)
+    public async Task<string> StartPipelineRunAsync(string pipelineName, IDictionary<string, object> parameters,
+	    CancellationToken cancellationToken)
     {
         var resource = GetPipelineResource(pipelineName);
         var parameterSpecification = parameters.ToDictionary(key => key.Key, value => new BinaryData(value.Value));
         var result = await resource.CreateRunAsync(
-            parameterValueSpecification: parameterSpecification, cancellationToken: cancellationToken);
+            parameterValueSpecification: parameterSpecification,
+            cancellationToken: cancellationToken);
         return result.Value.RunId.ToString();
     }
 
