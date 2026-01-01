@@ -2,34 +2,38 @@
 
 @inject ToasterService Toaster
 
-<HxOffcanvas @ref="_offcanvas" Backdrop="OffcanvasBackdrop.False" Title="@(_parameter?.DisplayName ?? "")" OnClosed="OnClosed">
+<HxOffcanvas @ref="_offcanvas"
+             Backdrop="OffcanvasBackdrop.False"
+             Title="@(_parameter?.DisplayName ?? "")"
+             OnClosed="OnClosed"
+             RenderMode="OffcanvasRenderMode.Always">
     <BodyTemplate>
-        @if (_parameter is not null)
+        <div class="row">
+            <div class="col">
+                <label class="form-label">
+                    Dynamic expression
+                </label>
+                <CodeEditor @ref="_editor"
+                            InitialValueExpression="() => _parameter?.Expression.Expression"
+                            MinimapEnabled="false"
+                            Language="csharp"
+                            OnValueChanged="async value => { _parameter?.Expression.Expression = value; await OnExpressionChanged.InvokeAsync(); }" />
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col">
+                <HxButton OnClick="TestEvaluate"
+                          Color="ThemeColor.None"
+                          CssClass="btn-auto"
+                          Size="ButtonSize.Small">
+                    <SvgIcon Icon="LucideIcon.Check" />
+                    Test evaluate / validate
+                </HxButton>
+            </div>
+        </div>
+        @if (ChildContent is not null && _parameter is not null)
         {
-            <div class="row">
-                <div class="col">
-                    <label class="form-label">
-                        Dynamic expression
-                    </label>
-                    <CodeEditor @ref="_editor"
-                                InitialValueExpression="() => _parameter.Expression.Expression"
-                                MinimapEnabled="false"
-                                Language="csharp"
-                                OnValueChanged="async (value) => { _parameter.Expression.Expression = value; await OnExpressionChanged.InvokeAsync(); }" />
-                </div>
-            </div>
-            <div class="row mt-3">
-                <div class="col">
-                    <HxButton OnClick="() => TestEvaluate(_parameter)" Color="ThemeColor.None" CssClass="btn-auto" Size="ButtonSize.Small">
-                        <SvgIcon Icon="LucideIcon.Check" />
-                        Test evaluate / validate
-                    </HxButton>
-                </div>
-            </div>
-            @if (ChildContent is not null)
-            {
-                @ChildContent(_parameter)
-            }
+            @ChildContent(_parameter)
         }
 
         <div class="row mt-4">
@@ -70,16 +74,17 @@
     public async Task ShowAsync(TParameter parameter)
     {
         _parameter = parameter;
-        await _editor.LetAsync(x => x.SetValueAsync(parameter.Expression.Expression));
+        await _editor.LetAsync(x => x.SetValueAsync(parameter.Expression.Expression ?? ""));
         StateHasChanged(); // To update offcanvas title text
         await _offcanvas.LetAsync(x => x.ShowAsync());
     }
 
-    private async Task TestEvaluate(TParameter parameter)
+    private async Task TestEvaluate()
     {
         try
         {
-            var result = await parameter.EvaluateAsync();
+            ArgumentNullException.ThrowIfNull(_parameter);
+            var result = await _parameter.EvaluateAsync();
             Toaster.AddInformation($"Evaluation result: {result}");
         }
         catch (Exception ex)
