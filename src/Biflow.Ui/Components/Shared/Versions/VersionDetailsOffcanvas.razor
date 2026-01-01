@@ -1,0 +1,63 @@
+@inject IJSRuntime Js
+@inject ToasterService Toaster
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+
+<HxOffcanvas @ref="_detailsOffcanvas"
+             Size="OffcanvasSize.Large"
+             Title="@($"Version {_detailsVersion?.VersionId}")">
+    <BodyTemplate>
+        <div class="row justify-content-between">
+            <div class="col-auto">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="simplified_json"
+                           checked=@_simplifiedJson
+                                                      @onchange="args => _simplifiedJson = (bool)args.Value!">
+                    <label class="form-check-label" for="simplified_json">Simplified JSON</label>
+                    <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
+                        <SvgIcon Icon="LucideIcon.Info" />
+                    </HxPopover>
+                </div>
+            </div>
+            <div class="col-auto">
+                <span class="text-secondary small text-decoration-underline cursor-pointer" @onclick="CopyToClipboard">
+                    <SvgIcon Icon="LucideIcon.ClipboardCopy" />
+                    Copy to clipboard
+                </span>
+            </div>
+        </div>
+        <div class="row mt-3">
+            <div class="col small font-monospace">
+                <pre style="max-height: calc(100vh - 160px);">
+                    @(_simplifiedJson ? _detailsVersion?.Snapshot : _detailsVersion?.SnapshotWithReferencesPreserved)
+                </pre>
+            </div>
+        </div>
+    </BodyTemplate>
+</HxOffcanvas>
+
+@code {
+    private HxOffcanvas? _detailsOffcanvas;
+    private bool _simplifiedJson = true; // inverse of whether to show JSON with references preserved
+    private EnvironmentVersion? _detailsVersion;
+
+    public async Task ShowAsync(int versionId)
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        _detailsVersion = await context.EnvironmentVersions.FirstOrDefaultAsync(v => v.VersionId == versionId);
+        await _detailsOffcanvas.LetAsync(x => x.ShowAsync());
+    }
+    
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            var text = _simplifiedJson ? _detailsVersion?.Snapshot : _detailsVersion?.SnapshotWithReferencesPreserved;
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            Toaster.AddInformation("Value copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error copying to clipboard", ex.Message);
+        }
+    }
+}
