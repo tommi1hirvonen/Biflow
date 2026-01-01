@@ -36,12 +36,11 @@
                         </div>
                         <div class="row mt-3">
                             <div class="col">
-                                <table class="table table-sm">
+                                <table class="table table-sm mb-0">
                                     <thead>
                                     <tr>
                                         <th>
-                                            JSON path(s)
-                                            &nbsp;
+                                            JSON path(s)&nbsp;
                                             <span class="cursor-pointer text-body-emphasis" @onclick="() => _jsonPathHelpOffcanvas.LetAsync(x => x.ShowAsync())">
                                                 <SvgIcon Icon="LucideIcon.CircleHelp" />
                                             </span>
@@ -56,7 +55,7 @@
                                             <td class="align-middle">
                                                 <input class="form-control font-monospace"
                                                        type="text"
-                                                       style="font-size: 11pt;"
+                                                       style="font-size: 10pt;"
                                                        @bind="_translation.PropertyPaths[i]" />
                                             </td>
                                             <td class="align-middle text-end">
@@ -70,9 +69,17 @@
                                     }
                                     </tbody>
                                 </table>
+                                <span class="form-text">
+                                    JSON paths should normally be added for both variants of the snapshot:
+                                    the one where references are preserved (used for reverting) and the simplified version.
+                                    See the
+                                    <span class="text-decoration-underline cursor-pointer" @onclick="() => _jsonPathHelpOffcanvas.LetAsync(x => x.ShowAsync())">
+                                        JSON path help
+                                    </span> for more info.
+                                </span>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row mt-2">
                             <div class="col">
                                 <HxButton Size="ButtonSize.Small"
                                           Color="ThemeColor.None"
