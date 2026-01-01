@@ -12,6 +12,9 @@
         <HxButton Color="ThemeColor.Success" OnClick="() => _createModal.LetAsync(x => x.ShowAsync())">
             Create version
         </HxButton>
+        <HxButton Color="ThemeColor.None" CssClass="btn-auto ms-3" OnClick="() => _generateSnapshotOffcanvas.LetAsync(x => x.ShowAsync())">
+            Generate snapshot
+        </HxButton>
         <AuthorizeView Roles="@($"{Roles.Admin}, {Roles.VersionManager}")">
             <a role="button" class="btn btn-auto btn-sm ms-auto" href="versions/revertjson">
                 Revert from JSON
@@ -152,6 +155,9 @@
                     PropertyTranslationSets="PropertyTranslationSets"
                     OnVersionCreated="version => Versions?.Insert(0, version)" />
 
+<GenerateSnapshotOffcanvas @ref="_generateSnapshotOffcanvas"
+                           PropertyTranslationSets="PropertyTranslationSets"/>
+
 @code {
     [CascadingParameter] public UserState UserState { get; set; } = new();
 
@@ -161,6 +167,7 @@
     private Paginator<VersionProjection>? _paginator;
     private VersionCreateModal? _createModal;
     private VersionDetailsOffcanvas? _detailsOffcanvas;
+    private GenerateSnapshotOffcanvas? _generateSnapshotOffcanvas;
 
     protected override void OnInitialized()
     {

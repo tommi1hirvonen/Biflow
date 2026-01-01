@@ -1,0 +1,131 @@
+@inject IJSRuntime Js
+@inject ToasterService Toaster
+@inject IDbContextFactory<AppDbContext> DbContextFactory
+@inject EnvironmentSnapshotBuilder SnapshotBuilder
+
+<HxOffcanvas @ref="_offcanvas"
+             Size="OffcanvasSize.Large"
+             Title="Generate snapshot"
+             OnClosed="OnClosed">
+    <BodyTemplate>
+        <div class="row">
+            <div class="col-auto">
+                <label class="form-label">Property translation set</label>
+                <select class="form-select form-select-sm"
+                        @bind:get="_propertyTranslationSetId"
+                        @bind:set="SetTranslationSetIdAsync">
+                    <option value="">None</option>
+                    @if (PropertyTranslationSets != null)
+                    {
+                        foreach (var set in PropertyTranslationSets)
+                        {
+                            <option value="@set.PropertyTranslationSetId">@set.PropertyTranslationSetName</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="row mt-3 justify-content-between">
+            <div class="col-auto">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="simplified_json"
+                           checked=@_simplifiedJson @onchange="args => ToggleSimplifiedJson((bool)args.Value!)">
+                    <label class="form-check-label" for="simplified_json">Simplified JSON</label>
+                    <HxPopover Trigger="PopoverTrigger.Hover" WrapperCssClass="ms-2" Content="Simplified JSON is easier for humans to read and is recommended for diff comparisons. JSON with object references preserved (non-simplified) includes additional metadata properties that add complexity and reduce readability but are required when deserializing and reverting snapshots.">
+                        <SvgIcon Icon="LucideIcon.Info"/>
+                    </HxPopover>
+                </div>
+            </div>
+            <div class="col-auto">
+                <span class="text-secondary small text-decoration-underline cursor-pointer" @onclick="CopyToClipboard">
+                    <SvgIcon Icon="LucideIcon.ClipboardCopy"/>
+                    Copy to clipboard
+                </span>
+            </div>
+        </div>
+        <div class="row mt-3">
+            @if (_snapshotJson is null)
+            {
+                <div class="col text-center">
+                    <HxSpinner Color="ThemeColor.Secondary" />
+                </div>
+            }
+            else
+            {
+                <div class="col small font-monospace">
+                    <pre style="max-height: calc(100vh - 240px);">
+                        @_snapshotJson
+                    </pre>
+                </div>
+            }
+        </div>
+    </BodyTemplate>
+</HxOffcanvas>
+
+@code {
+    [Parameter] public IList<PropertyTranslationSet>? PropertyTranslationSets { get; set; }
+    
+    private HxOffcanvas? _offcanvas;
+    private Guid? _propertyTranslationSetId;
+    private bool _simplifiedJson; // inverse of whether to show JSON with references preserved
+    private EnvironmentSnapshot? _snapshot;
+    private PropertyTranslation[] _propertyTranslations = [];
+    private string? _snapshotJson;
+
+    public async Task ShowAsync()
+    {
+        await _offcanvas.LetAsync(x => x.ShowAsync());
+        _snapshot ??= await SnapshotBuilder.CreateAsync();
+        _snapshotJson = _snapshot.ToJson(!_simplifiedJson, _propertyTranslations);
+        StateHasChanged();
+    }
+
+    private void ToggleSimplifiedJson(bool simplifiedJson)
+    {
+        ArgumentNullException.ThrowIfNull(_snapshot);
+        _simplifiedJson = simplifiedJson;
+        _snapshotJson = _snapshot.ToJson(!_simplifiedJson, _propertyTranslations);
+        StateHasChanged();
+    }
+
+    private async Task SetTranslationSetIdAsync(Guid? translationSetId)
+    {
+        ArgumentNullException.ThrowIfNull(_snapshot);
+        _snapshotJson = null;
+        _propertyTranslationSetId = translationSetId;
+        if (_propertyTranslationSetId is { } id)
+        {
+            await using var dbContext = await DbContextFactory.CreateDbContextAsync();
+            _propertyTranslations = await dbContext.PropertyTranslations
+                .Where(t => t.PropertyTranslationSetId == id)
+                .ToArrayAsync();
+        }
+        else
+        {
+            _propertyTranslations = [];
+        }
+        _snapshotJson = _snapshot.ToJson(!_simplifiedJson, _propertyTranslations);
+        StateHasChanged();
+    }
+
+    private void OnClosed()
+    {
+        _snapshot = null;
+        _snapshotJson = string.Empty;
+        _propertyTranslations = [];
+        _propertyTranslationSetId = null;
+    }
+    
+    private async Task CopyToClipboard()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("navigator.clipboard.writeText", _snapshotJson);
+            Toaster.AddInformation("Value copied to clipboard");
+        }
+        catch (Exception ex)
+        {
+            Toaster.AddError("Error copying to clipboard", ex.Message);
+        }
+    }
+}
