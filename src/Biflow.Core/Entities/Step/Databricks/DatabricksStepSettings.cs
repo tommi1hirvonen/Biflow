@@ -3,6 +3,7 @@
 namespace Biflow.Core.Entities;
 
 [JsonDerivedType(typeof(DbNotebookStepSettings), "Notebook")]
+[JsonDerivedType(typeof(DbSqlNotebookStepSettings), "SqlNotebook")]
 [JsonDerivedType(typeof(DbPythonFileStepSettings), "PythonFile")]
 [JsonDerivedType(typeof(DbJobStepSettings), "Job")]
 [JsonDerivedType(typeof(DbPipelineStepSettings), "Pipeline")]
@@ -16,6 +17,19 @@ public abstract class DatabricksClusterStepSettings : DatabricksStepSettings
 public class DbNotebookStepSettings : DatabricksClusterStepSettings
 {
     public string NotebookPath { get; set; } = "";
+}
+
+public class DbSqlNotebookStepSettings : DatabricksStepSettings
+{
+	public string NotebookPath { get; set; } = "";
+	
+	public string WarehouseId { get; set; } = "";
+	
+	/// <summary>
+	/// The warehouse name is stored only for audit purposes so that it can be viewed in the execution logs
+	/// without having to navigate to the actual Databricks workspace.
+	/// </summary>
+	public string? WarehouseName { get; set; }
 }
 
 public class DbPythonFileStepSettings : DatabricksClusterStepSettings

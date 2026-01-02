@@ -43,6 +43,7 @@ public static class DisplayStepTypeExtensions
             {
                 (StepType.AgentJob, _, _, _) => DisplayStepType.AgentJob,
                 (StepType.Databricks, _, DbNotebookStepSettings, _) => DisplayStepType.DatabricksNotebook,
+                (StepType.Databricks, _, DbSqlNotebookStepSettings, _) => DisplayStepType.DatabricksNotebook,
                 (StepType.Databricks, _, DbPythonFileStepSettings, _) => DisplayStepType.DatabricksPythonFile,
                 (StepType.Databricks, _, DbJobStepSettings, _) => DisplayStepType.DatabricksJob,
                 (StepType.Databricks, _, DbPipelineStepSettings, _) => DisplayStepType.DatabricksPipeline,

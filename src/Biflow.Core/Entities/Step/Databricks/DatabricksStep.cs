@@ -39,7 +39,7 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
     [JsonIgnore]
     public override DisplayStepType DisplayStepType => DatabricksStepSettings switch
     {
-        DbNotebookStepSettings => DisplayStepType.DatabricksNotebook,
+        DbNotebookStepSettings or DbSqlNotebookStepSettings => DisplayStepType.DatabricksNotebook,
         DbPythonFileStepSettings => DisplayStepType.DatabricksPythonFile,
         DbJobStepSettings => DisplayStepType.DatabricksJob,
         DbPipelineStepSettings => DisplayStepType.DatabricksPipeline,
@@ -68,6 +68,16 @@ public class DatabricksStep : Step, IHasTimeout, IHasStepParameters<DatabricksSt
             settings.NotebookPath = python.FilePath;
         }
         DatabricksStepSettings = settings;
+    }
+
+    public void SetIsSqlNotebook()
+    {
+	    if (DatabricksStepSettings is DbSqlNotebookStepSettings)
+		    return;
+	    var settings = new DbSqlNotebookStepSettings();
+	    if (DatabricksStepSettings is DbNotebookStepSettings nb)
+		    settings.NotebookPath = nb.NotebookPath;
+	    DatabricksStepSettings = settings;
     }
 
     public void SetIsPythonFile()

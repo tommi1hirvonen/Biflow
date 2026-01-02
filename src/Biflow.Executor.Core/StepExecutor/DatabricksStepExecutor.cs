@@ -69,6 +69,15 @@ internal class DatabricksStepExecutor(
                             NotebookPath = notebook.NotebookPath,
                             BaseParameters = parameters
                         }),
+                DbSqlNotebookStepSettings sqlNotebook =>
+	                settings.AddTask(
+		                taskKey,
+		                new NotebookTask
+		                {
+			                NotebookPath = sqlNotebook.NotebookPath,
+			                BaseParameters = parameters,
+			                WarehouseId = sqlNotebook.WarehouseId
+		                }),
                 DbPythonFileStepSettings python =>
                     settings.AddTask(
                         taskKey,

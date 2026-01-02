@@ -33,7 +33,7 @@ public class DatabricksStepExecution : StepExecution,
 
     public override DisplayStepType DisplayStepType => DatabricksStepSettings switch
     {
-        DbNotebookStepSettings => DisplayStepType.DatabricksNotebook,
+        DbNotebookStepSettings or DbSqlNotebookStepSettings => DisplayStepType.DatabricksNotebook,
         DbPythonFileStepSettings => DisplayStepType.DatabricksPythonFile,
         DbJobStepSettings => DisplayStepType.DatabricksJob,
         DbPipelineStepSettings => DisplayStepType.DatabricksPipeline,

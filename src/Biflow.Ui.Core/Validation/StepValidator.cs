@@ -163,6 +163,7 @@ file class DatabricksStepSettingsValidator : AbstractValidator<DatabricksStepSet
             .SetInheritanceValidator(v =>
             {
                 v.Add(new DbNotebookStepSettingsValidator());
+                v.Add(new DbSqlNotebookStepSettingsValidator());
                 v.Add(new DbPythonFileStepSettingsValidator());
                 v.Add(new DbPipelineStepSettingsValidator());
                 v.Add(new DbJobStepSettingsValidator());
@@ -182,6 +183,15 @@ file class DbNotebookStepSettingsValidator : AbstractValidator<DbNotebookStepSet
                 v.Add(new NewClusterValidator());
             });
     }
+}
+
+file class DbSqlNotebookStepSettingsValidator : AbstractValidator<DbSqlNotebookStepSettings>
+{
+	public DbSqlNotebookStepSettingsValidator()
+	{
+		RuleFor(settings => settings.NotebookPath).NotEmpty();
+		RuleFor(settings => settings.WarehouseId).NotEmpty();
+	}
 }
 
 file class DbPythonFileStepSettingsValidator : AbstractValidator<DbPythonFileStepSettings>

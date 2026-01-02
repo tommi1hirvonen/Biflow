@@ -2,6 +2,8 @@
 using Biflow.Ui.Components.Shared.StepEdit;
 using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline;
 using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo;
+using WarehouseInfo = Microsoft.Azure.Databricks.Client.Models.WarehouseInfo;
+using Job = Biflow.Core.Entities.Job;
 
 namespace Biflow.Ui.Components.Shared.StepEditModal;
 
@@ -18,6 +20,7 @@ public partial class DatabricksStepEditModal(
     private (string Id, string Description)[]? _runtimeVersions;
     private (string Id, string Description)[]? _nodeTypes;
     private ClusterInfo[]? _clusters;
+    private WarehouseInfo[]? _warehouses;
     private DatabricksJob[]? _dbJobs;
     private Pipeline[]? _pipelines;
 
@@ -90,6 +93,12 @@ public partial class DatabricksStepEditModal(
                     ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
                     ?.ClusterName;
                 break;
+            case DbSqlNotebookStepSettings sqlNotebook:
+	            if (!string.IsNullOrEmpty(sqlNotebook.WarehouseName)) break;
+				sqlNotebook.WarehouseName ??= _warehouses
+					?.FirstOrDefault(w => w.Id == sqlNotebook.WarehouseId)
+					?.Name;
+	            break;
         }
         var dependencies = step.Dependencies.ToDictionary(
             key => key.DependantOnStepId,
@@ -162,6 +171,12 @@ public partial class DatabricksStepEditModal(
                     ?.FirstOrDefault(c => c.ClusterId == existing.ClusterId)
                     ?.ClusterName;
                 break;
+            case DbSqlNotebookStepSettings sqlNotebook:
+	            if (!string.IsNullOrEmpty(sqlNotebook.WarehouseName)) break;
+	            sqlNotebook.WarehouseName = _warehouses
+		            ?.FirstOrDefault(w => w.Id == sqlNotebook.WarehouseId)
+		            ?.Name;
+	            break;
         }
         var dependencies = step.Dependencies.ToDictionary(
             key => key.DependantOnStepId,
@@ -243,6 +258,7 @@ public partial class DatabricksStepEditModal(
         _runtimeVersions = null;
         _nodeTypes = null;
         _clusters = null;
+        _warehouses = null;
         _dbJobs = null;
         _pipelines = null;
     }
@@ -537,5 +553,60 @@ public partial class DatabricksStepEditModal(
         {
             Data = _clusters.Where(n => n.ClusterName.ContainsIgnoreCase(request.UserInput))
         };
+    }
+    
+    private async Task<WarehouseInfo?> ResolveWarehouseFromValueAsync(string? value)
+    {
+	    if (string.IsNullOrWhiteSpace(value))
+	    {
+		    return null;
+	    }
+
+	    if (_warehouses is not null)
+	    {
+		    return _warehouses.FirstOrDefault(v => v.Id == value);
+	    }
+        
+	    try
+	    {
+		    var workspace = CurrentWorkspace;
+		    ArgumentNullException.ThrowIfNull(workspace);
+		    using var client = workspace.CreateClient();
+		    return await client.GetWarehouseAsync(value);
+	    }
+	    catch (Exception ex)
+	    {
+		    Toaster.AddWarning("Error fetching warehouse information", ex.Message);
+		    return null;
+	    }
+    }
+
+    private async Task<AutosuggestDataProviderResult<WarehouseInfo>> ProvideWarehouseSuggestionsAsync(
+	    AutosuggestDataProviderRequest request)
+    {
+	    if (_warehouses is not null)
+		    return new()
+		    {
+			    Data = _warehouses.Where(w => w.Name.ContainsIgnoreCase(request.UserInput))
+		    };
+        
+	    try
+	    {
+		    var workspace = CurrentWorkspace;
+		    ArgumentNullException.ThrowIfNull(workspace);
+		    using var client = workspace.CreateClient();
+		    var warehouses = await client.GetWarehousesAsync();
+		    _warehouses = warehouses.OrderBy(w => w.Name).ToArray();
+	    }
+	    catch (Exception ex)
+	    {
+		    Toaster.AddError("Error fetching available warehouses", ex.Message);
+		    _warehouses = [];
+	    }
+
+	    return new()
+	    {
+		    Data = _warehouses.Where(w => w.Name.ContainsIgnoreCase(request.UserInput))
+	    };
     }
 }

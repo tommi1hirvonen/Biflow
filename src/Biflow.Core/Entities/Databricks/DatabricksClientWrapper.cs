@@ -76,7 +76,8 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
         return folder;
     }
 
-    private async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/", CancellationToken cancellationToken = default)
+    private async Task<IEnumerable<ObjectInfo>> GetWorkspaceObjectsAsync(string path = "/",
+	    CancellationToken cancellationToken = default)
     {
         var result = new ConcurrentBag<ObjectInfo>();
         var items = await Client.Workspace.List(path, cancellationToken: cancellationToken);
@@ -117,6 +118,16 @@ public class DatabricksClientWrapper(DatabricksWorkspace workspace) : IDisposabl
     public Task<ClusterInfo?> GetClusterAsync(string clusterId, CancellationToken cancellationToken = default)
     {
         return Client.Clusters.Get(clusterId, cancellationToken);
+    }
+
+    public Task<IEnumerable<WarehouseInfo>> GetWarehousesAsync(CancellationToken cancellationToken = default)
+    {
+	    return Client.SQL.Warehouse.List(runAsUserId: null, cancellationToken: cancellationToken);
+    }
+
+    public Task<WarehouseInfo?> GetWarehouseAsync(string warehouseId, CancellationToken cancellationToken = default)
+    {
+	    return Client.SQL.Warehouse.Get(warehouseId, cancellationToken);
     }
 
     public void Dispose() => Client.Dispose();

@@ -1,6 +1,8 @@
-﻿@inherits StepEditModal<DatabricksStep>
+﻿@using WarehouseInfo = Microsoft.Azure.Databricks.Client.Models.WarehouseInfo
 @using Pipeline = Microsoft.Azure.Databricks.Client.Models.Pipeline
 @using ClusterInfo = Microsoft.Azure.Databricks.Client.Models.ClusterInfo
+
+@inherits StepEditModal<DatabricksStep>
 
 <StepEditModalTemplate Modal="this" TStep="DatabricksStep">
     @if (Step is not null)
@@ -51,6 +53,15 @@
                     <label class="form-check-label fw-normal" for="radio_databricks_type_notebook">
                         <SvgIcon Icon="LucideIcon.Notebook" />
                         Notebook
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input type="radio" class="form-check-input" id="radio_databricks_type_sql_notebook"
+                           checked=@(Step.DatabricksStepSettings is DbSqlNotebookStepSettings)
+                           @onchange="() => Step.SetIsSqlNotebook()">
+                    <label class="form-check-label fw-normal" for="radio_databricks_type_sql_notebook">
+                        <SvgIcon Icon="LucideIcon.Notebook" />
+                        SQL notebook
                     </label>
                 </div>
                 <div class="form-check form-check-inline">
@@ -105,8 +116,46 @@
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
-                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="notebookSettings.NotebookPath" />
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off"
+                                       @bind-Value="notebookSettings.NotebookPath" />
                     </div>
+                </div>
+            </div>
+        }
+        else if (Step.DatabricksStepSettings is DbSqlNotebookStepSettings sqlNotebookSettings)
+        {
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Path</label>
+                </div>
+                <div class="col-md-6">
+                    <div class="input-group input-group-sm">
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off"
+                                       @bind-Value="sqlNotebookSettings.NotebookPath" />
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-3">
+                <div class="col-md-4 d-md-flex justify-content-end">
+                    <label class="form-label mb-lg-0">Warehouse</label>
+                </div>
+                <div class="col-md-6">
+                    <HxAutosuggest TValue="string"
+                                   TItem="WarehouseInfo"
+                                   InputSize="InputSize.Small"
+                                   @bind-Value="sqlNotebookSettings.WarehouseId"
+                                   MinimumLength="0"
+                                   ValueSelector="item => item.Id"
+                                   TextSelector="item => item.Name"
+                                   ItemFromValueResolver="ResolveWarehouseFromValueAsync"
+                                   DataProvider="ProvideWarehouseSuggestionsAsync"
+                                   autocomplete="off">
+                        <EmptyTemplate>
+                            <div class="dropdown-item disabled">
+                                No warehouses
+                            </div>
+                        </EmptyTemplate>
+                    </HxAutosuggest>
                 </div>
             </div>
         }
@@ -118,7 +167,8 @@
                 </div>
                 <div class="col-md-6">
                     <div class="input-group input-group-sm">
-                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off" @bind-Value="python.FilePath" />
+                        <InputTextArea rows="2" class="form-control form-control-sm" autocomplete="off"
+                                       @bind-Value="python.FilePath" />
                     </div>
                 </div>
             </div>
@@ -201,13 +251,13 @@
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_existing_cluster"
                                checked=@(clusterSettings.ClusterConfiguration is ExistingClusterConfiguration)
-                                                              @onchange="() => clusterSettings.ClusterConfiguration = new ExistingClusterConfiguration()">
+                               @onchange="() => clusterSettings.ClusterConfiguration = new ExistingClusterConfiguration()">
                         <label class="form-check-label fw-normal" for="radio_existing_cluster">Existing cluster</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input type="radio" class="form-check-input" id="radio_new_cluster"
                                checked=@(clusterSettings.ClusterConfiguration is NewClusterConfiguration)
-                                                              @onchange="() => clusterSettings.ClusterConfiguration = new NewClusterConfiguration()">
+                               @onchange="() => clusterSettings.ClusterConfiguration = new NewClusterConfiguration()">
                         <label class="form-check-label fw-normal" for="radio_new_cluster">New cluster</label>
                     </div>
                 </div>
