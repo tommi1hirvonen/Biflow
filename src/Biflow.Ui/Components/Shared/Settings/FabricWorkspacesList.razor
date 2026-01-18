@@ -63,17 +63,18 @@
                 <th>
                     Name
                 </th>
+                <th>Azure credential</th>
                 <th></th>
             </tr>
         </thead>
         <tbody>
             @if (_fabricWorkspaces is null)
             {
-                <tr><td colspan="2" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
+                <tr><td colspan="3" class="text-center"><HxSpinner Color="ThemeColor.Secondary" /></td></tr>
             }
             else if (_fabricWorkspaces.Count == 0)
             {
-                <tr><td colspan="2">No Fabric workspaces</td></tr>
+                <tr><td colspan="3">No Fabric workspaces</td></tr>
             }
             else
             {
@@ -82,6 +83,9 @@
                     <tr>
                         <td class="align-middle">
                             @fabricWorkspace.FabricWorkspaceName
+                        </td>
+                        <td class="align-middle">
+                            @_azureCredentials?.FirstOrDefault(x => x.AzureCredentialId == fabricWorkspace.AzureCredentialId)?.AzureCredentialName
                         </td>
                         <td class="align-middle">
                             <HxButtonGroup>
