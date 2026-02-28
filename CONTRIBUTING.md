@@ -37,6 +37,10 @@ The UI uses the Bootstrap frontend toolkit (CSS, JavaScript and icons) and the H
 1. In a terminal, navigate to the `Biflow.Ui/wwwroot/css` folder
 2. Run `sass bootstrap.custom.scss:bootstrap.custom.css`
 
+## Package management
+
+The solution uses central package management (CPM). NuGet package versions are defined in `Directory.Packages.props`.
+
 ## Adding new step types
 
 The following new classes need to be added and existing files/classes need to be edited when adding support for new step types. Other files and classes may also need to be updated or created if there are references from the new step to other classes or resources (e.g. Azure credentials, pipeline clients, function apps etc.).
@@ -57,6 +61,7 @@ The following new classes need to be added and existing files/classes need to be
   - Inherits StepExecution
   - Implements IHasTimeout if the step execution supports timing out
   - Implements IHasStepExecutionParameters<> if the step execution supports parameters
+  - Has methods Set<integration_name>() and Get<integration_name>() for applying and retrieving integration object. The integration can also be a credential or Azure credential (see `ExeStepExecution`).
 - FooStepExecutionParameter (only if the step execution supports parameters)
   - Inherits StepExecutionParameterBase
 - FooStepExecutionAttempt
@@ -114,6 +119,9 @@ The following new classes need to be added and existing files/classes need to be
 
 **Update existing classes**
 
+- JobExecutorFactory
+  - Add left joins for the integrations potentially used by the new step type.
+  - Map the integration to the step execution.
 - StepExecutorProvider
   - Add mapping from FooStepExecution and FooStepExecutionAttempt to FooStepExecutor
 - JobExecutorFactory
