@@ -4,7 +4,8 @@ description: These instructions should be loaded when the user wants to add supp
 ## AI Instructions: Add Support for a New Step Type
 
 Use the following instructions when handling requests to add a new step type.
-Also reference the `CONTRIBUTING.md` file in the project root.
+Also reference the `CONTRIBUTING.md` file in the project root for guidance on what files to add and modify.
+Do not change the namespace for existing files and types.
 
 ### 1) Required Clarifications (ask first if missing)
 
