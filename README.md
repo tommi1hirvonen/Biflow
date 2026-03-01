@@ -98,6 +98,7 @@ Currently supported step types:
     - Reload apps and run automations in Qlik Cloud&reg;
 - Exe
     - Run locally stored executables (e.g., Python or PowerShell scripts)
+    - Optionally run executables through configured proxy hosts for remote execution
 - Mail
     - Send emails as part of your workflows
 - Http
@@ -252,6 +253,8 @@ If the dependency conditions of a step are not met, the step will be skipped. Th
 
 Jobs and steps can have any number of **parameters** (variables) that can be used to share values between steps during execution. Job parameters can be defined dynamically with C# expressions, or they can be set by SQL steps during execution by fetching values from a database. This allows the decoupling of individual ETL components. Instead, it is the orchestration framework that injects the necessary parameter values. This pattern is also called Inversion of Control.
 
+For **Exe** steps, execution can be targeted either to the main executor host or to a configured **proxy**. Proxies make it possible to run executables closer to required local resources (for example local file paths or host-specific tools) while orchestration remains centralized in Biflow.
+
 Steps can be categorized by using **tags** – simple labels that can be effective when filtering steps based on a data source, business function, etc.
 
 Jobs can have any number of **schedules**, which are triggers that invoke an execution of the job at a given time. Schedules use Cron expressions to define when a schedule should fire. A single Cron expression can be used to create a complex schedule, such as "every 2 hours between 10 am and 5 pm on days 1 to 7 of every month". Schedules can also define **tag filters** to limit which steps are to be included in that specific schedule's execution. This way we can avoid creating copies of jobs just to have a subset of its steps on a different schedule.
@@ -274,8 +277,8 @@ Outside of data orchestration, Biflow also supports **data tables**. These are s
 | Aspire.SqlAppHost        | Alternative .NET Aspire app host including a hosted SQL Server container. Requires Docker Desktop and runtime for running the SQL Server container.                                                   |
 | Core                     | Core library project containing common models, entities, interfaces and extensions.                                                                                                                   |
 | DataAccess               | Data access layer project responsible for ORM (Object-relational mapping). Contains the model configuration for the Entity Framework Core database context and some data management related services. |
-| ExecutorProxy.Core       | Core library for proxy execution service (enables remote execution of certain step types)                                                                                                             |
-| ExecutorProxy.WebApp     | Web App frontend project (minimal API) for the proxy application                                                                                                                                      |             
+| ExecutorProxy.Core       | Core library for proxy execution service used by Exe steps (remote process execution and related shared contracts).                                                                                   |
+| ExecutorProxy.WebApp     | Web App frontend project (minimal API) for the proxy application. It exposes API endpoints used by Biflow for remote Exe execution and file browsing.                                               |             
 | Executor.Core            | Core library for the executor and orchestration services                                                                                                                                              |
 | Executor.WebApp          | Web App frontend project (minimal API) for the executor and orchestration application                                                                                                                 |
 | Scheduler.Core           | Core library for the scheduler services                                                                                                                                                               |
@@ -588,6 +591,7 @@ There are three different installation alternatives: on-premise, Azure (monolith
 
 - Create the Azure App Service and UI Web App following the same steps as in the monolithic approach until the configuration stage.
 - Also create two additional Web Apps in the same App Service, one for the scheduler service and one for the executor service.
+- If Exe steps are intended to run outside the executor host, deploy one or more proxy applications (`Biflow.ExecutorProxy.WebApp`) and register them in UI settings.
 - Make sure websockets are enabled for the UI application and that "Always on" is enabled for the scheduler and executor applications.
 - Create a virtual network resource.
 - Create a lightweight Linux virtual machine resource (B1s is enough).
