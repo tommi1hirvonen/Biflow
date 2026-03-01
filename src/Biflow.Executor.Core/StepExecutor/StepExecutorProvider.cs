@@ -45,6 +45,8 @@ internal class StepExecutorProvider(IServiceProvider services) : IStepExecutorPr
                                                 $"Connection must be of type {nameof(MsSqlConnection)} or {nameof(SnowflakeConnection)}."),
         (TabularStepExecution tabularStep, TabularStepExecutionAttempt tabularAttempt) =>
             new TabularStepExecutor(tabularStep, tabularAttempt),
+        (VmStepExecution vmStep, VmStepExecutionAttempt vmAttempt) =>
+            new VmStepExecutor(services, vmStep, vmAttempt),
         _ => throw new InvalidOperationException("Error mapping step to an executor implementation. " +
                                                  "Unhandled combination of StepExecution and StepExecutionAttempt types: " +
                                                  $"({step.GetType()}, {attempt.GetType()})")

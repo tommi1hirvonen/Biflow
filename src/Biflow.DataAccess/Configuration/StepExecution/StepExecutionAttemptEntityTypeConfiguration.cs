@@ -41,7 +41,8 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<ScdStepExecutionAttempt>(StepType.Scd)
             .HasValue<DataflowStepExecutionAttempt>(StepType.Dataflow)
             .HasValue<FabricStepExecutionAttempt>(StepType.Fabric)
-            .HasValue<HttpStepExecutionAttempt>(StepType.Http);
+            .HasValue<HttpStepExecutionAttempt>(StepType.Http)
+            .HasValue<VmStepExecutionAttempt>(StepType.Vm);
 
         builder.Property(x => x.InfoMessages)
             .HasColumnName("InfoMessages")

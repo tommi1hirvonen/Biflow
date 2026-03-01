@@ -40,6 +40,10 @@ public enum StepType
     [Description("Run a Databricks job, notebook, Python file or pipeline")]
     Databricks,
 
+    [Category("Azure", 3)]
+    [Description("Ensure an Azure virtual machine is running or stopped")]
+    Vm,
+
     [Category("Other", 4)]
     [Description("Run a dbt Cloud job")]
     Dbt,

@@ -108,6 +108,7 @@ public partial class StepsList(
         StepType.Databricks => ((Integrations.DatabricksWorkspaces?.Count ?? 0) == 0, "No Databricks workspaces defined"),
         StepType.Dbt => ((Integrations.DbtAccounts?.Count ?? 0) == 0, "No dbt accounts defined"),
         StepType.Scd => ((Integrations.ScdTables?.Count ?? 0) == 0, "No SCD tables defined"),
+        StepType.Vm => ((Integrations.AzureCredentials?.Count ?? 0) == 0, "No Azure credentials defined"),
         _ => (false, "")
     };
 

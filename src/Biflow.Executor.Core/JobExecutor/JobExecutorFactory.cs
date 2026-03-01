@@ -66,6 +66,8 @@ internal class JobExecutorFactory(
             from exeCredential in exeCredential_.DefaultIfEmpty()
             join exeProxy in context.Proxies on ((ExeStepExecution)step).ProxyId equals exeProxy.ProxyId into exeProxy_
             from exeProxy in exeProxy_.DefaultIfEmpty()
+            join vm in context.AzureCredentials on ((VmStepExecution)step).AzureCredentialId equals vm.AzureCredentialId into vm_
+            from vm in vm_.DefaultIfEmpty()
             select new
             {
                 step,
@@ -83,7 +85,8 @@ internal class JobExecutorFactory(
                 dbt,
                 scd,
                 exeCredential,
-                exeProxy
+                exeProxy,
+                vm
             };
 
         var stepExecutions = await query2.ToArrayAsync(cancellationToken);
@@ -135,6 +138,9 @@ internal class JobExecutorFactory(
                 case ExeStepExecution exe:
                     exe.SetRunAsCredential(step.exeCredential);
                     exe.SetProxy(step.exeProxy);
+                    break;
+                case VmStepExecution vm:
+                    vm.SetAzureCredential(step.vm);
                     break;
             }
         }

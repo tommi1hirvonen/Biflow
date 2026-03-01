@@ -216,6 +216,20 @@
                                         @string.Join("\n", http.Headers.Select(x => $"{x.Key}: {x.Value}"))
                                     </dd>
                                     break;
+                                case VmStep vm:
+                                    <tr>
+                                        <td>Azure credential id</td>
+                                        <td>@vm.AzureCredentialId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>VM resource id</td>
+                                        <td class="font-monospace small">@vm.VirtualMachineResourceId</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Operation</td>
+                                        <td>@vm.Operation</td>
+                                    </tr>
+                                    break;
                                 case AgentJobStep agent:
                                     <tr>
                                         <td>Agent job name</td>

@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Communication.Email" />
+    <PackageReference Include="Azure.ResourceManager.Compute" />
     <PackageReference Include="Microsoft.Graph" />
     <PackageReference Include="OneOf" />
     <PackageReference Include="OneOf.SourceGenerator" />

@@ -455,6 +455,26 @@
                     @string.Join("\n", http.Headers.Select(x => $"{x.Key}: {x.Value}"))
                 </dd>
                 break;
+            case VmStepExecution vm:
+                <dt class="col-sm-3">
+                    Azure credential id
+                </dt>
+                <dd class="col-sm-9">
+                    @vm.AzureCredentialId
+                </dd>
+                <dt class="col-sm-3">
+                    VM resource id
+                </dt>
+                <dd class="col-sm-9 font-monospace small">
+                    @vm.VirtualMachineResourceId
+                </dd>
+                <dt class="col-sm-3">
+                    Operation
+                </dt>
+                <dd class="col-sm-9">
+                    @vm.Operation
+                </dd>
+                break;
             case AgentJobStepExecution agent:
                 <dt class="col-sm-3">
                     Agent job name

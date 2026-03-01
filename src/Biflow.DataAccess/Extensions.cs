@@ -206,6 +206,11 @@ public static class Extensions
                 equals new { Id = includeEndpoint ? (object?)exeProxy.ProxyId : false }
                 into exeProxy_
             from exeProxy in exeProxy_.DefaultIfEmpty()
+            join vm in context.AzureCredentials
+                on new { Id = includeEndpoint ? (object?)((VmStepExecution)stepExec).AzureCredentialId : true }
+                equals new { Id = includeEndpoint ? (object?)vm.AzureCredentialId : false }
+                into vm_
+            from vm in vm_.DefaultIfEmpty()
             join step in context.Steps
                 on new { Id = includeStep ? (object?)stepExec.StepId : true }
                 equals new { Id = includeStep ? (object?)step.StepId : false }
@@ -228,6 +233,7 @@ public static class Extensions
                 scd,
                 exe,
                 exeProxy,
+                vm,
                 step);
 
         var stepExecutions = await query2.ToArrayAsync();
@@ -281,6 +287,9 @@ public static class Extensions
                     exe.SetRunAsCredential(step.ExeStepCredential);
                     exe.SetProxy(step.ExeStepProxy);
                     break;
+                case VmStepExecution vm:
+                    vm.SetAzureCredential(step.VmStepCredential);
+                    break;
             }
         }
 
@@ -305,4 +314,5 @@ file record StepExecutionProjection(
     ScdTable? ScdTable,
     Credential? ExeStepCredential,
     Proxy? ExeStepProxy,
+    AzureCredential? VmStepCredential,
     Step? Step);

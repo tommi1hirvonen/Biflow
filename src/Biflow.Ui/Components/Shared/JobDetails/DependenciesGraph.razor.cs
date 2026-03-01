@@ -94,6 +94,7 @@ public partial class DependenciesGraph(
                 DisplayStepType.Parse(
                     s.StepType,
                     ((FabricStep)s).ItemType,
+                    ((VmStep)s).Operation,
                     ((DatabricksStep)s).DatabricksStepSettings,
                     ((QlikStep)s).QlikStepSettings),
                 s.ExecutionPhase,

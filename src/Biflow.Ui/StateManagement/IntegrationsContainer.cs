@@ -14,6 +14,7 @@ public record IntegrationsContainer
         DatabricksWorkspaces = [],
         DbtAccounts = [],
         ScdTables = [],
+        AzureCredentials = [],
         Credentials = [],
         Proxies = []
     };
@@ -28,6 +29,7 @@ public record IntegrationsContainer
     public required List<DatabricksWorkspace> DatabricksWorkspaces { get; init; }
     public required List<DbtAccount> DbtAccounts { get; init; }
     public required List<ScdTable> ScdTables { get; init; }
+    public required List<AzureCredential> AzureCredentials { get; init; }
     public required List<Credential> Credentials { get; init; }
     public required List<Proxy> Proxies { get; init; }
 }

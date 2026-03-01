@@ -1,0 +1,64 @@
+@inherits StepEditModal<VmStep>
+
+<StepEditModalTemplate Modal="this" TStep="VmStep">
+    @if (Step is not null)
+    {
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Azure credential</label>
+            </div>
+            <div class="col-md-6 d-inline">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.Key" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.AzureCredentialId">
+                        @foreach (var credential in Integrations.AzureCredentials)
+                        {
+                            <option value="@credential.AzureCredentialId">@credential.AzureCredentialName</option>
+                        }
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex justify-content-end">
+                <label class="form-label mb-lg-0">VM resource id</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        <SvgIcon Icon="LucideIcon.MonitorCloud" />
+                    </div>
+                    <InputTextArea class="form-control form-control-sm" rows="3" @bind-Value="Step.VirtualMachineResourceId" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-3">
+            <div class="col-md-4 d-md-flex align-items-center justify-content-end">
+                <label class="form-label mb-lg-0">Operation</label>
+            </div>
+            <div class="col-md-6">
+                <div class="input-group input-group-sm">
+                    <div class="input-group-text">
+                        @{
+                            var icon = Step.Operation switch
+                            {
+                                VmStepOperation.EnsureRunning => LucideIcon.CirclePlay,
+                                VmStepOperation.EnsureStopped => LucideIcon.CircleStop,
+                                _ => LucideIcon.CircleHelp
+                            };
+                        }
+                        <SvgIcon Icon="@icon" />
+                    </div>
+                    <InputSelect class="form-select form-select-sm" @bind-Value="Step.Operation" style="max-width: 12rem;">
+                        <option value="@VmStepOperation.EnsureRunning">Ensure running</option>
+                        <option value="@VmStepOperation.EnsureStopped">Ensure stopped</option>
+                    </InputSelect>
+                </div>
+            </div>
+        </div>
+    }
+</StepEditModalTemplate>

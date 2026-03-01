@@ -143,6 +143,10 @@ public partial class JobDetails(
             .Include(t => t.Connection) // used in data objects editor in step edit modal
             .OrderBy(t => t.ScdTableName)
             .ToListAsync(_cts.Token);
+        var azureCredentials = await context.AzureCredentials
+            .AsNoTracking()
+            .OrderBy(c => c.AzureCredentialName)
+            .ToListAsync(_cts.Token);
         var credentials = await context.Credentials
             .AsNoTracking()
             .OrderBy(c => c.Domain)
@@ -164,6 +168,7 @@ public partial class JobDetails(
             DatabricksWorkspaces = databricksWorkspaces,
             DbtAccounts = dbtAccounts,
             ScdTables = scdTables,
+            AzureCredentials = azureCredentials,
             Credentials = credentials,
             Proxies = proxies
         };

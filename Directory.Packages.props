@@ -9,6 +9,7 @@
     <PackageVersion Include="Azure.Communication.Email" Version="1.1.0" />
     <PackageVersion Include="Azure.Identity" Version="1.17.0" />
     <PackageVersion Include="Azure.ResourceManager.DataFactory" Version="1.9.0" />
+    <PackageVersion Include="Azure.ResourceManager.Compute" Version="1.14.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.26.0" />
     <PackageVersion Include="BlazorMonaco" Version="3.4.0" />
     <PackageVersion Include="ClosedXML" Version="0.105.0" />

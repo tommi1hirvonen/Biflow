@@ -24,7 +24,8 @@ internal class StepExecutionEntityTypeConfiguration : IEntityTypeConfiguration<S
             .HasValue<ScdStepExecution>(StepType.Scd)
             .HasValue<DataflowStepExecution>(StepType.Dataflow)
             .HasValue<FabricStepExecution>(StepType.Fabric)
-            .HasValue<HttpStepExecution>(StepType.Http);
+            .HasValue<HttpStepExecution>(StepType.Http)
+            .HasValue<VmStepExecution>(StepType.Vm);
 
         builder.OwnsOne(s => s.ExecutionConditionExpression, ece =>
         {

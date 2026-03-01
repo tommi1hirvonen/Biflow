@@ -577,6 +577,53 @@ public abstract class StepsUpdateEndpoints : IEndpoints
             .WithSummary("Update HTTP step")
             .WithDescription("Update an existing HTTP request step.")
             .WithName("UpdateHttpStep");
+
+        group.MapPut("/steps/vm/{stepId:guid}", async (Guid stepId, VmStepDto stepDto,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new UpdateExecutionConditionParameter(
+                        p.ParameterId,
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var command = new UpdateVmStepCommand
+                {
+                    StepId = stepId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    AzureCredentialId = stepDto.AzureCredentialId,
+                    VirtualMachineResourceId = stepDto.VirtualMachineResourceId,
+                    Operation = stepDto.Operation,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                return Results.Ok(step);
+            })
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesValidationProblem()
+            .Produces<VmStep>()
+            .WithSummary("Update VM step")
+            .WithDescription("Update an existing Azure virtual machine control step.")
+            .WithName("UpdateVmStep");
         
         group.MapPut("/steps/job/{stepId:guid}", async (Guid stepId, JobStepDto stepDto,
             IMediator mediator, CancellationToken cancellationToken) =>

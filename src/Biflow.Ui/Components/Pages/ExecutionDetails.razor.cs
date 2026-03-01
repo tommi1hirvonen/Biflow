@@ -226,6 +226,7 @@ public partial class ExecutionDetails(
                         DisplayStepType.Parse(
                             e.StepType,
                             ((FabricStepExecution)e.StepExecution).ItemType,
+                            ((VmStepExecution)e.StepExecution).Operation,
                             ((DatabricksStepExecution)e.StepExecution).DatabricksStepSettings,
                             ((QlikStepExecution)e.StepExecution).QlikStepSettings),
                         e.StepExecution.ExecutionPhase,
