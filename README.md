@@ -104,6 +104,8 @@ Currently supported step types:
     - Send arbitrary HTTP requests
 - Job
     - Start another Biflow job as part of your workflow
+- Vm
+    - Ensure an Azure VM is running or stopped (deallocated)
 
 ## 1.1. Rationale
 
