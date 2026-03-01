@@ -61,7 +61,7 @@
     <PackageVersion Include="Quartz.Extensions.Hosting" Version="3.15.1" />
     <PackageVersion Include="Scrutor" Version="6.1.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
-    <PackageVersion Include="Snowflake.Data" Version="5.1.0" />
+    <PackageVersion Include="Snowflake.Data" Version="5.4.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.0.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore.Annotations" Version="10.0.0" />
     <PackageVersion Include="System.IO.Packaging" Version="10.0.0" />
