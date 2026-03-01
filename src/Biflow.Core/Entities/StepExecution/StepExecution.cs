@@ -21,6 +21,7 @@ namespace Biflow.Core.Entities;
 [JsonDerivedType(typeof(DataflowStepExecution), nameof(StepType.Dataflow))]
 [JsonDerivedType(typeof(FabricStepExecution), nameof(StepType.Fabric))]
 [JsonDerivedType(typeof(HttpStepExecution), nameof(StepType.Http))]
+[JsonDerivedType(typeof(WaitStepExecution), nameof(StepType.Wait))]
 [JsonDerivedType(typeof(VmStepExecution), nameof(StepType.Vm))]
 public abstract class StepExecution(string stepName, StepType stepType)
 {

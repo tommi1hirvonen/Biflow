@@ -230,6 +230,12 @@
                                         <td>@vm.Operation</td>
                                     </tr>
                                     break;
+                                case WaitStep wait:
+                                    <tr>
+                                        <td>Wait seconds</td>
+                                        <td>@wait.WaitSeconds</td>
+                                    </tr>
+                                    break;
                                 case AgentJobStep agent:
                                     <tr>
                                         <td>Agent job name</td>

@@ -107,6 +107,8 @@ Currently supported step types:
     - Start another Biflow job as part of your workflow
 - Vm
     - Ensure an Azure VM is running or stopped (deallocated)
+- Wait
+    - Wait/delay for a configured number of seconds
 
 ## 1.1. Rationale
 

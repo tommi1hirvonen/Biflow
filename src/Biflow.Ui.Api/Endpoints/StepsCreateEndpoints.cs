@@ -626,6 +626,51 @@ public abstract class StepsCreateEndpoints : IEndpoints
             .WithSummary("Create VM step")
             .WithDescription("Create a new Azure virtual machine control step")
             .WithName("CreateVmStep");
+
+        group.MapPost("/{jobId:guid}/steps/wait", async (Guid jobId, WaitStepDto stepDto,
+            LinkGenerator linker, HttpContext ctx,
+            IMediator mediator, CancellationToken cancellationToken) =>
+            {
+                var dependencies = stepDto.Dependencies.ToDictionary(
+                    key => key.DependentOnStepId,
+                    value => value.DependencyType);
+                var executionConditionParameters = stepDto.ExecutionConditionParameters
+                    .Select(p => new CreateExecutionConditionParameter(
+                        p.ParameterName,
+                        p.ParameterValue,
+                        p.InheritFromJobParameterId))
+                    .ToArray();
+                var command = new CreateWaitStepCommand
+                {
+                    JobId = jobId,
+                    StepName = stepDto.StepName,
+                    StepDescription = stepDto.StepDescription,
+                    ExecutionPhase = stepDto.ExecutionPhase,
+                    DuplicateExecutionBehaviour = stepDto.DuplicateExecutionBehaviour,
+                    IsEnabled = stepDto.IsEnabled,
+                    RetryAttempts = stepDto.RetryAttempts,
+                    RetryIntervalMinutes = stepDto.RetryIntervalMinutes,
+                    ExecutionConditionExpression = stepDto.ExecutionConditionExpression,
+                    StepTagIds = stepDto.StepTagIds,
+                    WaitSeconds = stepDto.WaitSeconds,
+                    Dependencies = dependencies,
+                    ExecutionConditionParameters = executionConditionParameters,
+                    Sources = stepDto.Sources
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray(),
+                    Targets = stepDto.Targets
+                        .Select(x => new DataObjectRelation(x.DataObjectId, x.DataAttributes))
+                        .ToArray()
+                };
+                var step = await mediator.SendAsync(command, cancellationToken);
+                var url = linker.GetUriByName(ctx, "GetStep", new { stepId = step.StepId });
+                return Results.Created(url, step);
+            })
+            .ProducesValidationProblem()
+            .Produces<WaitStep>(StatusCodes.Status201Created)
+            .WithSummary("Create wait step")
+            .WithDescription("Create a new wait/delay step")
+            .WithName("CreateWaitStep");
         
         group.MapPost("/{jobId:guid}/steps/job", async (Guid jobId, JobStepDto stepDto,
             LinkGenerator linker, HttpContext ctx,

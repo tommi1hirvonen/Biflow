@@ -26,6 +26,8 @@ internal class StepExecutorProvider(IServiceProvider services) : IStepExecutorPr
             new FunctionStepExecutor(services, functionStep, functionAttempt),
         (HttpStepExecution httpStep, HttpStepExecutionAttempt httpAttempt) =>
             new HttpStepExecutor(services, httpStep, httpAttempt),
+        (WaitStepExecution waitStep, WaitStepExecutionAttempt waitAttempt) =>
+            new WaitStepExecutor(waitStep, waitAttempt),
         (JobStepExecution jobStep, JobStepExecutionAttempt jobAttempt) =>
             new JobStepExecutor(services, jobStep, jobAttempt),
         (PackageStepExecution packageStep, PackageStepExecutionAttempt packageAttempt) =>

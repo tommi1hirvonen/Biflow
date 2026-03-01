@@ -15,6 +15,10 @@ public enum StepType
     [Category("Common", 1)]
     [Description("Execute another job")]
     Job,
+
+    [Category("Common", 1)]
+    [Description("Wait for a configured number of seconds")]
+    Wait,
     
     [Category("Fabric/Power BI", 2)]
     [Description("Fabric item job")]

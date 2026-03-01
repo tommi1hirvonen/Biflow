@@ -42,6 +42,7 @@ internal class StepExecutionAttemptEntityTypeConfiguration : IEntityTypeConfigur
             .HasValue<DataflowStepExecutionAttempt>(StepType.Dataflow)
             .HasValue<FabricStepExecutionAttempt>(StepType.Fabric)
             .HasValue<HttpStepExecutionAttempt>(StepType.Http)
+            .HasValue<WaitStepExecutionAttempt>(StepType.Wait)
             .HasValue<VmStepExecutionAttempt>(StepType.Vm);
 
         builder.Property(x => x.InfoMessages)
