@@ -82,6 +82,60 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             .WithDescription("Get executions for a given time period. " +
                              "Use the query parameters lastExecutionId and limit to paginate results.")
             .WithName("GetExecutions");
+
+        group.MapGet("/search",
+            async (IMediator mediator,
+                CancellationToken cancellationToken,
+                [FromQuery] Guid[]? jobIds = null,
+                [FromQuery] Guid[]? scheduleIds = null,
+                [FromQuery] ExecutionStatus[]? executionStatuses = null,
+                [FromQuery] DateTimeOffset? startDate = null,
+                [FromQuery] DateTimeOffset? endDate = null,
+                [FromQuery] int limit = 100,
+                [FromQuery] DateTimeOffset? lastCreatedOn = null,
+                [FromQuery] Guid? lastExecutionId = null) =>
+            {
+                if (limit is < 10 or > 100)
+                {
+                    return Results.Problem("Limit must be between 10 and 100",
+                        statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                if (startDate is { } start && endDate is { } end && start > end)
+                {
+                    return Results.Problem("startDate must be less than or equal to endDate",
+                        statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                var page = (lastCreatedOn, lastExecutionId);
+                if (page is not ((null, null) or (not null, not null)))
+                {
+                    return Results.Problem(
+                        $"Both query parameters {nameof(lastCreatedOn)} and {nameof(lastExecutionId)} " +
+                        "must be provided together or both of them must be omitted.",
+                        statusCode: StatusCodes.Status400BadRequest);
+                }
+
+                var query = new SearchExecutionsQuery(
+                    JobIds: jobIds,
+                    ScheduleIds: scheduleIds,
+                    ExecutionStatuses: executionStatuses,
+                    StartDate: startDate,
+                    EndDate: endDate,
+                    Limit: limit,
+                    LastCreatedOn: lastCreatedOn,
+                    LastExecutionId: lastExecutionId);
+
+                var executions = await mediator.SendAsync(query, cancellationToken);
+                return Results.Ok(executions);
+            })
+            .ProducesProblem(StatusCodes.Status400BadRequest)
+            .Produces<Execution[]>()
+            .WithSummary("Search executions")
+            .WithDescription("Search executions with additive filters for jobIds, scheduleIds, executionStatuses and createdOn date range. " +
+                             "Results are ordered newest to oldest. " +
+                             "Use the query parameters lastCreatedOn, lastExecutionId and limit to paginate results.")
+            .WithName("SearchExecutions");
         
         group.MapGet("{executionId:guid}",
             async (IMediator mediator,
