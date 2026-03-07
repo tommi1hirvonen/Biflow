@@ -1,0 +1,87 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Aspire: Launch SqlAppHost",
+      "type": "coreclr",
+      "request": "launch",
+      "program": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/src/Biflow.Aspire.SqlAppHost"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "stopAtEntry": false,
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: .NET process (pick)",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: frontend (Biflow.Ui)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "BiflowUi",
+      "preLaunchTask": "wait-for-biflow-ui-process",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: api (Biflow.Ui.Api)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "BiflowApi",
+      "preLaunchTask": "wait-for-biflow-ui-api-process",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: schedulerapi (Biflow.Scheduler.WebApp)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "BiflowScheduler",
+      "preLaunchTask": "wait-for-biflow-scheduler-webapp-process",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: executorapi (Biflow.Executor.WebApp)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "BiflowExecutor",
+      "preLaunchTask": "wait-for-biflow-executor-webapp-process",
+      "justMyCode": false
+    },
+    {
+      "name": "Attach: proxyapi (Biflow.ExecutorProxy.WebApp)",
+      "type": "coreclr",
+      "request": "attach",
+      "processName": "BiflowProxy",
+      "preLaunchTask": "wait-for-biflow-executorproxy-webapp-process",
+      "justMyCode": false
+    },
+    {
+      "name": "Aspire: Launch (Aspire CLI + C# Dev Kit)",
+      "type": "aspire",
+      "request": "launch",
+      "program": "${workspaceFolder}/src/Biflow.Aspire.SqlAppHost/Biflow.Aspire.SqlAppHost.csproj"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Aspire: Launch + attach all web services",
+      "stopAll": true,
+      "configurations": [
+        "Aspire: Launch SqlAppHost",
+        "Attach: frontend (Biflow.Ui)",
+        "Attach: api (Biflow.Ui.Api)",
+        "Attach: schedulerapi (Biflow.Scheduler.WebApp)",
+        "Attach: executorapi (Biflow.Executor.WebApp)",
+        "Attach: proxyapi (Biflow.ExecutorProxy.WebApp)"
+      ]
+    }
+  ]
+}

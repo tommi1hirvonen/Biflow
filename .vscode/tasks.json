@@ -1,0 +1,113 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "run-apphost",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "src/Biflow.Aspire.SqlAppHost"
+      ],
+      "group": "build",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "stop-apphost",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "pkill -f 'src/Biflow.Aspire.SqlAppHost|Biflow.Aspire.SqlAppHost' || true"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "wait-for-biflow-ui-process",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/wait-for-process.ps1",
+        "-ProcessName",
+        "BiflowUi",
+        "-TimeoutSeconds",
+        "600"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "wait-for-biflow-ui-api-process",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/wait-for-process.ps1",
+        "-ProcessName",
+        "BiflowApi",
+        "-TimeoutSeconds",
+        "600"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "wait-for-biflow-scheduler-webapp-process",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/wait-for-process.ps1",
+        "-ProcessName",
+        "BiflowScheduler",
+        "-TimeoutSeconds",
+        "600"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "wait-for-biflow-executor-webapp-process",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/wait-for-process.ps1",
+        "-ProcessName",
+        "BiflowExecutor",
+        "-TimeoutSeconds",
+        "600"
+      ],
+      "problemMatcher": []
+    },
+    {
+      "label": "wait-for-biflow-executorproxy-webapp-process",
+      "type": "shell",
+      "command": "pwsh",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/wait-for-process.ps1",
+        "-ProcessName",
+        "BiflowProxy",
+        "-TimeoutSeconds",
+        "600"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
