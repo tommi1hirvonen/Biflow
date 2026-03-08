@@ -5,6 +5,26 @@ GET {{baseUrl}}/executions
     &endDate=2024-12-31
 x-api-key: {{apiKey}}
 
+### Executions search
+
+POST {{baseUrl}}/executions/search
+x-api-key: {{apiKey}}
+Content-Type: application/json
+
+{
+    "jobIds": [
+        "23781d01-4213-4384-0e52-08de7d2afd67"
+    ],
+    "scheduleIds": [],
+    "executionStatuses": [
+        "Succeeded"
+    ],
+    "startDate": "2026-03-01",
+    "endDate": "2026-03-31",
+    "includeParameters": true,
+    "limit": 10
+}
+
 ### Executions, running
 
 GET {{baseUrl}}/executions/running

@@ -83,48 +83,42 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
                              "Use the query parameters lastExecutionId and limit to paginate results.")
             .WithName("GetExecutions");
 
-        group.MapGet("/search",
+        group.MapPost("/search",
             async (IMediator mediator,
                 CancellationToken cancellationToken,
-                [FromQuery] Guid[]? jobIds = null,
-                [FromQuery] Guid[]? scheduleIds = null,
-                [FromQuery] ExecutionStatus[]? executionStatuses = null,
-                [FromQuery] DateTimeOffset? startDate = null,
-                [FromQuery] DateTimeOffset? endDate = null,
-                [FromQuery] int limit = 100,
-                [FromQuery] DateTimeOffset? lastCreatedOn = null,
-                [FromQuery] Guid? lastExecutionId = null) =>
+                [FromBody] SearchExecutionsRequest request) =>
             {
-                if (limit is < 10 or > 100)
+                if (request.Limit is < 10 or > 100)
                 {
                     return Results.Problem("Limit must be between 10 and 100",
                         statusCode: StatusCodes.Status400BadRequest);
                 }
 
-                if (startDate is { } start && endDate is { } end && start > end)
+                if (request.StartDate is { } start && request.EndDate is { } end && start > end)
                 {
-                    return Results.Problem("startDate must be less than or equal to endDate",
+                    return Results.Problem("StartDate must be less than or equal to EndDate",
                         statusCode: StatusCodes.Status400BadRequest);
                 }
 
-                var page = (lastCreatedOn, lastExecutionId);
+                var page = (request.LastCreatedOn, request.LastExecutionId);
                 if (page is not ((null, null) or (not null, not null)))
                 {
                     return Results.Problem(
-                        $"Both query parameters {nameof(lastCreatedOn)} and {nameof(lastExecutionId)} " +
+                        $"Both properties {nameof(request.LastCreatedOn)} and {nameof(request.LastExecutionId)} " +
                         "must be provided together or both of them must be omitted.",
                         statusCode: StatusCodes.Status400BadRequest);
                 }
 
                 var query = new SearchExecutionsQuery(
-                    JobIds: jobIds,
-                    ScheduleIds: scheduleIds,
-                    ExecutionStatuses: executionStatuses,
-                    StartDate: startDate,
-                    EndDate: endDate,
-                    Limit: limit,
-                    LastCreatedOn: lastCreatedOn,
-                    LastExecutionId: lastExecutionId);
+                    JobIds: request.JobIds,
+                    ScheduleIds: request.ScheduleIds,
+                    ExecutionStatuses: request.ExecutionStatuses,
+                    StartDate: request.StartDate,
+                    EndDate: request.EndDate,
+                    Limit: request.Limit,
+                    LastCreatedOn: request.LastCreatedOn,
+                    LastExecutionId: request.LastExecutionId,
+                    IncludeParameters: request.IncludeParameters);
 
                 var executions = await mediator.SendAsync(query, cancellationToken);
                 return Results.Ok(executions);
@@ -132,9 +126,9 @@ public abstract class ExecutionsReadEndpoints : IEndpoints
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .Produces<Execution[]>()
             .WithSummary("Search executions")
-            .WithDescription("Search executions with additive filters for jobIds, scheduleIds, executionStatuses and createdOn date range. " +
+            .WithDescription("Search executions with additive filters for JobIds, ScheduleIds, ExecutionStatuses and CreatedOn date range. " +
                              "Results are ordered newest to oldest. " +
-                             "Use the query parameters lastCreatedOn, lastExecutionId and limit to paginate results.")
+                             "Use the LastCreatedOn, LastExecutionId and Limit properties in the request body to paginate results.")
             .WithName("SearchExecutions");
         
         group.MapGet("{executionId:guid}",

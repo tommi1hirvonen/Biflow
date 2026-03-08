@@ -8,7 +8,8 @@ internal record SearchExecutionsQuery(
     DateTimeOffset? EndDate,
     int Limit,
     DateTimeOffset? LastCreatedOn,
-    Guid? LastExecutionId)
+    Guid? LastExecutionId,
+    bool IncludeParameters)
     : IRequest<Execution[]>;
 
 [UsedImplicitly]
@@ -23,6 +24,11 @@ internal class SearchExecutionsQueryHandler(IDbContextFactory<ServiceDbContext> 
             .AsNoTracking()
             .AsSingleQuery()
             .AsQueryable();
+
+        if (request.IncludeParameters)
+        {
+            query = query.Include(e => e.ExecutionParameters);
+        }
 
         if (request.JobIds is { Length: > 0 })
         {
